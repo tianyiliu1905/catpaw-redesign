@@ -404,7 +404,7 @@ body{
   min-width:0;
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:6px;
   height:100%;
   padding:0 4px 0 8px;
   border:none;
@@ -822,8 +822,8 @@ body{
    .content 是 grid 容器，这里用绝对定位脱离栅格，
    于是主区列宽从 1fr 收缩到 1fr−460px 时，按钮的位置不受影响。
 
-   高度对齐工具台顶栏的 52px，右内边距 12px 与 .wb-head 一致，
-   面板展开后按钮正好落在顶栏右端，与三颗页签同处一条水平线上。 */
+   关闭按钮仍以窗口顶部 52px 区域居中，右内边距 12px 与 .wb-head 一致。
+   页签顶栏略收短，让 34px 页签的内容中心与这颗 28px 按钮精确对齐。 */
 .wb-toggle-slot{
   position:absolute;
   top:0; right:0;
@@ -1890,51 +1890,161 @@ height:56px;
   transition-delay: .06s;
 }
 
-/* -- 顶栏 --
-   不画底线：顶栏与下方标签条同为灰底的容器层，中间插一条分割线
-   会把它们读成两个平级区块。实际上「浏览器」这个页签选中后，标签条
-   是它展开的内容，两者应当连成一片。
-   层级已由颜色表达：灰底是容器，白底是内容，不需要再加一条线。 */
+/* -- 工作区标签 --
+   文件夹不再是四个模式按钮之一，而是首个浏览器式标签。
+   白色活动标签与下方内容连为一体，新增入口紧随标签排列。 */
 .wb-head{
+  position:relative;
+  z-index:20;
   flex:none;
-  height: 52px;
+  height:43px;
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding: 0 12px 0 10px;
-}
-
-.wb-tabs{
-  display:flex;
-  align-items:center;
+  align-items:flex-end;
   gap:2px;
-  min-width:0;
+  padding:0 48px 0 4px;
 }
 
-.wb-tab{
-  display:inline-flex;
+.workspace-tabs{
+  display:flex;
+  align-items:flex-end;
+  gap:6px;
+  min-width:0;
+  overflow:hidden;
+  padding:0 6px;
+}
+
+.workspace-tab{
+  position:relative;
+  flex:0 1 132px;
+  min-width:38px;
+  max-width:168px;
+  height:34px;
+  display:flex;
   align-items:center;
   gap:6px;
-  height:28px;
-  padding: 0 10px;
-  border:none;
+  padding:0 9px;
+  border:0;
+  border-radius:8px;
   background:transparent;
-  border-radius: var(--radius-sm);
+  color:var(--text-3);
   font-family:inherit;
-  font-size: 12.5px;
-  color: var(--text-3);
-  cursor:pointer;
+  font-size:12.5px;
   white-space:nowrap;
-  transition: background .14s ease, color .14s ease;
+  cursor:pointer;
+  transition:background .14s ease, color .14s ease;
 }
-.wb-tab .ic{ width:14px; height:14px; }
-.wb-tab:hover{ background: var(--hover); color: var(--text-2); }
-.wb-tab.active{
+.workspace-tab:hover:not(.active){ background:rgba(0,0,0,.045); color:var(--text-2); }
+.workspace-tab.active{
+  z-index:1;
+  overflow:visible;
+  border-radius:9px 9px 0 0;
   background:#fff;
-  color: var(--text-1);
-  box-shadow: 0 0 0 .5px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.05);
+  color:var(--text-1);
 }
+.workspace-tab.active::before,
+.workspace-tab.active::after{
+  content:"";
+  position:absolute;
+  bottom:0;
+  width:6px;
+  height:6px;
+  background:#fff;
+  pointer-events:none;
+}
+.workspace-tab.active::before{
+  left:-6px;
+  -webkit-mask:radial-gradient(circle 6px at 0 0, transparent 6px, #000 6.5px);
+          mask:radial-gradient(circle 6px at 0 0, transparent 6px, #000 6.5px);
+}
+.workspace-tab.active::after{
+  right:-6px;
+  -webkit-mask:radial-gradient(circle 6px at 100% 0, transparent 6px, #000 6.5px);
+          mask:radial-gradient(circle 6px at 100% 0, transparent 6px, #000 6.5px);
+}
+.workspace-tab .ic{ width:14px; height:14px; flex:none; }
+.workspace-tab-title{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.workspace-tab-close{
+  width:16px;
+  height:16px;
+  display:grid;
+  place-items:center;
+  flex:none;
+  margin-left:auto;
+  border-radius:4px;
+  opacity:0;
+  transition:opacity .12s ease, background .12s ease;
+}
+.workspace-tab:hover .workspace-tab-close,
+.workspace-tab.active .workspace-tab-close{ opacity:1; }
+.workspace-tab-close:hover{ background:rgba(0,0,0,.08); }
+.workspace-tab-close .ic{ width:10px; height:10px; stroke-width:2.2; }
+
+.workspace-create{
+  position:relative;
+  flex:none;
+  height:34px;
+  display:flex;
+  align-items:center;
+  margin-left:2px;
+}
+.workspace-add{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text-3);
+  cursor:pointer;
+  transition:background .13s ease, color .13s ease;
+}
+.workspace-add:hover,
+.workspace-create.open .workspace-add{ background:var(--hover); color:var(--text-1); }
+.workspace-add .ic{ width:15px; height:15px; }
+.workspace-create-menu{
+  position:absolute;
+  top:34px;
+  left:0;
+  width:196px;
+  padding:6px;
+  border:.5px solid var(--gray-5);
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 14px 34px rgba(0,0,0,.16), 0 2px 7px rgba(0,0,0,.06);
+  transform-origin:top right;
+}
+.workspace-create-menu[hidden]{ display:none; }
+.workspace-create.open .workspace-create-menu{ animation:workspaceMenuIn .16s cubic-bezier(.22,.68,0,1) both; }
+@keyframes workspaceMenuIn{
+  from{ opacity:0; transform:translateY(-4px) scale(.98); }
+  to{ opacity:1; transform:none; }
+}
+.workspace-create-item{
+  width:100%;
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 9px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text-2);
+  font-family:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.workspace-create-item:hover,
+.workspace-create-item:focus-visible{ background:var(--gray-2); outline:none; }
+.workspace-create-item > .ic{ width:16px; height:16px; flex:none; color:var(--text-3); }
+.workspace-create-item > span{ display:flex; flex-direction:column; gap:1px; }
+.workspace-create-item strong{ font-size:12.5px; font-weight:500; color:var(--text-1); }
+.workspace-create-item small{ font-size:10.5px; color:var(--text-4); }
 
 /* -- 面板 -- */
 .wb-pane{
@@ -2457,6 +2567,38 @@ height:56px;
   align-content:start;
 }
 
+/* 列表视图保留同一批文件节点，只改变排布方式，切换时不会丢失层级或焦点。 */
+.file-grid.is-list{
+  grid-template-columns: 1fr;
+  gap:2px;
+  padding: 8px 10px;
+}
+.file-grid.is-list .fitem{
+  min-width:0;
+  height:48px;
+  flex-direction:row;
+  justify-content:flex-start;
+  gap:10px;
+  padding: 5px 9px;
+  border-radius:6px;
+}
+.file-grid.is-list .fthumb{
+  flex:0 0 38px;
+  width:38px;
+  height:38px;
+}
+.file-grid.is-list .f-folder{ width:34px; height:28px; }
+.file-grid.is-list .f-page{ width:27px; height:34px; }
+.file-grid.is-list .f-img{ width:34px; height:27px; }
+.file-grid.is-list .fname{
+  min-width:0;
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left;
+}
+
 /* 共享渐变的载体：只提供 <linearGradient> 定义，本身不该占格子 */
 .f-defs{ width:0; height:0; position:absolute; }
 
@@ -2725,12 +2867,49 @@ height:56px;
 .pv-empty-desc{ font-size: 12px; color: var(--text-4); }
 
 /* ============================================================
-   上下文面板
-   ------------------------------------------------------------
-   排版是一张两列表：左列是前提的名字，右列是它此刻的取值。
-   左列定宽对齐，视线可以竖着扫下来逐条核对；
-   若让标签宽度随字数浮动，每行的取值起点都不同，
-   这份列表就只能一行一行地读。
+   新建文件编辑器
+   ============================================================ */
+.file-editor-bar > .ic{
+  width:14px;
+  height:14px;
+  margin-left:4px;
+  color:var(--text-3);
+}
+.file-name-input{
+  flex:1;
+  min-width:0;
+  height:26px;
+  padding:0 7px;
+  border:1px solid transparent;
+  border-radius:6px;
+  background:transparent;
+  color:var(--text-1);
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:500;
+  outline:none;
+}
+.file-name-input:hover{ background:var(--gray-2); }
+.file-name-input:focus{ background:#fff; border-color:#c9d8f5; box-shadow:0 0 0 3px rgba(47,124,246,.1); }
+.file-save-state{ flex:none; font-size:10.5px; color:var(--text-4); }
+.file-editor-body{ display:flex; }
+.file-editor{
+  width:100%;
+  min-height:100%;
+  resize:none;
+  padding:20px 22px;
+  border:0;
+  outline:0;
+  background:#fff;
+  color:var(--text-1);
+  font-family:"SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size:13px;
+  line-height:1.75;
+}
+.file-editor::placeholder{ color:var(--text-4); }
+
+/* ============================================================
+   已移除的上下文面板旧样式（保留不影响页面，便于历史版本对照）
    ============================================================ */
 .ctx-title{
   flex:1;

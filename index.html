@@ -594,55 +594,37 @@
     <!-- ============ 工具台 ============ -->
     <aside class="workbench" id="workbench" aria-hidden="true">
 
-      <!-- 工具台顶栏 -->
+      <!-- 工具台顶栏：初始只保留文件夹，其余工作区由加号按需创建 -->
       <header class="wb-head">
-        <!-- 顺序即层级：文件夹是任务的产物落点，浏览器与终端是得到它的过程工具，
-             因此文件夹排在最左，并作为默认打开项 —— 用户开面板多半是去拿产物，
-             而不是去用工具 -->
-        <div class="wb-tabs" role="tablist" aria-label="工具类型">
-          <button class="wb-tab active" role="tab" data-wb="files" aria-selected="true">
+        <div class="workspace-tabs" id="workspaceTabs" role="tablist" aria-label="工作区标签">
+          <button class="workspace-tab active" role="tab" data-workspace-tab="files" aria-selected="true">
             <svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
-            <span>文件夹</span>
+            <span class="workspace-tab-title">文件夹</span>
           </button>
-          <button class="wb-tab" role="tab" data-wb="browser" aria-selected="false">
-            <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-            <span>浏览器</span>
+        </div>
+        <div class="workspace-create" id="workspaceCreate">
+          <button class="workspace-add" id="workspaceAdd" type="button" title="新建" aria-label="新建工作区" aria-haspopup="menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           </button>
-          <button class="wb-tab" role="tab" data-wb="terminal" aria-selected="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M12 19h8"/><path d="m4 17 6-6-6-6"/></svg>
-            <span>终端</span>
-          </button>
-          <!-- 上下文排在最后：前三个页签都是「可以动手的地方」，
-               这一个是「这次任务站在什么前提上」，属于旁证而非工具。
-               图标取层叠的数据片，对应它承载的是一叠 Context Item。 -->
-          <button class="wb-tab" role="tab" data-wb="context" aria-selected="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-            <span>上下文</span>
-          </button>
+          <div class="workspace-create-menu" id="workspaceCreateMenu" role="menu" hidden>
+            <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="file">
+              <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+              <span><strong>文件</strong><small>新建空白文件</small></span>
+            </button>
+            <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="browser">
+              <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <span><strong>浏览器</strong><small>打开网页工作区</small></span>
+            </button>
+            <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="terminal">
+              <svg viewBox="0 0 24 24" class="ic"><path d="M12 19h8"/><path d="m4 17 6-6-6-6"/></svg>
+              <span><strong>终端</strong><small>启动命令行</small></span>
+            </button>
+          </div>
         </div>
       </header>
 
       <!-- ===== 浏览器 ===== -->
       <section class="wb-pane" data-pane="browser">
-
-        <!-- 标签条：多窗口时自适应收缩 -->
-        <div class="tabstrip" id="tabstrip">
-          <div class="tabstrip-list" id="tabstripList">
-            <button class="btab active" data-tab-id="1">
-              <span class="btab-favicon"></span>
-              <span class="btab-title">新标签页</span>
-              <span class="btab-close" title="关闭">
-                <svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </span>
-            </button>
-          </div>
-          <button class="tabstrip-btn" id="newTab" title="新建标签页">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          </button>
-          <button class="tabstrip-btn" id="tabOverview" title="标签总览">
-            <svg viewBox="0 0 24 24" class="ic"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-          </button>
-        </div>
 
         <div class="wb-bar">
           <button class="icon-btn sm" title="后退">
@@ -673,10 +655,6 @@
           </div>
         </div>
 
-        <!-- 标签总览：多窗口时的宫格排列 -->
-        <div class="tab-grid" id="tabGrid" hidden>
-          <div class="tab-grid-inner" id="tabGridInner"></div>
-        </div>
       </section>
 
       <!-- ===== 文件夹 ===== -->
@@ -693,11 +671,13 @@
           <!-- 只显示当前所在那一层的名字：在目录里是文件夹名，
                打开文件后就是文件名，由 JS 依当前节点填充 -->
           <span class="file-loc" id="fileLoc"></span>
-          <!-- 仅在预览 HTML 时出现：把这份产物移交给浏览器页签。
-               预览是「看一眼」，浏览器才是「拿它做事」（调宽、开控制台、
-               跟着页内链接跳出去），两者是不同的意图，给两个入口。 -->
-          <button class="icon-btn sm" id="fileOpenExt" title="在浏览器中打开" hidden>
-            <svg viewBox="0 0 24 24" class="ic"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          <!-- 目录内可在宫格与列表之间切换；打开文件预览后隐藏，
+               避免把「内容视图」误解成文件排列方式。 -->
+          <button class="icon-btn sm file-layout-toggle" id="fileLayoutToggle"
+                  title="切换到列表视图" aria-label="切换到列表视图" aria-pressed="false">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+              <path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
           </button>
         </div>
 
@@ -711,6 +691,18 @@
                产物属于文件夹，打开它不该让人离开「我的文件」这个上下文。
                容器常驻、内容按需填。 -->
           <div class="file-view" id="fileView" hidden></div>
+        </div>
+      </section>
+
+      <!-- ===== 新建文件 ===== -->
+      <section class="wb-pane" data-pane="file">
+        <div class="wb-bar file-editor-bar">
+          <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+          <input class="file-name-input" id="newFileName" value="未命名文件.md" aria-label="文件名" />
+          <span class="file-save-state">已自动保存</span>
+        </div>
+        <div class="wb-body file-editor-body">
+          <textarea class="file-editor" id="newFileEditor" spellcheck="false" aria-label="文件内容" placeholder="开始输入内容…"></textarea>
         </div>
       </section>
 
@@ -736,44 +728,6 @@
 <span class="t-prompt">❯</span> <span class="cursor"></span></pre>
         </div>
       </section>
-
-      <!-- ===== 上下文 =====
-           这一面板回答的是「这次任务站在什么前提上」：身份、门店、业务日、
-           当前对象、数据新鲜度、权限……即智能体每一次作答所依据的那批
-           Context Item。把它们摊开，答案才可追溯。 -->
-      <section class="wb-pane" data-pane="context">
-        <div class="wb-bar">
-          <span class="ctx-title">任务上下文</span>
-          <button class="icon-btn sm" id="ctxHelp" title="什么是上下文">
-            <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-          </button>
-        </div>
-
-        <div class="wb-body ctx-body">
-          <p class="ctx-desc" id="ctxDesc">
-            以下是本次任务生效的 Context Item，由业务系统注入。
-            带箭头的一项可就地切换，切换后数据需重新拉取。
-          </p>
-          <div class="ctx-list" id="ctxList"></div>
-          <p class="ctx-note">
-            业务系统负责 Context 的数据与切换逻辑，CatPaw 只提供 Inspector 容器与呈现协议。
-          </p>
-        </div>
-
-        <!-- 底部常驻：数据什么时候拉的、下一次什么时候拉。
-             它对每一条 Context Item 都成立，因此不跟着列表滚动。 -->
-        <footer class="ctx-foot">
-          <button class="ctx-refresh" id="ctxRefresh">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            <span>刷新数据</span>
-          </button>
-          <span class="ctx-sync" id="ctxSync">13:45:12</span>
-          <button class="ctx-auto" id="ctxAuto" aria-pressed="true">
-            <i class="ctx-auto-dot"></i><span id="ctxAutoText">自动刷新已开启</span>
-          </button>
-        </footer>
-      </section>
-
     </aside>
 
     </div>

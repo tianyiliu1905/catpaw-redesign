@@ -525,9 +525,10 @@
   const fileLoc     = document.getElementById('fileLoc');
   const fileBack    = document.getElementById('fileBack');
   const fileFwd     = document.getElementById('fileFwd');
-  const fileGrid    = document.getElementById('fileGrid');
-  const fileView    = document.getElementById('fileView');
-  const fileOpenExt = document.getElementById('fileOpenExt');
+  const fileGrid         = document.getElementById('fileGrid');
+  const fileView         = document.getElementById('fileView');
+  const fileLayoutToggle = document.getElementById('fileLayoutToggle');
+  let fileLayout = 'grid';
 
   /* 缩略图按类型绘制。不画品牌化的「Word / Excel」标志，
      因为文件可能来自任何工具；改用「纸张 + 内容骨架」这一层抽象，
@@ -668,6 +669,20 @@
     // 在根目录就无处可退；没有待重做的路径就无处可进
     fileBack.disabled = filePath.length <= 1;
     fileFwd.disabled  = !fileForward.length;
+  }
+
+  const FILE_LAYOUT_ICONS = {
+    grid: '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
+  };
+
+  function syncFileLayout() {
+    const isList = fileLayout === 'list';
+    fileGrid.classList.toggle('is-list', isList);
+    fileLayoutToggle.setAttribute('aria-pressed', String(isList));
+    fileLayoutToggle.setAttribute('aria-label', isList ? '切换到宫格视图' : '切换到列表视图');
+    fileLayoutToggle.title = isList ? '切换到宫格视图' : '切换到列表视图';
+    fileLayoutToggle.querySelector('svg').innerHTML = isList ? FILE_LAYOUT_ICONS.grid : FILE_LAYOUT_ICONS.list;
   }
 
   function renderFileGrid(folder) {
@@ -857,15 +872,15 @@
       fileGrid.hidden = false;
       fileView.hidden = true;
       fileView.innerHTML = '';   // 放掉 iframe，不让它在后台继续留着
-      fileOpenExt.hidden = true;
+      fileLayoutToggle.hidden = false;
+      syncFileLayout();
       return;
     }
 
     fileGrid.hidden = true;
     fileView.hidden = false;
+    fileLayoutToggle.hidden = true;
     renderFileView(node);
-    // 「在浏览器中打开」只对网页成立，其余类型没有对应的去处
-    fileOpenExt.hidden = !(node.preview && node.preview.kind === 'html');
   }
 
   /* 换了归属文件夹就是换了一棵树，层级栈必须重置到根。
@@ -1757,52 +1772,176 @@
       `</div>`;
   }
 
-  /* ---------- 5.5 工具台：开关 + 类型切换 ---------- */
+  /* ---------- 5.5 工具台：按需创建的工作区标签 ---------- */
   const content = document.getElementById('content');
   const workbench = document.getElementById('workbench');
   const wbToggle = document.getElementById('toggleWorkbench');
-  const wbTabs = Array.from(workbench.querySelectorAll('.wb-tab'));
   const wbPanes = Array.from(workbench.querySelectorAll('.wb-pane'));
+  const workspaceTabs = document.getElementById('workspaceTabs');
+  const workspaceCreate = document.getElementById('workspaceCreate');
+  const workspaceAdd = document.getElementById('workspaceAdd');
+  const workspaceCreateMenu = document.getElementById('workspaceCreateMenu');
   const urlInput = document.getElementById('urlInput');
+  const newFileName = document.getElementById('newFileName');
+  const newFileEditor = document.getElementById('newFileEditor');
+
+  const WORKSPACE_META = {
+    files: {
+      title: '文件夹',
+      icon: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+    },
+    file: {
+      title: '未命名文件.md',
+      icon: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+    },
+    browser: {
+      title: '新标签页',
+      icon: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    },
+    terminal: {
+      title: '终端',
+      icon: '<path d="M12 19h8"/><path d="m4 17 6-6-6-6"/>',
+    },
+  };
+  const WORKSPACE_CLOSE = '<svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  let workspaceSeq = 0;
+  let openWorkspaces = [{ id: 'files', kind: 'files', title: '文件夹' }];
+  let activeWorkspace = 'files';
+
+  function saveActiveWorkspaceState() {
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
+    if (!item) return;
+    if (item.kind === 'file') {
+      item.title = newFileName.value.trim() || '未命名文件';
+      item.content = newFileEditor.value;
+    } else if (item.kind === 'browser') {
+      item.url = urlInput.value;
+    }
+  }
 
   function setWorkbench(open) {
     content.classList.toggle('wb-open', open);
     workbench.setAttribute('aria-hidden', String(!open));
     wbToggle.setAttribute('aria-expanded', String(open));
     wbToggle.title = open ? '收起工具台' : '工具台';
-    // 面板占位后，侧边栏 Tab 滑块位置不变，但主区宽度变化，重算一次以防抖动
     const active = tabsEl.querySelector('.tab.active');
     if (active) moveThumb(active, false);
   }
 
-  /* 同一颗按钮兼管开与关，因此不再有单独的关闭叉。
-     两个动作发生在同一个坐标上，来回切换不需要移动指针。 */
-  wbToggle.addEventListener('click', () => {
-    setWorkbench(!content.classList.contains('wb-open'));
-  });
+  function renderWorkspaceTabs() {
+    workspaceTabs.innerHTML = openWorkspaces.map((item) => {
+      const meta = WORKSPACE_META[item.kind];
+      const close = item.kind === 'files' ? '' : `<span class="workspace-tab-close" title="关闭">${WORKSPACE_CLOSE}</span>`;
+      return `<button class="workspace-tab${item.id === activeWorkspace ? ' active' : ''}" role="tab"` +
+        ` data-workspace-tab="${item.id}" data-workspace-kind="${item.kind}"` +
+        ` aria-selected="${item.id === activeWorkspace}" title="${esc(item.title)}">` +
+        `<svg viewBox="0 0 24 24" class="ic">${meta.icon}</svg>` +
+        `<span class="workspace-tab-title">${esc(item.title)}</span>${close}</button>`;
+    }).join('');
+  }
 
-  // ⌘/Ctrl + J 切换工具台
+  function activateWorkspace(id, saveCurrent = true) {
+    const item = openWorkspaces.find((workspace) => workspace.id === id);
+    if (!item) return;
+    if (saveCurrent) saveActiveWorkspaceState();
+    activeWorkspace = id;
+    renderWorkspaceTabs();
+    wbPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === item.kind));
+    if (item.kind === 'browser') {
+      urlInput.value = item.url || '';
+      requestAnimationFrame(() => urlInput.focus());
+    }
+    if (item.kind === 'file') {
+      newFileName.value = item.title;
+      newFileEditor.value = item.content || '';
+      requestAnimationFrame(() => newFileEditor.focus());
+    }
+  }
+
+  function createWorkspace(kind) {
+    if (!WORKSPACE_META[kind] || kind === 'files') return;
+    workspaceSeq += 1;
+    const sameKindCount = openWorkspaces.filter((item) => item.kind === kind).length;
+    let title = WORKSPACE_META[kind].title;
+    if (sameKindCount) {
+      if (kind === 'file') title = `未命名文件 ${sameKindCount + 1}.md`;
+      else title = `${title} ${sameKindCount + 1}`;
+    }
+    const item = {
+      id: `${kind}-${workspaceSeq}`,
+      kind,
+      title,
+      content: kind === 'file' ? '' : undefined,
+      url: kind === 'browser' ? '' : undefined,
+    };
+    openWorkspaces.push(item);
+    setWorkspaceCreate(false);
+    activateWorkspace(item.id);
+    if (kind === 'file') {
+      newFileName.value = title;
+      newFileEditor.value = '';
+      requestAnimationFrame(() => newFileName.select());
+    } else if (kind === 'browser') {
+      urlInput.value = '';
+    }
+  }
+
+  function closeWorkspace(id) {
+    const index = openWorkspaces.findIndex((item) => item.id === id);
+    if (index <= 0) return;
+    openWorkspaces.splice(index, 1);
+    if (activeWorkspace === id) {
+      activeWorkspace = openWorkspaces[Math.max(0, index - 1)].id;
+    }
+    activateWorkspace(activeWorkspace, false);
+  }
+
+  function setWorkspaceCreate(open) {
+    workspaceCreate.classList.toggle('open', open);
+    workspaceCreateMenu.hidden = !open;
+    workspaceAdd.setAttribute('aria-expanded', String(open));
+    if (open) requestAnimationFrame(() => workspaceCreateMenu.querySelector('.workspace-create-item').focus());
+  }
+
+  wbToggle.addEventListener('click', () => setWorkbench(!content.classList.contains('wb-open')));
+  workspaceAdd.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setWorkspaceCreate(!workspaceCreate.classList.contains('open'));
+  });
+  workspaceCreateMenu.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-create-workspace]');
+    if (item) createWorkspace(item.dataset.createWorkspace);
+  });
+  workspaceTabs.addEventListener('click', (e) => {
+    const tab = e.target.closest('[data-workspace-tab]');
+    if (!tab) return;
+    const key = tab.dataset.workspaceTab;
+    if (e.target.closest('.workspace-tab-close')) closeWorkspace(key);
+    else activateWorkspace(key);
+  });
+  document.addEventListener('click', (e) => {
+    if (!workspaceCreate.contains(e.target)) setWorkspaceCreate(false);
+  });
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setWorkspaceCreate(false);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
       e.preventDefault();
       setWorkbench(!content.classList.contains('wb-open'));
     }
   });
+  newFileName.addEventListener('input', () => {
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'file');
+    if (!item) return;
+    item.title = newFileName.value.trim() || '未命名文件';
+    const title = workspaceTabs.querySelector(`[data-workspace-tab="${item.id}"] .workspace-tab-title`);
+    if (title) title.textContent = item.title;
+  });
+  newFileEditor.addEventListener('input', () => {
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'file');
+    if (item) item.content = newFileEditor.value;
+  });
 
-  function selectWbTab(btn) {
-    const key = btn.dataset.wb;
-    wbTabs.forEach((b) => {
-      const on = b === btn;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-selected', String(on));
-    });
-    wbPanes.forEach((p) => {
-      p.classList.toggle('active', p.dataset.pane === key);
-    });
-    if (key === 'browser') urlInput.focus();
-  }
-
-  wbTabs.forEach((btn) => btn.addEventListener('click', () => selectWbTab(btn)));
+  renderWorkspaceTabs();
 
   /* ---------- 5.6 案例详情弹窗 ----------
      所有卡片共用一个 dialog：卡片只保存当前场景内的索引，打开时再从
@@ -1883,142 +2022,25 @@
 
   fileBack.addEventListener('click', fileGoBack);
   fileFwd.addEventListener('click', fileGoForward);
-
-  /* 把当前预览的网页移交给浏览器页签。
-     这里不重新加载一次文档——产物已经在手上，浏览器页签要的只是
-     「有这么一个标签、它叫什么」。真实实现里此处会换成一个本地 URL。 */
-  fileOpenExt.addEventListener('click', () => {
-    const node = currentNode();
-    if (!node || !node.preview || node.preview.kind !== 'html') return;
-    const browserTab = wbTabs.find((b) => b.dataset.wb === 'browser');
-    if (browserTab) selectWbTab(browserTab);
-    navigate(node.name);
+  fileLayoutToggle.addEventListener('click', () => {
+    fileLayout = fileLayout === 'grid' ? 'list' : 'grid';
+    syncFileLayout();
   });
 
-  /* ---------- 5.6 浏览器多窗口 ---------- */
-  const tabstrip = document.getElementById('tabstrip');
-  const tabstripList = document.getElementById('tabstripList');
-  const newTabBtn = document.getElementById('newTab');
-  const overviewBtn = document.getElementById('tabOverview');
-  const browserBody = document.getElementById('browserBody');
-  const tabGrid = document.getElementById('tabGrid');
-  const tabGridInner = document.getElementById('tabGridInner');
-
-  const CLOSE_SVG =
-    '<svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
-
-  let tabs = [{ id: 1, title: '新标签页', url: '' }];
-  let activeTabId = 1;
-  let seq = 1;
-  let overview = false;
-
-  /* 标签条超过多少个就进入「只剩图标」的密集模式 */
-  function updateDensity() {
-    // 可用宽度 ÷ 舒适宽度(约 120px)，低于阈值则收缩为图标
-    const avail = tabstripList.clientWidth || 1;
-    tabstrip.classList.toggle('dense', avail / tabs.length < 76);
-  }
-
-  function renderTabstrip() {
-    tabstripList.innerHTML = tabs
-      .map(
-        (t) =>
-          `<button class="btab${t.id === activeTabId ? ' active' : ''}" data-tab-id="${t.id}" title="${t.title}">` +
-          `<span class="btab-favicon"></span>` +
-          `<span class="btab-title">${t.title}</span>` +
-          `<span class="btab-close" title="关闭">${CLOSE_SVG}</span>` +
-          `</button>`
-      )
-      .join('');
-    updateDensity();
-  }
-
-  function renderGrid() {
-    tabGridInner.innerHTML = tabs
-      .map(
-        (t, i) =>
-          `<div class="gcard${t.id === activeTabId ? ' active' : ''}" data-tab-id="${t.id}" style="animation-delay:${i * 35}ms">` +
-          `<div class="gcard-thumb">` +
-          `<div class="gcard-skeleton"><i></i><i></i><i></i><i></i></div>` +
-          `</div>` +
-          `<button class="gcard-close" title="关闭">${CLOSE_SVG}</button>` +
-          `<div class="gcard-foot">` +
-          `<span class="btab-favicon"></span>` +
-          `<span class="gcard-title">${t.title}</span>` +
-          `</div></div>`
-      )
-      .join('');
-  }
-
-  function setOverview(on) {
-    overview = on;
-    browserBody.hidden = on;
-    tabGrid.hidden = !on;
-    overviewBtn.setAttribute('aria-expanded', String(on));
-    if (on) renderGrid();
-  }
-
-  function activateTab(id) {
-    activeTabId = id;
-    const t = tabs.find((x) => x.id === id);
-    urlInput.value = t ? t.url : '';
-    renderTabstrip();
-    if (overview) setOverview(false);
-  }
-
-  function addTab() {
-    seq += 1;
-    tabs.push({ id: seq, title: '新标签页', url: '' });
-    activeTabId = seq;
-    urlInput.value = '';
-    renderTabstrip();
-    if (overview) renderGrid();
-  }
-
-  function closeTab(id) {
-    if (tabs.length === 1) return; // 至少保留一个
-    const idx = tabs.findIndex((t) => t.id === id);
-    tabs.splice(idx, 1);
-    if (activeTabId === id) {
-      const next = tabs[Math.min(idx, tabs.length - 1)];
-      activeTabId = next.id;
-      urlInput.value = next.url;
-    }
-    renderTabstrip();
-    if (overview) renderGrid();
-  }
-
-  newTabBtn.addEventListener('click', addTab);
-  overviewBtn.addEventListener('click', () => setOverview(!overview));
-
-  tabstripList.addEventListener('click', (e) => {
-    const btab = e.target.closest('.btab');
-    if (!btab) return;
-    const id = Number(btab.dataset.tabId);
-    if (e.target.closest('.btab-close')) closeTab(id);
-    else activateTab(id);
-  });
-
-  tabGridInner.addEventListener('click', (e) => {
-    const card = e.target.closest('.gcard');
-    if (!card) return;
-    const id = Number(card.dataset.tabId);
-    if (e.target.closest('.gcard-close')) closeTab(id);
-    else activateTab(id);
-  });
-
-  /* 浏览器地址栏：回车加载 */
+  /* ---------- 5.6 浏览器工作区 ---------- */
   function navigate(input) {
     const q = input.trim();
     if (!q) return;
     const isUrl = /^(https?:\/\/|[\w-]+\.[a-z]{2,})/i.test(q);
-    const tab = tabs.find((t) => t.id === activeTabId);
-    if (tab) {
-      tab.url = isUrl ? q : `搜索：${q}`;
-      tab.title = isUrl ? q.replace(/^https?:\/\//, '').split('/')[0] : q;
+    const title = isUrl ? q.replace(/^https?:\/\//, '').split('/')[0] : q;
+    urlInput.value = isUrl ? q : `搜索：${q}`;
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'browser');
+    if (item) {
+      item.title = title;
+      item.url = urlInput.value;
+      const tabTitle = workspaceTabs.querySelector(`[data-workspace-tab="${item.id}"] .workspace-tab-title`);
+      if (tabTitle) tabTitle.textContent = title;
     }
-    urlInput.value = tab ? tab.url : q;
-    renderTabstrip();
     console.log('[CatPaw] 浏览器', isUrl ? '打开' : '搜索', '：', q);
   }
 
@@ -2027,7 +2049,6 @@
     navigate(urlInput.value);
   });
 
-  /* 快捷站点 */
   const SITES = { Google: 'https://www.google.com', GitHub: 'https://github.com', 学城: 'https://km.sankuai.com' };
   workbench.querySelectorAll('.wb-chip').forEach((chip) => {
     chip.addEventListener('click', () => {
@@ -2036,17 +2057,15 @@
     });
   });
 
-  // ⌘/Ctrl + T 新标签
+  // ⌘/Ctrl + T 与加号里的「浏览器」保持同一语义。
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 't') {
       if (!content.classList.contains('wb-open')) return;
       e.preventDefault();
-      addTab();
+      createWorkspace('browser');
+      urlInput.value = '';
     }
   });
-
-  window.addEventListener('resize', updateDensity);
-  renderTabstrip();
 
   setWorkbench(false);
 
@@ -2080,140 +2099,6 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setMobilePop(false);
   });
-
-  /* ---------- 5.8 上下文面板 ----------
-     这一面板回答的不是「我能做什么」，而是「这次作答站在什么前提上」。
-     智能体给出的每一个结论，都隐含了一批前提：谁在问、问的是哪家店、
-     哪一天的账、数据什么时候拉的、有没有写权限。这些前提平时藏在系统里，
-     出错时才被追问——因此把它们摊开常驻，答案才可追溯。
-
-     数据由业务系统注入，CatPaw 只负责呈现。所以这里定义的是一份
-     「呈现协议」而非业务模型：每条 Item 只描述自己长什么样、能不能切，
-     不关心门店从哪来、权限怎么算。
-
-     字段：
-       icon      图标键，见 CTX_ICONS
-       label     前提的名字
-       value     当前取值
-       badge     取值旁的状态标记，{ text, tone }；tone 决定配色
-       note      整条的补充说明，单独起一行——它解释的是「这个前提会带来
-                 什么后果」，与取值本身不是一回事，不该挤在同一行
-       switchable 能否就地切换。能切的给右箭头，不能切的连 hover 都不给，
-                 避免「看起来能点、点了没反应」 */
-  const CTX_ICONS = {
-    user:    '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-    org:     '<path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M15 9h2a2 2 0 0 1 2 2v10"/><path d="M9 7h2"/><path d="M9 11h2"/><path d="M9 15h2"/>',
-    store:   '<path d="M3 9.5 4.6 4.8A1.5 1.5 0 0 1 6 3.8h12a1.5 1.5 0 0 1 1.4 1L21 9.5"/><path d="M3 9.5h18"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9 21v-6h6v6"/>',
-    date:    '<rect width="18" height="17" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/>',
-    target:  '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
-    plug:    '<path d="M9 2v6"/><path d="M15 2v6"/><path d="M6 8h12v3a6 6 0 0 1-12 0Z"/><path d="M12 17v5"/>',
-    clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.5l3.5 2"/>',
-    cloud:   '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97 6 6 0 0 0-11.72-1.3A4 4 0 0 0 6.5 19Z"/>',
-    lock:    '<rect width="15" height="10" x="4.5" y="11" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
-    wallet:  '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1"/><path d="M3 7.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8H5.5A2.5 2.5 0 0 1 3 7.5Z"/><path d="M16.5 14.5h.01"/>',
-  };
-
-  const CONTEXT_ITEMS = [
-    { icon: 'user',   label: '身份',     value: '张三 · 店长' },
-    { icon: 'org',    label: '集团',     value: '果果集团' },
-    // 门店 / 业务日 / 当前对象是三个可被换掉的「作答范围」：
-    // 换了它们，同一句提问的答案就应当不同，因此给切换入口
-    { icon: 'store',  label: '门店',     value: '上海虹桥店',  switchable: true },
-    { icon: 'date',   label: '业务日',   value: '2026-07-27',  switchable: true },
-    { icon: 'target', label: '当前对象', value: '订单 #12345', switchable: true },
-    {
-      icon: 'plug', label: '渠道账号', value: '携程 A',
-      badge: { text: 'READY', tone: 'ok' },
-      switchable: true,
-    },
-    {
-      icon: 'clock', label: '数据截至', value: '13:45',
-      // 过期状态用警示色：它直接决定「现在看到的数还算不算数」
-      badge: { text: '已过期', tone: 'warn' },
-    },
-    { icon: 'cloud',  label: '执行位置', value: '酒店云端' },
-    {
-      icon: 'lock', label: '权限', value: '只读',
-      note: '当前会话不可写，涉及改单的请求会被拒绝',
-    },
-    { icon: 'wallet', label: '预算', value: '集团预算' },
-  ];
-
-  const ctxList     = document.getElementById('ctxList');
-  const ctxSync     = document.getElementById('ctxSync');
-  const ctxRefresh  = document.getElementById('ctxRefresh');
-  const ctxAuto     = document.getElementById('ctxAuto');
-  const ctxAutoText = document.getElementById('ctxAutoText');
-
-  const CTX_ARROW =
-    '<svg viewBox="0 0 24 24" class="ctx-arrow"><path d="m9 18 6-6-6-6"/></svg>';
-
-  /* 可切换的渲染成 <button>，不可切换的渲染成 <div>。
-     不是样式差异，是可达性差异：按钮进 Tab 序列、回车可触发，
-     而「身份」这类只读事实进了 Tab 序列反而是干扰。 */
-  function renderContextList() {
-    ctxList.innerHTML = CONTEXT_ITEMS
-      .map((it, i) => {
-        const tag = it.switchable ? 'button' : 'div';
-        const badge = it.badge
-          ? `<span class="ctx-badge ${it.badge.tone}">${esc(it.badge.text)}</span>`
-          : '';
-        // 说明单独占一行，且与取值左对齐——它补充的是取值，不是标签
-        const note = it.note
-          ? `<span class="ctx-note-row">` +
-            `<svg viewBox="0 0 24 24" class="ctx-note-ic">` +
-            `<path d="M12 9v4"/><path d="M12 17h.01"/>` +
-            `<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>` +
-            `</svg>${esc(it.note)}</span>`
-          : '';
-
-        return (
-          `<${tag} class="ctx-item${it.switchable ? ' switchable' : ''}"` +
-          ` data-ctx-index="${i}"${it.switchable ? ' type="button"' : ''}>` +
-          `<span class="ctx-ic"><svg viewBox="0 0 24 24">${CTX_ICONS[it.icon] || ''}</svg></span>` +
-          `<span class="ctx-label">${esc(it.label)}</span>` +
-          `<span class="ctx-value">${esc(it.value)}${badge}</span>` +
-          (it.switchable ? CTX_ARROW : '') +
-          note +
-          `</${tag}>`
-        );
-      })
-      .join('');
-  }
-
-  /* 只更新时间戳，不重画整张列表：
-     刷新在真实实现里会带回新数据，但「什么时候拉的」是此处唯一确定的事实。
-     补 0 是为了位宽恒定，数字不会在原地跳动。 */
-  function stampSync() {
-    const d = new Date();
-    const p = (n) => String(n).padStart(2, '0');
-    ctxSync.textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-  }
-
-  ctxRefresh.addEventListener('click', () => {
-    // 转一圈当作反馈：拉数据是异步的，不给动效就像没按动
-    ctxRefresh.classList.add('spinning');
-    setTimeout(() => ctxRefresh.classList.remove('spinning'), 620);
-    stampSync();
-    console.log('[CatPaw] 上下文：已重新拉取');
-  });
-
-  ctxAuto.addEventListener('click', () => {
-    const on = ctxAuto.getAttribute('aria-pressed') !== 'true';
-    ctxAuto.setAttribute('aria-pressed', String(on));
-    ctxAutoText.textContent = on ? '自动刷新已开启' : '自动刷新已关闭';
-  });
-
-  /* 切换入口交给业务系统：这里只负责把「用户想换哪一项」报出去。
-     CatPaw 不知道门店列表从哪来，也不该知道。 */
-  ctxList.addEventListener('click', (e) => {
-    const item = e.target.closest('.ctx-item.switchable');
-    if (!item) return;
-    const it = CONTEXT_ITEMS[Number(item.dataset.ctxIndex)];
-    console.log('[CatPaw] 上下文：请求切换', it.label, '当前值', it.value);
-  });
-
-  renderContextList();
 
   /* ---------- 6. 交通灯（侧边栏 / 主区两处） ---------- */
   document.querySelectorAll('.light.close').forEach((btn) => {
