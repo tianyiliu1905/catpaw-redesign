@@ -31,7 +31,7 @@
         </div>
       </header>
 
-      <!-- 品牌行：右侧模式筛选会决定下方是否提供场景切换 -->
+      <!-- 品牌行：右侧模式筛选用于切换产品能力集合 -->
       <div class="brand-row">
         <span class="brand-name">CatPaw</span>
         <div class="mode-picker" id="modePicker">
@@ -52,20 +52,12 @@
         </div>
       </div>
 
-      <!-- 筛选 Tab -->
-      <div class="tabs" id="tabs" role="tablist" aria-label="场景筛选">
-        <span class="tab-thumb" id="tabThumb" aria-hidden="true"></span>
-        <button class="tab active" role="tab" data-tab="office"  aria-selected="true">办公</button>
-        <button class="tab"        role="tab" data-tab="dev"     aria-selected="false">开发</button>
-        <button class="tab"        role="tab" data-tab="design"  aria-selected="false">设计</button>
-      </div>
-
       <!-- 滚动区 -->
       <div class="sidebar-scroll">
 
         <nav class="nav" id="nav">
           <!-- 通用 -->
-          <a class="nav-item" href="#" data-scope="all">
+          <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
             <svg viewBox="0 0 24 24" class="ic"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
             <span>新建任务</span>
           </a>
@@ -78,19 +70,17 @@
             <span>专家 · 技能</span>
           </a>
 
-          <!-- 办公 -->
+          <!-- 原办公、开发、设计能力统一拍平展示，场景仅保留为数据归属 -->
           <a class="nav-item" href="#" data-scope="office">
             <svg viewBox="0 0 24 24" class="ic"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>
             <span>资料库</span>
           </a>
 
-          <!-- 开发 -->
           <a class="nav-item" href="#" data-scope="dev">
             <svg viewBox="0 0 24 24" class="ic"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
             <span>应用</span>
           </a>
 
-          <!-- 设计 -->
           <a class="nav-item" href="#" data-scope="design">
             <svg viewBox="0 0 24 24" class="ic"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect x="14" y="2" width="8" height="8" rx="1"/></svg>
             <span>设计系统</span>
@@ -101,17 +91,37 @@
           </a>
         </nav>
 
-        <!-- 任务：不属于任何文件夹，按场景过滤，超出 8 条折叠 -->
+        <!-- 任务：不属于任何文件夹，跨原场景统一展示，超出上限折叠 -->
         <div class="section-label" id="labelTasks">任务</div>
 
         <!-- 不在文件夹里的任务左侧顶头，状态一律靠右：
              running=转圈（不显示时间） / new=绿点 / await=待确认 / 其余=时间 -->
         <div class="loose-tasks" id="looseTasks">
           <!-- 办公 -->
-          <a class="task flush" href="#" data-scope="office" data-state="running">
-            <span class="task-name">整理本周门店履约异常明细</span>
-            <span class="task-state"><span class="spinner"></span></span>
-          </a>
+          <div class="task-with-agents is-expanded" data-agent-task>
+            <a class="task flush task-parent" id="demoConversationTask" href="#" data-scope="office" data-state="running" data-open-conversation>
+              <span class="agent-disclosure" role="button" tabindex="0" data-toggle-agents
+                    aria-label="收起 SubAgent 任务" aria-expanded="true">
+                <svg viewBox="0 0 24 24" class="ic"><path d="m9 18 6-6-6-6"/></svg>
+              </span>
+              <span class="task-name">整理本周门店履约异常明细</span>
+              <span class="task-state"><span class="spinner"></span></span>
+            </a>
+            <div class="subagent-list">
+              <a class="task subagent-task" href="#" data-state="running" title="SubAgent：定位异常订单的集中时段">
+                <span class="task-name">数据分析 · 定位异常时段</span>
+                <span class="task-state"><span class="spinner"></span></span>
+              </a>
+              <a class="task subagent-task" href="#" data-state="done" title="SubAgent：合并各门店履约明细">
+                <span class="task-name">表格处理 · 合并门店明细</span>
+                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4 4L19 6"/></svg></span>
+              </a>
+              <a class="task subagent-task" href="#" data-state="await" title="SubAgent：复核履约指标统计口径">
+                <span class="task-name">指标校验 · 复核统计口径</span>
+                <span class="task-state"><em class="tag-await">待确认</em></span>
+              </a>
+            </div>
+          </div>
           <a class="task flush" href="#" data-scope="office" data-state="await">
             <span class="task-name">把季度复盘要点汇总成幻灯片</span>
             <span class="task-state"><em class="tag-await">待确认</em></span>
@@ -434,12 +444,16 @@
     <!-- ============ 主内容 ============ -->
     <div class="content" id="content">
 
-    <!-- 工具台开关：开与关是同一颗按钮，因此必须待在同一个位置上。
-         它挂在 .content 而非 .main 之下 —— 挂在 .main 里的话，面板展开后
-         主区变窄，按钮会跟着缩进到屏幕中间，「原地再按一次关掉」就断了。
-         这里定位到窗口右缘，无论面板开合都压在工具台顶栏的右端不动。 -->
-    <div class="wb-toggle-slot">
-      <button class="icon-btn" id="toggleWorkbench" title="工具台" aria-expanded="false">
+    <!-- 右侧抽屉有两个同级入口：左侧看任务产物，右侧使用过程工具。
+         全屏按钮同时作用于两类面板，将右栏向左扩展到整个内容区。 -->
+    <div class="wb-toggle-slot" role="group" aria-label="右侧面板">
+      <button class="icon-btn wb-expand-toggle" id="toggleWorkbenchExpand" title="全屏显示面板" aria-label="全屏显示面板" aria-pressed="false" disabled>
+        <svg viewBox="0 0 24 24" class="ic"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+      </button>
+      <button class="icon-btn" id="toggleOutputs" title="产物" aria-label="产物" aria-expanded="false">
+        <svg viewBox="0 0 24 24" class="ic"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+      </button>
+      <button class="icon-btn" id="toggleWorkbench" title="工具" aria-label="工具" aria-expanded="false">
         <svg viewBox="0 0 24 24" class="ic"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
       </button>
     </div>
@@ -462,6 +476,45 @@
           </button>
         </div>
       </div>
+
+      <!-- 示例对话：点击左侧指定任务进入。只保留一轮消息与底部输入框，
+           产物卡片可直接在右侧以纯预览模式打开。 -->
+      <section class="conversation-page" id="conversationPage" aria-label="任务对话" hidden>
+        <div class="conversation-scroll" id="conversationScroll">
+          <div class="conversation-thread" id="conversationThread">
+            <div class="conversation-message user-message">
+              <div class="message-bubble">帮我整理本周门店履约异常明细，并标出需要优先处理的问题。</div>
+            </div>
+            <div class="conversation-message assistant-message">
+              <div class="assistant-avatar">C</div>
+              <div class="assistant-content">
+                <p>已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。</p>
+                <button class="conversation-artifact" id="conversationArtifact" type="button">
+                  <span class="conversation-artifact-icon">
+                    <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h8M8 17h5"/></svg>
+                  </span>
+                  <span><strong>门店履约异常看板.html</strong><small>查看产物</small></span>
+                  <svg viewBox="0 0 24 24" class="ic conversation-artifact-arrow"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="conversation-composer-wrap">
+          <div class="conversation-composer" id="conversationComposer">
+            <textarea id="conversationPrompt" rows="1" placeholder="继续对话"></textarea>
+            <div class="conversation-composer-actions">
+              <button class="round-btn" type="button" title="添加附件" aria-label="添加附件">
+                <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              </button>
+              <button class="conversation-send" id="conversationSend" type="button" title="发送" aria-label="发送" disabled>
+                <svg viewBox="0 0 24 24" class="ic"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="conversation-note">CatPaw 可能会犯错，请核查重要信息。</p>
+        </div>
+      </section>
 
       <div class="hero">
 
@@ -591,16 +644,24 @@
       </div>
     </main>
 
-    <!-- ============ 工具台 ============ -->
+    <!-- ============ 产物 / 工具抽屉 ============ -->
     <aside class="workbench" id="workbench" aria-hidden="true">
+      <!-- 产物是一级面板，不再占用工具工作区的标签。 -->
+      <header class="outputs-head">
+        <svg viewBox="0 0 24 24" class="ic"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+        <span>产物</span>
+      </header>
 
-      <!-- 工具台顶栏：初始只保留文件夹，其余工作区由加号按需创建 -->
+      <!-- 工具顶栏：文件目录常驻，其余工作区由加号按需创建。 -->
       <header class="wb-head">
         <div class="workspace-tabs" id="workspaceTabs" role="tablist" aria-label="工作区标签">
-          <button class="workspace-tab active" role="tab" data-workspace-tab="files" aria-selected="true">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
-            <span class="workspace-tab-title">文件夹</span>
-          </button>
+          <div class="workspace-tab active" role="tab" tabindex="0" data-workspace-tab="file-default" aria-selected="true" title="打开文件">
+            <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+            <span class="workspace-tab-title">打开文件</span>
+            <button class="workspace-tab-close" type="button" title="关闭" aria-label="关闭 打开文件">
+              <svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
         </div>
         <div class="workspace-create" id="workspaceCreate">
           <button class="workspace-add" id="workspaceAdd" type="button" title="新建" aria-label="新建工作区" aria-haspopup="menu" aria-expanded="false">
@@ -609,7 +670,7 @@
           <div class="workspace-create-menu" id="workspaceCreateMenu" role="menu" hidden>
             <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="file">
               <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
-              <span><strong>文件</strong><small>新建空白文件</small></span>
+              <span><strong>文件</strong><small>从当前文件夹选择并预览</small></span>
             </button>
             <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="browser">
               <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
@@ -623,7 +684,26 @@
         </div>
       </header>
 
-      <!-- ===== 浏览器 ===== -->
+      <!-- ===== 工具：当前任务文件夹 ===== -->
+      <section class="wb-pane active" data-pane="files">
+        <div class="tool-tree-head">
+          <div class="tool-folder-picker" id="toolFolderPicker">
+            <button class="tool-folder-trigger" id="toolFolderBtn" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <span id="toolFolderName">默认文件夹</span>
+              <svg viewBox="0 0 24 24" class="ic tool-folder-chev"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <div class="tool-folder-menu" id="toolFolderMenu" role="listbox" aria-label="切换任务文件夹" hidden></div>
+          </div>
+          <button class="icon-btn sm tool-tree-close" id="toolTreeClose" type="button" title="关闭文件夹树" aria-label="关闭文件夹树">
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/><path d="m10 9-3 3 3 3"/></svg>
+          </button>
+        </div>
+        <div class="tool-tree" id="toolFileTree" role="tree" aria-label="当前任务文件夹目录"></div>
+      </section>
+
+      <!-- ===== 工具：浏览器 ===== -->
       <section class="wb-pane" data-pane="browser">
 
         <div class="wb-bar">
@@ -657,8 +737,14 @@
 
       </section>
 
-      <!-- ===== 文件夹 ===== -->
-      <section class="wb-pane active" data-pane="files">
+      <!-- ===== 产物：按来源分为当前对话与最近打开 ===== -->
+      <section class="output-pane" id="outputsPane">
+        <div class="output-categories" role="tablist" aria-label="产物分类">
+          <button class="output-category active" type="button" role="tab"
+                  data-output-category="current" aria-selected="true">当前对话</button>
+          <button class="output-category" type="button" role="tab"
+                  data-output-category="recent" aria-selected="false">最近打开的文件</button>
+        </div>
         <div class="wb-bar">
           <!-- 前进 / 后退与浏览器面板同形同位；无处可去时置灰并 disabled，
                既不可点也进不了 Tab 序列 -->
@@ -686,6 +772,7 @@
              HTML 预览里的 iframe 因此能拿到确定的高度，不必靠内容撑。 -->
         <div class="wb-body files-body">
           <div class="file-grid" id="fileGrid"></div>
+          <div class="recent-files" id="recentFiles" hidden></div>
 
           <!-- 预览层：按决策 2，文件在本面板内就地打开，不跳到浏览器页签——
                产物属于文件夹，打开它不该让人离开「我的文件」这个上下文。
@@ -694,19 +781,21 @@
         </div>
       </section>
 
-      <!-- ===== 新建文件 ===== -->
-      <section class="wb-pane" data-pane="file">
-        <div class="wb-bar file-editor-bar">
+      <!-- ===== 工具：打开文件 =====
+           默认就是左侧大面积预览、右侧窄文件树的编辑器结构；尚未选中文件时
+           左侧保持空白。产物或对话入口仍可进入不带目录树的纯预览。 -->
+      <section class="wb-pane tool-file-preview" data-pane="file">
+        <header class="tool-file-preview-head">
           <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
-          <input class="file-name-input" id="newFileName" value="未命名文件.md" aria-label="文件名" />
-          <span class="file-save-state">已自动保存</span>
-        </div>
-        <div class="wb-body file-editor-body">
-          <textarea class="file-editor" id="newFileEditor" spellcheck="false" aria-label="文件内容" placeholder="开始输入内容…"></textarea>
-        </div>
+          <span id="toolFilePreviewTitle">选择文件</span>
+          <button class="icon-btn sm tool-tree-reopen" id="toolTreeReopen" type="button" title="展开文件夹树" aria-label="展开文件夹树" hidden>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/><path d="m7 9 3 3-3 3"/></svg>
+          </button>
+        </header>
+        <div class="tool-file-preview-body" id="toolFilePreviewBody"></div>
       </section>
 
-      <!-- ===== 终端 ===== -->
+      <!-- ===== 工具：终端 ===== -->
       <section class="wb-pane" data-pane="terminal">
         <div class="wb-bar">
           <span class="term-title">zsh — catpaw-desktop-ui</span>

@@ -38,10 +38,10 @@
   /* 主题绿：新生成的任务标记、待确认 tag */
   --brand-green: #4bcc7a;
 
-  /* 场景色：办公 / 开发 / 设计 */
-  --scene-office: #3b72e8;   /* 蓝 — 秩序、信赖 */
-  --scene-dev:    #1fbb8c;   /* 翠绿偏青 — 终端、构建通过 */
-  --scene-design: #ea4c89;   /* Dribbble 粉 — 创意、表达 */
+  /* 主区装饰仍沿用原有语义色；左侧能力入口统一使用中性灰。 */
+  --scene-office: #3b72e8;
+  --scene-dev:    #1fbb8c;
+  --scene-design: #ea4c89;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -52,6 +52,7 @@
 
   --sidebar-w: 292px;
   --workbench-w: 460px;
+  --workbench-folder-w: 720px;
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
           "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
@@ -263,58 +264,8 @@ body{
 .mode-check{ width:13px; height:13px; opacity:0; color:var(--text-1); }
 .mode-option.selected .mode-check{ opacity:1; }
 
-/* 智能掌柜是独立模式，不提供办公 / 开发 / 设计场景及其彩色专属工具。 */
-.sidebar[data-mode="merchant"] .tabs{ display:none; }
+/* 智能掌柜是独立模式，不展示通用模式下拍平后的扩展能力。 */
 .sidebar[data-mode="merchant"] .nav-item[data-scope]:not([data-scope="all"]){ display:none; }
-
-/* -- 筛选 Tab（分段控件） -- */
-.tabs{
-  position: relative;
-  flex:none;
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  margin: 0 12px 10px;
-  padding: 2px;
-  background: rgba(0,0,0,.045);
-  border-radius: 8px;
-}
-
-.tab-thumb{
-  position:absolute;
-  top:2px; left:2px;
-  height: calc(100% - 4px);
-  border-radius: 6px;
-  background:#fff;
-  box-shadow:
-    0 0 0 .5px rgba(0,0,0,.05),
-    0 1px 2px rgba(0,0,0,.07);
-  z-index: 0;
-  transition: transform .42s cubic-bezier(.22,.68,0,1),
-              width .42s cubic-bezier(.22,.68,0,1);
-}
-.tab-thumb.no-anim{ transition:none; }
-
-.tab{
-  position: relative;
-  z-index: 1;
-  height: 26px;
-  border:none;
-  background:transparent;
-  border-radius: 6px;
-  font-family:inherit;
-  font-size: 12.5px;
-  letter-spacing:.2px;
-  color: var(--text-3);
-  cursor:pointer;
-  white-space:nowrap;
-  transition: color .3s ease;
-}
-.tab:hover{ color: var(--text-2); }
-.tab.active{
-  color: var(--text-1);
-  font-weight: 500;
-}
 
 /* -- 滚动区 -- */
 .sidebar-scroll{
@@ -355,22 +306,8 @@ body{
 }
 .nav-item:hover{ background: var(--hover); }
 
-/* 场景相关项：隐藏态 */
-.nav-item[hidden]{ display:none; }
-
-/* 场景色：只染专属项的 icon，通用项（data-scope="all"）保持灰 */
-.nav-item[data-scope="office"] .ic{ color: var(--scene-office); }
-.nav-item[data-scope="dev"]    .ic{ color: var(--scene-dev); }
-.nav-item[data-scope="design"] .ic{ color: var(--scene-design); }
-
-/* 场景相关项：从左侧淡入 */
-.nav-item.enter{
-  animation: navIn .62s cubic-bezier(.22,.68,0,1) both;
-}
-@keyframes navIn{
-  from{ opacity:0; transform: translateX(-16px); }
-  to  { opacity:1; transform: none; }
-}
+/* 原场景专属入口已拍平，图标与通用入口统一使用中性灰。 */
+.nav-item .ic{ color:var(--text-3); }
 
 /* -- 分区标题 --
    与导航项、任务、文件夹名同为 14.5px，左栏不再有第二个字号；
@@ -622,6 +559,92 @@ body{
    不再为状态图形预留缩进 */
 .task.flush{ padding-left: 8px; }
 
+/* -- 带 SubAgent 的任务 --
+   父任务仍处于顶层任务流中；展开箭头只在确实存在下挂任务时出现。
+   子任务使用更轻的字号和树状连接线，说明它们是并行执行单元，而不是
+   与父任务同级的普通会话。 */
+.task-with-agents{
+  position:relative;
+}
+.task-parent{
+  gap:6px;
+  font-weight:400;
+  color:var(--text-2);
+}
+.agent-disclosure{
+  width:18px;
+  height:24px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  margin-left:-3px;
+  border-radius:4px;
+  color:var(--text-4);
+  cursor:pointer;
+  transition:background .13s ease, color .13s ease;
+}
+.agent-disclosure:hover{
+  color:var(--text-2);
+  background:var(--active);
+}
+.agent-disclosure .ic{
+  width:13px;
+  height:13px;
+  transition:transform .2s cubic-bezier(.32,.72,0,1);
+}
+.task-with-agents.is-expanded .agent-disclosure .ic{
+  transform:rotate(90deg);
+}
+.subagent-list{
+  position:relative;
+  max-height:108px;
+  overflow:hidden;
+  opacity:1;
+  transition:max-height .24s cubic-bezier(.32,.72,0,1), opacity .16s ease;
+}
+.task-with-agents:not(.is-expanded) .subagent-list{
+  max-height:0;
+  opacity:0;
+  pointer-events:none;
+}
+.subagent-list::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:16px;
+  top:0;
+  bottom:16px;
+  width:1px;
+  background:var(--gray-5);
+}
+.subagent-task{
+  position:relative;
+  z-index:1;
+  height:30px;
+  padding-left:32px;
+  color:var(--text-3);
+  font-size:13px;
+}
+.subagent-task::before{
+  content:"";
+  position:absolute;
+  left:16px;
+  top:0;
+  width:11px;
+  height:15px;
+  border-bottom:1px solid var(--gray-5);
+  border-bottom-left-radius:5px;
+}
+.subagent-done{
+  width:14px;
+  height:14px;
+  fill:none;
+  stroke:var(--brand-green);
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
 /* 状态区统一贴右；固定最小宽度让各行的状态列对齐 */
 .task-state{
   flex:none;
@@ -762,6 +785,10 @@ body{
   transition: grid-template-columns .42s cubic-bezier(.22,.68,0,1);
 }
 .content.wb-open{ grid-template-columns: 1fr var(--workbench-w); }
+.content.wb-open.wb-folder-open{ grid-template-columns:1fr min(var(--workbench-folder-w), 62%); }
+.content.wb-open.wb-expanded{ grid-template-columns:0 1fr; }
+/* 普通工具保持紧凑宽度；目录展开时适度加宽；全屏状态则让整个面板跨过
+   原文件目录区域继续向左延展，占满主内容区。 */
 
 /* ============================================================
    主内容
@@ -776,7 +803,161 @@ body{
   overflow-y:auto;
   min-width:0;
   min-height:0;
+  transition:opacity .2s ease, visibility .2s;
 }
+/* -- 对话页 --
+   与首页 hero 互斥显示，但始终只占主内容列；右侧产物/工具面板的宽度
+   仍由外层 content grid 决定，不会被消息内容或输入框撑开。 */
+.conversation-page{
+  position:absolute;
+  inset:0;
+  min-width:0;
+  min-height:0;
+  display:grid;
+  grid-template-rows:minmax(0,1fr) auto;
+  background:var(--main-bg);
+}
+.conversation-page[hidden]{ display:none; }
+.main.conversation-open{
+  padding:0;
+  overflow:hidden;
+  align-items:stretch;
+  justify-content:stretch;
+}
+.main.conversation-open .hero{ display:none; }
+.conversation-scroll{
+  min-height:0;
+  overflow:auto;
+  padding:42px 28px 32px;
+}
+.conversation-thread{
+  width:min(700px,100%);
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:30px;
+}
+.conversation-message{ display:flex; width:100%; }
+.user-message{ justify-content:flex-end; }
+.message-bubble{
+  max-width:min(520px,82%);
+  padding:11px 15px;
+  border-radius:16px 16px 4px 16px;
+  background:#eceef0;
+  color:var(--text-1);
+  font-size:14px;
+  line-height:1.65;
+}
+.assistant-message{ align-items:flex-start; gap:12px; }
+.assistant-avatar{
+  width:28px;
+  height:28px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#1f2328;
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+}
+.assistant-content{
+  min-width:0;
+  flex:1;
+  padding-top:2px;
+  color:var(--text-1);
+  font-size:14px;
+  line-height:1.72;
+}
+.assistant-content p{ margin:0 0 16px; }
+.conversation-artifact{
+  width:min(390px,100%);
+  min-height:68px;
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) 18px;
+  align-items:center;
+  gap:11px;
+  padding:10px 12px;
+  border:1px solid var(--gray-5);
+  border-radius:12px;
+  background:#fff;
+  color:var(--text-1);
+  text-align:left;
+  font-family:inherit;
+  cursor:pointer;
+  transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.conversation-artifact:hover{
+  border-color:var(--gray-6);
+  box-shadow:0 5px 18px rgba(0,0,0,.06);
+  transform:translateY(-1px);
+}
+.conversation-artifact-icon{
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#f2f5f8;
+  color:#4d6d91;
+}
+.conversation-artifact-icon .ic{ width:20px; height:20px; }
+.conversation-artifact > span:nth-child(2){ min-width:0; display:flex; flex-direction:column; gap:3px; }
+.conversation-artifact strong{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600; }
+.conversation-artifact small{ color:var(--text-4); font-size:12px; }
+.conversation-artifact-arrow{ width:16px; height:16px; color:var(--text-4); }
+.conversation-composer-wrap{
+  width:min(732px,calc(100% - 48px));
+  margin:0 auto;
+  padding:8px 0 16px;
+}
+.conversation-composer{
+  min-height:94px;
+  display:flex;
+  flex-direction:column;
+  padding:12px 12px 10px;
+  border:1px solid var(--gray-5);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 6px 24px rgba(0,0,0,.055);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.conversation-composer.focus{
+  border-color:var(--gray-6);
+  box-shadow:0 6px 24px rgba(0,0,0,.07),0 0 0 3px rgba(0,0,0,.025);
+}
+.conversation-composer textarea{
+  width:100%;
+  min-height:38px;
+  max-height:130px;
+  flex:1;
+  resize:none;
+  overflow-y:auto;
+  padding:2px 3px;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--text-1);
+  font:14px/1.55 inherit;
+}
+.conversation-composer textarea::placeholder{ color:var(--text-4); }
+.conversation-composer-actions{ display:flex; align-items:center; justify-content:space-between; }
+.conversation-send{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:#1f2328;
+  color:#fff;
+  cursor:pointer;
+}
+.conversation-send:disabled{ background:var(--gray-5); cursor:default; }
+.conversation-send .ic{ width:16px; height:16px; }
+.conversation-note{ margin:8px 0 0; color:var(--text-4); font-size:11px; text-align:center; }
+.task.current-conversation{ background:var(--hover); color:var(--text-1); }
 
 /* -- 折叠后浮出的顶部工具条 -- */
 .main-topbar{
@@ -817,29 +998,30 @@ body{
   -webkit-app-region: no-drag;
 }
 
-/* -- 右上角：工具台开关 --
-   开与关合为一颗按钮，因此它必须钉在窗口右缘，不随面板开合移动。
-   .content 是 grid 容器，这里用绝对定位脱离栅格，
-   于是主区列宽从 1fr 收缩到 1fr−460px 时，按钮的位置不受影响。
-
-   关闭按钮仍以窗口顶部 52px 区域居中，右内边距 12px 与 .wb-head 一致。
-   页签顶栏略收短，让 34px 页签的内容中心与这颗 28px 按钮精确对齐。 */
+/* -- 右上角：产物 / 工具 --
+   两个入口锚在窗口右缘，不随抽屉开合移动。左侧是任务结果，右侧是过程工具；
+   当前入口用浅灰底驻留，既表达打开状态，也把两颗相邻图标区分开。 */
 .wb-toggle-slot{
   position:absolute;
   top:0; right:0;
-  height: 52px;
+  height:52px;
   display:flex;
   align-items:center;
-  padding: 0 12px;
-  z-index: 30;
-  -webkit-app-region: no-drag;
+  gap:3px;
+  padding:0 12px;
+  z-index:30;
+  -webkit-app-region:no-drag;
 }
 .wb-toggle-slot .icon-btn{ width:28px; height:28px; }
-
-/* 展开态不再加底色：此时按钮压在工具台顶栏上，
-   一块灰底会和页签的白色选中态争抢注意力。
-   面板本身的存在已经说明了状态，按钮只需表达「点这里关掉」。 */
-.wb-toggle-slot .icon-btn[aria-expanded="true"]{ color: var(--text-2); }
+.wb-toggle-slot .icon-btn[aria-expanded="true"],
+.wb-toggle-slot .wb-expand-toggle[aria-pressed="true"]{
+  color:var(--text-1);
+  background:rgba(0,0,0,.065);
+}
+.wb-toggle-slot .wb-expand-toggle:disabled{
+  opacity:.28;
+  cursor:default;
+}
 
 /* hero 以主区中心为基准轻微下移，给上方装饰图留出呼吸感。
    位移随视口高度连续变化：小屏保持约 24–32px，大屏最多 52px，
@@ -1889,6 +2071,179 @@ height:56px;
   visibility: visible;
   transition-delay: .06s;
 }
+/* “打开文件”采用编辑器式固定骨架：左侧预览占 55%，右侧目录树占 45%。
+   分栏完全位于右侧面板内；目录展开时避免空白预览区占据过多空间。 */
+.workbench.file-split[data-panel="tools"] .wb-pane[data-pane="file"]{
+  position:absolute;
+  top:43px;
+  bottom:0;
+  left:0;
+  width:55%;
+  display:flex;
+}
+.workbench.file-split[data-panel="tools"] .wb-pane[data-pane="files"]{
+  position:absolute;
+  top:43px;
+  right:0;
+  bottom:0;
+  width:45%;
+  display:flex;
+  border-left:.5px solid var(--sidebar-border);
+}
+.workbench.file-preview-only[data-panel="tools"] .wb-pane[data-pane="file"]{
+  display:flex;
+  width:100%;
+}
+.workbench.file-preview-only .wb-head{
+  background:var(--sidebar-bg);
+}
+.tool-file-preview{
+  min-width:0;
+  min-height:0;
+  background:#fff;
+}
+.tool-file-preview-head{
+  flex:none;
+  height:38px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:0 8px 0 12px;
+  border-bottom:.5px solid var(--sidebar-border);
+  color:var(--text-2);
+  font-size:12.5px;
+  font-weight:500;
+}
+.tool-file-preview-head > .ic{ width:14px; height:14px; flex:none; color:var(--text-4); }
+.tool-file-preview-head > span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tool-tree-reopen{ margin-left:auto; }
+.tool-tree-reopen[hidden]{ display:none; }
+.tool-file-preview-body{
+  flex:1;
+  min-width:0;
+  min-height:0;
+  overflow:auto;
+  background:#fff;
+}
+.tool-file-preview-empty{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:32px;
+  background:#fff;
+  color:var(--text-4);
+  text-align:center;
+}
+.tool-file-preview-empty > .ic{
+  width:28px;
+  height:28px;
+  margin-bottom:5px;
+  color:var(--gray-6);
+  stroke-width:1.35;
+}
+.tool-file-preview-empty strong{
+  color:var(--text-3);
+  font-size:13px;
+  font-weight:500;
+}
+.tool-file-preview-empty span{
+  max-width:220px;
+  font-size:11.5px;
+  line-height:1.5;
+}
+.source-preview{
+  min-width:max-content;
+  min-height:100%;
+  margin:0;
+  padding:16px 0 28px 58px;
+  background:#fff;
+  color:#24292f;
+  font:12.5px/1.65 "SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  counter-reset:source-line;
+}
+.source-preview li{
+  padding:0 24px 0 12px;
+  white-space:pre;
+}
+.source-preview li::marker{ color:#a1a7b0; font-size:11px; }
+.source-preview li:hover{ background:#f5f7f9; }
+.source-preview code{ font:inherit; color:inherit; }
+
+
+/* 一级面板互斥：产物直接展示结果，工具才显示工作区标签与工具内容。 */
+.outputs-head,
+.output-pane{ display:none; }
+.workbench[data-panel="outputs"] .outputs-head{ display:flex; }
+.workbench[data-panel="outputs"] .output-pane{ display:flex; }
+.workbench[data-panel="outputs"] .wb-head,
+.workbench[data-panel="outputs"] .wb-pane{ display:none; }
+.workbench[data-panel="tools"] .outputs-head,
+.workbench[data-panel="tools"] .output-pane{ display:none; }
+
+.workbench[data-panel="outputs"]{ background:#fff; }
+.outputs-head{
+  flex:none;
+  height:43px;
+  box-sizing:border-box;
+  align-items:center;
+  gap:7px;
+  padding:9px 115px 0 14px;
+  background:#fff;
+  color:var(--text-1);
+  font-size:12.5px;
+  font-weight:600;
+}
+.outputs-head .ic{ width:15px; height:15px; color:var(--text-3); }
+.output-pane{
+  flex:1;
+  min-height:0;
+  flex-direction:column;
+  background:#fff;
+}
+/* 分类下方不再占一整行显示路径、前进后退和视图按钮。 */
+.output-pane > .wb-bar{ display:none; }
+
+/* 产物来源分类：轻量下划线 Tab，不与工具侧的浏览器式工作区标签混用。 */
+.output-categories{
+  flex:none;
+  height:38px;
+  display:flex;
+  align-items:stretch;
+  gap:20px;
+  padding:0 14px;
+  background:#fff;
+  border-bottom:.5px solid var(--sidebar-border);
+}
+.output-category{
+  position:relative;
+  padding:0 1px;
+  border:0;
+  background:transparent;
+  color:var(--text-3);
+  font-family:inherit;
+  font-size:12.5px;
+  cursor:pointer;
+  transition:color .14s ease;
+}
+.output-category:hover{ color:var(--text-1); }
+.output-category.active{
+  color:var(--text-1);
+  font-weight:500;
+}
+.output-category.active::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-.5px;
+  height:2px;
+  border-radius:2px 2px 0 0;
+  background:var(--text-1);
+}
 
 /* -- 工作区标签 --
    文件夹不再是四个模式按钮之一，而是首个浏览器式标签。
@@ -1901,7 +2256,7 @@ height:56px;
   display:flex;
   align-items:flex-end;
   gap:2px;
-  padding:0 48px 0 4px;
+  padding:0 115px 0 4px;
 }
 
 .workspace-tabs{
@@ -1974,7 +2329,12 @@ height:56px;
   place-items:center;
   flex:none;
   margin-left:auto;
+  padding:0;
+  border:0;
   border-radius:4px;
+  background:transparent;
+  color:inherit;
+  cursor:pointer;
   opacity:0;
   transition:opacity .12s ease, background .12s ease;
 }
@@ -2053,7 +2413,148 @@ height:56px;
   flex-direction:column;
   min-height:0;
 }
-.wb-pane.active{ display:flex; }
+.workbench[data-panel="tools"] .wb-pane.active{ display:flex; }
+
+/* 当前任务文件夹：标题本身就是切换入口，不再额外显示“资源管理器”。 */
+.tool-tree-head{
+  position:relative;
+  z-index:12;
+  flex:none;
+  height:38px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:0 7px 0 8px;
+  border-bottom:.5px solid var(--sidebar-border);
+  background:#fff;
+}
+.tool-folder-picker{ position:relative; flex:1; min-width:0; }
+.tool-folder-trigger{
+  width:100%;
+  height:28px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:0 7px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:var(--text-2);
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:500;
+  cursor:pointer;
+}
+.tool-folder-trigger:hover,
+.tool-folder-picker.open .tool-folder-trigger{ background:var(--hover); color:var(--text-1); }
+.tool-folder-trigger > .ic:first-child{ width:15px; height:15px; color:var(--text-3); }
+.tool-folder-trigger > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; }
+.tool-folder-chev{ width:13px; height:13px; color:var(--text-4); transition:transform .14s ease; }
+.tool-folder-picker.open .tool-folder-chev{ transform:rotate(180deg); }
+.tool-folder-menu{
+  position:absolute;
+  top:31px;
+  left:0;
+  right:-32px;
+  max-height:300px;
+  overflow:auto;
+  padding:6px;
+  border:.5px solid var(--gray-5);
+  border-radius:9px;
+  background:#fff;
+  box-shadow:0 12px 28px rgba(0,0,0,.16), 0 2px 6px rgba(0,0,0,.06);
+}
+.tool-folder-menu[hidden]{ display:none; }
+.tool-folder-option{
+  width:100%;
+  min-height:43px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:6px 8px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:var(--text-2);
+  font-family:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.tool-folder-option:hover{ background:var(--gray-2); }
+.tool-folder-option.active{ background:rgba(0,0,0,.055); }
+.tool-folder-option > .ic{ width:15px; height:15px; flex:none; color:var(--text-3); }
+.tool-folder-option > span{ min-width:0; display:flex; flex-direction:column; gap:1px; }
+.tool-folder-option strong{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-1); font-size:12px; font-weight:500; }
+.tool-folder-option small{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-4); font-size:10px; }
+.tool-tree{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  padding:5px 0 12px;
+  background:#fff;
+}
+.tool-tree::-webkit-scrollbar{ width:8px; }
+.tool-tree::-webkit-scrollbar-thumb{
+  background:rgba(0,0,0,.14);
+  border:2px solid #fff;
+  border-radius:4px;
+}
+.tool-tree-row{
+  width:100%;
+  height:25px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:0 10px 0 calc(8px + var(--tree-depth) * 16px);
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--text-2);
+  font-family:inherit;
+  font-size:12.5px;
+  text-align:left;
+  cursor:default;
+}
+.tool-tree-row:hover{ background:var(--hover); }
+.tool-tree-row.selected{
+  background:rgba(47,124,246,.09);
+  color:#245fae;
+}
+.tool-tree-row.selected .tool-tree-icon{ color:#3978c7; }
+.tool-tree-close{ display:none; flex:none; }
+.workbench.file-split .tool-tree-close{ display:grid; }
+.tool-tree-root > .tool-tree-row{
+  height:28px;
+  font-weight:500;
+  color:var(--text-1);
+}
+.tool-tree-row > span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.tool-tree-chevron,
+.tool-tree-icon{
+  width:14px;
+  height:14px;
+  flex:none;
+}
+.tool-tree-chevron{
+  color:var(--text-4);
+  transition:transform .12s ease;
+}
+.tool-tree-row[aria-expanded="true"] .tool-tree-chevron{ transform:rotate(90deg); }
+.tool-tree-chevron.blank{ visibility:hidden; }
+.tool-tree-icon{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.65;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  color:#7b8493;
+}
+.tool-tree-row[data-tree-folder="true"] .tool-tree-icon{ color:#7587a0; }
 
 /* 面板内工具条 --
    取白底，与下方 .wb-body 连成一块完整的内容区。灰色留给外层容器
@@ -2551,6 +3052,81 @@ height:56px;
   transition: background .14s ease, border-color .14s ease;
 }
 .wb-chip:hover{ background: var(--gray-1); border-color: var(--gray-6); }
+
+/* ============================================================
+   最近打开的文件
+   ============================================================ */
+.recent-files{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  padding:8px 10px;
+}
+.recent-files[hidden]{ display:none; }
+.recent-file{
+  width:100%;
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 9px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text-2);
+  font-family:inherit;
+  text-align:left;
+  cursor:pointer;
+  transition:background .12s ease;
+}
+.recent-file:hover{ background:var(--hover); }
+.recent-file-symbol{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  flex:none;
+  border:.5px solid var(--gray-5);
+  border-radius:7px;
+  background:var(--gray-1);
+  color:#77849a;
+}
+.recent-file-symbol .ic{ width:17px; height:17px; }
+.recent-file-copy{
+  min-width:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.recent-file-copy strong,
+.recent-file-copy small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.recent-file-copy strong{
+  color:var(--text-1);
+  font-size:12.5px;
+  font-weight:500;
+}
+.recent-file-copy small{
+  color:var(--text-4);
+  font-size:10.5px;
+}
+.recent-file time{
+  flex:none;
+  color:var(--text-4);
+  font-size:10.5px;
+  white-space:nowrap;
+}
+.recent-empty{
+  margin:0;
+  padding:48px 20px;
+  color:var(--text-4);
+  font-size:13px;
+  text-align:center;
+}
 
 /* ============================================================
    文件宫格
@@ -3153,11 +3729,11 @@ height:56px;
    响应式
    ============================================================ */
 @media (max-width: 1360px){
-  :root{ --workbench-w: 400px; }
+  :root{ --workbench-w: 400px; --workbench-folder-w: 620px; }
 }
 
 @media (max-width: 1100px){
-  :root{ --sidebar-w: 252px; --workbench-w: 340px; }
+  :root{ --sidebar-w: 252px; --workbench-w: 340px; --workbench-folder-w: 520px; }
   .greeting{ font-size: 26px; }
 }
 

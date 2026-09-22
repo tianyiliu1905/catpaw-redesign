@@ -29,8 +29,7 @@
   setCollapsed(false);
 
   /* ---------- 1.4 产品模式筛选 ----------
-     「通用」保留现有场景 Tab 与场景专属工具；「智能掌柜」隐藏这两部分。
-     当前业务内容暂沿用用户最后选中的场景，切回通用时可无损恢复。 */
+     「通用」展示拍平后的完整能力入口；「智能掌柜」隐藏通用扩展入口。 */
   const sidebar = document.getElementById('sidebar');
   const modePicker = document.getElementById('modePicker');
   const modeTrigger = document.getElementById('modeTrigger');
@@ -103,89 +102,28 @@
 
   selectMode('general');
 
-  /* ---------- 1.5 筛选 Tab ---------- */
-  const tabsEl = document.getElementById('tabs');
-  const thumb = document.getElementById('tabThumb');
-  const tabBtns = Array.from(tabsEl.querySelectorAll('.tab'));
-  const navItems = Array.from(document.querySelectorAll('.nav-item[data-scope]'));
-
-  /* 场景问候语：句式固定，只换动词，切换时视觉抖动最小 */
-  const SCENE_VERB = {
-    office: '推进',
-    dev:    '构建',
-    design: '创作',
-  };
-
-  /* 句首不再按时段变化：时段只说明「现在几点」，
-     与用户接下来要做什么无关，整句因此固定为「想在 CatPaw …点什么？」。
-     唯一随场景变化的仍是中间那个动词。 */
-  const greetVerbEl     = document.getElementById('greetVerb');
-  const greetVerbTextEl = document.getElementById('greetVerbText');
-
-  function applyGreeting(scope, animate) {
-    const verb = SCENE_VERB[scope];
-    if (!verb) return;
-
-    // 已是目标场景（含首次渲染）只需确保标记正确，避免重复触发装饰动画
-    if (greetVerbTextEl.textContent === verb) {
-      greetVerbEl.dataset.scene = scope;
-      return;
-    }
-
-    if (!animate) {
-      greetVerbTextEl.textContent = verb;
-      greetVerbEl.dataset.scene = scope;
-      return;
-    }
-
-    // 旧词连同旧装饰一起淡出，再整体换新：中途不会出现「旧词配新装饰」
-    greetVerbEl.classList.add('out');
-    setTimeout(() => {
-      greetVerbTextEl.textContent = verb;
-      // 场景标记与新词同帧写入，装饰的入场动画刚好跟着淡入一起播
-      greetVerbEl.dataset.scene = scope;
-      greetVerbEl.classList.remove('out');
-      greetVerbEl.classList.add('in');
-      setTimeout(() => greetVerbEl.classList.remove('in'), 420);
-    }, 160);
-  }
-
-  /* 滑块跟随选中项 */
-  function moveThumb(btn, animate) {
-    if (!animate) thumb.classList.add('no-anim');
-    thumb.style.width = btn.offsetWidth + 'px';
-    thumb.style.transform = `translateX(${btn.offsetLeft - 2}px)`;
-    if (!animate) {
-      void thumb.offsetWidth;
-      thumb.classList.remove('no-anim');
-    }
-  }
-
-  /* ---------- 1.6 任务 / 文件夹的场景过滤 ---------- */
+  /* ---------- 1.5 拍平后的任务 / 文件夹列表 ---------- */
   const TASK_LIMIT = 6;   // 任务区默认最多展示的条数
 
   const looseTasksEl  = document.getElementById('looseTasks');
   const expandTasksBtn = looseTasksEl.querySelector('[data-expand-tasks]');
-  const looseTasks = Array.from(looseTasksEl.querySelectorAll('.task'));
+  // 父任务即使下挂 SubAgent，也只占任务列表中的一个名额；
+  // 子任务由父任务负责显隐，不参与顶层「展示 6 条」的计数。
+  const looseTasks = Array.from(looseTasksEl.children)
+    .filter((item) => item.matches('.task, [data-agent-task]'));
   const groups     = Array.from(document.querySelectorAll('[data-group]'));
   const labelTasks   = document.getElementById('labelTasks');
   const labelFolders = document.getElementById('labelFolders');
 
   let tasksExpanded = false;   // 任务区是否已展开全部
 
-  /* 按当前场景 + 展开态重排任务区：
-     隐藏非本场景的任务，本场景超出 TASK_LIMIT 的部分收进折叠。 */
-  function renderTasks(scope) {
-    let shown = 0;
-
-    looseTasks.forEach((task) => {
-      const inScope = task.dataset.scope === scope;
-      // 超出上限的项在收起态隐藏，展开后全部放出
-      const visible = inScope && (tasksExpanded || shown < TASK_LIMIT);
-      task.hidden = !visible;
-      if (inScope) shown++;
+  /* 所有原场景任务按 DOM 顺序进入同一列表，超出上限的部分统一折叠。 */
+  function renderTasks() {
+    looseTasks.forEach((task, index) => {
+      task.hidden = !tasksExpanded && index >= TASK_LIMIT;
     });
 
+    const shown = looseTasks.length;
     const overflow = Math.max(0, shown - TASK_LIMIT);
     expandTasksBtn.hidden = overflow === 0;
     // 收起时提示还有多少条，展开后只需给出回收入口
@@ -197,23 +135,45 @@
   expandTasksBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     tasksExpanded = !tasksExpanded;
-    renderTasks(currentScope);
+    renderTasks();
     refreshClipped();
   });
 
-  /* 文件夹同样按场景过滤；当前场景没有文件夹时连标题一起隐藏 */
-  function renderGroups(scope) {
-    let shown = 0;
-    groups.forEach((g) => {
-      const show = g.dataset.scope === scope;
-      g.hidden = !show;
-      if (show) {
-        shown++;
-        // 隐藏期间 scrollHeight 为 0，重新可见后需重新测高，否则展不开
-        syncGroupHeight(g);
-      }
+  /* 父任务可以编排多个 SubAgent。展开按钮位于任务链接内部，因此同时拦住
+     默认跳转和冒泡，只切换子任务区域，不误触父任务本身。 */
+  function toggleAgentTasks(control) {
+    const taskGroup = control.closest('[data-agent-task]');
+    if (!taskGroup) return;
+    const expanded = taskGroup.classList.toggle('is-expanded');
+    control.setAttribute('aria-expanded', String(expanded));
+    control.setAttribute('aria-label', `${expanded ? '收起' : '展开'} SubAgent 任务`);
+    requestAnimationFrame(refreshClipped);
+  }
+
+  looseTasksEl.addEventListener('click', (e) => {
+    const control = e.target.closest('[data-toggle-agents]');
+    if (!control) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggleAgentTasks(control);
+  });
+
+  looseTasksEl.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const control = e.target.closest('[data-toggle-agents]');
+    if (!control) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggleAgentTasks(control);
+  });
+
+  /* 原场景文件夹全部进入同一列表，并沿用各自的折叠交互。 */
+  function renderGroups() {
+    groups.forEach((group) => {
+      group.hidden = false;
+      syncGroupHeight(group);
     });
-    labelFolders.hidden = shown === 0;
+    labelFolders.hidden = groups.length === 0;
   }
 
   /* ---------- 1.7 文件夹数据源 ----------
@@ -514,8 +474,9 @@
     },
   ];
 
-  /* 当前场景下可选的文件夹：默认文件夹恒在首位 */
+  /* 拍平后展示全部文件夹，默认文件夹仍恒在首位。 */
   function foldersForScope(scope) {
+    if (scope === 'all') return FOLDERS.slice();
     return FOLDERS.filter((f) => f.isDefault || f.scope === scope);
   }
 
@@ -527,8 +488,17 @@
   const fileFwd     = document.getElementById('fileFwd');
   const fileGrid         = document.getElementById('fileGrid');
   const fileView         = document.getElementById('fileView');
+  const recentFiles      = document.getElementById('recentFiles');
+  const outputCategories = Array.from(document.querySelectorAll('[data-output-category]'));
   const fileLayoutToggle = document.getElementById('fileLayoutToggle');
   let fileLayout = 'grid';
+  let outputCategory = 'current';
+  let recentPreviewEntry = null;
+  let recentOpenedFiles = [
+    { node: FOLDERS[0].files[1], chain: [FOLDERS[0], FOLDERS[0].files[1]], opened: '刚刚' },
+    { node: FOLDERS[3].files[4], chain: [FOLDERS[3], FOLDERS[3].files[4]], opened: '12 分钟前' },
+    { node: FOLDERS[1].files[2], chain: [FOLDERS[1], FOLDERS[1].files[2]], opened: '1 小时前' },
+  ];
 
   /* 缩略图按类型绘制。不画品牌化的「Word / Excel」标志，
      因为文件可能来自任何工具；改用「纸张 + 内容骨架」这一层抽象，
@@ -635,16 +605,30 @@
     return filePath[filePath.length - 1] || null;
   }
 
+  function rememberRecentFile(node, chain) {
+    if (!node || node.type === 'folder') return;
+    recentOpenedFiles = recentOpenedFiles.filter((entry) => entry.node !== node);
+    recentOpenedFiles.unshift({ node, chain: chain.slice(), opened: '刚刚' });
+    recentOpenedFiles = recentOpenedFiles.slice(0, 8);
+    if (outputCategory === 'recent' && !recentPreviewEntry) renderRecentFiles();
+  }
+
   /* 往下走一层：子目录与文件走同一条路径 */
   function enterNode(node) {
     filePath.push(node);
     // 走了新的岔路，原先记下的「可重做」路径不再成立
     fileForward = [];
+    if (node.type !== 'folder') rememberRecentFile(node, filePath);
     renderFilePane();
   }
 
-  /* 回上一级。根目录没有父级，此时按钮本就是禁用的 */
+  /* 回上一级；最近打开的文件预览优先返回最近列表。 */
   function fileGoBack() {
+    if (outputCategory === 'recent' && recentPreviewEntry) {
+      recentPreviewEntry = null;
+      renderFilePane();
+      return;
+    }
     if (filePath.length <= 1) return;
     fileForward.push(filePath.pop());
     renderFilePane();
@@ -683,6 +667,54 @@
     fileLayoutToggle.setAttribute('aria-label', isList ? '切换到宫格视图' : '切换到列表视图');
     fileLayoutToggle.title = isList ? '切换到宫格视图' : '切换到列表视图';
     fileLayoutToggle.querySelector('svg').innerHTML = isList ? FILE_LAYOUT_ICONS.grid : FILE_LAYOUT_ICONS.list;
+  }
+
+  function recentFileIcon(type) {
+    if (type === 'image') return '<path d="M4 4h16v16H4z"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/>';
+    if (type === 'sheet') return '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>';
+    if (type === 'code') return '<path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/>';
+    if (type === 'web') return '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>';
+    return '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>';
+  }
+
+  function renderRecentFiles() {
+    if (!recentOpenedFiles.length) {
+      recentFiles.innerHTML = '<p class="recent-empty">还没有打开过文件</p>';
+      return;
+    }
+    recentFiles.innerHTML = recentOpenedFiles.map((entry, index) => {
+      const location = entry.chain.slice(0, -1).map((node) => node.name).join(' / ');
+      return `<button class="recent-file" type="button" data-recent-index="${index}" title="${esc(entry.node.name)}">` +
+        `<span class="recent-file-symbol"><svg viewBox="0 0 24 24" class="ic">${recentFileIcon(entry.node.type)}</svg></span>` +
+        `<span class="recent-file-copy"><strong>${esc(entry.node.name)}</strong><small>${esc(location)}</small></span>` +
+        `<time>${entry.opened}</time>` +
+        `</button>`;
+    }).join('');
+  }
+
+  function syncOutputCategories() {
+    outputCategories.forEach((button) => {
+      const active = button.dataset.outputCategory === outputCategory;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+  }
+
+  function selectOutputCategory(category) {
+    if (category !== 'current' && category !== 'recent') return;
+    outputCategory = category;
+    recentPreviewEntry = null;
+    syncOutputCategories();
+    renderFilePane();
+  }
+
+  function openRecentFile(entry) {
+    if (!entry) return;
+    rememberRecentFile(entry.node, entry.chain);
+    recentPreviewEntry = recentOpenedFiles[0];
+    outputCategory = 'recent';
+    syncOutputCategories();
+    renderFilePane();
   }
 
   function renderFileGrid(folder) {
@@ -861,6 +893,35 @@
      目录画宫格，文件画预览——两者是同一个位置上的两种形态，
      因此显隐在一处统一切换，不散落到各个调用点。 */
   function renderFilePane() {
+    syncOutputCategories();
+
+    if (outputCategory === 'recent') {
+      fileFwd.hidden = true;
+      fileLayoutToggle.hidden = true;
+      fileGrid.hidden = true;
+      if (recentPreviewEntry) {
+        fileLoc.textContent = recentPreviewEntry.node.name;
+        fileLoc.title = recentPreviewEntry.node.name;
+        fileBack.hidden = false;
+        fileBack.disabled = false;
+        recentFiles.hidden = true;
+        fileView.hidden = false;
+        renderFileView(recentPreviewEntry.node);
+      } else {
+        fileLoc.textContent = '最近打开的文件';
+        fileLoc.title = '最近打开的文件';
+        fileBack.hidden = true;
+        fileView.hidden = true;
+        fileView.innerHTML = '';
+        recentFiles.hidden = false;
+        renderRecentFiles();
+      }
+      return;
+    }
+
+    recentFiles.hidden = true;
+    fileBack.hidden = false;
+    fileFwd.hidden = false;
     const node = currentNode();
     if (!node) return;
     renderFileLoc();
@@ -891,7 +952,7 @@
     if (!folder) return;
     filePath = [folder];
     fileForward = [];
-    renderFilePane();
+    if (outputCategory === 'current') renderFilePane();
   }
 
   /* ---------- 1.8 归属文件夹选择器 ---------- */
@@ -900,8 +961,8 @@
   const folderBtnName = document.getElementById('folderBtnName');
   const folderMenu    = document.getElementById('folderMenu');
 
-  // 每个场景各自记住上次选择，切回来时不丢
-  const folderByScope = { office: 'default', dev: 'default', design: 'default' };
+  // 拍平后的通用列表共享一份文件夹选择状态
+  const folderByScope = { all: 'default' };
 
   function setFolderOpen(open) {
     folderPicker.classList.toggle('open', open);
@@ -915,11 +976,15 @@
     renderBranchPicker();
     // 换了树，回到新树的根
     resetFilePane();
+    if (typeof renderToolTree === 'function') {
+      toolTreeExpanded.clear();
+      toolTreeExpanded.add('root');
+      renderToolTree();
+    }
     setFolderOpen(false);
   }
 
-  /* 重建选项列表并同步按钮文案。
-     场景切换后原选中项可能已不在列表中，此时回落到默认文件夹。 */
+  /* 重建选项列表并同步按钮文案；选中项失效时回落到默认文件夹。 */
   function renderFolderPicker(scope) {
     const list = foldersForScope(scope);
     let activeId = folderByScope[scope];
@@ -1066,87 +1131,25 @@
     if (e.key === 'Escape') setBranchOpen(false);
   });
 
-  let currentScope = 'office';
-  // 当前一级 Prompt 分类；场景切换时保留，让推荐案例继续围绕用户意图。
+  // 场景筛选已移除；统一作用域用于共享文件夹选择状态。
+  let currentScope = 'all';
+  // 当前一级 Prompt 分类；切换分类时保留，让推荐案例继续围绕用户意图。
   let selectedPromptCategory = null;
 
-  /* 按场景过滤导航项 */
-  function applyScope(scope) {
-    currentScope = scope;
-    let order = 0;
-
-    navItems.forEach((item) => {
-      const s = item.dataset.scope;
-      const show = s === 'all' || s === scope;
-      const wasHidden = item.hidden;
-
-      item.hidden = !show;
-
-      // 仅对「由隐藏变可见」的场景项播放入场动画
-      if (show && wasHidden) {
-        item.classList.remove('enter');
-        item.style.animationDelay = '';
-        void item.offsetWidth;
-        // 多项同时出现时依次错峰滑入
-        item.style.animationDelay = order * 90 + 'ms';
-        item.classList.add('enter');
-        order++;
-      }
-    });
-
-    // 换场景时任务区回到收起态，避免上个场景的展开状态被带过来
+  function initializeFlatSidebar() {
     tasksExpanded = false;
-    renderTasks(scope);
-    renderGroups(scope);
-    // 归属选择器的可选项随场景变化，需同步重建
-    renderFolderPicker(scope);
+    renderTasks();
+    renderGroups();
+    renderFolderPicker(currentScope);
     renderBranchPicker();
-    // 场景切换可能连带换了选中的文件夹，面板回到根层重渲染
     resetFilePane();
-    // 案例按场景给，办公 / 开发 / 设计各一组
-    renderCases(scope);
+    renderCases(currentScope);
     setFolderOpen(false);
     setBranchOpen(false);
     refreshClipped();
   }
 
-  function selectTab(btn, animate = true) {
-    tabBtns.forEach((b) => {
-      const on = b === btn;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-selected', String(on));
-    });
-    moveThumb(btn, animate);
-    applyScope(btn.dataset.tab);
-    applyGreeting(btn.dataset.tab, animate);
-  }
-
-  tabBtns.forEach((btn) => {
-    btn.addEventListener('click', () => selectTab(btn));
-  });
-
-  // 左右方向键切换
-  tabsEl.addEventListener('keydown', (e) => {
-    const idx = tabBtns.indexOf(document.activeElement);
-    if (idx === -1) return;
-    let next = null;
-    if (e.key === 'ArrowRight') next = tabBtns[(idx + 1) % tabBtns.length];
-    if (e.key === 'ArrowLeft') next = tabBtns[(idx - 1 + tabBtns.length) % tabBtns.length];
-    if (next) {
-      e.preventDefault();
-      next.focus();
-      selectTab(next);
-    }
-  });
-
-  // 初始化：默认「办公」，无动画
-  selectTab(tabBtns[0], false);
-
-  // 侧边栏宽度变化时重新定位滑块
-  window.addEventListener('resize', () => {
-    const active = tabsEl.querySelector('.tab.active');
-    if (active) moveThumb(active, false);
-  });
+  initializeFlatSidebar();
 
   /* ---------- 2. 分组折叠 ---------- */
   document.querySelectorAll('[data-group]').forEach((group) => {
@@ -1605,11 +1608,10 @@
      因此案例必须是预先备好的静态产物，而非现场跑一遍。
      点击后走工具台的文件面板（决策 2：文件就地预览，不跳浏览器）。
 
-     内容随场景走，与决策 4 的场景主线一致：
-     办公给看板与推文，开发给代码与部署，设计给视觉稿。
+     默认内容跨原场景混合展示；选择一级 Prompt 后按意图切换案例。
 
      -- 为什么这两组数据写成函数而非 const --
-     初始化路径是 selectTab → applyScope → renderCases，发生在本节之前。
+     初始化路径会在本节定义之前调用 renderCases。
      const 不提升，彼时读它会落进暂时性死区并抛错，
      而这一抛会中断整个脚本——表现不是「案例区空白」，
      而是侧边栏行操作、标签条等后续模块全部不再初始化。
@@ -1718,7 +1720,7 @@
    };
   }
 
-  /* 每个场景四张，与胶囊的动作相呼应。
+  /* 保留原场景案例池作为内容来源；默认跨池取样，Prompt 选中后按意图展示。
      prompt 会在详情弹窗中完整展示，并可通过「做同款」直接带回输入框。 */
   function caseData() {
    return {
@@ -1745,7 +1747,9 @@
 
   function visibleCaseData(scope) {
     const category = selectedPromptCategory && promptCategoryData()[selectedPromptCategory];
-    return category ? category.cases : ((caseData()[scope]) || []);
+    if (category) return category.cases;
+    const cases = caseData();
+    return cases[scope] || [cases.office[0], cases.dev[0], cases.design[0], cases.office[1]];
   }
 
   function renderCases(scope) {
@@ -1772,18 +1776,27 @@
       `</div>`;
   }
 
-  /* ---------- 5.5 工具台：按需创建的工作区标签 ---------- */
+  /* ---------- 5.5 右侧抽屉：产物与工具 ---------- */
   const content = document.getElementById('content');
   const workbench = document.getElementById('workbench');
+  const outputToggle = document.getElementById('toggleOutputs');
   const wbToggle = document.getElementById('toggleWorkbench');
+  const wbExpandToggle = document.getElementById('toggleWorkbenchExpand');
   const wbPanes = Array.from(workbench.querySelectorAll('.wb-pane'));
   const workspaceTabs = document.getElementById('workspaceTabs');
   const workspaceCreate = document.getElementById('workspaceCreate');
   const workspaceAdd = document.getElementById('workspaceAdd');
   const workspaceCreateMenu = document.getElementById('workspaceCreateMenu');
   const urlInput = document.getElementById('urlInput');
-  const newFileName = document.getElementById('newFileName');
-  const newFileEditor = document.getElementById('newFileEditor');
+  const toolFileTree = document.getElementById('toolFileTree');
+  const toolTreeClose = document.getElementById('toolTreeClose');
+  const toolTreeReopen = document.getElementById('toolTreeReopen');
+  const toolFilePreviewTitle = document.getElementById('toolFilePreviewTitle');
+  const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
+  const toolFolderPicker = document.getElementById('toolFolderPicker');
+  const toolFolderBtn = document.getElementById('toolFolderBtn');
+  const toolFolderName = document.getElementById('toolFolderName');
+  const toolFolderMenu = document.getElementById('toolFolderMenu');
 
   const WORKSPACE_META = {
     files: {
@@ -1791,7 +1804,7 @@
       icon: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
     },
     file: {
-      title: '未命名文件.md',
+      title: '打开文件',
       icon: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
     },
     browser: {
@@ -1805,38 +1818,90 @@
   };
   const WORKSPACE_CLOSE = '<svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
   let workspaceSeq = 0;
-  let openWorkspaces = [{ id: 'files', kind: 'files', title: '文件夹' }];
-  let activeWorkspace = 'files';
+  let openWorkspaces = [{
+    id: 'file-default',
+    kind: 'file',
+    title: '打开文件',
+    node: null,
+    chain: [],
+    path: null,
+    treeVisible: true,
+    previewMode: 'source',
+  }];
+  let activeWorkspace = 'file-default';
 
   function saveActiveWorkspaceState() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
     if (!item) return;
-    if (item.kind === 'file') {
-      item.title = newFileName.value.trim() || '未命名文件';
-      item.content = newFileEditor.value;
-    } else if (item.kind === 'browser') {
+    if (item.kind === 'browser') {
       item.url = urlInput.value;
     }
   }
 
-  function setWorkbench(open) {
+  let rightPanel = null;
+  let workbenchExpanded = false;
+
+  function setWorkbenchExpanded(expanded) {
+    workbenchExpanded = Boolean(expanded && rightPanel);
+    content.classList.toggle('wb-expanded', workbenchExpanded);
+    wbExpandToggle.disabled = !rightPanel;
+    wbExpandToggle.setAttribute('aria-pressed', String(workbenchExpanded));
+    wbExpandToggle.title = workbenchExpanded ? '退出全屏面板' : '全屏显示面板';
+    wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
+  }
+
+  function syncWorkbenchWidth() {
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
+    const folderOpen = rightPanel === 'tools' && item?.kind === 'file' && item.treeVisible !== false;
+    content.classList.toggle('wb-folder-open', folderOpen);
+  }
+
+  function setRightPanel(panel) {
+    const next = panel === rightPanel ? null : panel;
+    if (next === 'tools' && openWorkspaces.length === 0) ensureDefaultFileWorkspace();
+    rightPanel = next;
+    syncWorkbenchWidth();
+    const open = Boolean(next);
     content.classList.toggle('wb-open', open);
+    workbench.dataset.panel = next || '';
+    setWorkbenchExpanded(workbenchExpanded);
     workbench.setAttribute('aria-hidden', String(!open));
-    wbToggle.setAttribute('aria-expanded', String(open));
-    wbToggle.title = open ? '收起工具台' : '工具台';
-    const active = tabsEl.querySelector('.tab.active');
-    if (active) moveThumb(active, false);
+    outputToggle.setAttribute('aria-expanded', String(next === 'outputs'));
+    wbToggle.setAttribute('aria-expanded', String(next === 'tools'));
+    outputToggle.title = next === 'outputs' ? '收起产物' : '产物';
+    wbToggle.title = next === 'tools' ? '收起工具' : '工具';
+  }
+
+  function setWorkbench(open) {
+    if (!open) {
+      rightPanel = null;
+      content.classList.remove('wb-open', 'wb-folder-open', 'wb-expanded');
+      workbenchExpanded = false;
+      wbExpandToggle.disabled = true;
+      wbExpandToggle.setAttribute('aria-pressed', 'false');
+      wbExpandToggle.title = '全屏显示面板';
+      wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
+      workbench.dataset.panel = '';
+      workbench.setAttribute('aria-hidden', 'true');
+      outputToggle.setAttribute('aria-expanded', 'false');
+      wbToggle.setAttribute('aria-expanded', 'false');
+      outputToggle.title = '产物';
+      wbToggle.title = '工具';
+      return;
+    }
+    if (rightPanel !== 'tools') setRightPanel('tools');
   }
 
   function renderWorkspaceTabs() {
     workspaceTabs.innerHTML = openWorkspaces.map((item) => {
       const meta = WORKSPACE_META[item.kind];
-      const close = item.kind === 'files' ? '' : `<span class="workspace-tab-close" title="关闭">${WORKSPACE_CLOSE}</span>`;
-      return `<button class="workspace-tab${item.id === activeWorkspace ? ' active' : ''}" role="tab"` +
+      return `<div class="workspace-tab${item.id === activeWorkspace ? ' active' : ''}" role="tab" tabindex="0"` +
         ` data-workspace-tab="${item.id}" data-workspace-kind="${item.kind}"` +
         ` aria-selected="${item.id === activeWorkspace}" title="${esc(item.title)}">` +
         `<svg viewBox="0 0 24 24" class="ic">${meta.icon}</svg>` +
-        `<span class="workspace-tab-title">${esc(item.title)}</span>${close}</button>`;
+        `<span class="workspace-tab-title">${esc(item.title)}</span>` +
+        `<button class="workspace-tab-close" type="button" title="关闭" aria-label="关闭 ${esc(item.title)}">${WORKSPACE_CLOSE}</button>` +
+        `</div>`;
     }).join('');
   }
 
@@ -1846,54 +1911,86 @@
     if (saveCurrent) saveActiveWorkspaceState();
     activeWorkspace = id;
     renderWorkspaceTabs();
+    workbench.classList.remove('file-split', 'file-preview-only');
+    syncWorkbenchWidth();
     wbPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === item.kind));
     if (item.kind === 'browser') {
       urlInput.value = item.url || '';
       requestAnimationFrame(() => urlInput.focus());
     }
-    if (item.kind === 'file') {
-      newFileName.value = item.title;
-      newFileEditor.value = item.content || '';
-      requestAnimationFrame(() => newFileEditor.focus());
-    }
+    if (item.kind === 'file') renderToolFileWorkspace(item);
+  }
+
+  function makeFileWorkspace(overrides = {}) {
+    workspaceSeq += 1;
+    return {
+      id: `file-${workspaceSeq}`,
+      kind: 'file',
+      title: '打开文件',
+      node: null,
+      chain: [],
+      path: null,
+      treeVisible: true,
+      previewMode: 'source',
+      ...overrides,
+    };
+  }
+
+  function ensureDefaultFileWorkspace() {
+    if (openWorkspaces.length > 0) return openWorkspaces[0];
+    const item = makeFileWorkspace();
+    openWorkspaces.push(item);
+    activeWorkspace = item.id;
+    activateWorkspace(item.id, false);
+    return item;
   }
 
   function createWorkspace(kind) {
     if (!WORKSPACE_META[kind] || kind === 'files') return;
-    workspaceSeq += 1;
     const sameKindCount = openWorkspaces.filter((item) => item.kind === kind).length;
     let title = WORKSPACE_META[kind].title;
-    if (sameKindCount) {
-      if (kind === 'file') title = `未命名文件 ${sameKindCount + 1}.md`;
-      else title = `${title} ${sameKindCount + 1}`;
+    if (sameKindCount && kind !== 'file') title = `${title} ${sameKindCount + 1}`;
+    let item;
+    if (kind === 'file') {
+      item = makeFileWorkspace();
+    } else {
+      workspaceSeq += 1;
+      item = {
+        id: `${kind}-${workspaceSeq}`,
+        kind,
+        title,
+        url: kind === 'browser' ? '' : undefined,
+      };
     }
-    const item = {
-      id: `${kind}-${workspaceSeq}`,
-      kind,
-      title,
-      content: kind === 'file' ? '' : undefined,
-      url: kind === 'browser' ? '' : undefined,
-    };
     openWorkspaces.push(item);
     setWorkspaceCreate(false);
     activateWorkspace(item.id);
-    if (kind === 'file') {
-      newFileName.value = title;
-      newFileEditor.value = '';
-      requestAnimationFrame(() => newFileName.select());
-    } else if (kind === 'browser') {
-      urlInput.value = '';
-    }
+    if (kind === 'browser') urlInput.value = '';
   }
 
   function closeWorkspace(id) {
     const index = openWorkspaces.findIndex((item) => item.id === id);
-    if (index <= 0) return;
+    if (index === -1) return;
+
+    const closingActiveWorkspace = activeWorkspace === id;
     openWorkspaces.splice(index, 1);
-    if (activeWorkspace === id) {
-      activeWorkspace = openWorkspaces[Math.max(0, index - 1)].id;
+
+    // 关闭按钮始终真正移除对应页签；最后一张被移除时同时收起面板。
+    // 下次主动打开工具面板时再提供新的空白文件页签，不恢复已关闭内容。
+    if (openWorkspaces.length === 0) {
+      activeWorkspace = null;
+      renderWorkspaceTabs();
+      setWorkbench(false);
+      return;
     }
-    activateWorkspace(activeWorkspace, false);
+
+    if (closingActiveWorkspace) {
+      const nextWorkspace = openWorkspaces[Math.min(index, openWorkspaces.length - 1)];
+      activeWorkspace = nextWorkspace.id;
+      activateWorkspace(activeWorkspace, false);
+    } else {
+      renderWorkspaceTabs();
+    }
   }
 
   function setWorkspaceCreate(open) {
@@ -1903,7 +2000,9 @@
     if (open) requestAnimationFrame(() => workspaceCreateMenu.querySelector('.workspace-create-item').focus());
   }
 
-  wbToggle.addEventListener('click', () => setWorkbench(!content.classList.contains('wb-open')));
+  wbExpandToggle.addEventListener('click', () => setWorkbenchExpanded(!workbenchExpanded));
+  outputToggle.addEventListener('click', () => setRightPanel('outputs'));
+  wbToggle.addEventListener('click', () => setRightPanel('tools'));
   workspaceAdd.addEventListener('click', (e) => {
     e.stopPropagation();
     setWorkspaceCreate(!workspaceCreate.classList.contains('open'));
@@ -1919,6 +2018,13 @@
     if (e.target.closest('.workspace-tab-close')) closeWorkspace(key);
     else activateWorkspace(key);
   });
+  workspaceTabs.addEventListener('keydown', (e) => {
+    if ((e.key !== 'Enter' && e.key !== ' ') || e.target.closest('.workspace-tab-close')) return;
+    const tab = e.target.closest('[data-workspace-tab]');
+    if (!tab) return;
+    e.preventDefault();
+    activateWorkspace(tab.dataset.workspaceTab);
+  });
   document.addEventListener('click', (e) => {
     if (!workspaceCreate.contains(e.target)) setWorkspaceCreate(false);
   });
@@ -1926,22 +2032,220 @@
     if (e.key === 'Escape') setWorkspaceCreate(false);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
       e.preventDefault();
-      setWorkbench(!content.classList.contains('wb-open'));
+      if (rightPanel === 'tools') setWorkbench(false);
+      else setRightPanel('tools');
     }
   });
-  newFileName.addEventListener('input', () => {
-    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'file');
-    if (!item) return;
-    item.title = newFileName.value.trim() || '未命名文件';
-    const title = workspaceTabs.querySelector(`[data-workspace-tab="${item.id}"] .workspace-tab-title`);
-    if (title) title.textContent = item.title;
-  });
-  newFileEditor.addEventListener('input', () => {
-    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'file');
-    if (item) item.content = newFileEditor.value;
+  /* 工具文件夹只展示当前任务所在的根目录，顶部切换器与输入框下方的
+     归属选择共享状态。目录图标沿用 Lucide 线性语言，不引入实心色块。 */
+  const toolTreeExpanded = new Set(['root']);
+  let activeFilePath = null;
+  const TREE_ICONS = {
+    folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+  };
+
+  function activeToolFolder() {
+    return FOLDERS.find((folder) => folder.id === folderByScope[currentScope]) || FOLDERS[0];
+  }
+
+  function treeNodeAtPath(path) {
+    const indices = path === 'root' ? [] : path.replace(/^root\.?/, '').split('.').filter(Boolean).map(Number);
+    const root = activeToolFolder();
+    const chain = [root];
+    let node = root;
+    for (const index of indices) {
+      node = (node.files || [])[index];
+      if (!node) return null;
+      chain.push(node);
+    }
+    return { node, chain };
+  }
+
+  function renderToolTreeNodes(nodes, parentPath, depth) {
+    return nodes.map((node, index) => {
+      const path = `${parentPath}.${index}`;
+      const isFolder = node.type === 'folder';
+      const expanded = isFolder && toolTreeExpanded.has(path);
+      const children = isFolder && expanded
+        ? `<div role="group">${renderToolTreeNodes(node.files || [], path, depth + 1)}</div>`
+        : '';
+      return `<div class="tool-tree-node">` +
+        `<button type="button" role="treeitem" data-tree-path="${path}"` +
+        ` data-tree-folder="${isFolder}" aria-expanded="${isFolder ? String(expanded) : ''}"` +
+        ` class="tool-tree-row${!isFolder && `${activeToolFolder().id}:${path}` === activeFilePath ? ' selected' : ''}"` +
+        ` style="--tree-depth:${depth}" title="${esc(node.name)}">` +
+        `<svg viewBox="0 0 24 24" class="tool-tree-chevron${isFolder ? '' : ' blank'}"><path d="m9 18 6-6-6-6"/></svg>` +
+        `<svg viewBox="0 0 24 24" class="tool-tree-icon">${TREE_ICONS[isFolder ? 'folder' : 'file']}</svg>` +
+        `<span>${esc(node.name)}</span>` +
+        `</button>${children}</div>`;
+    }).join('');
+  }
+
+  function renderToolFolderPicker() {
+    const active = activeToolFolder();
+    toolFolderName.textContent = active.name;
+    toolFolderBtn.title = active.path;
+    toolFolderMenu.innerHTML = FOLDERS.map((folder) =>
+      `<button class="tool-folder-option${folder.id === active.id ? ' active' : ''}" type="button" role="option"` +
+      ` aria-selected="${folder.id === active.id}" data-tool-folder-id="${folder.id}">` +
+      `<svg viewBox="0 0 24 24" class="ic">${TREE_ICONS.folder}</svg>` +
+      `<span><strong>${esc(folder.name)}</strong><small>${esc(folder.path)}</small></span>` +
+      `</button>`
+    ).join('');
+  }
+
+  function setToolFolderOpen(open) {
+    toolFolderPicker.classList.toggle('open', open);
+    toolFolderMenu.hidden = !open;
+    toolFolderBtn.setAttribute('aria-expanded', String(open));
+  }
+
+  function renderToolTree() {
+    const folder = activeToolFolder();
+    const expanded = toolTreeExpanded.has('root');
+    const children = expanded
+      ? `<div role="group">${renderToolTreeNodes(folder.files || [], 'root', 1)}</div>`
+      : '';
+    toolFileTree.innerHTML = `<div class="tool-tree-node tool-tree-root">` +
+      `<button class="tool-tree-row" type="button" role="treeitem" data-tree-path="root"` +
+      ` data-tree-folder="true" aria-expanded="${expanded}" style="--tree-depth:0" title="${esc(folder.path)}">` +
+      `<svg viewBox="0 0 24 24" class="tool-tree-chevron"><path d="m9 18 6-6-6-6"/></svg>` +
+      `<svg viewBox="0 0 24 24" class="tool-tree-icon">${TREE_ICONS.folder}</svg>` +
+      `<span>${esc(folder.name)}</span>` +
+      `</button>${children}</div>`;
+    renderToolFolderPicker();
+  }
+
+  function sourceForNode(node) {
+    const preview = node.preview;
+    if (preview && preview.kind === 'html') return preview.html;
+    if (preview && preview.kind === 'markdown') return preview.text;
+    if (preview && preview.kind === 'image') {
+      return `<!-- ${node.name}\n二进制图片文件不提供文本源码预览。 -->`;
+    }
+    return `// ${node.name}\n// 当前原型未载入该文件的源码内容。`;
+  }
+
+  function renderSourcePreview(node) {
+    const lines = sourceForNode(node).split('\n');
+    return `<ol class="source-preview">${lines.map((line) => `<li><code>${esc(line) || ' '}</code></li>`).join('')}</ol>`;
+  }
+
+  const TOOL_FILE_EMPTY = `<div class="tool-file-preview-empty" role="status">
+    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+    <strong>尚未选择文件</strong>
+    <span>从右侧文件夹中选择一个文件打开</span>
+  </div>`;
+
+  function currentFileWorkspace() {
+    return openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'file');
+  }
+
+  function renderToolFileWorkspace(item) {
+    if (!item || item.kind !== 'file') return;
+    const treeVisible = item.treeVisible !== false;
+    workbench.classList.toggle('file-split', treeVisible);
+    workbench.classList.toggle('file-preview-only', !treeVisible);
+    syncWorkbenchWidth();
+    toolTreeReopen.hidden = treeVisible;
+    activeFilePath = treeVisible ? item.path || null : null;
+    toolFilePreviewTitle.textContent = item.node ? item.node.name : '选择文件';
+    if (!item.node) toolFilePreviewBody.innerHTML = TOOL_FILE_EMPTY;
+    else toolFilePreviewBody.innerHTML = renderSourcePreview(item.node);
+    toolFilePreviewBody.scrollTop = 0;
+    renderToolTree();
+  }
+
+  function openFileWorkspace(node, chain, options) {
+    // 目录树、产物面板和对话产物共用同一组页签。同一个文件再次打开时
+    // 激活已有页签；不同文件各占一张，并一直保留到用户手动关闭。
+    let item = openWorkspaces.find((workspace) => workspace.kind === 'file' && workspace.node === node);
+    if (!item) {
+      item = openWorkspaces.find((workspace) => workspace.kind === 'file' && !workspace.node);
+    }
+    if (!item) {
+      item = makeFileWorkspace();
+      openWorkspaces.push(item);
+    }
+
+    item.node = node;
+    item.chain = chain.slice();
+    item.path = options.path;
+    item.title = node.name;
+    item.treeVisible = options.treeVisible;
+    item.previewMode = options.previewMode;
+    rememberRecentFile(node, chain);
+
+    if (rightPanel !== 'tools') setRightPanel('tools');
+    activateWorkspace(item.id);
+    return item;
+  }
+
+  function openToolFile(node, chain, path) {
+    openFileWorkspace(node, chain, {
+      path,
+      treeVisible: true,
+      previewMode: 'source',
+    });
+  }
+
+  function openArtifactPreview(node, chain) {
+    openFileWorkspace(node, chain, {
+      path: null,
+      treeVisible: false,
+      previewMode: 'artifact',
+    });
+  }
+
+  toolFileTree.addEventListener('click', (e) => {
+    const row = e.target.closest('[data-tree-path]');
+    if (!row) return;
+    const path = row.dataset.treePath;
+    const target = treeNodeAtPath(path);
+    if (!target) return;
+    if (row.dataset.treeFolder === 'true') {
+      if (toolTreeExpanded.has(path)) toolTreeExpanded.delete(path);
+      else toolTreeExpanded.add(path);
+      renderToolTree();
+      return;
+    }
+    openToolFile(target.node, target.chain, `${activeToolFolder().id}:${path}`);
   });
 
-  renderWorkspaceTabs();
+  toolFolderBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setToolFolderOpen(!toolFolderPicker.classList.contains('open'));
+  });
+
+  toolFolderMenu.addEventListener('click', (e) => {
+    const option = e.target.closest('[data-tool-folder-id]');
+    if (!option) return;
+    selectFolder(option.dataset.toolFolderId);
+    setToolFolderOpen(false);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!toolFolderPicker.contains(e.target)) setToolFolderOpen(false);
+  });
+
+  toolTreeClose.addEventListener('click', () => {
+    const item = currentFileWorkspace();
+    if (!item) return;
+    item.treeVisible = false;
+    renderToolFileWorkspace(item);
+  });
+
+  toolTreeReopen.addEventListener('click', () => {
+    const item = currentFileWorkspace();
+    if (!item) return;
+    item.treeVisible = true;
+    item.previewMode = 'source';
+    renderToolFileWorkspace(item);
+  });
+
+  renderToolTree();
+  activateWorkspace('file-default', false);
 
   /* ---------- 5.6 案例详情弹窗 ----------
      所有卡片共用一个 dialog：卡片只保存当前场景内的索引，打开时再从
@@ -2011,13 +2315,90 @@
      排过序后 DOM 顺序与数据顺序不再一致，
      因此用渲染时写入的下标回查原节点，而不是拿名字去 find——
      同一层里出现同名项时，按名字找会拿错。 */
+  outputCategories.forEach((button) => {
+    button.addEventListener('click', () => selectOutputCategory(button.dataset.outputCategory));
+  });
+
+  recentFiles.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-recent-index]');
+    if (!item) return;
+    const entry = recentOpenedFiles[Number(item.dataset.recentIndex)];
+    if (entry) openArtifactPreview(entry.node, entry.chain);
+  });
+
   fileGrid.addEventListener('click', (e) => {
     const item = e.target.closest('.fitem');
     if (!item) return;
 
     const node = (currentNode().files || [])[Number(item.dataset.fileIndex)];
     if (!node) return;
-    enterNode(node);
+    if (node.type === 'folder') enterNode(node);
+    else openArtifactPreview(node, filePath.concat(node));
+  });
+
+  /* ---------- 5.6 示例对话 ----------
+     选中左侧指定任务后，首页让位给一轮对话；对话和产物面板打开的文件
+     统一进入右侧页签，并在本次对话中保留到用户手动关闭。 */
+  const mainView = document.querySelector('.main');
+  const conversationPage = document.getElementById('conversationPage');
+  const conversationThread = document.getElementById('conversationThread');
+  const conversationScroll = document.getElementById('conversationScroll');
+  const conversationPrompt = document.getElementById('conversationPrompt');
+  const conversationComposer = document.getElementById('conversationComposer');
+  const conversationSend = document.getElementById('conversationSend');
+  const conversationTask = document.getElementById('demoConversationTask');
+  const conversationArtifact = document.getElementById('conversationArtifact');
+  const newTaskNav = document.getElementById('newTaskNav');
+
+  function setConversationOpen(open) {
+    mainView.classList.toggle('conversation-open', open);
+    conversationPage.hidden = !open;
+    conversationTask.classList.toggle('current-conversation', open);
+    conversationTask.setAttribute('aria-current', open ? 'page' : 'false');
+    if (open) {
+      setWorkbench(false);
+      requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+    }
+  }
+
+  function resizeConversationPrompt() {
+    conversationPrompt.style.height = 'auto';
+    conversationPrompt.style.height = `${Math.min(conversationPrompt.scrollHeight, 130)}px`;
+    conversationSend.disabled = !conversationPrompt.value.trim();
+  }
+
+  function sendConversationMessage() {
+    const text = conversationPrompt.value.trim();
+    if (!text) return;
+    conversationThread.insertAdjacentHTML('beforeend',
+      `<div class="conversation-message user-message"><div class="message-bubble">${esc(text)}</div></div>`);
+    conversationPrompt.value = '';
+    resizeConversationPrompt();
+    requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+  }
+
+  conversationTask.addEventListener('click', (e) => {
+    if (e.target.closest('[data-toggle-agents]')) return;
+    e.preventDefault();
+    setConversationOpen(true);
+  });
+  newTaskNav.addEventListener('click', (e) => {
+    e.preventDefault();
+    setConversationOpen(false);
+    requestAnimationFrame(() => prompt.focus());
+  });
+  conversationPrompt.addEventListener('input', resizeConversationPrompt);
+  conversationPrompt.addEventListener('focus', () => conversationComposer.classList.add('focus'));
+  conversationPrompt.addEventListener('blur', () => conversationComposer.classList.remove('focus'));
+  conversationPrompt.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+    e.preventDefault();
+    sendConversationMessage();
+  });
+  conversationSend.addEventListener('click', sendConversationMessage);
+  conversationArtifact.addEventListener('click', () => {
+    const node = FOLDERS[0].files.find((file) => file.name === '门店履约异常看板.html');
+    if (node) openArtifactPreview(node, [FOLDERS[0], node]);
   });
 
   fileBack.addEventListener('click', fileGoBack);
@@ -2060,7 +2441,7 @@
   // ⌘/Ctrl + T 与加号里的「浏览器」保持同一语义。
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 't') {
-      if (!content.classList.contains('wb-open')) return;
+      if (rightPanel !== 'tools') return;
       e.preventDefault();
       createWorkspace('browser');
       urlInput.value = '';
