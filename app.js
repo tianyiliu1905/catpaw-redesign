@@ -4,6 +4,20 @@
 (function () {
   'use strict';
 
+  const timeGreeting = document.getElementById('timeGreeting');
+
+  function updateTimeGreeting() {
+    const hour = new Date().getHours();
+    let greeting = '晚上好，';
+    if (hour >= 5 && hour < 11) greeting = '早上好，';
+    else if (hour >= 11 && hour < 13) greeting = '中午好，';
+    else if (hour >= 13 && hour < 18) greeting = '下午好，';
+    timeGreeting.textContent = greeting;
+  }
+
+  updateTimeGreeting();
+  setInterval(updateTimeGreeting, 60 * 1000);
+
   /* ---------- 1. 侧边栏折叠 / 展开 ---------- */
   const win = document.getElementById('window');
   const collapseBtn = document.getElementById('toggleSidebar');
@@ -28,80 +42,6 @@
 
   setCollapsed(false);
 
-  /* ---------- 1.4 产品模式筛选 ----------
-     「通用」展示拍平后的完整能力入口；「智能掌柜」隐藏通用扩展入口。 */
-  const sidebar = document.getElementById('sidebar');
-  const modePicker = document.getElementById('modePicker');
-  const modeTrigger = document.getElementById('modeTrigger');
-  const modeTriggerName = document.getElementById('modeTriggerName');
-  const modeMenu = document.getElementById('modeMenu');
-  const modeOptions = Array.from(modeMenu.querySelectorAll('.mode-option'));
-
-  function setModeMenuOpen(open) {
-    modePicker.classList.toggle('open', open);
-    modeMenu.hidden = !open;
-    modeTrigger.setAttribute('aria-expanded', String(open));
-  }
-
-  function selectMode(mode) {
-    const selected = modeOptions.find((option) => option.dataset.mode === mode);
-    if (!selected) return;
-
-    modeOptions.forEach((option) => {
-      const on = option === selected;
-      option.classList.toggle('selected', on);
-      option.setAttribute('aria-selected', String(on));
-    });
-    modeTriggerName.textContent = selected.querySelector('span').textContent;
-    sidebar.dataset.mode = mode;
-    setModeMenuOpen(false);
-  }
-
-  modeTrigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    setModeMenuOpen(!modePicker.classList.contains('open'));
-  });
-
-  modeMenu.addEventListener('click', (e) => {
-    const option = e.target.closest('.mode-option');
-    if (!option) return;
-    e.stopPropagation();
-    selectMode(option.dataset.mode);
-    modeTrigger.focus();
-  });
-
-  modePicker.addEventListener('keydown', (e) => {
-    const open = modePicker.classList.contains('open');
-    const activeIndex = modeOptions.indexOf(document.activeElement);
-
-    if (e.key === 'Escape' && open) {
-      e.preventDefault();
-      setModeMenuOpen(false);
-      modeTrigger.focus();
-      return;
-    }
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      const selectedIndex = modeOptions.findIndex((option) => option.classList.contains('selected'));
-
-      if (!open) {
-        setModeMenuOpen(true);
-        modeOptions[Math.max(0, selectedIndex)].focus();
-        return;
-      }
-
-      const step = e.key === 'ArrowDown' ? 1 : -1;
-      const fromIndex = activeIndex === -1 ? selectedIndex : activeIndex;
-      modeOptions[(fromIndex + step + modeOptions.length) % modeOptions.length].focus();
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!modePicker.contains(e.target)) setModeMenuOpen(false);
-  });
-
-  selectMode('general');
-
   /* ---------- 1.5 拍平后的任务 / 文件夹列表 ---------- */
   const TASK_LIMIT = 6;   // 任务区默认最多展示的条数
 
@@ -123,13 +63,15 @@
       task.hidden = !tasksExpanded && index >= TASK_LIMIT;
     });
 
-    const shown = looseTasks.length;
-    const overflow = Math.max(0, shown - TASK_LIMIT);
-    expandTasksBtn.hidden = overflow === 0;
-    // 收起时提示还有多少条，展开后只需给出回收入口
-    expandTasksBtn.textContent = tasksExpanded ? '收起' : `展开（${overflow}）`;
+const shown = looseTasks.length;
+const overflow = Math.max(0, shown - TASK_LIMIT);
+expandTasksBtn.hidden = overflow === 0;
+// 标题展示顶层任务总数；SubAgent 归属于父任务，不重复计数。
+labelTasks.textContent = `任务 (${shown})`;
+// 按钮只表达展开状态；剩余数量不在操作文案中重复展示。
+expandTasksBtn.textContent = tasksExpanded ? '收起' : '展开';
 
-    labelTasks.hidden = shown === 0;
+labelTasks.hidden = shown === 0;
   }
 
   expandTasksBtn.addEventListener('click', (e) => {
@@ -167,14 +109,13 @@
     toggleAgentTasks(control);
   });
 
-  /* 原场景文件夹全部进入同一列表，并沿用各自的折叠交互。 */
-  function renderGroups() {
-    groups.forEach((group) => {
-      group.hidden = false;
-      syncGroupHeight(group);
-    });
-    labelFolders.hidden = groups.length === 0;
-  }
+/* 原场景文件夹全部进入同一列表，并沿用各自的折叠交互。 */
+function renderGroups() {
+groups.forEach((group) => {
+group.hidden = false;
+});
+labelFolders.hidden = groups.length === 0;
+}
 
   /* ---------- 1.7 文件夹数据源 ----------
      侧边栏分组、归属选择器共用同一份数据，避免两处文案各写各的。
@@ -198,8 +139,8 @@
      三者都是纯字符串，不发任何请求——脱离本机、双击打开也能显示。
      没有 preview 的项保持只读占位，点开给一句说明而非空白。 */
 
-  /* -- 三份示例产物 --
-     全部内联成字符串，不落成独立文件。这样整个原型只有
+  /* -- 示例产物 --
+     全部内联成字符串或结构，不落成独立文件。这样整个原型只有
      index.html / styles.css / app.js 三个文件，打包发给别人
      或直接双击打开都能完整显示：没有 fetch，就没有
      file:// 协议下的跨域限制，也不会出现「少带了一个资源」。 */
@@ -292,31 +233,31 @@
     '<title>门店履约异常看板</title>',
     '<style>',
     '*{box-sizing:border-box;margin:0;padding:0}',
-    'body{font:13px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;',
+    'body{font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;',
     '  color:#1d1d1f;background:#f5f7fa;padding:18px}',
-    'h1{font-size:17px;letter-spacing:-.2px}',
-    '.sub{color:#86868b;font-size:11.5px;margin:4px 0 14px}',
+    'h1{font-size:16px;letter-spacing:-.2px}',
+    '.sub{color:#86868b;font-size:12px;margin:4px 0 16px}',
     '.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}',
-    '.kpi{background:#fff;border:1px solid #e6e9ef;border-radius:9px;padding:10px 11px}',
-    '.kpi .k{font-size:11px;color:#86868b}',
-    '.kpi .v{font-size:20px;font-weight:600;margin-top:3px;letter-spacing:-.4px}',
-    '.kpi .d{font-size:11px;margin-top:2px}',
+    '.kpi{background:#fff;border:1px solid #e6e9ef;border-radius:9px;padding:12px}',
+    '.kpi .k{font-size:12px;color:#86868b}',
+    '.kpi .v{font-size:16px;font-weight:600;margin-top:4px;letter-spacing:-.4px}',
+    '.kpi .d{font-size:12px;margin-top:2px}',
     '.up{color:#d1483f}.down{color:#1a7f44}',
     '.card{background:#fff;border:1px solid #e6e9ef;border-radius:9px;padding:12px}',
-    '.card h2{font-size:12.5px;margin-bottom:10px}',
+    '.card h2{font-size:14px;margin-bottom:12px}',
     '.bars{display:flex;align-items:flex-end;gap:10px;height:120px}',
     '.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}',
     '.bar i{display:block;width:100%;border-radius:4px 4px 0 0;background:#cfe0f6}',
     '.bar.peak i{background:#3b82e0}',
-    '.bar span{font-size:10.5px;color:#86868b}',
+    '.bar span{font-size:12px;color:#86868b}',
     'table{width:100%;border-collapse:collapse;margin-top:12px}',
-    'th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #eef1f5;font-size:12px}',
-    'th{color:#86868b;font-weight:500;font-size:11px}',
+    'th,td{text-align:left;padding:8px;border-bottom:1px solid #eef1f5;font-size:12px}',
+    'th{color:#86868b;font-weight:500;font-size:12px}',
     'td.num{text-align:right;font-variant-numeric:tabular-nums}',
-    '.tag{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10.5px}',
+    '.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}',
     '.tag.bad{background:#fdeceb;color:#d1483f}',
     '.tag.ok{background:#e8f6ed;color:#1a7f44}',
-    'footer{margin-top:12px;color:#a1a1a6;font-size:10.5px}',
+    'footer{margin-top:12px;color:#a1a1a6;font-size:12px}',
     '</style></head><body>',
     '<h1>门店履约异常看板</h1>',
     '<p class="sub">上海虹桥店 · 业务日 2026-07-27 · 数据截至 13:45</p>',
@@ -360,33 +301,55 @@
       id: 'default', name: '默认文件夹', scope: null, isDefault: true,
       path: '~/CatPaw/默认文件夹',
       files: [
+        { name: '季度经营复盘.pptx', type: 'ppt', artifact: true, preview: { kind: 'ppt' } },
+        { name: '门店履约分析.docx', type: 'word', artifact: true },
+        { name: '门店履约异常明细.xlsx', type: 'excel', artifact: true },
         {
-          name: '未命名对话记录.md', type: 'doc',
-          preview: { kind: 'markdown', text: DEMO_MD },
-        },
-        {
-          name: '门店履约异常看板.html', type: 'web',
+          name: '门店履约异常看板.html', type: 'html', artifact: true,
           preview: { kind: 'html', html: DEMO_HTML },
         },
         {
-          name: '草稿箱', type: 'folder',
-          files: [
-            // 再嵌一层，用来验证多级回退而非只能退一步
-            {
-              name: '待整理', type: 'folder',
-              files: [
-                { name: '会议速记-0918.md',     type: 'doc' },
-                { name: '毛稿拼图.png',          type: 'image' },
-              ],
-            },
-            { name: '提纲-未完成.md',         type: 'doc' },
-            { name: '素材清单.csv',            type: 'sheet' },
-            { name: '参考截图.png',            type: 'image' },
-          ],
+          name: '履约异常趋势.png', type: 'png', artifact: true,
+          preview: { kind: 'image', art: DEMO_PNG },
         },
         {
-          name: '截图 2026-09-21.png', type: 'image',
-          preview: { kind: 'image', art: DEMO_PNG },
+          name: '系统文件示例', type: 'folder', system: true,
+          files: [
+            { name: 'README.md', type: 'code', preview: { kind: 'markdown', text: DEMO_MD } },
+            { name: 'index.html', type: 'code', preview: { kind: 'html', html: DEMO_HTML } },
+            { name: 'styles.css', type: 'code' },
+            { name: 'app.js', type: 'code' },
+            { name: 'component.jsx', type: 'code' },
+            { name: 'main.ts', type: 'code' },
+            { name: 'App.tsx', type: 'code' },
+            { name: 'Component.vue', type: 'code' },
+            { name: 'Widget.svelte', type: 'code' },
+            { name: 'config.json', type: 'code' },
+            { name: 'layout.xml', type: 'code' },
+            { name: 'pipeline.yaml', type: 'code' },
+            { name: 'settings.toml', type: 'code' },
+            { name: 'runtime.ini', type: 'code' },
+            { name: '.env', type: 'code' },
+            { name: '.gitignore', type: 'code' },
+            { name: 'Dockerfile', type: 'code' },
+            { name: 'query.sql', type: 'code' },
+            { name: 'schema.graphql', type: 'code' },
+            { name: 'analysis.py', type: 'code' },
+            { name: 'Service.java', type: 'code' },
+            { name: 'Main.kt', type: 'code' },
+            { name: 'server.go', type: 'code' },
+            { name: 'lib.rs', type: 'code' },
+            { name: 'index.php', type: 'code' },
+            { name: 'task.rb', type: 'code' },
+            { name: 'View.swift', type: 'code' },
+            { name: 'main.c', type: 'code' },
+            { name: 'engine.cpp', type: 'code' },
+            { name: 'types.h', type: 'code' },
+            { name: 'Program.cs', type: 'code' },
+            { name: 'deploy.sh', type: 'code' },
+            { name: 'logo.svg', type: 'code' },
+            { name: 'notes.txt', type: 'code' },
+          ],
         },
       ],
     },
@@ -480,25 +443,31 @@
     return FOLDERS.filter((f) => f.isDefault || f.scope === scope);
   }
 
-  /* ---------- 1.75 工具台「文件夹」面板 ----------
-     面板展示的始终是输入框下方选中的那个归属文件夹，不再是写死的工程目录。
-     「我把任务存到哪」与「我在文件面板里看到什么」因此指向同一个对象。 */
-  const fileLoc     = document.getElementById('fileLoc');
-  const fileBack    = document.getElementById('fileBack');
-  const fileFwd     = document.getElementById('fileFwd');
-  const fileGrid         = document.getElementById('fileGrid');
-  const fileView         = document.getElementById('fileView');
-  const recentFiles      = document.getElementById('recentFiles');
-  const outputCategories = Array.from(document.querySelectorAll('[data-output-category]'));
-  const fileLayoutToggle = document.getElementById('fileLayoutToggle');
-  let fileLayout = 'grid';
-  let outputCategory = 'current';
-  let recentPreviewEntry = null;
-  let recentOpenedFiles = [
-    { node: FOLDERS[0].files[1], chain: [FOLDERS[0], FOLDERS[0].files[1]], opened: '刚刚' },
-    { node: FOLDERS[3].files[4], chain: [FOLDERS[3], FOLDERS[3].files[4]], opened: '12 分钟前' },
-    { node: FOLDERS[1].files[2], chain: [FOLDERS[1], FOLDERS[1].files[2]], opened: '1 小时前' },
-  ];
+  /* ---------- 1.75 摘要文件列表 ----------
+     浮窗展示的始终是输入框下方选中的归属文件夹，不再是写死的工程目录。
+     「我把任务存到哪」与「摘要里看到什么」因此指向同一个对象。 */
+  const fileGrid = document.getElementById('fileGrid');
+  const recentFiles = document.getElementById('recentFiles');
+const summaryExpandRecent = document.getElementById('summaryExpandRecent');
+const MAX_RECENT_FILES = 12;
+const RECENT_VISIBLE_COUNT = 6;
+let recentFilesExpanded = false;
+
+  /* 最近记录最多保留 12 条，默认展示前 6 条；展开后展示全部记录。 */
+  function seedRecentFiles() {
+    const entries = [];
+    const visit = (nodes, chain) => {
+      (nodes || []).forEach((node) => {
+        const nextChain = chain.concat(node);
+        if (node.type === 'folder') visit(node.files, nextChain);
+        else entries.push({ node, chain: nextChain, opened: '刚刚' });
+      });
+    };
+    FOLDERS.forEach((folder) => visit(folder.files, [folder]));
+    return entries.slice(0, MAX_RECENT_FILES);
+  }
+
+  let recentOpenedFiles = seedRecentFiles();
 
   /* 缩略图按类型绘制。不画品牌化的「Word / Excel」标志，
      因为文件可能来自任何工具；改用「纸张 + 内容骨架」这一层抽象，
@@ -517,6 +486,34 @@
     `</svg>`;
 
   const THUMBS = {
+    /* PPT 缩略图直接绘制首屏封面，让用户在打开前就能辨认内容；不使用参考截图或外链图片。 */
+    ppt: () =>
+      `<svg class="f-ppt-preview" viewBox="0 0 88 50" aria-hidden="true">` +
+      `<defs><linearGradient id="pptCover" x1="0" y1="0" x2="1" y2="1">` +
+      `<stop offset="0" stop-color="#718b9f"/><stop offset=".42" stop-color="#dce3e8"/>` +
+      `<stop offset=".43" stop-color="#314655"/><stop offset="1" stop-color="#101b25"/>` +
+      `</linearGradient></defs>` +
+      `<rect x=".5" y=".5" width="87" height="49" rx="3" fill="url(#pptCover)" stroke="#d6dae0"/>` +
+      `<path d="M54 6h25v16H54z" fill="#12212d" opacity=".86"/>` +
+      `<path d="M8 44 43 31l35 13" fill="#18242e" opacity=".76"/>` +
+      `<rect x="17" y="18" width="54" height="14" rx="1.5" fill="none" stroke="#77a9f4" stroke-width=".8"/>` +
+      `<text x="44" y="23.5" text-anchor="middle" font-size="5.4" font-weight="700" fill="#fff">季度经营复盘</text>` +
+      `<text x="44" y="29" text-anchor="middle" font-size="4.6" font-weight="600" fill="#fff">稳增长 · 提效率</text>` +
+      `<rect x="4" y="4" width="15" height="7" rx="2" fill="#e86f3c"/>` +
+      `<text x="11.5" y="9" text-anchor="middle" font-size="4.2" font-weight="700" fill="#fff">PPT</text>` +
+      `</svg>`,
+    word: () => productFile('W', '#3478d4', '<path d="M11 20h24M11 25h24M11 30h17"/>'),
+    excel: () => productFile('X', '#2d9b62', '<path d="M11 19h24v16H11zM11 24h24M11 29h24M19 19v16M27 19v16"/>'),
+    html: () => productFile('HTML', '#e76f3c', '<path d="m17 22-5 5 5 5M29 22l5 5-5 5M26 18l-6 18"/>'),
+    png: () =>
+      `<svg class="f-img" viewBox="0 0 56 44" aria-hidden="true">` +
+      `<rect width="56" height="44" rx="4" fill="url(#fgImage)"/>` +
+      `<circle cx="42" cy="12" r="5" fill="#fff" opacity=".75"/>` +
+      `<path d="M0 44l17-17 11 11 9-8 19 14z" fill="#93b8d8" opacity=".85"/>` +
+      `<rect x="4" y="4" width="20" height="10" rx="3" fill="#fff" opacity=".9"/>` +
+      `<text x="14" y="11.5" text-anchor="middle" font-size="7" font-weight="700" fill="#667085">PNG</text>` +
+      `</svg>`,
+
     folder: () =>
       `<svg class="f-folder" viewBox="0 0 58 46" aria-hidden="true">` +
       // 后层：露出顶部一条，做出「一沓」的厚度
@@ -563,6 +560,16 @@
       `</svg>`,
   };
 
+  function productFile(label, color, inner) {
+    return `<svg class="f-product" viewBox="0 0 46 58" aria-hidden="true">` +
+      `<path d="M2 4a3 3 0 0 1 3-3h22l17 16.5V54a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3z" fill="#fff" stroke="#dcdce2"/>` +
+      `<path d="M27 1l17 16.5H30a3 3 0 0 1-3-3z" fill="#ececed"/>` +
+      `<rect x="6" y="8" width="${label.length > 2 ? 21 : 15}" height="8" rx="2" fill="${color}"/>` +
+      `<text x="${label.length > 2 ? 16.5 : 13.5}" y="14" text-anchor="middle" font-size="5.8" font-weight="700" fill="#fff">${label}</text>` +
+      `<g fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${inner}</g>` +
+      `</svg>`;
+  }
+
   /* 所有纸张类共用同一张页面底板，只有内部骨架不同。
      右上角切角是「纸」的通用符号，缺了它就只是个白方块。 */
   function page(inner) {
@@ -577,29 +584,9 @@
     );
   }
 
-  /* -- 层级导航 --
-     filePath 是一条从根文件夹往下的节点链，末项即当前所在位置。
-     只存节点引用而非 id：嵌套项没有 id，且同名文件夹可能出现在不同层，
-     靠名字定位会认错人。
-
-     末项不一定是目录——打开一个文件时，该文件节点同样入栈。
-     「打开文件」与「进入子目录」因此是同一个动作：都是往下走一层，
-     区别只在这一层用宫格渲染还是用预览器渲染。
-     好处是左箭头不需要为「关闭预览」单开一条分支，
-     它始终只做一件事：出栈一层。
-
-     为什么不是浏览器式的前进 / 后退历史：
-     这是一棵目录树，「上一级」是结构上的父节点，唯一确定；
-     若做成访问历史，从 A/B 跳到 C/D 后按左箭头会回到 A/B，
-     与图标上的「向上」语义相悖。因此左箭头 = 出栈一层。
-
-     右箭头是后退的逆操作，因此 fileForward 也是一个栈而非单个节点：
-     连退两层后再连进两层，应回到原位。
-     若只存一个，第二次后退会覆掉第一次的记录，深的那一层就找不回来了。
-
-     一旦从别处重新下钻，这条待重做的路径整条失效，需清空。 */
+  /* 摘要只展示当前归属文件夹的首层产物；路径数组继续用于把点击条目
+     交给工具工作区时保留完整来源链。 */
   let filePath = [];
-  let fileForward = [];
 
   function currentNode() {
     return filePath[filePath.length - 1] || null;
@@ -609,116 +596,50 @@
     if (!node || node.type === 'folder') return;
     recentOpenedFiles = recentOpenedFiles.filter((entry) => entry.node !== node);
     recentOpenedFiles.unshift({ node, chain: chain.slice(), opened: '刚刚' });
-    recentOpenedFiles = recentOpenedFiles.slice(0, 8);
-    if (outputCategory === 'recent' && !recentPreviewEntry) renderRecentFiles();
-  }
-
-  /* 往下走一层：子目录与文件走同一条路径 */
-  function enterNode(node) {
-    filePath.push(node);
-    // 走了新的岔路，原先记下的「可重做」路径不再成立
-    fileForward = [];
-    if (node.type !== 'folder') rememberRecentFile(node, filePath);
-    renderFilePane();
-  }
-
-  /* 回上一级；最近打开的文件预览优先返回最近列表。 */
-  function fileGoBack() {
-    if (outputCategory === 'recent' && recentPreviewEntry) {
-      recentPreviewEntry = null;
-      renderFilePane();
-      return;
-    }
-    if (filePath.length <= 1) return;
-    fileForward.push(filePath.pop());
-    renderFilePane();
-  }
-
-  /* 重新进入刚退出的那一层 */
-  function fileGoForward() {
-    if (!fileForward.length) return;
-    filePath.push(fileForward.pop());
-    renderFilePane();
-  }
-
-  /* 只写当前这一层的名字，不铺完整路径：
-     路径中间的层级既不可点也无处可去，写出来只是噪声，
-     层级移动交给左右两颗箭头。
-     打开文件后这里显示的是文件名——标题位始终回答「我此刻在看什么」。 */
-  function renderFileLoc() {
-    const node = currentNode();
-    if (!node) return;
-    fileLoc.textContent = node.name;
-    fileLoc.title = node.name;
-    // 在根目录就无处可退；没有待重做的路径就无处可进
-    fileBack.disabled = filePath.length <= 1;
-    fileFwd.disabled  = !fileForward.length;
-  }
-
-  const FILE_LAYOUT_ICONS = {
-    grid: '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>',
-    list: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
-  };
-
-  function syncFileLayout() {
-    const isList = fileLayout === 'list';
-    fileGrid.classList.toggle('is-list', isList);
-    fileLayoutToggle.setAttribute('aria-pressed', String(isList));
-    fileLayoutToggle.setAttribute('aria-label', isList ? '切换到宫格视图' : '切换到列表视图');
-    fileLayoutToggle.title = isList ? '切换到宫格视图' : '切换到列表视图';
-    fileLayoutToggle.querySelector('svg').innerHTML = isList ? FILE_LAYOUT_ICONS.grid : FILE_LAYOUT_ICONS.list;
-  }
-
-  function recentFileIcon(type) {
-    if (type === 'image') return '<path d="M4 4h16v16H4z"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/>';
-    if (type === 'sheet') return '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>';
-    if (type === 'code') return '<path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/>';
-    if (type === 'web') return '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>';
-    return '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>';
+    recentOpenedFiles = recentOpenedFiles.slice(0, MAX_RECENT_FILES);
+    renderRecentFiles();
   }
 
   function renderRecentFiles() {
     if (!recentOpenedFiles.length) {
       recentFiles.innerHTML = '<p class="recent-empty">还没有打开过文件</p>';
+      summaryExpandRecent.hidden = true;
       return;
     }
-    recentFiles.innerHTML = recentOpenedFiles.map((entry, index) => {
-      const location = entry.chain.slice(0, -1).map((node) => node.name).join(' / ');
-      return `<button class="recent-file" type="button" data-recent-index="${index}" title="${esc(entry.node.name)}">` +
-        `<span class="recent-file-symbol"><svg viewBox="0 0 24 24" class="ic">${recentFileIcon(entry.node.type)}</svg></span>` +
-        `<span class="recent-file-copy"><strong>${esc(entry.node.name)}</strong><small>${esc(location)}</small></span>` +
-        `<time>${entry.opened}</time>` +
+    const visibleCount = recentFilesExpanded ? MAX_RECENT_FILES : RECENT_VISIBLE_COUNT;
+    const visibleFiles = recentOpenedFiles.slice(0, visibleCount);
+    recentFiles.innerHTML = GRADIENT_DEFS + visibleFiles.map((entry, index) => {
+      const type = artifactType(entry.node);
+      const thumb = (THUMBS[type] || THUMBS.doc)();
+      return `<button class="fitem recent-file" type="button" data-recent-index="${index}"` +
+        ` data-file-type="${type || 'file'}" title="${esc(entry.node.name)}">` +
+        `<span class="fthumb">${thumb}</span>` +
+        `<span class="fname">${esc(entry.node.name)}</span>` +
         `</button>`;
     }).join('');
+    summaryExpandRecent.hidden = recentOpenedFiles.length <= RECENT_VISIBLE_COUNT;
+    summaryExpandRecent.textContent = recentFilesExpanded ? '收起' : '展开更多';
+    summaryExpandRecent.setAttribute('aria-expanded', String(recentFilesExpanded));
   }
 
-  function syncOutputCategories() {
-    outputCategories.forEach((button) => {
-      const active = button.dataset.outputCategory === outputCategory;
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-selected', String(active));
-    });
+  function artifactType(node) {
+    const name = String(node?.name || '').toLowerCase();
+    if (/\.pptx?$/.test(name)) return 'ppt';
+    if (/\.docx?$/.test(name)) return 'word';
+    if (/\.xlsx?$/.test(name)) return 'excel';
+    if (/\.html?$/.test(name)) return 'html';
+    if (/\.png$/.test(name)) return 'png';
+    return null;
   }
 
-  function selectOutputCategory(category) {
-    if (category !== 'current' && category !== 'recent') return;
-    outputCategory = category;
-    recentPreviewEntry = null;
-    syncOutputCategories();
-    renderFilePane();
-  }
-
-  function openRecentFile(entry) {
-    if (!entry) return;
-    rememberRecentFile(entry.node, entry.chain);
-    recentPreviewEntry = recentOpenedFiles[0];
-    outputCategory = 'recent';
-    syncOutputCategories();
-    renderFilePane();
+  function isArtifactNode(node) {
+    return Boolean(artifactType(node));
   }
 
   function renderFileGrid(folder) {
-    const files = folder.files || [];
+    const files = (folder.files || [])
+      .map((f, i) => ({ f, i }))
+      .filter(({ f }) => isArtifactNode(f));
     if (!files.length) {
       fileGrid.innerHTML = `<p class="file-empty">这个文件夹还是空的</p>`;
       return;
@@ -728,15 +649,14 @@
        排序会打乱与原数组的对应关系，故先把原下标绑在每一项上，
        再写进 data-file-index 供点击时回查。
        sort 用的是稳定排序，同类项之间维持原有次序。 */
-    const sorted = files
-      .map((f, i) => ({ f, i }))
-      .sort((a, b) => (a.f.type === 'folder' ? 0 : 1) - (b.f.type === 'folder' ? 0 : 1));
+    const sorted = files;
 
     fileGrid.innerHTML = GRADIENT_DEFS + sorted
       .map(({ f, i }) => {
-        const thumb = (THUMBS[f.type] || THUMBS.doc)();
+        const type = artifactType(f);
+        const thumb = (THUMBS[type] || THUMBS.doc)();
         return (
-          `<button class="fitem" data-file-type="${f.type}"` +
+          `<button class="fitem" data-file-type="${type}"` +
           ` data-file-index="${i}" title="${f.name}">` +
           `<span class="fthumb">${thumb}</span>` +
           `<span class="fname">${f.name}</span>` +
@@ -846,6 +766,42 @@
   }
 
   const PREVIEWS = {
+    /* PPT：参考桌面演示文稿编辑器，直接展示可辨认的编辑态，而不是文件占位。 */
+    ppt: () => `<div class="pv-ppt" aria-label="季度经营复盘演示文稿预览">
+      <header class="ppt-appbar">
+        <span class="ppt-traffic"><i></i><i></i><i></i></span>
+        <span class="ppt-app-icon">P</span>
+        <strong>季度经营复盘</strong>
+        <span class="ppt-app-name">演示文稿</span>
+        <em>已保存</em>
+        <span class="ppt-app-actions">播放　分享　下载　•••</span>
+      </header>
+      <nav class="ppt-ribbon" aria-label="演示文稿工具栏">
+        <span>开始</span><span>插入</span><span>设计</span><span>切换</span><span>动画</span><span>放映</span><span>审阅</span><span>视图</span>
+        <b>格式</b>
+      </nav>
+      <div class="ppt-editor">
+        <aside class="ppt-slides" aria-label="幻灯片缩略图">
+          <button class="ppt-thumb active"><i>1</i><span class="ppt-thumb-cover"><b>季度经营复盘</b><small>2026 Q3</small></span></button>
+          <button class="ppt-thumb"><i>2</i><span><b>核心经营指标</b><small class="ppt-mini-kpis">18.4%　92.6%</small></span></button>
+          <button class="ppt-thumb"><i>3</i><span><b>区域业绩表现</b><small class="ppt-mini-chart"></small></span></button>
+          <button class="ppt-thumb"><i>4</i><span><b>门店优秀案例</b><small class="ppt-mini-cards"></small></span></button>
+          <button class="ppt-thumb"><i>5</i><span><b>下一步行动</b><small>聚焦增长 · 提升履约</small></span></button>
+        </aside>
+        <main class="ppt-workspace">
+          <div class="ppt-formatbar"><b>AI 排版</b><span>B</span><i>I</i><u>U</u><span>24</span><span>思源黑体</span><span>↕</span><span>≡</span><span>•••</span></div>
+          <article class="ppt-slide">
+            <div class="ppt-cover-visual"><span class="ppt-screen"></span><span class="ppt-keyboard"></span></div>
+            <div class="ppt-title-selection"><i></i><i></i><i></i><i></i><h1>季度经营复盘<br><strong>稳增长 · 提效率</strong></h1></div>
+            <p>服务零售事业部　·　2026 Q3</p>
+            <small>CATPAW GENERATED</small>
+          </article>
+          <div class="ppt-notes"><b>备注</b><span>本季度核心指标保持稳健增长，履约效率和门店经营质量持续改善。</span></div>
+        </main>
+      </div>
+      <footer class="ppt-status"><span>幻灯片 1 / 5　　简体中文</span><span>▦　▤　　−　 72%　＋</span></footer>
+    </div>`,
+
     /* 文档：渲染成排版后的富文本，而不是显示源码。
        用户要的是「这篇文档写了什么」，不是「它的标记长什么样」。 */
     markdown: (p) => `<article class="md">${renderMarkdown(p.text)}</article>`,
@@ -881,68 +837,13 @@
     );
   }
 
-  function renderFileView(node) {
-    const p = node.preview;
-    const render = p && PREVIEWS[p.kind];
-    fileView.innerHTML = render ? render(p) : previewFallback(node);
-    // 每次换文件都从顶部开始读，不带着上一篇的滚动位置
-    fileView.scrollTop = 0;
-  }
-
-  /* 重画当前所在的那一层。
-     目录画宫格，文件画预览——两者是同一个位置上的两种形态，
-     因此显隐在一处统一切换，不散落到各个调用点。 */
-  function renderFilePane() {
-    syncOutputCategories();
-
-    if (outputCategory === 'recent') {
-      fileFwd.hidden = true;
-      fileLayoutToggle.hidden = true;
-      fileGrid.hidden = true;
-      if (recentPreviewEntry) {
-        fileLoc.textContent = recentPreviewEntry.node.name;
-        fileLoc.title = recentPreviewEntry.node.name;
-        fileBack.hidden = false;
-        fileBack.disabled = false;
-        recentFiles.hidden = true;
-        fileView.hidden = false;
-        renderFileView(recentPreviewEntry.node);
-      } else {
-        fileLoc.textContent = '最近打开的文件';
-        fileLoc.title = '最近打开的文件';
-        fileBack.hidden = true;
-        fileView.hidden = true;
-        fileView.innerHTML = '';
-        recentFiles.hidden = false;
-        renderRecentFiles();
-      }
-      return;
-    }
-
-    recentFiles.hidden = true;
-    fileBack.hidden = false;
-    fileFwd.hidden = false;
-    const node = currentNode();
-    if (!node) return;
-    renderFileLoc();
-
-    const isFolder = node.type === 'folder' || !filePath.length || node === filePath[0];
-
-    if (isFolder) {
-      renderFileGrid(node);
-      fileGrid.hidden = false;
-      fileView.hidden = true;
-      fileView.innerHTML = '';   // 放掉 iframe，不让它在后台继续留着
-      fileLayoutToggle.hidden = false;
-      syncFileLayout();
-      return;
-    }
-
-    fileGrid.hidden = true;
-    fileView.hidden = false;
-    fileLayoutToggle.hidden = true;
-    renderFileView(node);
-  }
+function renderSummaryContents() {
+const hasActiveTask = document.querySelector('.main')?.classList.contains('conversation-open');
+const folder = currentNode();
+if (!hasActiveTask) fileGrid.innerHTML = '<p class="summary-empty">无</p>';
+else if (folder) renderFileGrid(folder);
+renderRecentFiles();
+}
 
   /* 换了归属文件夹就是换了一棵树，层级栈必须重置到根。
      不重置的话，面板会停在上一个文件夹的子目录里，
@@ -951,8 +852,7 @@
     const folder = FOLDERS.find((f) => f.id === folderByScope[currentScope]);
     if (!folder) return;
     filePath = [folder];
-    fileForward = [];
-    if (outputCategory === 'current') renderFilePane();
+    renderSummaryContents();
   }
 
   /* ---------- 1.8 归属文件夹选择器 ---------- */
@@ -1151,49 +1051,42 @@
 
   initializeFlatSidebar();
 
-  /* ---------- 2. 分组折叠 ---------- */
+  /* ---------- 2. 分组折叠 ----------
+     使用 0fr → 1fr 的网格轨道过渡，避免读取 scrollHeight 和强制回流。
+     内容高度发生变化时由浏览器直接插值，连续点击也不会卡在中间高度。 */
   document.querySelectorAll('[data-group]').forEach((group) => {
     const head = group.querySelector('[data-toggle-group]');
     const body = group.querySelector('.group-body');
-
-    // 初始化显式高度，保证首次过渡有值可算
-    body.style.height = body.scrollHeight + 'px';
+    const inner = document.createElement('div');
+    inner.className = 'group-body-inner';
+    while (body.firstChild) inner.appendChild(body.firstChild);
+    body.appendChild(inner);
+    head.setAttribute('aria-expanded', String(!group.classList.contains('folded')));
 
     head.addEventListener('click', () => {
-      const folded = group.classList.contains('folded');
-      if (folded) {
-        group.classList.remove('folded');
-        body.style.height = body.scrollHeight + 'px';
-      } else {
-        body.style.height = body.scrollHeight + 'px';
-        // 强制回流后再收起，触发动画
-        void body.offsetHeight;
-        group.classList.add('folded');
-      }
+      const folded = group.classList.toggle('folded');
+      head.setAttribute('aria-expanded', String(!folded));
+      requestAnimationFrame(refreshClipped);
     });
   });
 
-  /* 内容变化后同步高度；散落任务不在分组内，直接跳过 */
-  function syncGroupHeight(group) {
-    if (!group) return;
-    const body = group.querySelector('.group-body');
-    if (body && !group.classList.contains('folded')) {
-      body.style.height = body.scrollHeight + 'px';
-    }
-  }
-
-  /* ---------- 3. 展开显示 / 收起 ---------- */
+  /* ---------- 3. 展开显示 / 收起 ----------
+     附加任务自身也采用网格轨道动画；收起时内容不会先消失再留下空白。 */
   document.querySelectorAll('[data-expand]').forEach((btn) => {
     const wrap = btn.parentElement.querySelector('[data-more]');
     if (!wrap) return;
+    const inner = document.createElement('div');
+    inner.className = 'more-wrap-inner';
+    while (wrap.firstChild) inner.appendChild(wrap.firstChild);
+    wrap.appendChild(inner);
+    btn.setAttribute('aria-expanded', String(!wrap.classList.contains('hidden')));
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const hidden = wrap.classList.toggle('hidden');
-      btn.textContent = hidden ? '展开显示' : '收起';
-      syncGroupHeight(btn.closest('[data-group]'));
-      // 新展开的项尚未检测过溢出
-      refreshClipped();
+      btn.textContent = hidden ? '展开' : '收起';
+      btn.setAttribute('aria-expanded', String(!hidden));
+      requestAnimationFrame(refreshClipped);
     });
   });
 
@@ -1407,6 +1300,7 @@
   const promptChip = document.getElementById('promptChip');
   const promptChipText = document.getElementById('promptChipText');
   const promptChipClear = document.getElementById('promptChipClear');
+  const promptChipSourceIcon = document.getElementById('promptChipSourceIcon');
   let promptGuide = '';
 
   function autoResize() {
@@ -1418,9 +1312,10 @@
     sendBtn.disabled = prompt.value.trim().length === 0 && !promptGuide;
   }
 
-  function setPromptGuide(text = '', label = text) {
+  function setPromptGuide(text = '', label = text, iconMarkup = '') {
     promptGuide = text;
     promptChipText.textContent = label;
+    promptChipSourceIcon.innerHTML = iconMarkup;
     promptChip.hidden = !text;
     refreshSendState();
   }
@@ -1429,9 +1324,6 @@
     autoResize();
     refreshSendState();
   });
-
-  prompt.addEventListener('focus', () => card.classList.add('focus'));
-  prompt.addEventListener('blur', () => card.classList.remove('focus'));
 
   // Enter 发送，Shift+Enter 换行
   prompt.addEventListener('keydown', (e) => {
@@ -1463,6 +1355,34 @@
   const primaryPromptButtons = Array.from(primaryPrompts.querySelectorAll('.pill'));
   const secondaryPrompts = document.getElementById('secondaryPrompts');
   const casesEl = document.getElementById('cases');
+
+  function updatePromptScrollEdges(row) {
+    const maxScroll = row.scrollWidth - row.clientWidth;
+    row.classList.toggle('can-scroll-left', row.scrollLeft > 1);
+    row.classList.toggle('can-scroll-right', maxScroll > 1 && row.scrollLeft < maxScroll - 1);
+  }
+
+  [primaryPrompts, secondaryPrompts].forEach((row) => {
+    row.addEventListener('scroll', () => updatePromptScrollEdges(row), { passive: true });
+    row.addEventListener('wheel', (event) => {
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      const maxScroll = row.scrollWidth - row.clientWidth;
+      if (maxScroll <= 1 || (delta < 0 && row.scrollLeft <= 0) ||
+          (delta > 0 && row.scrollLeft >= maxScroll - 1)) return;
+      event.preventDefault();
+      row.scrollBy({ left: delta, behavior: 'smooth' });
+    }, { passive: false });
+    row.addEventListener('focusin', (event) => {
+      if (event.target.matches('button')) event.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+  });
+  const promptRowsResizeObserver = new ResizeObserver(() => {
+    updatePromptScrollEdges(primaryPrompts);
+    updatePromptScrollEdges(secondaryPrompts);
+  });
+  promptRowsResizeObserver.observe(primaryPrompts);
+  promptRowsResizeObserver.observe(secondaryPrompts);
+  requestAnimationFrame(() => updatePromptScrollEdges(primaryPrompts));
   let promptTransitionTimer = null;
   let caseTransitionTimer = null;
 
@@ -1533,6 +1453,8 @@
       ` style="animation-delay:${index * 55}ms">${label}</button>`
     ).join('');
     secondaryPrompts.hidden = false;
+    secondaryPrompts.scrollLeft = 0;
+    requestAnimationFrame(() => updatePromptScrollEdges(secondaryPrompts));
   }
 
   function transitionCases() {
@@ -1570,7 +1492,9 @@
         renderSecondaryPrompts(category);
       }, delay);
       const data = promptCategoryData()[category];
-      setPromptGuide(data.guide, data.tag);
+      const sourceButton = primaryPromptButtons.find((button) => button.dataset.promptCategory === category);
+      const sourceIcon = sourceButton?.querySelector('.ic')?.outerHTML || '';
+      setPromptGuide(data.guide, data.tag, sourceIcon);
       prompt.focus();
     }
     transitionCases();
@@ -1628,94 +1552,94 @@
     // 看板：左侧柱形 + 右侧折线，一眼是「一屏数据」
     dashboard: () =>
       `<svg class="cthumb-art" viewBox="0 0 160 100" aria-hidden="true">` +
-      `<rect width="160" height="100" fill="#f7f9fc"/>` +
+      `<rect width="160" height="100" fill="#f7f7f8"/>` +
       // 顶部标题条与两张指标卡
-      `<rect x="10" y="9" width="42" height="5" rx="2.5" fill="#c3ccda"/>` +
-      `<rect x="10" y="20" width="30" height="20" rx="3" fill="#fff" stroke="#e3e8f0"/>` +
-      `<rect x="44" y="20" width="30" height="20" rx="3" fill="#fff" stroke="#e3e8f0"/>` +
-      `<rect x="14" y="26" width="16" height="3" rx="1.5" fill="#8aa0c4"/>` +
-      `<rect x="48" y="26" width="16" height="3" rx="1.5" fill="#8aa0c4"/>` +
-      // 柱形图
-      `<rect x="10" y="46" width="64" height="44" rx="3" fill="#fff" stroke="#e3e8f0"/>` +
-      `<rect x="17" y="72" width="7" height="12" rx="1.5" fill="#9cc2f0"/>` +
-      `<rect x="28" y="64" width="7" height="20" rx="1.5" fill="#6aa5ea"/>` +
-      `<rect x="39" y="56" width="7" height="28" rx="1.5" fill="#3b82e0"/>` +
-      `<rect x="50" y="66" width="7" height="18" rx="1.5" fill="#9cc2f0"/>` +
+      `<rect x="10" y="9" width="42" height="5" rx="2.5" fill="#c9c9ce"/>` +
+      `<rect x="10" y="20" width="30" height="20" rx="3" fill="#fff" stroke="#e4e4e8"/>` +
+      `<rect x="44" y="20" width="30" height="20" rx="3" fill="#fff" stroke="#e4e4e8"/>` +
+      `<rect x="14" y="26" width="16" height="3" rx="1.5" fill="#8f8f96"/>` +
+      `<rect x="48" y="26" width="16" height="3" rx="1.5" fill="#8f8f96"/>` +
+      // 柱形图：灰阶为主，最高值用主题绿强调
+      `<rect x="10" y="46" width="64" height="44" rx="3" fill="#fff" stroke="#e4e4e8"/>` +
+      `<rect x="17" y="72" width="7" height="12" rx="1.5" fill="#d4d4d8"/>` +
+      `<rect x="28" y="64" width="7" height="20" rx="1.5" fill="#b7b7bd"/>` +
+      `<rect x="39" y="56" width="7" height="28" rx="1.5" fill="#4bcc7a"/>` +
+      `<rect x="50" y="66" width="7" height="18" rx="1.5" fill="#d4d4d8"/>` +
       // 折线图
-      `<rect x="80" y="20" width="70" height="70" rx="3" fill="#fff" stroke="#e3e8f0"/>` +
-      `<path d="M88 74l14-12 12 7 14-20 14 9" fill="none" stroke="#3b82e0" stroke-width="2.4"` +
+      `<rect x="80" y="20" width="70" height="70" rx="3" fill="#fff" stroke="#e4e4e8"/>` +
+      `<path d="M88 74l14-12 12 7 14-20 14 9" fill="none" stroke="#4bcc7a" stroke-width="2.4"` +
       ` stroke-linecap="round" stroke-linejoin="round"/>` +
       `</svg>`,
 
     // 推文：一张竖排图文，顶部配图、下面是正文块
     article: () =>
       `<svg class="cthumb-art" viewBox="0 0 160 100" aria-hidden="true">` +
-      `<rect width="160" height="100" fill="#f7f9fc"/>` +
-      `<rect x="40" y="8" width="80" height="84" rx="4" fill="#fff" stroke="#e3e8f0"/>` +
+      `<rect width="160" height="100" fill="#f7f7f8"/>` +
+      `<rect x="40" y="8" width="80" height="84" rx="4" fill="#fff" stroke="#e4e4e8"/>` +
       // 头图
-      `<path d="M46 14h68v22H46z" fill="#dce8f7"/>` +
-      `<circle cx="104" cy="21" r="4" fill="#fff" opacity=".8"/>` +
-      `<path d="M46 36l14-11 10 7 8-6 36 14z" fill="#9cc2f0" opacity=".9"/>` +
+      `<path d="M46 14h68v22H46z" fill="#e9e9ec"/>` +
+      `<circle cx="104" cy="21" r="4" fill="#4bcc7a" opacity=".9"/>` +
+      `<path d="M46 36l14-11 10 7 8-6 36 14z" fill="#bfc0c5" opacity=".9"/>` +
       // 标题与正文
-      `<rect x="46" y="42" width="46" height="4" rx="2" fill="#8f9aad"/>` +
+      `<rect x="46" y="42" width="46" height="4" rx="2" fill="#85858c"/>` +
       [50, 57, 64, 71, 78].map((y, i) =>
-        `<rect x="46" y="${y}" width="${i === 4 ? 40 : 68}" height="3" rx="1.5" fill="#d3d8e0"/>`
+        `<rect x="46" y="${y}" width="${i === 4 ? 40 : 68}" height="3" rx="1.5" fill="#d4d4d8"/>`
       ).join('') +
       `</svg>`,
 
     // 幻灯片：一张主页 + 后面叠两张，表达「一套」而非「一张」
     deck: () =>
       `<svg class="cthumb-art" viewBox="0 0 160 100" aria-hidden="true">` +
-      `<rect width="160" height="100" fill="#f7f9fc"/>` +
-      `<rect x="34" y="16" width="92" height="58" rx="4" fill="#eef2f8" stroke="#e3e8f0"/>` +
-      `<rect x="29" y="22" width="92" height="58" rx="4" fill="#f4f7fb" stroke="#e3e8f0"/>` +
-      `<rect x="24" y="28" width="92" height="58" rx="4" fill="#fff" stroke="#dde4ee"/>` +
-      `<rect x="32" y="37" width="40" height="5" rx="2.5" fill="#8f9aad"/>` +
-      `<rect x="32" y="47" width="58" height="3" rx="1.5" fill="#d3d8e0"/>` +
-      `<rect x="32" y="54" width="50" height="3" rx="1.5" fill="#d3d8e0"/>` +
-      `<rect x="32" y="64" width="18" height="14" rx="2" fill="#cfe0f6"/>` +
-      `<rect x="54" y="64" width="18" height="14" rx="2" fill="#9cc2f0"/>` +
-      `<rect x="76" y="64" width="18" height="14" rx="2" fill="#cfe0f6"/>` +
+      `<rect width="160" height="100" fill="#f7f7f8"/>` +
+      `<rect x="34" y="16" width="92" height="58" rx="4" fill="#ededf0" stroke="#e4e4e8"/>` +
+      `<rect x="29" y="22" width="92" height="58" rx="4" fill="#f5f5f6" stroke="#e4e4e8"/>` +
+      `<rect x="24" y="28" width="92" height="58" rx="4" fill="#fff" stroke="#dedee2"/>` +
+      `<rect x="32" y="37" width="40" height="5" rx="2.5" fill="#85858c"/>` +
+      `<rect x="32" y="47" width="58" height="3" rx="1.5" fill="#d4d4d8"/>` +
+      `<rect x="32" y="54" width="50" height="3" rx="1.5" fill="#d4d4d8"/>` +
+      `<rect x="32" y="64" width="18" height="14" rx="2" fill="#dedee2"/>` +
+      `<rect x="54" y="64" width="18" height="14" rx="2" fill="#4bcc7a"/>` +
+      `<rect x="76" y="64" width="18" height="14" rx="2" fill="#dedee2"/>` +
       `</svg>`,
 
     // 网页：带浏览器外壳，与「文档」区分开
     web: () =>
       `<svg class="cthumb-art" viewBox="0 0 160 100" aria-hidden="true">` +
-      `<rect width="160" height="100" fill="#f7f9fc"/>` +
-      `<rect x="18" y="14" width="124" height="72" rx="5" fill="#fff" stroke="#dde4ee"/>` +
-      `<path d="M18 19a5 5 0 0 1 5-5h114a5 5 0 0 1 5 5v7H18z" fill="#eef2f8"/>` +
-      `<circle cx="27" cy="20" r="2" fill="#d3d8e0"/>` +
-      `<circle cx="34" cy="20" r="2" fill="#d3d8e0"/>` +
-      `<circle cx="41" cy="20" r="2" fill="#d3d8e0"/>` +
-      `<rect x="26" y="34" width="52" height="6" rx="3" fill="#8f9aad"/>` +
-      `<rect x="26" y="46" width="72" height="3" rx="1.5" fill="#d3d8e0"/>` +
-      `<rect x="26" y="53" width="60" height="3" rx="1.5" fill="#d3d8e0"/>` +
-      `<rect x="26" y="64" width="28" height="10" rx="5" fill="#3b82e0"/>` +
-      `<rect x="104" y="34" width="30" height="40" rx="3" fill="#dce8f7"/>` +
+      `<rect width="160" height="100" fill="#f7f7f8"/>` +
+      `<rect x="18" y="14" width="124" height="72" rx="5" fill="#fff" stroke="#dedee2"/>` +
+      `<path d="M18 19a5 5 0 0 1 5-5h114a5 5 0 0 1 5 5v7H18z" fill="#ededf0"/>` +
+      `<circle cx="27" cy="20" r="2" fill="#c8c8cd"/>` +
+      `<circle cx="34" cy="20" r="2" fill="#c8c8cd"/>` +
+      `<circle cx="41" cy="20" r="2" fill="#4bcc7a"/>` +
+      `<rect x="26" y="34" width="52" height="6" rx="3" fill="#85858c"/>` +
+      `<rect x="26" y="46" width="72" height="3" rx="1.5" fill="#d4d4d8"/>` +
+      `<rect x="26" y="53" width="60" height="3" rx="1.5" fill="#d4d4d8"/>` +
+      `<rect x="26" y="64" width="28" height="10" rx="5" fill="#4bcc7a"/>` +
+      `<rect x="104" y="34" width="30" height="40" rx="3" fill="#e7e7ea"/>` +
       `</svg>`,
 
     // 代码：编辑器窗口，左侧行号栏
     code: () =>
       `<svg class="cthumb-art" viewBox="0 0 160 100" aria-hidden="true">` +
-      `<rect width="160" height="100" fill="#f7f9fc"/>` +
-      `<rect x="18" y="14" width="124" height="72" rx="5" fill="#fff" stroke="#dde4ee"/>` +
-      `<path d="M18 19a5 5 0 0 1 5-5h114a5 5 0 0 1 5 5v6H18z" fill="#eef2f8"/>` +
-      `<rect x="18" y="25" width="14" height="61" fill="#f4f7fb"/>` +
+      `<rect width="160" height="100" fill="#f7f7f8"/>` +
+      `<rect x="18" y="14" width="124" height="72" rx="5" fill="#fff" stroke="#dedee2"/>` +
+      `<path d="M18 19a5 5 0 0 1 5-5h114a5 5 0 0 1 5 5v6H18z" fill="#ededf0"/>` +
+      `<rect x="18" y="25" width="14" height="61" fill="#f5f5f6"/>` +
       [33, 41, 49, 57, 65, 73].map((y, i) =>
         `<rect x="${38 + (i % 3) * 6}" y="${y}" width="${[46, 34, 54, 28, 42, 30][i]}"` +
-        ` height="3" rx="1.5" fill="${i % 3 === 0 ? '#8aa0c4' : '#d3d8e0'}"/>`
+        ` height="3" rx="1.5" fill="${i === 3 ? '#4bcc7a' : i % 3 === 0 ? '#8f8f96' : '#d4d4d8'}"/>`
       ).join('') +
       `</svg>`,
 
     // 视觉稿：画板上的构图，用色块而非线条
     visual: () =>
       `<svg class="cthumb-art" viewBox="0 0 160 100" aria-hidden="true">` +
-      `<rect width="160" height="100" fill="#f7f9fc"/>` +
-      `<rect x="30" y="12" width="100" height="76" rx="4" fill="#fff" stroke="#dde4ee"/>` +
-      `<circle cx="62" cy="40" r="16" fill="#f3d0e0"/>` +
-      `<rect x="74" y="30" width="44" height="20" rx="3" fill="#cfe0f6"/>` +
-      `<rect x="42" y="62" width="76" height="4" rx="2" fill="#8f9aad"/>` +
-      `<rect x="42" y="71" width="52" height="4" rx="2" fill="#d3d8e0"/>` +
+      `<rect width="160" height="100" fill="#f7f7f8"/>` +
+      `<rect x="30" y="12" width="100" height="76" rx="4" fill="#fff" stroke="#dedee2"/>` +
+      `<circle cx="62" cy="40" r="16" fill="#dff3e6"/>` +
+      `<rect x="74" y="30" width="44" height="20" rx="3" fill="#d7d7db"/>` +
+      `<rect x="42" y="62" width="76" height="4" rx="2" fill="#4bcc7a"/>` +
+      `<rect x="42" y="71" width="52" height="4" rx="2" fill="#d4d4d8"/>` +
       `</svg>`,
    };
   }
@@ -1731,13 +1655,13 @@
       { kind: 'article', type: '分析报告', title: '客户反馈洞察报告', prompt: '整理近期客户反馈，归纳高频问题、情绪倾向和核心诉求，并给出按优先级排序的产品改进建议。' },
     ],
     dev: [
-      { kind: 'web', type: '网页', title: 'NoCode 组件文档站', prompt: '为 NoCode 组件库制作一个清晰易查的文档网站，包含组件分类、交互示例、参数说明和复制代码入口。' },
+      { kind: 'web', type: '应用开发', title: 'NoCode 组件文档站', prompt: '为 NoCode 组件库制作一个清晰易查的文档网站，包含组件分类、交互示例、参数说明和复制代码入口。' },
       { kind: 'code', type: '代码配置', title: '灰度发布流水线配置', prompt: '生成一份支持分批放量、自动健康检查、失败回滚和发布通知的灰度发布流水线配置。' },
       { kind: 'dashboard', type: '监控看板', title: '服务健康度监控台', prompt: '制作服务健康度监控台，展示可用率、响应时延、错误率和告警趋势，并支持按服务与时间范围筛选。' },
       { kind: 'code', type: '技术方案', title: '接口性能优化方案', prompt: '分析订单查询接口的性能瓶颈，给出缓存、数据库索引、并发控制和可观测性方面的优化方案与示例代码。' },
     ],
     design: [
-      { kind: 'visual', type: '视觉设计', title: '节点运营主视觉', prompt: '设计一张节点运营活动主视觉，突出限时氛围与核心权益，构图简洁有冲击力，并适配横版活动页面。' },
+      { kind: 'visual', type: '网页设计', title: '节点运营主视觉', prompt: '设计一张节点运营活动主视觉，突出限时氛围与核心权益，构图简洁有冲击力，并适配横版活动页面。' },
       { kind: 'deck', type: '设计提案', title: '品牌升级提案', prompt: '制作一份品牌升级提案，梳理品牌现状、设计策略、核心视觉语言和多场景应用示例。' },
       { kind: 'web', type: '交互原型', title: '设计系统组件预览', prompt: '搭建设计系统组件预览页，覆盖基础控件、状态变化、组合示例和设计规范，整体风格简洁统一。' },
       { kind: 'visual', type: '界面设计', title: '会员中心焕新方案', prompt: '重新设计会员中心首页，强化等级权益、成长进度和常用服务入口，输出兼顾信息效率与品牌感的界面方案。' },
@@ -1776,10 +1700,14 @@
       `</div>`;
   }
 
-  /* ---------- 5.5 右侧抽屉：产物与工具 ---------- */
+  /* ---------- 5.5 右上角摘要浮窗与工具抽屉 ---------- */
   const content = document.getElementById('content');
   const workbench = document.getElementById('workbench');
   const outputToggle = document.getElementById('toggleOutputs');
+  const summaryToggleSlot = document.querySelector('.summary-toggle-slot');
+  const summaryPopover = document.getElementById('summaryPopover');
+  const summaryArtifactsSection = document.getElementById('summaryArtifactsSection');
+  const summaryArtifactsDivider = document.getElementById('summaryArtifactsDivider');
   const wbToggle = document.getElementById('toggleWorkbench');
   const wbExpandToggle = document.getElementById('toggleWorkbenchExpand');
   const wbPanes = Array.from(workbench.querySelectorAll('.wb-pane'));
@@ -1789,10 +1717,21 @@
   const workspaceCreateMenu = document.getElementById('workspaceCreateMenu');
   const urlInput = document.getElementById('urlInput');
   const toolFileTree = document.getElementById('toolFileTree');
+  const toolTreeSearch = document.getElementById('toolTreeSearch');
+  const toolTreeSearchClear = document.getElementById('toolTreeSearchClear');
   const toolTreeClose = document.getElementById('toolTreeClose');
   const toolTreeReopen = document.getElementById('toolTreeReopen');
+  const toolFileModeToggle = document.getElementById('toolFileModeToggle');
   const toolFilePreviewTitle = document.getElementById('toolFilePreviewTitle');
   const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
+  const openWith = document.getElementById('openWith');
+  const openWithPrimary = document.getElementById('openWithPrimary');
+  const openWithPrimaryIcon = document.getElementById('openWithPrimaryIcon');
+  const openWithToggle = document.getElementById('openWithToggle');
+  const openWithMenu = document.getElementById('openWithMenu');
+  const fullscreenChat = document.getElementById('fullscreenChat');
+  const fullscreenChatInput = document.getElementById('fullscreenChatInput');
+  const fullscreenChatSend = document.getElementById('fullscreenChatSend');
   const toolFolderPicker = document.getElementById('toolFolderPicker');
   const toolFolderBtn = document.getElementById('toolFolderBtn');
   const toolFolderName = document.getElementById('toolFolderName');
@@ -1841,23 +1780,73 @@
   let rightPanel = null;
   let workbenchExpanded = false;
 
+  function syncFullscreenChat() {
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
+    const visible = workbenchExpanded && rightPanel === 'tools' && item?.kind === 'file' && Boolean(item.node);
+    fullscreenChat.hidden = !visible;
+  }
+
   function setWorkbenchExpanded(expanded) {
-    workbenchExpanded = Boolean(expanded && rightPanel);
+    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
+    const canExpandFile = rightPanel === 'tools' && item?.kind === 'file';
+    workbenchExpanded = Boolean(expanded && canExpandFile);
     content.classList.toggle('wb-expanded', workbenchExpanded);
-    wbExpandToggle.disabled = !rightPanel;
+    content.classList.toggle('wb-file-active', canExpandFile);
+    wbExpandToggle.disabled = !canExpandFile;
     wbExpandToggle.setAttribute('aria-pressed', String(workbenchExpanded));
-    wbExpandToggle.title = workbenchExpanded ? '退出全屏面板' : '全屏显示面板';
+    wbExpandToggle.title = workbenchExpanded ? '退出文件全屏' : '全屏显示文件';
     wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
+    syncFullscreenChat();
+    requestAnimationFrame(syncSummaryTriggerPosition);
+  }
+
+  function usesWideFilePreview(node) {
+    return Boolean(node) && ['ppt', 'html', 'png', 'excel'].includes(artifactType(node));
   }
 
   function syncWorkbenchWidth() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
-    const folderOpen = rightPanel === 'tools' && item?.kind === 'file' && item.treeVisible !== false;
+    const isActiveFile = rightPanel === 'tools' && item?.kind === 'file';
+    const folderOpen = isActiveFile && item.treeVisible !== false;
     content.classList.toggle('wb-folder-open', folderOpen);
+    content.classList.toggle('wb-preview-wide', isActiveFile && usesWideFilePreview(item.node));
+  }
+
+  function syncSummaryTriggerPosition() {
+    const main = document.querySelector('.main');
+    if (rightPanel !== 'tools' || workbenchExpanded || !main || !summaryToggleSlot) {
+      summaryToggleSlot?.style.removeProperty('--summary-trigger-right');
+      content.style.removeProperty('--summary-float-left');
+      content.style.removeProperty('--summary-float-top');
+      summaryPopover.style.removeProperty('position');
+      summaryPopover.style.removeProperty('left');
+      summaryPopover.style.removeProperty('top');
+      summaryPopover.style.removeProperty('right');
+      return;
+    }
+
+    const contentRect = content.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
+    const mainRightInset = contentRect.right - mainRect.right;
+
+    // 先提交 icon 的新位置；随后读取矩形会得到已经移动后的最终坐标。
+    summaryToggleSlot.style.setProperty('--summary-trigger-right', `${Math.max(16, mainRightInset + 16)}px`);
+    const triggerRect = outputToggle.getBoundingClientRect();
+    const floatWidth = summaryPopover.hidden ? 344 : summaryPopover.getBoundingClientRect().width;
+    const minLeft = mainRect.left + 16;
+    const maxLeft = Math.max(minLeft, mainRect.right - floatWidth - 16);
+    const left = Math.min(maxLeft, Math.max(minLeft, triggerRect.right - floatWidth));
+    const top = triggerRect.bottom + 8;
+
+    // 浮窗使用视口坐标直接跟随摘要按钮的右下角，并严格夹紧在左侧主区。
+    summaryPopover.style.setProperty('position', 'fixed', 'important');
+    summaryPopover.style.setProperty('left', `${left}px`, 'important');
+    summaryPopover.style.setProperty('top', `${top}px`, 'important');
+    summaryPopover.style.setProperty('right', 'auto', 'important');
   }
 
   function setRightPanel(panel) {
-    const next = panel === rightPanel ? null : panel;
+    const next = panel || null;
     if (next === 'tools' && openWorkspaces.length === 0) ensureDefaultFileWorkspace();
     rightPanel = next;
     syncWorkbenchWidth();
@@ -1866,27 +1855,33 @@
     workbench.dataset.panel = next || '';
     setWorkbenchExpanded(workbenchExpanded);
     workbench.setAttribute('aria-hidden', String(!open));
-    outputToggle.setAttribute('aria-expanded', String(next === 'outputs'));
     wbToggle.setAttribute('aria-expanded', String(next === 'tools'));
-    outputToggle.title = next === 'outputs' ? '收起产物' : '产物';
     wbToggle.title = next === 'tools' ? '收起工具' : '工具';
+    requestAnimationFrame(() => {
+      syncSummaryTriggerPosition();
+      requestAnimationFrame(syncSummaryTriggerPosition);
+    });
   }
+
+  const summaryTriggerResizeObserver = new ResizeObserver(syncSummaryTriggerPosition);
+  summaryTriggerResizeObserver.observe(content);
+  summaryTriggerResizeObserver.observe(document.querySelector('.main'));
+  window.addEventListener('resize', syncSummaryTriggerPosition);
 
   function setWorkbench(open) {
     if (!open) {
       rightPanel = null;
-      content.classList.remove('wb-open', 'wb-folder-open', 'wb-expanded');
+      content.classList.remove('wb-open', 'wb-folder-open', 'wb-preview-wide', 'wb-expanded', 'wb-file-active');
       workbenchExpanded = false;
       wbExpandToggle.disabled = true;
       wbExpandToggle.setAttribute('aria-pressed', 'false');
-      wbExpandToggle.title = '全屏显示面板';
+      wbExpandToggle.title = '全屏显示文件';
       wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
       workbench.dataset.panel = '';
       workbench.setAttribute('aria-hidden', 'true');
-      outputToggle.setAttribute('aria-expanded', 'false');
       wbToggle.setAttribute('aria-expanded', 'false');
-      outputToggle.title = '产物';
       wbToggle.title = '工具';
+      fullscreenChat.hidden = true;
       return;
     }
     if (rightPanel !== 'tools') setRightPanel('tools');
@@ -1897,6 +1892,7 @@
       const meta = WORKSPACE_META[item.kind];
       return `<div class="workspace-tab${item.id === activeWorkspace ? ' active' : ''}" role="tab" tabindex="0"` +
         ` data-workspace-tab="${item.id}" data-workspace-kind="${item.kind}"` +
+        ` data-workspace-empty="${item.kind === 'file' && !item.node}"` +
         ` aria-selected="${item.id === activeWorkspace}" title="${esc(item.title)}">` +
         `<svg viewBox="0 0 24 24" class="ic">${meta.icon}</svg>` +
         `<span class="workspace-tab-title">${esc(item.title)}</span>` +
@@ -1913,12 +1909,14 @@
     renderWorkspaceTabs();
     workbench.classList.remove('file-split', 'file-preview-only');
     syncWorkbenchWidth();
+    setWorkbenchExpanded(workbenchExpanded);
     wbPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === item.kind));
     if (item.kind === 'browser') {
       urlInput.value = item.url || '';
       requestAnimationFrame(() => urlInput.focus());
     }
     if (item.kind === 'file') renderToolFileWorkspace(item);
+    syncFullscreenChat();
   }
 
   function makeFileWorkspace(overrides = {}) {
@@ -2001,8 +1999,53 @@
   }
 
   wbExpandToggle.addEventListener('click', () => setWorkbenchExpanded(!workbenchExpanded));
-  outputToggle.addEventListener('click', () => setRightPanel('outputs'));
-  wbToggle.addEventListener('click', () => setRightPanel('tools'));
+  fullscreenChatInput.addEventListener('input', () => {
+    fullscreenChatInput.style.height = 'auto';
+    fullscreenChatInput.style.height = `${Math.min(fullscreenChatInput.scrollHeight, 112)}px`;
+    fullscreenChatSend.disabled = !fullscreenChatInput.value.trim();
+  });
+  fullscreenChatInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+    e.preventDefault();
+    if (!fullscreenChatInput.value.trim()) return;
+    fullscreenChatInput.value = '';
+    fullscreenChatInput.style.height = 'auto';
+    fullscreenChatSend.disabled = true;
+  });
+  fullscreenChatSend.addEventListener('click', () => {
+    if (!fullscreenChatInput.value.trim()) return;
+    fullscreenChatInput.value = '';
+    fullscreenChatInput.style.height = 'auto';
+    fullscreenChatSend.disabled = true;
+  });
+function setSummaryOpen(open) {
+  // 工具区已打开时先用当前左侧主区边界定位，再显示摘要浮窗，避免沿用旧的静态位置。
+  syncSummaryTriggerPosition();
+  summaryPopover.hidden = !open;
+  content.classList.toggle('summary-open', open);
+  outputToggle.setAttribute('aria-expanded', String(open));
+  outputToggle.classList.toggle('active', open);
+  if (open) renderSummaryContents();
+  requestAnimationFrame(syncSummaryTriggerPosition);
+}
+
+  outputToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setSummaryOpen(summaryPopover.hidden);
+  });
+  summaryPopover.addEventListener('click', (event) => event.stopPropagation());
+  document.addEventListener('click', () => setSummaryOpen(false));
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || summaryPopover.hidden) return;
+    setSummaryOpen(false);
+    outputToggle.focus();
+  });
+
+  wbToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const toolsOpen = content.classList.contains('wb-open') && workbench.dataset.panel === 'tools';
+    setRightPanel(toolsOpen ? null : 'tools');
+  });
   workspaceAdd.addEventListener('click', (e) => {
     e.stopPropagation();
     setWorkspaceCreate(!workspaceCreate.classList.contains('open'));
@@ -2032,18 +2075,44 @@
     if (e.key === 'Escape') setWorkspaceCreate(false);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
       e.preventDefault();
-      if (rightPanel === 'tools') setWorkbench(false);
-      else setRightPanel('tools');
+      const toolsOpen = content.classList.contains('wb-open') && workbench.dataset.panel === 'tools';
+      setRightPanel(toolsOpen ? null : 'tools');
     }
   });
   /* 工具文件夹只展示当前任务所在的根目录，顶部切换器与输入框下方的
-     归属选择共享状态。目录图标沿用 Lucide 线性语言，不引入实心色块。 */
-  const toolTreeExpanded = new Set(['root']);
+     归属选择共享状态。代码文件使用编辑器社区常见的文件类型字形。 */
+  const toolTreeExpanded = new Set(['root', 'root.5']);
   let activeFilePath = null;
+  let toolTreeQuery = '';
   const TREE_ICONS = {
     folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
     file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
   };
+
+  function fileExtension(name) {
+    const lower = String(name || '').toLowerCase();
+    if (lower === 'dockerfile') return 'docker';
+    if (lower === '.env' || lower === '.gitignore') return lower.slice(1);
+    const match = lower.match(/\.([^.]+)$/);
+    return match ? match[1] : 'file';
+  }
+
+  function treeIconForNode(node) {
+    if (node.type === 'folder') return { kind: 'folder', icon: TREE_ICONS.folder, label: '' };
+    const ext = fileExtension(node.name);
+    const labels = {
+      javascript: 'JS', typescript: 'TS', jsx: 'JS', tsx: 'TS',
+      html: '<>', css: '#', scss: '#', less: '#',
+      markdown: '↓', md: '↓', json: '{}', xml: '<>', yaml: 'Y', yml: 'Y',
+      toml: 'T', ini: 'I', env: 'E', gitignore: 'G', docker: '◆',
+      python: 'Py', py: 'Py', java: 'J', kt: 'K', go: 'Go', rs: 'Rs',
+      php: 'php', rb: 'Rb', swift: 'S', c: 'C', h: 'H', cpp: 'C+', cs: 'C#',
+      sql: 'DB', graphql: '◇', sh: '$_', bash: '$_', zsh: '$_',
+      png: '▧', jpg: '▧', jpeg: '▧', gif: '▧', webp: '▧', svg: '◇',
+      txt: 'T', doc: 'W', docx: 'W', pdf: 'PDF', file: '·',
+    };
+    return { kind: ext, icon: TREE_ICONS.file, label: labels[ext] || ext.slice(0, 3).toUpperCase() };
+  }
 
   function activeToolFolder() {
     return FOLDERS.find((folder) => folder.id === folderByScope[currentScope]) || FOLDERS[0];
@@ -2062,24 +2131,33 @@
     return { node, chain };
   }
 
+  function nodeMatchesTreeQuery(node) {
+    if (!toolTreeQuery) return true;
+    if (String(node.name || '').toLocaleLowerCase().includes(toolTreeQuery)) return true;
+    return node.type === 'folder' && (node.files || []).some(nodeMatchesTreeQuery);
+  }
+
   function renderToolTreeNodes(nodes, parentPath, depth) {
-    return nodes.map((node, index) => {
-      const path = `${parentPath}.${index}`;
-      const isFolder = node.type === 'folder';
-      const expanded = isFolder && toolTreeExpanded.has(path);
-      const children = isFolder && expanded
-        ? `<div role="group">${renderToolTreeNodes(node.files || [], path, depth + 1)}</div>`
-        : '';
-      return `<div class="tool-tree-node">` +
-        `<button type="button" role="treeitem" data-tree-path="${path}"` +
-        ` data-tree-folder="${isFolder}" aria-expanded="${isFolder ? String(expanded) : ''}"` +
-        ` class="tool-tree-row${!isFolder && `${activeToolFolder().id}:${path}` === activeFilePath ? ' selected' : ''}"` +
-        ` style="--tree-depth:${depth}" title="${esc(node.name)}">` +
-        `<svg viewBox="0 0 24 24" class="tool-tree-chevron${isFolder ? '' : ' blank'}"><path d="m9 18 6-6-6-6"/></svg>` +
-        `<svg viewBox="0 0 24 24" class="tool-tree-icon">${TREE_ICONS[isFolder ? 'folder' : 'file']}</svg>` +
-        `<span>${esc(node.name)}</span>` +
-        `</button>${children}</div>`;
-    }).join('');
+    return nodes.map((node, index) => ({ node, index }))
+      .filter(({ node }) => nodeMatchesTreeQuery(node))
+      .map(({ node, index }) => {
+        const path = `${parentPath}.${index}`;
+        const isFolder = node.type === 'folder';
+        const expanded = isFolder && (Boolean(toolTreeQuery) || toolTreeExpanded.has(path));
+        const children = isFolder && expanded
+          ? `<div role="group">${renderToolTreeNodes(node.files || [], path, depth + 1)}</div>`
+          : '';
+        const icon = treeIconForNode(node);
+        return `<div class="tool-tree-node">` +
+          `<button type="button" role="treeitem" data-tree-path="${path}"` +
+          ` data-tree-folder="${isFolder}" aria-expanded="${isFolder ? String(expanded) : ''}"` +
+          ` class="tool-tree-row${!isFolder && `${activeToolFolder().id}:${path}` === activeFilePath ? ' selected' : ''}"` +
+          ` style="--tree-depth:${depth}" title="${esc(node.name)}">` +
+          `<svg viewBox="0 0 24 24" class="tool-tree-chevron${isFolder ? '' : ' blank'}"><path d="m9 18 6-6-6-6"/></svg>` +
+          `<span class="tool-tree-file-icon" data-file-kind="${icon.kind}"><svg viewBox="0 0 24 24" class="tool-tree-icon">${icon.icon}</svg><i>${esc(icon.label)}</i></span>` +
+          `<span>${esc(node.name)}</span>` +
+          `</button>${children}</div>`;
+      }).join('');
   }
 
   function renderToolFolderPicker() {
@@ -2101,23 +2179,112 @@
     toolFolderBtn.setAttribute('aria-expanded', String(open));
   }
 
-  function renderToolTree() {
-    const folder = activeToolFolder();
-    const expanded = toolTreeExpanded.has('root');
-    const children = expanded
-      ? `<div role="group">${renderToolTreeNodes(folder.files || [], 'root', 1)}</div>`
-      : '';
-    toolFileTree.innerHTML = `<div class="tool-tree-node tool-tree-root">` +
-      `<button class="tool-tree-row" type="button" role="treeitem" data-tree-path="root"` +
-      ` data-tree-folder="true" aria-expanded="${expanded}" style="--tree-depth:0" title="${esc(folder.path)}">` +
-      `<svg viewBox="0 0 24 24" class="tool-tree-chevron"><path d="m9 18 6-6-6-6"/></svg>` +
-      `<svg viewBox="0 0 24 24" class="tool-tree-icon">${TREE_ICONS.folder}</svg>` +
-      `<span>${esc(folder.name)}</span>` +
-      `</button>${children}</div>`;
-    renderToolFolderPicker();
-  }
+function renderToolTree() {
+const folder = activeToolFolder();
+const expanded = Boolean(toolTreeQuery) || toolTreeExpanded.has('root');
+const childrenHtml = expanded ? renderToolTreeNodes(folder.files || [], 'root', 1) : '';
+const children = expanded && childrenHtml ? `<div role="group">${childrenHtml}</div>` : '';
+const empty = toolTreeQuery && !childrenHtml
+? `<div class="tool-tree-empty">没有匹配“${esc(toolTreeSearch.value.trim())}”的文件</div>`
+: '';
+toolFileTree.innerHTML = `<div class="tool-tree-node tool-tree-root">` +
+`<button class="tool-tree-row" type="button" role="treeitem" data-tree-path="root"` +
+` data-tree-folder="true" aria-expanded="${expanded}" style="--tree-depth:0" title="${esc(folder.path)}">` +
+`<svg viewBox="0 0 24 24" class="tool-tree-chevron"><path d="m9 18 6-6-6-6"/></svg>` +
+`<span class="tool-tree-file-icon" data-file-kind="folder"><svg viewBox="0 0 24 24" class="tool-tree-icon">${TREE_ICONS.folder}</svg></span>` +
+`<span>${esc(folder.name)}</span>` +
+`</button>${children}${empty}</div>`;
+renderToolFolderPicker();
+}
 
-  function sourceForNode(node) {
+/* 文件树右键菜单挂到 body，避免被目录面板的 overflow 裁切。 */
+const TREE_CONTEXT_ITEMS = [
+{ act: 'chat', label: '添加到对话', svg: '<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M12 7v8M8 11h8"/>' },
+{ act: 'copy-path', label: '复制路径', divider: true, svg: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
+{ act: 'copy-relative-path', label: '复制相对路径', svg: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
+{ act: 'reveal', label: '在 Finder 中显示', svg: '<path d="M2 7.5V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2z"/><path d="M2 10h20"/>' },
+{ act: 'rename', label: '重命名', divider: true, svg: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>' },
+{ act: 'delete', label: '删除', svg: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
+];
+const treeContextMenu = document.createElement('div');
+treeContextMenu.className = 'row-menu tree-context-menu';
+treeContextMenu.setAttribute('role', 'menu');
+treeContextMenu.hidden = true;
+treeContextMenu.innerHTML = TREE_CONTEXT_ITEMS.map((item) =>
+`<button class="row-menu-item" type="button" role="menuitem" data-tree-context-act="${item.act}"${item.divider ? ' data-divider' : ''}>` +
+`<svg viewBox="0 0 24 24" class="ic">${item.svg}</svg><span>${item.label}</span></button>`
+).join('');
+document.body.appendChild(treeContextMenu);
+
+let treeContextTarget = null;
+let treeContextRow = null;
+
+function closeTreeContextMenu() {
+if (treeContextMenu.hidden) return;
+treeContextMenu.classList.remove('open');
+treeContextMenu.hidden = true;
+if (treeContextRow) treeContextRow.classList.remove('context-open');
+treeContextTarget = null;
+treeContextRow = null;
+}
+
+function openTreeContextMenu(event, row, target, path) {
+closeTreeContextMenu();
+closeRowMenu();
+treeContextTarget = { ...target, path };
+treeContextRow = row;
+row.classList.add('context-open');
+
+treeContextMenu.hidden = false;
+treeContextMenu.style.visibility = 'hidden';
+treeContextMenu.style.left = '0px';
+treeContextMenu.style.top = '0px';
+treeContextMenu.style.transform = 'none';
+const rect = treeContextMenu.getBoundingClientRect();
+const margin = 8;
+let left = Math.min(event.clientX, window.innerWidth - rect.width - margin);
+let top = Math.min(event.clientY, window.innerHeight - rect.height - margin);
+left = Math.max(margin, left);
+top = Math.max(margin, top);
+treeContextMenu.style.left = `${Math.round(left)}px`;
+treeContextMenu.style.top = `${Math.round(top)}px`;
+treeContextMenu.style.transform = '';
+treeContextMenu.style.visibility = '';
+requestAnimationFrame(() => treeContextMenu.classList.add('open'));
+}
+
+function treeRelativePath(target) {
+return target.chain.slice(1).map((item) => item.name).join('/');
+}
+
+async function copyTreePath(text) {
+try {
+await navigator.clipboard.writeText(text);
+} catch (error) {
+console.warn('[CatPaw] 无法复制文件路径：', error);
+}
+}
+
+function appendFileToConversation(node) {
+const value = `@${node.name} `;
+let input = prompt;
+if (!fullscreenChat.hidden) input = fullscreenChatInput;
+else if (!conversationPage.hidden) input = conversationPrompt;
+input.value = `${input.value}${input.value && !/\s$/.test(input.value) ? ' ' : ''}${value}`;
+input.dispatchEvent(new Event('input', { bubbles: true }));
+input.focus();
+}
+
+function removeTreeNode(path) {
+const indices = path.replace(/^root\.?/, '').split('.').filter(Boolean).map(Number);
+if (!indices.length) return;
+let parent = activeToolFolder();
+for (const index of indices.slice(0, -1)) parent = (parent.files || [])[index];
+if (!parent?.files) return;
+parent.files.splice(indices.at(-1), 1);
+}
+
+function sourceForNode(node) {
     const preview = node.preview;
     if (preview && preview.kind === 'html') return preview.html;
     if (preview && preview.kind === 'markdown') return preview.text;
@@ -2142,17 +2309,84 @@
     return openWorkspaces.find((workspace) => workspace.id === activeWorkspace && workspace.kind === 'file');
   }
 
+  function supportsRenderedPreview(node) {
+    return node?.preview && (node.preview.kind === 'html' || node.preview.kind === 'markdown');
+  }
+
+  const OPEN_WITH_ICONS = {
+    browser: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#edf5ff" stroke="#3180dd"/><path d="M12 2.5c3 3 4.4 6.1 4.4 9.5S15 18.5 12 21.5C9 18.5 7.6 15.4 7.6 12S9 5.5 12 2.5ZM2.5 12h19" fill="none" stroke="#3180dd" stroke-width="1.4"/></svg>',
+    word: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="4" fill="#2b69c9"/><path d="M7 7.5 9.3 17h1.9l1.5-5.6 1.5 5.6h1.9L18 7.5h-2l-1 6-1.5-6h-1.7l-1.6 6-1.1-6Z" fill="#fff"/></svg>',
+    excel: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="4" fill="#218354"/><path d="m7 7.5 3.1 4.4L6.8 17h2.5l2.1-3.5 2.2 3.5h2.6l-3.5-5.2 3.1-4.3h-2.5l-1.8 2.9-1.9-2.9Z" fill="#fff"/></svg>',
+    powerpoint: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="4" fill="#d84a2f"/><path d="M7 7.5h4.2c2.5 0 4 1.3 4 3.5 0 2.3-1.7 3.7-4.2 3.7H9.2V17H7Zm2.2 1.8v3.6h1.7c1.3 0 2.1-.6 2.1-1.8s-.8-1.8-2.1-1.8Z" fill="#fff"/></svg>',
+    ide: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="4" fill="#25262b"/><path d="m9.5 8-4 4 4 4M14.5 8l4 4-4 4" fill="none" stroke="#74d99f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    terminal: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="4" fill="#202124"/><path d="m6.5 8.5 3.5 3.5-3.5 3.5M12 16h5.5" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    finder: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" fill="#66aaf4"/><path d="M12 2v20M8.2 8.2c.9-1.8 2.1-3.1 3.8-4.3M7.5 14.5c2.8 2.3 6.2 2.3 9 0" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><circle cx="8.1" cy="10.2" r=".8" fill="#173b75"/><circle cx="15.9" cy="10.2" r=".8" fill="#173b75"/></svg>',
+    preview: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="#557de8"/><path d="M6.5 15.5 10 12l2.5 2.5 2-2 3 3M15.5 8.5h.01" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
+
+  function openWithConfig(node) {
+    const ext = fileExtension(node?.name || '');
+    if (['html', 'htm'].includes(ext)) return { primary: 'browser', label: '浏览器', apps: [['ide', 'CatPaw IDE'], ['browser', 'Safari']] };
+    if (['ppt', 'pptx'].includes(ext)) return { primary: 'powerpoint', label: 'PowerPoint', apps: [['preview', 'Keynote'], ['ide', 'CatPaw IDE']] };
+    if (['doc', 'docx'].includes(ext)) return { primary: 'word', label: 'Word', apps: [['preview', 'Pages'], ['ide', 'CatPaw IDE']] };
+    if (['xls', 'xlsx'].includes(ext)) return { primary: 'excel', label: 'Excel', apps: [['preview', 'Numbers'], ['ide', 'CatPaw IDE']] };
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf'].includes(ext)) return { primary: 'preview', label: '预览', apps: [['ide', 'CatPaw IDE']] };
+    return { primary: 'ide', label: 'CatPaw IDE', apps: [['terminal', 'Terminal']] };
+  }
+
+  function setOpenWithMenu(open) {
+    openWith.classList.toggle('open', open);
+    openWithMenu.hidden = !open;
+    openWithToggle.setAttribute('aria-expanded', String(open));
+  }
+
+  function renderOpenWith(node) {
+    openWith.hidden = !node;
+    if (!node) {
+      setOpenWithMenu(false);
+      return;
+    }
+    const config = openWithConfig(node);
+    openWith.dataset.primaryApp = config.label;
+    openWithPrimaryIcon.innerHTML = OPEN_WITH_ICONS[config.primary];
+    openWithPrimary.title = `使用 ${config.label} 打开`;
+    openWithPrimary.setAttribute('aria-label', openWithPrimary.title);
+    openWithMenu.innerHTML = config.apps.map(([icon, label]) =>
+      `<button class="open-with-item" type="button" role="menuitem" data-open-with-app="${esc(label)}">` +
+      `<span class="open-with-app-icon">${OPEN_WITH_ICONS[icon]}</span>` +
+      `<span class="open-with-item-label">${esc(label)}</span></button>`
+    ).join('') +
+      `<button class="open-with-item" type="button" role="menuitem" data-open-with-action="reveal" data-divider>` +
+      `<span class="open-with-app-icon">${OPEN_WITH_ICONS.finder}</span>` +
+      `<span class="open-with-item-label">在文件夹中打开</span></button>`;
+  }
+
   function renderToolFileWorkspace(item) {
     if (!item || item.kind !== 'file') return;
     const treeVisible = item.treeVisible !== false;
+    const canToggleMode = supportsRenderedPreview(item.node);
+    const hasVisualPreview = Boolean(item.node?.preview && PREVIEWS[item.node.preview.kind]);
+    if (canToggleMode && item.previewMode !== 'source') item.previewMode = 'rendered';
+    if (item.node?.preview?.kind === 'image' && item.previewMode !== 'artifact') item.previewMode = 'rendered';
     workbench.classList.toggle('file-split', treeVisible);
     workbench.classList.toggle('file-preview-only', !treeVisible);
     syncWorkbenchWidth();
-    toolTreeReopen.hidden = treeVisible;
+toolTreeReopen.hidden = treeVisible;
+toolTreeReopen.setAttribute('aria-pressed', String(treeVisible));
+toolFileModeToggle.hidden = !canToggleMode;
+    toolFileModeToggle.textContent = item.previewMode === 'source' ? '预览效果' : '编辑代码';
+    toolFileModeToggle.setAttribute('aria-pressed', String(item.previewMode === 'source'));
     activeFilePath = treeVisible ? item.path || null : null;
     toolFilePreviewTitle.textContent = item.node ? item.node.name : '选择文件';
+    renderOpenWith(item.node);
     if (!item.node) toolFilePreviewBody.innerHTML = TOOL_FILE_EMPTY;
-    else toolFilePreviewBody.innerHTML = renderSourcePreview(item.node);
+    else if (hasVisualPreview && item.previewMode !== 'source') {
+      toolFilePreviewBody.innerHTML = PREVIEWS[item.node.preview.kind](item.node.preview);
+    } else if (item.previewMode === 'artifact') {
+      toolFilePreviewBody.innerHTML = previewFallback(item.node);
+    } else {
+      toolFilePreviewBody.innerHTML = renderSourcePreview(item.node);
+    }
     toolFilePreviewBody.scrollTop = 0;
     renderToolTree();
   }
@@ -2186,7 +2420,7 @@
     openFileWorkspace(node, chain, {
       path,
       treeVisible: true,
-      previewMode: 'source',
+      previewMode: node?.preview ? 'rendered' : 'source',
     });
   }
 
@@ -2198,20 +2432,165 @@
     });
   }
 
-  toolFileTree.addEventListener('click', (e) => {
-    const row = e.target.closest('[data-tree-path]');
-    if (!row) return;
-    const path = row.dataset.treePath;
-    const target = treeNodeAtPath(path);
+  let toolTreeScrollTimer;
+  toolFileTree.addEventListener('scroll', () => {
+    toolFileTree.classList.add('is-scrolling');
+    clearTimeout(toolTreeScrollTimer);
+    toolTreeScrollTimer = setTimeout(() => toolFileTree.classList.remove('is-scrolling'), 650);
+  }, { passive: true });
+
+  toolTreeSearch.addEventListener('input', () => {
+    toolTreeQuery = toolTreeSearch.value.trim().toLocaleLowerCase();
+    toolTreeSearchClear.hidden = !toolTreeQuery;
+    renderToolTree();
+  });
+
+  toolTreeSearchClear.addEventListener('click', () => {
+    toolTreeSearch.value = '';
+    toolTreeQuery = '';
+    toolTreeSearchClear.hidden = true;
+    renderToolTree();
+    toolTreeSearch.focus();
+  });
+
+  toolFileModeToggle.addEventListener('click', () => {
+    const item = currentFileWorkspace();
+    if (!item || !supportsRenderedPreview(item.node)) return;
+    item.previewMode = item.previewMode === 'source' ? 'rendered' : 'source';
+    renderToolFileWorkspace(item);
+  });
+
+  function currentFileAbsolutePath() {
+    const item = currentFileWorkspace();
+    if (!item?.node) return '';
+    const folder = item.chain?.[0] || activeToolFolder();
+    const relativePath = (item.chain || []).slice(1).map((node) => node.name).join('/') || item.node.name;
+    return `${folder.path.replace(/\/$/, '')}/${relativePath}`;
+  }
+
+  function openCurrentFileWith(appName) {
+    const item = currentFileWorkspace();
+    if (!item?.node) return;
+    console.log(`[CatPaw] 使用 ${appName} 打开：`, currentFileAbsolutePath());
+    setOpenWithMenu(false);
+  }
+
+  openWithPrimary.addEventListener('click', () => openCurrentFileWith(openWith.dataset.primaryApp));
+  openWithToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setOpenWithMenu(openWithMenu.hidden);
+  });
+  openWithMenu.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-open-with-app], [data-open-with-action]');
     if (!target) return;
-    if (row.dataset.treeFolder === 'true') {
-      if (toolTreeExpanded.has(path)) toolTreeExpanded.delete(path);
-      else toolTreeExpanded.add(path);
-      renderToolTree();
+    event.stopPropagation();
+    if (target.dataset.openWithAction === 'reveal') {
+      console.log('[CatPaw] 在 Finder 中显示：', currentFileAbsolutePath());
+      setOpenWithMenu(false);
       return;
     }
-    openToolFile(target.node, target.chain, `${activeToolFolder().id}:${path}`);
+    openCurrentFileWith(target.dataset.openWithApp);
   });
+  document.addEventListener('click', (event) => {
+    if (!openWith.contains(event.target)) setOpenWithMenu(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || openWithMenu.hidden) return;
+    setOpenWithMenu(false);
+    openWithToggle.focus();
+  });
+
+toolFileTree.addEventListener('click', (e) => {
+const row = e.target.closest('[data-tree-path]');
+if (!row) return;
+closeTreeContextMenu();
+const path = row.dataset.treePath;
+const target = treeNodeAtPath(path);
+if (!target) return;
+if (row.dataset.treeFolder === 'true') {
+if (toolTreeExpanded.has(path)) toolTreeExpanded.delete(path);
+else toolTreeExpanded.add(path);
+renderToolTree();
+return;
+}
+openToolFile(target.node, target.chain, `${activeToolFolder().id}:${path}`);
+});
+
+toolFileTree.addEventListener('contextmenu', (e) => {
+const row = e.target.closest('[data-tree-path]');
+if (!row || row.dataset.treeFolder === 'true') return;
+const path = row.dataset.treePath;
+const target = treeNodeAtPath(path);
+if (!target) return;
+e.preventDefault();
+e.stopPropagation();
+openTreeContextMenu(e, row, target, path);
+});
+
+treeContextMenu.addEventListener('click', async (e) => {
+const item = e.target.closest('[data-tree-context-act]');
+if (!item || !treeContextTarget) return;
+const target = treeContextTarget;
+const node = target.node;
+const relativePath = treeRelativePath(target);
+const absolutePath = `${activeToolFolder().path.replace(/\/$/, '')}/${relativePath}`;
+closeTreeContextMenu();
+
+switch (item.dataset.treeContextAct) {
+case 'chat':
+appendFileToConversation(node);
+break;
+case 'copy-path':
+await copyTreePath(absolutePath);
+break;
+case 'copy-relative-path':
+await copyTreePath(relativePath);
+break;
+case 'reveal':
+console.log('[CatPaw] 在 Finder 中显示：', absolutePath);
+break;
+case 'rename': {
+const nextName = window.prompt('重命名文件', node.name)?.trim();
+if (!nextName || nextName === node.name) break;
+node.name = nextName;
+openWorkspaces.forEach((workspace) => {
+if (workspace.node === node) workspace.title = nextName;
+});
+renderWorkspaceTabs();
+const active = currentFileWorkspace();
+if (active) renderToolFileWorkspace(active);
+else renderToolTree();
+break;
+}
+case 'delete':
+if (!window.confirm(`确定删除“${node.name}”吗？`)) break;
+removeTreeNode(target.path);
+openWorkspaces.forEach((workspace) => {
+if (workspace.node !== node) return;
+workspace.node = null;
+workspace.chain = [];
+workspace.path = null;
+workspace.title = '打开文件';
+workspace.previewMode = 'source';
+});
+renderWorkspaceTabs();
+const active = currentFileWorkspace();
+if (active) renderToolFileWorkspace(active);
+else renderToolTree();
+break;
+default:
+break;
+}
+});
+
+document.addEventListener('mousedown', (e) => {
+if (!treeContextMenu.contains(e.target)) closeTreeContextMenu();
+}, true);
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape') closeTreeContextMenu();
+});
+window.addEventListener('scroll', closeTreeContextMenu, true);
+window.addEventListener('resize', closeTreeContextMenu);
 
   toolFolderBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -2229,20 +2608,20 @@
     if (!toolFolderPicker.contains(e.target)) setToolFolderOpen(false);
   });
 
-  toolTreeClose.addEventListener('click', () => {
-    const item = currentFileWorkspace();
-    if (!item) return;
-    item.treeVisible = false;
-    renderToolFileWorkspace(item);
-  });
+toolTreeClose.addEventListener('click', () => {
+const item = currentFileWorkspace();
+if (!item) return;
+item.treeVisible = false;
+renderToolFileWorkspace(item);
+});
 
-  toolTreeReopen.addEventListener('click', () => {
-    const item = currentFileWorkspace();
-    if (!item) return;
-    item.treeVisible = true;
-    item.previewMode = 'source';
-    renderToolFileWorkspace(item);
-  });
+toolTreeReopen.addEventListener('click', () => {
+const item = currentFileWorkspace();
+if (!item) return;
+item.treeVisible = true;
+// 展开目录只改变布局，不改变当前文件的渲染方式。
+renderToolFileWorkspace(item);
+});
 
   renderToolTree();
   activateWorkspace('file-default', false);
@@ -2305,25 +2684,20 @@
     });
   });
 
-  /* 宫格点击：文件夹与文件都走 enterNode，往下走一层。
-     两者的差别交给 renderFilePane 去分派，这里不做判断——
-     点击处理只负责「去哪」，不负责「长什么样」。
-
-     宫格每次重渲染都会换掉内部节点，故在容器上做委托，
-     不给单个格子绑监听。
-
-     排过序后 DOM 顺序与数据顺序不再一致，
-     因此用渲染时写入的下标回查原节点，而不是拿名字去 find——
-     同一层里出现同名项时，按名字找会拿错。 */
-  outputCategories.forEach((button) => {
-    button.addEventListener('click', () => selectOutputCategory(button.dataset.outputCategory));
+  /* 摘要浮窗中的两个列表始终同时展示；点击任一文件后关闭浮窗，
+     并复用工具工作区已有的文件预览。 */
+  summaryExpandRecent.addEventListener('click', () => {
+    recentFilesExpanded = !recentFilesExpanded;
+    renderRecentFiles();
   });
 
   recentFiles.addEventListener('click', (e) => {
     const item = e.target.closest('[data-recent-index]');
     if (!item) return;
     const entry = recentOpenedFiles[Number(item.dataset.recentIndex)];
-    if (entry) openArtifactPreview(entry.node, entry.chain);
+    if (!entry) return;
+    setSummaryOpen(false);
+    openArtifactPreview(entry.node, entry.chain);
   });
 
   fileGrid.addEventListener('click', (e) => {
@@ -2331,9 +2705,9 @@
     if (!item) return;
 
     const node = (currentNode().files || [])[Number(item.dataset.fileIndex)];
-    if (!node) return;
-    if (node.type === 'folder') enterNode(node);
-    else openArtifactPreview(node, filePath.concat(node));
+    if (!node || node.type === 'folder') return;
+    setSummaryOpen(false);
+    openArtifactPreview(node, filePath.concat(node));
   });
 
   /* ---------- 5.6 示例对话 ----------
@@ -2347,15 +2721,19 @@
   const conversationComposer = document.getElementById('conversationComposer');
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
+  const conversationTaskTitle = document.getElementById('conversationTaskTitle');
   const conversationArtifact = document.getElementById('conversationArtifact');
   const newTaskNav = document.getElementById('newTaskNav');
 
   function setConversationOpen(open) {
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
-    conversationTask.classList.toggle('current-conversation', open);
     conversationTask.setAttribute('aria-current', open ? 'page' : 'false');
-    if (open) {
+    if (open && conversationTaskTitle) {
+      conversationTaskTitle.textContent = conversationTask.querySelector('.task-name')?.textContent.trim() || '当前任务';
+    }
+if (!summaryPopover.hidden) renderSummaryContents();
+if (open) {
       setWorkbench(false);
       requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
     }
@@ -2378,7 +2756,7 @@
   }
 
   conversationTask.addEventListener('click', (e) => {
-    if (e.target.closest('[data-toggle-agents]')) return;
+    if (e.target.closest('[data-toggle-agents], .row-acts, .row-act')) return;
     e.preventDefault();
     setConversationOpen(true);
   });
@@ -2388,8 +2766,6 @@
     requestAnimationFrame(() => prompt.focus());
   });
   conversationPrompt.addEventListener('input', resizeConversationPrompt);
-  conversationPrompt.addEventListener('focus', () => conversationComposer.classList.add('focus'));
-  conversationPrompt.addEventListener('blur', () => conversationComposer.classList.remove('focus'));
   conversationPrompt.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
     e.preventDefault();
@@ -2399,13 +2775,6 @@
   conversationArtifact.addEventListener('click', () => {
     const node = FOLDERS[0].files.find((file) => file.name === '门店履约异常看板.html');
     if (node) openArtifactPreview(node, [FOLDERS[0], node]);
-  });
-
-  fileBack.addEventListener('click', fileGoBack);
-  fileFwd.addEventListener('click', fileGoForward);
-  fileLayoutToggle.addEventListener('click', () => {
-    fileLayout = fileLayout === 'grid' ? 'list' : 'grid';
-    syncFileLayout();
   });
 
   /* ---------- 5.6 浏览器工作区 ---------- */
