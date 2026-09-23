@@ -486,22 +486,8 @@ let recentFilesExpanded = false;
     `</svg>`;
 
   const THUMBS = {
-    /* PPT 缩略图直接绘制首屏封面，让用户在打开前就能辨认内容；不使用参考截图或外链图片。 */
-    ppt: () =>
-      `<svg class="f-ppt-preview" viewBox="0 0 88 50" aria-hidden="true">` +
-      `<defs><linearGradient id="pptCover" x1="0" y1="0" x2="1" y2="1">` +
-      `<stop offset="0" stop-color="#718b9f"/><stop offset=".42" stop-color="#dce3e8"/>` +
-      `<stop offset=".43" stop-color="#314655"/><stop offset="1" stop-color="#101b25"/>` +
-      `</linearGradient></defs>` +
-      `<rect x=".5" y=".5" width="87" height="49" rx="3" fill="url(#pptCover)" stroke="#d6dae0"/>` +
-      `<path d="M54 6h25v16H54z" fill="#12212d" opacity=".86"/>` +
-      `<path d="M8 44 43 31l35 13" fill="#18242e" opacity=".76"/>` +
-      `<rect x="17" y="18" width="54" height="14" rx="1.5" fill="none" stroke="#77a9f4" stroke-width=".8"/>` +
-      `<text x="44" y="23.5" text-anchor="middle" font-size="5.4" font-weight="700" fill="#fff">季度经营复盘</text>` +
-      `<text x="44" y="29" text-anchor="middle" font-size="4.6" font-weight="600" fill="#fff">稳增长 · 提效率</text>` +
-      `<rect x="4" y="4" width="15" height="7" rx="2" fill="#e86f3c"/>` +
-      `<text x="11.5" y="9" text-anchor="middle" font-size="4.2" font-weight="700" fill="#fff">PPT</text>` +
-      `</svg>`,
+    /* PPT 与其他办公文件共用纸张图示，不在概览中绘制封面缩略图。 */
+    ppt: () => productFile('P', '#e76f3c', '<rect x="10" y="20" width="27" height="17" rx="1"/><path d="M15 42h17"/>'),
     word: () => productFile('W', '#3478d4', '<path d="M11 20h24M11 25h24M11 30h17"/>'),
     excel: () => productFile('X', '#2d9b62', '<path d="M11 19h24v16H11zM11 24h24M11 29h24M19 19v16M27 19v16"/>'),
     html: () => productFile('HTML', '#e76f3c', '<path d="m17 22-5 5 5 5M29 22l5 5-5 5M26 18l-6 18"/>'),

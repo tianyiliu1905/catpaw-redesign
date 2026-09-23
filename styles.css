@@ -955,14 +955,14 @@ box-shadow:0 5px 18px rgba(0,0,0,.06);
   padding:8px 0 16px;
 }
 .conversation-composer{
-  min-height:94px;
-  display:flex;
-  flex-direction:column;
-  padding:12px 12px 10px;
-  border:1px solid var(--gray-5);
+min-height:94px;
+display:flex;
+flex-direction:column;
+padding:12px 12px 10px;
+border:.5px solid var(--gray-5);
   border-radius:16px;
   background:#fff;
-  box-shadow:0 6px 24px rgba(0,0,0,.055);
+  box-shadow:0 4px 16px rgba(0,0,0,.035);
 }
 .conversation-composer textarea{
   width:100%;
@@ -2516,7 +2516,7 @@ overflow-wrap:inherit;
   border:.5px solid rgba(0,0,0,.1);
   border-radius:16px;
   background:rgba(255,255,255,.98);
-  box-shadow:0 14px 40px rgba(0,0,0,.13),0 2px 8px rgba(0,0,0,.05);
+  box-shadow:0 10px 28px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.035);
   backdrop-filter:blur(20px);
   -webkit-app-region:no-drag;
 }
@@ -2543,7 +2543,7 @@ overflow-wrap:inherit;
   border:.5px solid rgba(0,0,0,.1);
   border-radius:16px;
   background:rgba(255,255,255,.98);
-  box-shadow:0 14px 40px rgba(0,0,0,.13),0 2px 8px rgba(0,0,0,.05);
+  box-shadow:0 10px 28px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.035);
   backdrop-filter:blur(20px);
   transform-origin:top right;
   animation:summaryPanelIn .16s cubic-bezier(.22,.68,0,1) both;
@@ -2607,7 +2607,6 @@ overflow-wrap:inherit;
   width:21px;
   height:27px;
 }
-.summary-file-list .f-ppt-preview,
 .summary-file-list .f-img{
   width:30px;
   height:22px;
@@ -2670,6 +2669,7 @@ overflow-wrap:inherit;
   gap:2px;
   padding:0 115px 0 10px;
   background:#fff;
+  border-bottom:.5px solid var(--sidebar-border);
 }
 
 .workspace-tabs{
@@ -3642,7 +3642,6 @@ overflow-wrap:inherit;
 .file-grid.is-list .f-page,
 .file-grid.is-list .f-product{ width:27px; height:34px; }
 .file-grid.is-list .f-img{ width:34px; height:27px; }
-.file-grid.is-list .f-ppt-preview{ width:48px; height:28px; }
 .file-grid.is-list .fname{
   min-width:0;
   display:block;
@@ -3698,14 +3697,12 @@ overflow-wrap:inherit;
 /* -- 文件夹：实心蓝，系统里最不需要解释的一个图形 -- */
 .f-folder{ width:58px; height:46px; display:block; }
 
-/* -- 纸张：文档 / 表格 / 代码共用的白色页面 --
-   浅描边加一道极轻的投影，让它从白底上浮起来；
-   右上角切角是「纸」的通用符号，不切就只是个白方块 */
+/* -- 纸张：文档 / 演示 / 表格 / 代码共用的白色页面 --
+   仅用浅描边与右上切角表达文件类型，不添加投影。 */
 .f-page,
 .f-product{
   width:46px; height:58px;
   display:block;
-  filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.1));
 }
 
 /* 页面内的骨架线，模拟文档正文的疏密 */
@@ -3720,21 +3717,11 @@ overflow-wrap:inherit;
 .f-code{ fill: #b9bec9; }
 .f-code.accent{ fill: #8aa0c4; }
 
-/* -- PPT：用绘制出的首屏封面作为缩略图，不使用外部截图资源。 -- */
-.f-ppt-preview{
-  width:88px;
-  height:50px;
-  display:block;
-  border-radius:3px;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,.12));
-}
-
 /* -- 图片：直接铺一张渐变当画面，比画个相机图标更接近真实缩略图 -- */
 .f-img{
   width:56px; height:44px;
   border-radius: 3px;
   display:block;
-  filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.1));
 }
 
 /* -- 空文件夹 -- */
