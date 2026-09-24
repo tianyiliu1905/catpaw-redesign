@@ -2271,11 +2271,7 @@ function setSummaryOpen(open) {
     event.stopPropagation();
     setSummaryOpen(summaryPopover.hidden);
   });
-  summaryPopover.addEventListener('click', (event) => event.stopPropagation());
-  document.addEventListener('click', (event) => {
-    if (!conversationPage.hidden && conversationPage.contains(event.target)) return;
-    setSummaryOpen(false);
-  });
+  // 摘要可与首页、对话和右侧工作区并用，点击页面其他区域不改变其开关状态。
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || summaryPopover.hidden) return;
     setSummaryOpen(false);
