@@ -458,6 +458,10 @@
       <section class="conversation-page" id="conversationPage" aria-label="任务对话" hidden>
         <header class="conversation-task-bar">
           <span id="conversationTaskTitle">整理本周门店履约异常明细</span>
+          <button class="conversation-task-more" id="conversationTaskMore" type="button" aria-label="任务操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationTaskMenu">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+          </button>
+          <span class="conversation-task-feedback" id="conversationTaskFeedback" role="status" aria-live="polite"></span>
         </header>
         <div class="conversation-scroll" id="conversationScroll">
           <div class="conversation-thread" id="conversationThread">
@@ -629,8 +633,11 @@
       </div>
     </section>
 
-    <!-- ============ 工具抽屉 ============ -->
-    <aside class="workbench" id="workbench" aria-hidden="true">
+<!-- 面板分隔线与目录树分隔线均可用鼠标或方向键调节。 -->
+<div class="panel-resizer" id="panelResizer" role="separator" tabindex="0" aria-label="调整工作区宽度" aria-orientation="vertical" aria-controls="workbench" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
+
+<!-- ============ 工具抽屉 ============ -->
+<aside class="workbench" id="workbench" aria-hidden="true">
       <!-- 工具顶栏：文件目录常驻，其余工作区由加号按需创建。 -->
       <header class="wb-head">
         <div class="workspace-tabs" id="workspaceTabs" role="tablist" aria-label="工作区标签">
@@ -662,6 +669,17 @@
           </div>
         </div>
       </header>
+      <div class="file-close-overlay" id="fileCloseOverlay" hidden>
+        <div class="file-close-dialog" role="dialog" aria-modal="true" aria-labelledby="fileCloseTitle" aria-describedby="fileCloseDescription">
+          <h2 id="fileCloseTitle">保存对文件的更改？</h2>
+          <p id="fileCloseDescription"></p>
+          <div class="file-close-actions">
+            <button id="fileCloseCancel" type="button">取消</button>
+            <button id="fileCloseDiscard" type="button">不保存</button>
+            <button id="fileCloseSave" type="button">保存</button>
+          </div>
+        </div>
+      </div>
 
       <!-- ===== 工具：当前任务文件夹 ===== -->
       <section class="wb-pane active" data-pane="files">
@@ -723,6 +741,8 @@
 
       </section>
 
+      <div class="tree-resizer" id="treeResizer" role="separator" tabindex="0" aria-label="调整目录树宽度" aria-orientation="vertical" aria-controls="toolFileTree" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
+
       <!-- ===== 工具：打开文件 =====
            默认就是左侧大面积预览、右侧窄文件树的编辑器结构；尚未选中文件时
            左侧保持空白。产物或对话入口仍可进入不带目录树的纯预览。 -->
@@ -730,6 +750,9 @@
         <header class="tool-file-preview-head">
           <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
           <span id="toolFilePreviewTitle">选择文件</span>
+          <button class="file-mode-toggle" id="toolFileModeToggle" type="button" hidden>编辑代码</button>
+          <button class="file-edit-save" id="toolFileEditSave" type="button" hidden>保存</button>
+          <button class="file-edit-discard" id="toolFileEditDiscard" type="button" hidden>取消</button>
           <div class="open-with" id="openWith" hidden>
             <button class="open-with-primary" id="openWithPrimary" type="button" title="打开文件" aria-label="使用默认应用打开文件">
               <span class="open-with-app-icon" id="openWithPrimaryIcon" aria-hidden="true"></span>
@@ -739,7 +762,6 @@
             </button>
             <div class="open-with-menu" id="openWithMenu" role="menu" aria-label="打开方式" hidden></div>
           </div>
-          <button class="file-mode-toggle" id="toolFileModeToggle" type="button" hidden>编辑代码</button>
           <button class="tool-tree-reopen" id="toolTreeReopen" type="button" title="展开文件树" aria-label="展开文件树" aria-pressed="false" hidden>
             <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/><path d="m7 9 3 3-3 3"/></svg>
           </button>

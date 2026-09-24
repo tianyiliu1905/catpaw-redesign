@@ -302,8 +302,29 @@ labelFolders.hidden = groups.length === 0;
       path: '~/CatPaw/默认文件夹',
       files: [
         { name: '季度经营复盘.pptx', type: 'ppt', artifact: true, preview: { kind: 'ppt' } },
-        { name: '门店履约分析.docx', type: 'word', artifact: true },
-        { name: '门店履约异常明细.xlsx', type: 'excel', artifact: true },
+        { name: '门店履约分析.docx', type: 'word', artifact: true, preview: {
+          kind: 'word', title: '门店履约分析', sections: [
+            { heading: '一、分析概览', paragraphs: ['本报告汇总门店履约异常情况，聚焦晚高峰时段的超时订单与运力匹配问题。以下为可编辑的演示数据。', '观察周期：2026 年 9 月 21 日；分析范围：上海虹桥店及周边商圈。'] },
+            { heading: '二、核心发现', paragraphs: ['当日超时订单 128 单，占订单总量的 6.2%。其中 83% 集中于 17:00–19:00，峰值时段骑手供给不足。', '同商圈另外两家门店没有出现相同幅度波动，初步排除平台级派单异常。'] },
+            { heading: '三、行动建议', paragraphs: ['晚高峰前置增配 2 名骑手，连续观察 7 天的超时率与单均配送时长。', '逐单核对异常订单，并与渠道方确认 13:45 后的数据延迟原因。'] },
+          ],
+        } },
+        { name: '门店履约异常明细.xlsx', type: 'excel', artifact: true, preview: {
+          kind: 'excel', sheets: [
+            { name: '异常明细', columns: ['日期', '门店', '时段', '订单量', '超时单', '超时率', '主要原因'], rows: [
+              ['09-21', '上海虹桥店', '11:00–13:00', '318', '11', '', '午间集中下单'],
+              ['09-21', '上海虹桥店', '17:00–19:00', '452', '106', '', '晚高峰运力不足'],
+              ['09-21', '上海虹桥店', '19:00–21:00', '281', '11', '', '个别订单延迟'],
+              ['09-21', '静安寺店', '17:00–19:00', '306', '13', '', '天气影响'],
+              ['09-21', '徐家汇店', '17:00–19:00', '295', '9', '', '正常波动'],
+            ] },
+            { name: '行动跟踪', columns: ['事项', '负责人', '截止日期', '状态', '备注'], rows: [
+              ['晚高峰增配骑手', '配送运营', '09-22', '进行中', '计划增配 2 人'],
+              ['超时订单逐单复核', '门店经理', '09-23', '待开始', '优先核对高峰时段'],
+              ['核查渠道数据延迟', '数据团队', '09-24', '已完成', '确认上游延迟'],
+            ] },
+          ],
+        } },
         {
           name: '门店履约异常看板.html', type: 'html', artifact: true,
           preview: { kind: 'html', html: DEMO_HTML },
@@ -751,17 +772,53 @@ let recentFilesExpanded = false;
     return out.join('\n');
   }
 
+  function spreadsheetCell(sheet, row, column) {
+    if (sheet.name === '异常明细' && column === 5) {
+      const orders = Number(sheet.rows[row]?.[3]) || 0;
+      const late = Number(sheet.rows[row]?.[4]) || 0;
+      return orders ? `${(late / orders * 100).toFixed(1)}%` : '—';
+    }
+    return String(sheet.rows[row]?.[column] ?? '');
+  }
+
+  function renderWordPreview(preview, item) {
+    const zoom = item.officeZoom || 100;
+    const sections = preview.sections.map((section, sectionIndex) => `
+      <section class="word-section" id="word-section-${sectionIndex}">
+        <h2>${esc(section.heading)}</h2>
+        ${section.paragraphs.map((text, paragraphIndex) => `<p contenteditable="true" role="textbox" aria-multiline="true"
+          aria-label="${esc(section.heading)}第 ${paragraphIndex + 1} 段" data-word-section="${sectionIndex}" data-word-paragraph="${paragraphIndex}" spellcheck="false">${esc(text)}</p>`).join('')}
+      </section>`).join('');
+    return `<div class="pv-office pv-word" aria-label="文档演示预览">
+      <div class="office-toolbar"><span>开始</span><span>插入</span><span>布局</span><span>审阅</span><span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
+      <div class="word-layout"><nav class="word-outline" aria-label="文档大纲"><strong>大纲</strong>${preview.sections.map((section, index) => `<button type="button" data-word-jump="${index}">${esc(section.heading)}</button>`).join('')}</nav>
+        <div class="word-canvas"><article class="word-page" style="--office-zoom:${zoom / 100}"><h1>${esc(preview.title)}</h1><div class="word-subtitle">上海虹桥店 · 2026 年 9 月 21 日</div><hr>${sections}<footer>由 CatPaw 生成 · 演示文档</footer></article></div></div>
+      <div class="office-footer"><span>第 1 页 · 共 1 页</span><div class="office-zoom"><button type="button" data-office-zoom="-10" aria-label="缩小文档">−</button><span>${zoom}%</span><button type="button" data-office-zoom="10" aria-label="放大文档">＋</button></div></div>
+    </div>`;
+  }
+
+  function renderExcelPreview(preview, item) {
+    const sheetIndex = Math.min(item.officeSheet || 0, preview.sheets.length - 1);
+    const sheet = preview.sheets[sheetIndex];
+    const query = (item.officeFilter || '').toLocaleLowerCase();
+    const rows = sheet.rows.map((row, rowIndex) => ({ row, rowIndex }))
+      .filter(({ row, rowIndex }) => !query || sheet.columns.some((_, columnIndex) => spreadsheetCell(sheet, rowIndex, columnIndex).toLocaleLowerCase().includes(query)));
+    const letters = sheet.columns.map((_, index) => String.fromCharCode(65 + index));
+    return `<div class="pv-office pv-excel" aria-label="表格演示预览">
+      <div class="office-toolbar"><span>开始</span><span>插入</span><span>数据</span><span>公式</span><span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
+      <div class="excel-actions"><label>查找 <input type="search" data-excel-filter placeholder="筛选当前工作表" value="${esc(item.officeFilter || '').replace(/"/g, '&quot;')}"></label><button type="button" data-excel-add>＋ 添加一行</button><span>${rows.length} / ${sheet.rows.length} 行</span></div>
+      <div class="excel-formula"><span data-excel-address>选择单元格</span><span class="excel-fx">ƒx</span><output data-excel-value>选中单元格后显示内容</output></div>
+      <div class="excel-scroll"><table class="excel-grid"><thead><tr><th class="excel-corner"></th>${letters.map(letter => `<th>${letter}</th>`).join('')}</tr><tr><th class="excel-row-number">#</th>${sheet.columns.map(name => `<th class="excel-column-name">${esc(name)}</th>`).join('')}</tr></thead><tbody>${rows.map(({ row, rowIndex }) => `<tr><th class="excel-row-number">${rowIndex + 1}</th>${row.map((_, columnIndex) => `<td tabindex="0" data-excel-row="${rowIndex}" data-excel-column="${columnIndex}" data-excel-address="${letters[columnIndex]}${rowIndex + 1}" title="${columnIndex === 5 && sheet.name === '异常明细' ? '根据超时单 ÷ 订单量自动计算' : '双击编辑'}">${esc(spreadsheetCell(sheet, rowIndex, columnIndex))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="excel-tabs" role="tablist" aria-label="工作表">${preview.sheets.map((entry, index) => `<button type="button" role="tab" data-excel-sheet="${index}" aria-selected="${index === sheetIndex}" class="${index === sheetIndex ? 'active' : ''}">${esc(entry.name)}</button>`).join('')}</div>
+      <div class="office-footer"><span>工作表 ${sheetIndex + 1} / ${preview.sheets.length}</span><span>超时率按订单量自动计算 · 更改仅保存在当前会话</span></div>
+    </div>`;
+  }
+
   const PREVIEWS = {
+    word: (preview, item) => renderWordPreview(preview, item),
+    excel: (preview, item) => renderExcelPreview(preview, item),
     /* PPT：参考桌面演示文稿编辑器，直接展示可辨认的编辑态，而不是文件占位。 */
     ppt: () => `<div class="pv-ppt" aria-label="季度经营复盘演示文稿预览">
-      <header class="ppt-appbar">
-        <span class="ppt-traffic"><i></i><i></i><i></i></span>
-        <span class="ppt-app-icon">P</span>
-        <strong>季度经营复盘</strong>
-        <span class="ppt-app-name">演示文稿</span>
-        <em>已保存</em>
-        <span class="ppt-app-actions">播放　分享　下载　•••</span>
-      </header>
       <nav class="ppt-ribbon" aria-label="演示文稿工具栏">
         <span>开始</span><span>插入</span><span>设计</span><span>切换</span><span>动画</span><span>放映</span><span>审阅</span><span>视图</span>
         <b>格式</b>
@@ -1134,33 +1191,41 @@ renderRecentFiles();
      侧边栏的滚动容器设了 overflow，菜单若是行的子节点，
      超出容器的部分会被直接裁掉——列表底部那几行的菜单将只剩上半截。
 
-     全局只建一个菜单实例：内容对每一行都一样，
-     差别只在「作用于谁」，这一点由 menuRow 单独记着即可。 */
+     左侧任务与对话标题共用菜单项；左侧只建一个菜单实例，
+     差别由 menuRow 记录当前作用的任务。 */
   const TASK_MENU = [
-    // 置顶与「在文件夹显示」都是定位类动作，排在前面
-    { act: 'pin',    label: '置顶',
+    { act: 'pin', label: '置顶',
       svg: '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>' },
-    { act: 'reveal', label: '在文件夹显示',
-      svg: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>' },
-    // 重命名与删除是改变任务本身的动作，与上两项分栏
-    { act: 'rename', label: '重命名', divider: true,
+    { act: 'rename', label: '重命名',
       svg: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>' },
-    // 删除标红：它不可撤销，需要在按下之前就与其余项区分开
-    { act: 'delete', label: '删除任务', danger: true,
+    { act: 'copy-directory', label: '复制工作目录', divider: true,
+      svg: '<path d="M2 7.5V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2z"/><path d="M2 10h20"/>' },
+    { act: 'copy-id', label: '复制会话 ID',
+      svg: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
+    { act: 'delete', label: '删除', divider: true, danger: true,
       svg: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
   ];
+  const taskHomes = new WeakMap();
+  const taskIds = new WeakMap();
+  let nextTaskId = 1;
+  document.querySelectorAll('.task').forEach((task) => {
+    const container = task.matches('.task-parent') ? task.closest('[data-agent-task]') : task;
+    if (!taskHomes.has(container)) taskHomes.set(container, { parent: container.parentElement, next: container.nextSibling });
+    taskIds.set(task, task.id === 'demoConversationTask' ? 'demo-conversation-store-fulfillment' : `demo-conversation-${nextTaskId++}`);
+  });
+
+  function renderTaskMenu(items, attribute) {
+    return items.map(({ act, label, svg, divider, danger }) =>
+      `<button type="button" role="menuitem" class="row-menu-item${danger ? ' danger' : ''}" ${attribute}="${act}"${divider ? ' data-divider' : ''}>` +
+      `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${svg}</svg><span>${label}</span></button>`
+    ).join('');
+  }
 
   const rowMenu = document.createElement('div');
   rowMenu.className = 'row-menu';
   rowMenu.setAttribute('role', 'menu');
   rowMenu.hidden = true;
-  rowMenu.innerHTML = TASK_MENU.map((m) =>
-    `<button class="row-menu-item${m.danger ? ' danger' : ''}"` +
-    ` role="menuitem" data-menu-act="${m.act}"${m.divider ? ' data-divider' : ''}>` +
-    `<svg viewBox="0 0 24 24" class="ic">${m.svg}</svg>` +
-    `<span>${m.label}</span>` +
-    `</button>`
-  ).join('');
+  rowMenu.innerHTML = renderTaskMenu(TASK_MENU, 'data-menu-act');
   document.body.appendChild(rowMenu);
 
   // 菜单当前作用于哪一行。关掉时置空，避免拿着一个已失效的引用
@@ -1182,6 +1247,7 @@ renderRecentFiles();
     menuRow = row;
     row.classList.add('menu-open');
 
+    rowMenu.querySelector('[data-menu-act="pin"] span').textContent = (row.matches('.task-parent') ? row.closest('[data-agent-task]') : row).dataset.pinned === 'true' ? '取消置顶' : '置顶';
     rowMenu.hidden = false;
     rowMenu.style.visibility = 'hidden';
     rowMenu.style.left = '0px';
@@ -1242,13 +1308,11 @@ renderRecentFiles();
   }
 
   rowMenu.addEventListener('click', (e) => {
-    const item = e.target.closest('.row-menu-item');
-    if (!item) return;
-    const name = menuRow
-      ? (menuRow.querySelector('.task-name') || {}).textContent
-      : '';
-    console.log('[CatPaw] 任务菜单：', item.dataset.menuAct, '→', name);
+    const item = e.target.closest('[data-menu-act]');
+    if (!item || !menuRow) return;
+    const task = menuRow;
     closeRowMenu();
+    void runTaskMenuAction(item.dataset.menuAct, task);
   });
 
   /* 点别处关闭。走捕获阶段：handleRowAct 会 stopPropagation，
@@ -1708,6 +1772,13 @@ renderRecentFiles();
   const toolTreeClose = document.getElementById('toolTreeClose');
   const toolTreeReopen = document.getElementById('toolTreeReopen');
   const toolFileModeToggle = document.getElementById('toolFileModeToggle');
+const toolFileEditSave = document.getElementById('toolFileEditSave');
+const toolFileEditDiscard = document.getElementById('toolFileEditDiscard');
+const fileCloseOverlay = document.getElementById('fileCloseOverlay');
+const fileCloseDescription = document.getElementById('fileCloseDescription');
+const fileCloseCancel = document.getElementById('fileCloseCancel');
+const fileCloseDiscard = document.getElementById('fileCloseDiscard');
+const fileCloseSave = document.getElementById('fileCloseSave');
   const toolFilePreviewTitle = document.getElementById('toolFilePreviewTitle');
   const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
   const openWith = document.getElementById('openWith');
@@ -1750,10 +1821,11 @@ renderRecentFiles();
     node: null,
     chain: [],
     path: null,
-    treeVisible: true,
     previewMode: 'source',
   }];
   let activeWorkspace = 'file-default';
+  // 文件目录树是右侧工作区的共享布局状态，不随文件页签切换恢复旧值。
+  let fileTreeVisible = true;
 
   function saveActiveWorkspaceState() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
@@ -1772,10 +1844,31 @@ renderRecentFiles();
     fullscreenChat.hidden = !visible;
   }
 
+  let summaryRestoreFrame = 0;
+  function waitForMainRestored() {
+    if (workbenchExpanded || rightPanel !== 'tools') return;
+    const mainRight = document.querySelector('.main').getBoundingClientRect().right;
+    const triggerRight = summaryToggleSlot.getBoundingClientRect().right;
+    if (mainRight >= triggerRight + 15) {
+      content.classList.remove('wb-restoring');
+      syncSummaryTriggerPosition();
+    } else {
+      summaryRestoreFrame = requestAnimationFrame(waitForMainRestored);
+    }
+  }
+
   function setWorkbenchExpanded(expanded) {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
     const canExpandFile = rightPanel === 'tools' && item?.kind === 'file';
+    const wasExpanded = workbenchExpanded;
     workbenchExpanded = Boolean(expanded && canExpandFile);
+    cancelAnimationFrame(summaryRestoreFrame);
+    if (wasExpanded && !workbenchExpanded && rightPanel === 'tools') {
+      content.classList.add('wb-restoring');
+      summaryRestoreFrame = requestAnimationFrame(waitForMainRestored);
+    } else {
+      content.classList.remove('wb-restoring');
+    }
     content.classList.toggle('wb-expanded', workbenchExpanded);
     content.classList.toggle('wb-file-active', canExpandFile);
     wbExpandToggle.disabled = !canExpandFile;
@@ -1784,24 +1877,121 @@ renderRecentFiles();
     wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
     syncFullscreenChat();
     requestAnimationFrame(syncSummaryTriggerPosition);
-  }
-
-  function usesWideFilePreview(node) {
-    return Boolean(node) && ['ppt', 'html', 'png', 'excel'].includes(artifactType(node));
+    requestAnimationFrame(syncResizeLayout);
   }
 
   function syncWorkbenchWidth() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
-    const isActiveFile = rightPanel === 'tools' && item?.kind === 'file';
-    const folderOpen = isActiveFile && item.treeVisible !== false;
-    content.classList.toggle('wb-folder-open', folderOpen);
-    content.classList.toggle('wb-preview-wide', isActiveFile && usesWideFilePreview(item.node));
+    content.classList.toggle('wb-file-workspace', rightPanel === 'tools' && item?.kind === 'file');
+    requestAnimationFrame(syncResizeLayout);
   }
+
+  /* 两级分栏只记录用户设置的像素宽度；布局变化时夹紧，不覆盖原始偏好。 */
+  const panelResizer = document.getElementById('panelResizer');
+  const treeResizer = document.getElementById('treeResizer');
+  let preferredPanelWidths = { file: null, compact: null };
+  let preferredTreeWidth = null;
+  let activeResize = null;
+
+  function panelWidthKey() { return content.classList.contains('wb-file-workspace') ? 'file' : 'compact'; }
+  function panelBounds() {
+    const available = content.clientWidth;
+    const mainMin = Math.min(320, Math.floor(available * .48));
+    const panelMin = Math.min(panelWidthKey() === 'file' ? 360 : 300, available - mainMin);
+    return { min: panelMin, max: Math.max(panelMin, available - mainMin) };
+  }
+  function treeBounds() {
+    const available = workbench.clientWidth;
+    const previewMin = Math.min(240, Math.floor(available * .52));
+    const treeMin = Math.min(180, available - previewMin);
+    return { min: treeMin, max: Math.max(treeMin, available - previewMin) };
+  }
+  function clampWidth(value, bounds) { return Math.round(Math.min(bounds.max, Math.max(bounds.min, value))); }
+  function syncResizeLayout() {
+    const mobile = window.matchMedia('(max-width: 860px)').matches;
+    const panelActive = content.classList.contains('wb-open') && !workbenchExpanded && !mobile;
+    const panelPreference = preferredPanelWidths[panelWidthKey()];
+    const bounds = panelBounds();
+    if (panelActive) {
+      const root = getComputedStyle(document.documentElement);
+      const defaultWidth = panelWidthKey() === 'file'
+        ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), content.clientWidth * .62)
+        : parseFloat(root.getPropertyValue('--workbench-w'));
+      content.style.setProperty('--user-panel-w', `${clampWidth(panelPreference ?? defaultWidth, bounds)}px`);
+    } else content.style.removeProperty('--user-panel-w');
+    const treeActive = content.classList.contains('wb-open') && workbench.classList.contains('file-split') && rightPanel === 'tools';
+    const treeLimits = treeBounds();
+    if (treeActive) {
+      const fallback = workbenchExpanded && !mobile
+        ? Math.min(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--workbench-folder-w')) * .4, content.clientWidth * .248)
+        : workbench.clientWidth * .4;
+      const treeWidth = clampWidth(preferredTreeWidth ?? fallback, treeLimits);
+      workbench.style.setProperty('--user-tree-w', `${treeWidth}px`);
+      treeResizer.setAttribute('aria-valuemin', String(treeLimits.min));
+      treeResizer.setAttribute('aria-valuemax', String(treeLimits.max));
+      treeResizer.setAttribute('aria-valuenow', String(treeWidth));
+    } else workbench.style.removeProperty('--user-tree-w');
+    if (panelActive) {
+      const panelWidth = Math.round(workbench.getBoundingClientRect().width);
+      panelResizer.setAttribute('aria-valuemin', String(bounds.min));
+      panelResizer.setAttribute('aria-valuemax', String(bounds.max));
+      panelResizer.setAttribute('aria-valuenow', String(panelWidth));
+    }
+  }
+  function endResize() {
+    if (!activeResize) return;
+    activeResize.element.releasePointerCapture?.(activeResize.pointerId);
+    activeResize = null;
+    content.classList.remove('is-resizing');
+    workbench.classList.remove('is-resizing');
+    document.body.classList.remove('is-resizing-panels');
+  }
+  function setupResizer(element, kind) {
+    element.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || !content.classList.contains('wb-open') ||
+          (kind === 'panel' && (workbenchExpanded || window.matchMedia('(max-width: 860px)').matches)) ||
+          (kind === 'tree' && !workbench.classList.contains('file-split'))) return;
+      event.preventDefault();
+      endResize();
+      activeResize = { element, kind, pointerId: event.pointerId };
+      element.setPointerCapture(event.pointerId);
+      content.classList.toggle('is-resizing', kind === 'panel');
+      workbench.classList.toggle('is-resizing', kind === 'tree');
+      document.body.classList.add('is-resizing-panels');
+    });
+    element.addEventListener('pointermove', (event) => {
+      if (!activeResize || activeResize.element !== element || activeResize.pointerId !== event.pointerId) return;
+      if (kind === 'panel') {
+        preferredPanelWidths[panelWidthKey()] = clampWidth(content.getBoundingClientRect().right - event.clientX, panelBounds());
+      } else {
+        preferredTreeWidth = clampWidth(workbench.getBoundingClientRect().right - event.clientX, treeBounds());
+      }
+      syncResizeLayout();
+    });
+    element.addEventListener('pointerup', endResize);
+    element.addEventListener('pointercancel', endResize);
+    element.addEventListener('lostpointercapture', endResize);
+    element.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'Home' && event.key !== 'End') return;
+      event.preventDefault();
+      const bounds = kind === 'panel' ? panelBounds() : treeBounds();
+      const current = kind === 'panel' ? workbench.getBoundingClientRect().width : document.querySelector('.wb-pane[data-pane="files"]').getBoundingClientRect().width;
+      const target = event.key === 'Home' ? bounds.min : event.key === 'End' ? bounds.max : current + (event.key === 'ArrowLeft' ? 1 : -1) * (event.shiftKey ? 32 : 16);
+      if (kind === 'panel') preferredPanelWidths[panelWidthKey()] = clampWidth(target, bounds);
+      else preferredTreeWidth = clampWidth(target, bounds);
+      syncResizeLayout();
+    });
+  }
+  setupResizer(panelResizer, 'panel');
+  setupResizer(treeResizer, 'tree');
+  const layoutResizeObserver = new ResizeObserver(syncResizeLayout);
+  layoutResizeObserver.observe(content);
+  layoutResizeObserver.observe(workbench);
+  window.addEventListener('resize', () => { endResize(); syncResizeLayout(); });
 
   function syncSummaryTriggerPosition() {
     const main = document.querySelector('.main');
     if (rightPanel !== 'tools' || workbenchExpanded || !main || !summaryToggleSlot) {
-      summaryToggleSlot?.style.removeProperty('--summary-trigger-right');
       content.style.removeProperty('--summary-float-left');
       content.style.removeProperty('--summary-float-top');
       summaryPopover.style.removeProperty('position');
@@ -1811,12 +2001,7 @@ renderRecentFiles();
       return;
     }
 
-    const contentRect = content.getBoundingClientRect();
     const mainRect = main.getBoundingClientRect();
-    const mainRightInset = contentRect.right - mainRect.right;
-
-    // 先提交 icon 的新位置；随后读取矩形会得到已经移动后的最终坐标。
-    summaryToggleSlot.style.setProperty('--summary-trigger-right', `${Math.max(16, mainRightInset + 16)}px`);
     const triggerRect = outputToggle.getBoundingClientRect();
     const floatWidth = summaryPopover.hidden ? 344 : summaryPopover.getBoundingClientRect().width;
     const minLeft = mainRect.left + 16;
@@ -1844,6 +2029,7 @@ renderRecentFiles();
     wbToggle.setAttribute('aria-expanded', String(next === 'tools'));
     wbToggle.title = next === 'tools' ? '收起工具' : '工具';
     requestAnimationFrame(() => {
+      syncResizeLayout();
       syncSummaryTriggerPosition();
       requestAnimationFrame(syncSummaryTriggerPosition);
     });
@@ -1857,7 +2043,7 @@ renderRecentFiles();
   function setWorkbench(open) {
     if (!open) {
       rightPanel = null;
-      content.classList.remove('wb-open', 'wb-folder-open', 'wb-preview-wide', 'wb-expanded', 'wb-file-active');
+      content.classList.remove('wb-open', 'wb-file-workspace', 'wb-expanded', 'wb-file-active');
       workbenchExpanded = false;
       wbExpandToggle.disabled = true;
       wbExpandToggle.setAttribute('aria-pressed', 'false');
@@ -1868,6 +2054,7 @@ renderRecentFiles();
       wbToggle.setAttribute('aria-expanded', 'false');
       wbToggle.title = '工具';
       fullscreenChat.hidden = true;
+      requestAnimationFrame(syncResizeLayout);
       return;
     }
     if (rightPanel !== 'tools') setRightPanel('tools');
@@ -1881,7 +2068,7 @@ renderRecentFiles();
         ` data-workspace-empty="${item.kind === 'file' && !item.node}"` +
         ` aria-selected="${item.id === activeWorkspace}" title="${esc(item.title)}">` +
         `<svg viewBox="0 0 24 24" class="ic">${meta.icon}</svg>` +
-        `<span class="workspace-tab-title">${esc(item.title)}</span>` +
+        `<span class="workspace-tab-title">${esc(item.title)}${item.sourceDraft !== undefined && item.sourceDraft !== sourceForNode(item.node) ? ' •' : ''}</span>` +
         `<button class="workspace-tab-close" type="button" title="关闭" aria-label="关闭 ${esc(item.title)}">${WORKSPACE_CLOSE}</button>` +
         `</div>`;
     }).join('');
@@ -1914,7 +2101,6 @@ renderRecentFiles();
       node: null,
       chain: [],
       path: null,
-      treeVisible: true,
       previewMode: 'source',
       ...overrides,
     };
@@ -1952,9 +2138,28 @@ renderRecentFiles();
     if (kind === 'browser') urlInput.value = '';
   }
 
-  function closeWorkspace(id) {
+  let pendingCloseWorkspaceId = null;
+  let closeDialogReturnFocus = null;
+
+  function dismissFileCloseDialog(restoreFocus = true) {
+    fileCloseOverlay.hidden = true;
+    pendingCloseWorkspaceId = null;
+    if (restoreFocus && closeDialogReturnFocus?.isConnected) closeDialogReturnFocus.focus();
+    closeDialogReturnFocus = null;
+  }
+
+  function closeWorkspace(id, confirmed = false) {
     const index = openWorkspaces.findIndex((item) => item.id === id);
     if (index === -1) return;
+    const item = openWorkspaces[index];
+    if (!confirmed && item.kind === 'file' && item.sourceDraft !== undefined) {
+      pendingCloseWorkspaceId = id;
+      closeDialogReturnFocus = document.activeElement;
+      fileCloseDescription.textContent = `“${item.title}”正在编辑。关闭前要保存更改吗？`;
+      fileCloseOverlay.hidden = false;
+      fileCloseCancel.focus();
+      return;
+    }
 
     const closingActiveWorkspace = activeWorkspace === id;
     openWorkspaces.splice(index, 1);
@@ -1965,6 +2170,7 @@ renderRecentFiles();
       activeWorkspace = null;
       renderWorkspaceTabs();
       setWorkbench(false);
+      if (confirmed) wbToggle.focus();
       return;
     }
 
@@ -1975,7 +2181,41 @@ renderRecentFiles();
     } else {
       renderWorkspaceTabs();
     }
+    if (confirmed) workspaceTabs.querySelector(`[data-workspace-tab="${activeWorkspace}"]`)?.focus();
   }
+
+  fileCloseCancel.addEventListener('click', () => dismissFileCloseDialog());
+  fileCloseDiscard.addEventListener('click', () => {
+    const id = pendingCloseWorkspaceId;
+    dismissFileCloseDialog(false);
+    closeWorkspace(id, true);
+  });
+  fileCloseSave.addEventListener('click', () => {
+    const id = pendingCloseWorkspaceId;
+    const item = openWorkspaces.find((workspace) => workspace.id === id);
+    if (!item || !saveFileDraft(item)) {
+      dismissFileCloseDialog();
+      return;
+    }
+    dismissFileCloseDialog(false);
+    closeWorkspace(id, true);
+  });
+  fileCloseOverlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dismissFileCloseDialog();
+    } else if (event.key === 'Tab') {
+      const buttons = [fileCloseCancel, fileCloseDiscard, fileCloseSave];
+      const index = buttons.indexOf(document.activeElement);
+      if (event.shiftKey && index <= 0) {
+        event.preventDefault();
+        fileCloseSave.focus();
+      } else if (!event.shiftKey && index === buttons.length - 1) {
+        event.preventDefault();
+        fileCloseCancel.focus();
+      }
+    }
+  });
 
   function setWorkspaceCreate(open) {
     workspaceCreate.classList.toggle('open', open);
@@ -2271,7 +2511,8 @@ parent.files.splice(indices.at(-1), 1);
 }
 
 function sourceForNode(node) {
-    const preview = node.preview;
+if (!node) return '';
+const preview = node.preview;
     if (preview && preview.kind === 'html') return preview.html;
     if (preview && preview.kind === 'markdown') return preview.text;
     if (preview && preview.kind === 'image') {
@@ -2349,7 +2590,7 @@ function sourceForNode(node) {
 
   function renderToolFileWorkspace(item) {
     if (!item || item.kind !== 'file') return;
-    const treeVisible = item.treeVisible !== false;
+    const treeVisible = fileTreeVisible;
     const canToggleMode = supportsRenderedPreview(item.node);
     const hasVisualPreview = Boolean(item.node?.preview && PREVIEWS[item.node.preview.kind]);
     if (canToggleMode && item.previewMode !== 'source') item.previewMode = 'rendered';
@@ -2357,19 +2598,28 @@ function sourceForNode(node) {
     workbench.classList.toggle('file-split', treeVisible);
     workbench.classList.toggle('file-preview-only', !treeVisible);
     syncWorkbenchWidth();
+    requestAnimationFrame(syncResizeLayout);
 toolTreeReopen.hidden = treeVisible;
 toolTreeReopen.setAttribute('aria-pressed', String(treeVisible));
-toolFileModeToggle.hidden = !canToggleMode;
-    toolFileModeToggle.textContent = item.previewMode === 'source' ? '预览效果' : '编辑代码';
-    toolFileModeToggle.setAttribute('aria-pressed', String(item.previewMode === 'source'));
+    const editing = canToggleMode && item.previewMode === 'source';
+    toolFileModeToggle.hidden = !canToggleMode || editing;
+    toolFileModeToggle.textContent = '编辑代码';
+    toolFileEditSave.hidden = !editing;
+    toolFileEditDiscard.hidden = !editing;
+    toolFileEditSave.disabled = !editing;
+    if (editing) setOpenWithMenu(false);
     activeFilePath = treeVisible ? item.path || null : null;
     toolFilePreviewTitle.textContent = item.node ? item.node.name : '选择文件';
     renderOpenWith(item.node);
+    openWith.hidden = editing || !item.node;
     if (!item.node) toolFilePreviewBody.innerHTML = TOOL_FILE_EMPTY;
     else if (hasVisualPreview && item.previewMode !== 'source') {
-      toolFilePreviewBody.innerHTML = PREVIEWS[item.node.preview.kind](item.node.preview);
+      toolFilePreviewBody.innerHTML = PREVIEWS[item.node.preview.kind](item.node.preview, item);
     } else if (item.previewMode === 'artifact') {
       toolFilePreviewBody.innerHTML = previewFallback(item.node);
+    } else if (editing) {
+      toolFilePreviewBody.innerHTML = '<textarea class="source-editor" aria-label="编辑文件源码" spellcheck="false"></textarea>';
+      toolFilePreviewBody.querySelector('.source-editor').value = item.sourceDraft ?? sourceForNode(item.node);
     } else {
       toolFilePreviewBody.innerHTML = renderSourcePreview(item.node);
     }
@@ -2393,8 +2643,7 @@ toolFileModeToggle.hidden = !canToggleMode;
     item.chain = chain.slice();
     item.path = options.path;
     item.title = node.name;
-    item.treeVisible = options.treeVisible;
-    item.previewMode = options.previewMode;
+    if (item.sourceDraft === undefined) item.previewMode = options.previewMode;
     rememberRecentFile(node, chain);
 
     if (rightPanel !== 'tools') setRightPanel('tools');
@@ -2405,7 +2654,6 @@ toolFileModeToggle.hidden = !canToggleMode;
   function openToolFile(node, chain, path) {
     openFileWorkspace(node, chain, {
       path,
-      treeVisible: true,
       previewMode: node?.preview ? 'rendered' : 'source',
     });
   }
@@ -2413,7 +2661,6 @@ toolFileModeToggle.hidden = !canToggleMode;
   function openArtifactPreview(node, chain) {
     openFileWorkspace(node, chain, {
       path: null,
-      treeVisible: false,
       previewMode: 'artifact',
     });
   }
@@ -2442,7 +2689,145 @@ toolFileModeToggle.hidden = !canToggleMode;
   toolFileModeToggle.addEventListener('click', () => {
     const item = currentFileWorkspace();
     if (!item || !supportsRenderedPreview(item.node)) return;
-    item.previewMode = item.previewMode === 'source' ? 'rendered' : 'source';
+    item.sourceDraft = sourceForNode(item.node);
+    item.previewMode = 'source';
+    renderToolFileWorkspace(item);
+    toolFilePreviewBody.querySelector('.source-editor')?.focus();
+  });
+
+  toolFilePreviewBody.addEventListener('click', (event) => {
+    const item = currentFileWorkspace();
+    if (!item?.node?.preview) return;
+    const jump = event.target.closest('[data-word-jump]');
+    if (jump) toolFilePreviewBody.querySelector(`#word-section-${jump.dataset.wordJump}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const zoom = event.target.closest('[data-office-zoom]');
+    if (zoom) {
+      item.officeZoom = Math.min(140, Math.max(70, (item.officeZoom || 100) + Number(zoom.dataset.officeZoom)));
+      toolFilePreviewBody.querySelector('.word-page').style.setProperty('--office-zoom', item.officeZoom / 100);
+      toolFilePreviewBody.querySelector('.office-zoom span').textContent = `${item.officeZoom}%`;
+    }
+    const sheetButton = event.target.closest('[data-excel-sheet]');
+    if (sheetButton) {
+      item.officeSheet = Number(sheetButton.dataset.excelSheet);
+      item.officeFilter = '';
+      renderToolFileWorkspace(item);
+    }
+    if (event.target.matches('[data-excel-add]')) {
+      const sheet = item.node.preview.sheets[item.officeSheet || 0];
+      sheet.rows.push(sheet.columns.map(() => ''));
+      item.officeFilter = '';
+      item.officeEdited = true;
+      renderToolFileWorkspace(item);
+      toolFilePreviewBody.querySelector(`[data-excel-row="${sheet.rows.length - 1}"][data-excel-column="0"]`)?.focus();
+    }
+    const cell = event.target.closest('.excel-grid td[data-excel-address]');
+    if (cell) selectExcelCell(cell);
+  });
+
+  function selectExcelCell(cell) {
+    toolFilePreviewBody.querySelector('.excel-grid td.selected')?.classList.remove('selected');
+    cell.classList.add('selected');
+    toolFilePreviewBody.querySelector('[data-excel-address]:not(td)').textContent = cell.dataset.excelAddress;
+    toolFilePreviewBody.querySelector('[data-excel-value]').textContent = cell.textContent;
+  }
+
+  function editExcelCell(cell) {
+    const item = currentFileWorkspace();
+    if (!item || cell.dataset.excelColumn === '5' && (item.officeSheet || 0) === 0) return;
+    if (cell.querySelector('input')) return;
+    selectExcelCell(cell);
+    const sheet = item.node.preview.sheets[item.officeSheet || 0];
+    const row = Number(cell.dataset.excelRow);
+    const column = Number(cell.dataset.excelColumn);
+    const input = document.createElement('input');
+    input.className = 'excel-cell-input';
+    input.value = sheet.rows[row][column];
+    cell.textContent = '';
+    cell.append(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = (commit) => {
+      if (done) return;
+      done = true;
+      if (commit && input.value !== sheet.rows[row][column]) {
+        sheet.rows[row][column] = input.value;
+        item.officeEdited = true;
+      }
+      renderToolFileWorkspace(item);
+      const next = toolFilePreviewBody.querySelector(`[data-excel-row="${row}"][data-excel-column="${column}"]`);
+      next?.focus();
+      if (next) selectExcelCell(next);
+    };
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === 'Escape') {
+        event.preventDefault();
+        finish(event.key === 'Enter');
+      }
+    });
+    input.addEventListener('blur', () => finish(true));
+  }
+
+  toolFilePreviewBody.addEventListener('dblclick', (event) => {
+    const cell = event.target.closest('.excel-grid td');
+    if (cell) editExcelCell(cell);
+  });
+  toolFilePreviewBody.addEventListener('keydown', (event) => {
+    if (event.target.matches('.excel-grid td') && (event.key === 'Enter' || event.key === 'F2')) {
+      event.preventDefault();
+      editExcelCell(event.target);
+    }
+  });
+
+  toolFilePreviewBody.addEventListener('input', (event) => {
+    if (event.target.matches('[data-excel-filter]')) {
+      const item = currentFileWorkspace();
+      item.officeFilter = event.target.value;
+      const caret = event.target.selectionStart;
+      renderToolFileWorkspace(item);
+      const filter = toolFilePreviewBody.querySelector('[data-excel-filter]');
+      filter.focus();
+      filter.setSelectionRange(caret, caret);
+      return;
+    }
+    const paragraph = event.target.closest('[data-word-paragraph]');
+    if (paragraph) {
+      const item = currentFileWorkspace();
+      item.node.preview.sections[Number(paragraph.dataset.wordSection)].paragraphs[Number(paragraph.dataset.wordParagraph)] = paragraph.textContent;
+      item.officeEdited = true;
+      toolFilePreviewBody.querySelector('.office-status').textContent = '已编辑 · 当前会话';
+      return;
+    }
+    if (!event.target.matches('.source-editor')) return;
+    const item = currentFileWorkspace();
+    if (!item) return;
+    item.sourceDraft = event.target.value;
+    renderWorkspaceTabs();
+  });
+
+  function saveFileDraft(item) {
+    if (item?.sourceDraft === undefined || !supportsRenderedPreview(item.node)) return false;
+    const preview = item.node.preview;
+    if (preview.kind === 'html') preview.html = item.sourceDraft;
+    else preview.text = item.sourceDraft;
+    delete item.sourceDraft;
+    item.previewMode = 'rendered';
+    return true;
+  }
+
+  toolFileEditSave.addEventListener('click', () => {
+    const item = currentFileWorkspace();
+    if (!saveFileDraft(item)) return;
+    renderWorkspaceTabs();
+    renderToolFileWorkspace(item);
+  });
+
+  toolFileEditDiscard.addEventListener('click', () => {
+    const item = currentFileWorkspace();
+    if (!item || !supportsRenderedPreview(item.node)) return;
+    delete item.sourceDraft;
+    item.previewMode = 'rendered';
+    renderWorkspaceTabs();
     renderToolFileWorkspace(item);
   });
 
@@ -2597,15 +2982,15 @@ window.addEventListener('resize', closeTreeContextMenu);
 toolTreeClose.addEventListener('click', () => {
 const item = currentFileWorkspace();
 if (!item) return;
-item.treeVisible = false;
-renderToolFileWorkspace(item);
+  fileTreeVisible = false;
+  renderToolFileWorkspace(item);
 });
 
 toolTreeReopen.addEventListener('click', () => {
 const item = currentFileWorkspace();
 if (!item) return;
-item.treeVisible = true;
-// 展开目录只改变布局，不改变当前文件的渲染方式。
+  fileTreeVisible = true;
+  // 展开目录只改变布局，不改变当前文件的渲染方式。
 renderToolFileWorkspace(item);
 });
 
@@ -2677,13 +3062,18 @@ renderToolFileWorkspace(item);
     renderRecentFiles();
   });
 
+  function openFileFromSummary(node, chain) {
+    setSummaryOpen(false);
+    fileTreeVisible = false;
+    openArtifactPreview(node, chain);
+  }
+
   recentFiles.addEventListener('click', (e) => {
     const item = e.target.closest('[data-recent-index]');
     if (!item) return;
     const entry = recentOpenedFiles[Number(item.dataset.recentIndex)];
     if (!entry) return;
-    setSummaryOpen(false);
-    openArtifactPreview(entry.node, entry.chain);
+    openFileFromSummary(entry.node, entry.chain);
   });
 
   fileGrid.addEventListener('click', (e) => {
@@ -2692,8 +3082,7 @@ renderToolFileWorkspace(item);
 
     const node = (currentNode().files || [])[Number(item.dataset.fileIndex)];
     if (!node || node.type === 'folder') return;
-    setSummaryOpen(false);
-    openArtifactPreview(node, filePath.concat(node));
+    openFileFromSummary(node, filePath.concat(node));
   });
 
   /* ---------- 5.6 示例对话 ----------
@@ -2708,10 +3097,104 @@ renderToolFileWorkspace(item);
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
   const conversationTaskTitle = document.getElementById('conversationTaskTitle');
+  const conversationTaskMore = document.getElementById('conversationTaskMore');
+  const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
   const conversationArtifact = document.getElementById('conversationArtifact');
+  const conversationTaskMenu = document.createElement('div');
+  conversationTaskMenu.id = 'conversationTaskMenu';
+  conversationTaskMenu.className = 'row-menu';
+  conversationTaskMenu.setAttribute('role', 'menu');
+  conversationTaskMenu.hidden = true;
+  conversationTaskMenu.innerHTML = renderTaskMenu(TASK_MENU, 'data-conversation-act');
+  document.body.appendChild(conversationTaskMenu);
+  let conversationFeedbackTimer;
+
+  function closeConversationTaskMenu(restoreFocus = false) {
+    if (conversationTaskMenu.hidden) return;
+    conversationTaskMenu.hidden = true;
+    conversationTaskMenu.classList.remove('open');
+    conversationTaskMore.setAttribute('aria-expanded', 'false');
+    if (restoreFocus && !conversationPage.hidden) conversationTaskMore.focus();
+  }
+
+  function showConversationFeedback(message) {
+    conversationTaskFeedback.textContent = message;
+    clearTimeout(conversationFeedbackTimer);
+    conversationFeedbackTimer = setTimeout(() => { conversationTaskFeedback.textContent = ''; }, 2500);
+  }
+
+  conversationTaskMore.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!conversationTaskMenu.hidden) { closeConversationTaskMenu(); return; }
+    closeRowMenu();
+    conversationTaskMenu.querySelector('[data-conversation-act="pin"] span').textContent = conversationTask.closest('[data-agent-task]').dataset.pinned === 'true' ? '取消置顶' : '置顶';
+    conversationTaskMenu.hidden = false;
+    conversationTaskMenu.classList.add('open');
+    conversationTaskMore.setAttribute('aria-expanded', 'true');
+    const button = conversationTaskMore.getBoundingClientRect();
+    const menu = conversationTaskMenu.getBoundingClientRect();
+    conversationTaskMenu.style.left = `${Math.max(8, Math.min(button.left, window.innerWidth - menu.width - 8))}px`;
+    conversationTaskMenu.style.top = `${Math.max(8, Math.min(button.bottom + 4, window.innerHeight - menu.height - 8))}px`;
+    conversationTaskMenu.querySelector('button')?.focus();
+  });
+
+  async function runTaskMenuAction(action, task) {
+    const container = task.matches('.task-parent') ? task.closest('[data-agent-task]') : task;
+    const nameEl = task.querySelector('.task-name');
+    const isCurrentConversation = task === conversationTask;
+    if (action === 'pin') {
+      const pinned = container.dataset.pinned !== 'true';
+      container.dataset.pinned = String(pinned);
+      if (pinned) container.parentElement.prepend(container);
+      else {
+        const home = taskHomes.get(container);
+        home.parent.insertBefore(container, home.next?.parentNode === home.parent ? home.next : null);
+      }
+      if (isCurrentConversation && !conversationPage.hidden) showConversationFeedback(pinned ? '已置顶' : '已取消置顶');
+    } else if (action === 'rename') {
+      const name = window.prompt('重命名任务', nameEl.textContent)?.trim();
+      if (name) {
+        nameEl.textContent = name;
+        if (isCurrentConversation) conversationTaskTitle.textContent = name;
+        refreshClipped();
+        if (isCurrentConversation && !conversationPage.hidden) showConversationFeedback('已重命名');
+      }
+    } else if (action === 'copy-directory' || action === 'copy-id') {
+      const folderId = task.closest('[data-folder]')?.dataset.folder || 'default';
+      const text = action === 'copy-id' ? taskIds.get(task) : FOLDERS.find((folder) => folder.id === folderId)?.path;
+      try {
+        await navigator.clipboard.writeText(text);
+        if (isCurrentConversation && !conversationPage.hidden) showConversationFeedback(action === 'copy-id' ? '会话 ID 已复制' : '工作目录已复制');
+      } catch (error) {
+        if (isCurrentConversation && !conversationPage.hidden) showConversationFeedback('复制失败，请检查剪贴板权限');
+      }
+    } else if (action === 'delete' && window.confirm(`确定删除“${nameEl.textContent}”吗？`)) {
+      if (isCurrentConversation && !conversationPage.hidden) setConversationOpen(false);
+      container.remove();
+      refreshClipped();
+    }
+  }
+
+  conversationTaskMenu.addEventListener('click', (event) => {
+    const action = event.target.closest('[data-conversation-act]')?.dataset.conversationAct;
+    if (!action) return;
+    closeConversationTaskMenu();
+    void runTaskMenuAction(action, conversationTask);
+    if (!conversationPage.hidden) conversationTaskMore.focus();
+  });
+
+  document.addEventListener('pointerdown', (event) => {
+    if (!conversationTaskMenu.contains(event.target) && !conversationTaskMore.contains(event.target)) closeConversationTaskMenu();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeConversationTaskMenu(true);
+  });
+  window.addEventListener('resize', () => closeConversationTaskMenu());
+  window.addEventListener('scroll', () => closeConversationTaskMenu(), true);
   const newTaskNav = document.getElementById('newTaskNav');
 
   function setConversationOpen(open) {
+    if (!open) closeConversationTaskMenu();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
     conversationTask.setAttribute('aria-current', open ? 'page' : 'false');

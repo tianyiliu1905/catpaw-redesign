@@ -63,13 +63,20 @@
   --radius-md: 10px;
   --radius-lg: 14px;
 
+  /* 轻量菜单共用外壳；内容型浮层与模态框保留各自的层级和尺寸。 */
+  --menu-bg: var(--gray-0);
+  --menu-radius: var(--radius-md);
+  --menu-shadow: 0 0 0 .5px rgba(0,0,0,.07),
+                 0 8px 28px rgba(0,0,0,.14),
+                 0 2px 6px rgba(0,0,0,.06);
+
   /* macOS Sequoia 窗口圆角 ≈12pt；本原型为放大展示，等比放大到 18px */
   --radius-window: 18px;
 
   --sidebar-w: 292px;
   --workbench-w: 460px;
   --workbench-folder-w: 720px;
-  --workbench-tree-w: min(calc(var(--workbench-folder-w) * .45), 27.9%);
+  --workbench-tree-w: min(calc(var(--workbench-folder-w) * .40), 24.8%);
   --summary-panel-w: 340px;
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
@@ -441,12 +448,9 @@ body{
   z-index:200;
   min-width:156px;
   padding:var(--space-1);
-  background:#fff;
-  border-radius:10px;
-  box-shadow:
-    0 0 0 .5px rgba(0,0,0,.07),
-    0 8px 28px rgba(0,0,0,.14),
-    0 2px 6px rgba(0,0,0,.06);
+  background:var(--menu-bg);
+  border-radius:var(--menu-radius);
+  box-shadow:var(--menu-shadow);
 
   /* 从触发点方向展开。这里不用 visibility 控制显隐：
      JS 在测量阶段要临时借用 visibility，两边会打架；
@@ -471,7 +475,7 @@ body{
   padding:0 var(--space-2);
   border:none;
   background:transparent;
-  border-radius:6px;
+  border-radius:var(--radius-sm);
   font-family:inherit;
   font-size:var(--type-sm);
   color: var(--text-1);
@@ -480,7 +484,8 @@ body{
   white-space:nowrap;
   transition: background .12s ease;
 }
-.row-menu-item:hover{ background: var(--hover); }
+.row-menu-item:hover,
+.row-menu-item:focus-visible{ background:var(--hover); outline:none; }
 .row-menu-item .ic{ width:14px; height:14px; color: var(--text-3); flex:none; }
 
 /* 分栏线：与文件夹选择器同一套写法，靠 ::after 画在项与项之间，
@@ -809,23 +814,19 @@ pointer-events:none;
   overflow: hidden;
   transition: grid-template-columns .42s cubic-bezier(.22,.68,0,1);
 }
-.content.wb-open{ grid-template-columns: 1fr var(--workbench-w); }
-/* 带目录的文件工作区沿用原有宽度；PPT、HTML、PNG 与 Excel 即使不带
-   目录，也默认获得更适合展示内容的宽视图。 */
-.content.wb-open.wb-folder-open,
-.content.wb-open.wb-preview-wide{ grid-template-columns:1fr min(var(--workbench-folder-w), 62%); }
+.content.wb-open{ grid-template-columns: minmax(0,1fr) var(--user-panel-w, var(--workbench-w)); }
+/* 所有文件工作区使用同一宽视图，不随文件类型或目录树显隐切换。 */
+.content.wb-open.wb-file-workspace{ grid-template-columns:minmax(0,1fr) var(--user-panel-w, min(var(--workbench-folder-w), 62%)); }
 .content.wb-open.wb-expanded{ grid-template-columns:0 1fr; }
 /* 未打开工具区时，摘要是独立工作区列：仅横向让出空间，主区高度和垂直位置保持不变。 */
 .content.summary-open:not(.wb-open){
   grid-template-columns:minmax(0,1fr) var(--summary-panel-w);
 }
 /* 工具区打开后仍沿用工具区的两列布局；摘要改回叠在内容上方的浮层。 */
-.content.summary-open.wb-open{ grid-template-columns:1fr var(--workbench-w); }
-.content.summary-open.wb-open.wb-folder-open,
-.content.summary-open.wb-open.wb-preview-wide{ grid-template-columns:1fr min(var(--workbench-folder-w), 62%); }
+.content.summary-open.wb-open{ grid-template-columns:minmax(0,1fr) var(--user-panel-w, var(--workbench-w)); }
+.content.summary-open.wb-open.wb-file-workspace{ grid-template-columns:minmax(0,1fr) var(--user-panel-w, min(var(--workbench-folder-w), 62%)); }
 .content.summary-open.wb-open.wb-expanded{ grid-template-columns:0 1fr; }
-/* 普通工具保持紧凑宽度；宽预览与目录视图适度加宽；手动全屏状态则让
-   整个面板跨过原文件目录区域继续向左延展，占满主内容区。 */
+/* 非文件工具保持紧凑宽度；文件工作区统一加宽；手动全屏仍占满主内容区。 */
 
 /* ============================================================
    主内容
@@ -867,11 +868,41 @@ pointer-events:none;
   font-size:var(--type-md);
   font-weight:600;
 }
-.conversation-task-bar span{
+#conversationTaskTitle{
+  min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+.conversation-task-more{
+  width:24px;
+  height:24px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  margin-left:6px;
+  padding:0;
+  border:0;
+  border-radius:5px;
+  background:transparent;
+  color:var(--text-3);
+  cursor:pointer;
+  transition:background .12s ease,color .12s ease;
+}
+.conversation-task-more:hover,
+.conversation-task-more:focus-visible{ background:var(--active); color:var(--text-1); outline:none; }
+.conversation-task-more[aria-expanded="true"]{ background:var(--active); color:var(--text-1); }
+.conversation-task-more:active{ transform:scale(.94); }
+.conversation-task-more .ic{ width:15px; height:15px; fill:currentColor; stroke:none; }
+.conversation-task-feedback{
+  min-width:0;
+  margin-left:8px;
+  color:var(--text-3);
+  font-size:var(--type-sm);
+  font-weight:400;
+  white-space:nowrap;
+}
+.conversation-task-feedback:empty{ display:none; }
 .conversation-page[hidden]{ display:none; }
 .main.conversation-open{
   padding:0;
@@ -1083,10 +1114,13 @@ background:rgba(0,0,0,.065);
 color:var(--text-1);
 background:rgba(0,0,0,.065);
 }
-/* 工具区打开时，摘要入口锚定到左侧主区右上角的留白区。
-   实际偏移由脚本按主区右边界同步，适配普通、宽预览与目录展开的宽度。 */
-.content.wb-open .summary-toggle-slot{ right:var(--summary-trigger-right, calc(var(--workbench-w) + 16px)); }
-.content.wb-open.wb-expanded .summary-toggle-slot{ display:none; }
+/* 摘要入口锚定右侧面板左边界；全屏退出时不等待测量或淡入。 */
+.content.wb-open .summary-toggle-slot{ right:calc(var(--user-panel-w, var(--workbench-w)) + 16px); }
+.content.wb-open.wb-file-workspace .summary-toggle-slot{
+  right:calc(var(--user-panel-w, min(var(--workbench-folder-w), 62%)) + 16px);
+}
+.content.wb-open.wb-expanded .summary-toggle-slot,
+.content.wb-restoring .summary-toggle-slot{ visibility:hidden; }
 
 /* 全屏文件预览中的快捷对话框悬浮于内容之上，不压缩预览画布。
    输入区保持单一白色卡面，阴影仅用于与预览内容建立前后层级。 */
@@ -1639,12 +1673,9 @@ height:49px;
   left:0;
   min-width:168px;
   padding:var(--space-1);
-  background:#fff;
-  border-radius: var(--radius-md);
-  box-shadow:
-    0 0 0 .5px rgba(0,0,0,.07),
-    0 8px 28px rgba(0,0,0,.14),
-    0 2px 6px rgba(0,0,0,.06);
+  background:var(--menu-bg);
+  border-radius:var(--menu-radius);
+  box-shadow:var(--menu-shadow);
   z-index: 60;
 
   opacity: 0;
@@ -1669,10 +1700,10 @@ height:49px;
 .branch-opt{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:var(--space-2);
   width:100%;
   height:30px;
-  padding: 0 8px;
+  padding:0 var(--space-2);
   border:none;
   background:transparent;
   border-radius: var(--radius-sm);
@@ -1684,7 +1715,9 @@ height:49px;
   transition: background .12s ease;
 }
 .folder-opt:hover,
-.branch-opt:hover{ background: var(--hover); }
+.branch-opt:hover,
+.folder-opt:focus-visible,
+.branch-opt:focus-visible{ background:var(--hover); outline:none; }
 .folder-opt .ic,
 .branch-opt .ic{ width:14px; height:14px; color: var(--text-3); flex:none; }
 .folder-opt-name,
@@ -1726,10 +1759,10 @@ height:49px;
 .folder-act{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:var(--space-2);
   width:100%;
   height:30px;
-  padding: 0 8px;
+  padding:0 var(--space-2);
   border:none;
   background:transparent;
   border-radius: var(--radius-sm);
@@ -1740,7 +1773,8 @@ height:49px;
   text-align:left;
   transition: background .12s ease, color .12s ease;
 }
-.folder-act:hover{ background: var(--hover); color: var(--text-1); }
+.folder-act:hover,
+.folder-act:focus-visible{ background:var(--hover); color:var(--text-1); outline:none; }
 .folder-act .ic{ width:14px; height:14px; color: var(--text-3); flex:none; }
 .folder-act span{ white-space:nowrap; }
 
@@ -1766,8 +1800,8 @@ height:49px;
   flex:none;
   padding: 1px 5px;
   border-radius: 4px;
-  background: var(--gray-2, rgba(0,0,0,.05));
-  font-size: var(--type-sm);
+  background:var(--gray-2);
+  font-size:var(--type-sm);
   color: var(--text-3);
   letter-spacing: .01em;
 }
@@ -2140,12 +2174,9 @@ height:49px;
   right:calc(var(--space-2) * -1);
   width:210px;
   padding:var(--space-4);
-  background: #fff;
-  border-radius: var(--radius-md);
-  box-shadow:
-    0 0 0 .5px rgba(0,0,0,.07),
-    0 8px 28px rgba(0,0,0,.14),
-    0 2px 6px rgba(0,0,0,.06);
+  background:var(--menu-bg);
+  border-radius:var(--menu-radius);
+  box-shadow:var(--menu-shadow);
   z-index: 60;
 
   opacity: 0;
@@ -2172,7 +2203,7 @@ height:49px;
   bottom: -5px;
   right: 16px;
   width:10px; height:10px;
-  background:#fff;
+  background:var(--menu-bg);
   transform: rotate(45deg);
   box-shadow: 1px 1px 0 rgba(0,0,0,.04);
 }
@@ -2235,6 +2266,48 @@ height:49px;
 .store-btn:hover{ background: var(--gray-1); border-color: var(--gray-6); }
 .store-btn .ic{ width:13px; height:13px; }
 
+/* 拖拽命中区比视觉分隔线宽；不占网格列宽，避免改变原布局。 */
+.panel-resizer,
+.tree-resizer{
+  position:absolute;
+  width:12px;
+  cursor:col-resize;
+  touch-action:none;
+  -webkit-app-region:no-drag;
+  user-select:none;
+}
+.panel-resizer::after,
+.tree-resizer::after{
+  content:"";
+  position:absolute;
+  top:0; bottom:0; left:5px;
+  width:2px;
+  background:transparent;
+  transition:background .15s;
+  pointer-events:none;
+}
+.panel-resizer:hover::after,
+.panel-resizer:focus-visible::after,
+.tree-resizer:hover::after,
+.tree-resizer:focus-visible::after,
+.content.is-resizing .panel-resizer::after,
+.workbench.is-resizing .tree-resizer::after{ background:var(--accent-blue); }
+.panel-resizer:focus-visible,
+.tree-resizer:focus-visible{ outline:none; }
+.panel-resizer{
+  z-index:25;
+  top:52px; bottom:0;
+  right:calc(var(--user-panel-w, var(--workbench-w)) - 6px);
+  display:none;
+}
+.content.wb-open:not(.wb-expanded) .panel-resizer{ display:block; }
+.content.wb-open.wb-file-workspace .panel-resizer{
+  right:calc(var(--user-panel-w, min(var(--workbench-folder-w), 62%)) - 6px);
+}
+.content.is-resizing{ transition:none; }
+body.is-resizing-panels{ cursor:col-resize; user-select:none; }
+body.is-resizing-panels iframe{ pointer-events:none; }
+
 /* ============================================================
    工具台（Workbench）
    ============================================================ */
@@ -2257,14 +2330,14 @@ display:flex;
   visibility: visible;
   transition-delay: .06s;
 }
-/* “打开文件”采用编辑器式固定骨架：左侧预览占 55%，右侧目录树占 45%。
+/* “打开文件”采用编辑器式固定骨架：左侧预览占 60%，右侧目录树占 40%。
    分栏完全位于右侧面板内；目录展开时避免空白预览区占据过多空间。 */
 .workbench.file-split[data-panel="tools"] .wb-pane[data-pane="file"]{
   position:absolute;
   top:52px;
   bottom:0;
   left:0;
-  width:55%;
+  width:calc(100% - var(--user-tree-w, 40%));
   display:flex;
 }
 .workbench.file-split[data-panel="tools"] .wb-pane[data-pane="files"]{
@@ -2272,7 +2345,7 @@ display:flex;
   top:52px;
   right:0;
   bottom:0;
-  width:45%;
+  width:var(--user-tree-w, 40%);
   display:flex;
   border-left:.5px solid var(--sidebar-border);
   animation:toolTreeSlideIn .22s cubic-bezier(.22,.68,0,1) both;
@@ -2284,10 +2357,22 @@ display:flex;
 @media (min-width:861px){
   /* 面板放大时只扩展文件内容区，目录树保持放大前的实际宽度。 */
   .content.wb-expanded .workbench.file-split[data-panel="tools"] .wb-pane[data-pane="file"]{
-    width:calc(100% - var(--workbench-tree-w));
+    width:calc(100% - var(--user-tree-w, var(--workbench-tree-w)));
   }
   .content.wb-expanded .workbench.file-split[data-panel="tools"] .wb-pane[data-pane="files"]{
-    width:var(--workbench-tree-w);
+    width:var(--user-tree-w, var(--workbench-tree-w));
+  }
+}
+.tree-resizer{
+  z-index:15;
+  top:52px; bottom:0;
+  right:calc(var(--user-tree-w, 40%) - 6px);
+  display:none;
+}
+.workbench.file-split[data-panel="tools"] .tree-resizer{ display:block; }
+@media (min-width:861px){
+  .content.wb-expanded .tree-resizer{
+    right:calc(var(--user-tree-w, var(--workbench-tree-w)) - 6px);
   }
 }
 .workbench.file-preview-only[data-panel="tools"] .wb-pane[data-pane="file"]{
@@ -2299,6 +2384,54 @@ display:flex;
   min-height:0;
   background:#fff;
 }
+.file-close-overlay{
+  position:absolute;
+  z-index:100;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:rgba(29,29,31,.28);
+}
+.file-close-overlay[hidden]{ display:none; }
+.file-close-dialog{
+  width:min(360px,100%);
+  padding:var(--space-5);
+  border:.5px solid var(--gray-5);
+  border-radius:var(--radius-lg);
+  background:var(--gray-0);
+  box-shadow:0 18px 48px rgba(0,0,0,.16);
+}
+.file-close-dialog h2{
+  color:var(--text-1);
+  font:600 var(--type-lg)/1.4 var(--font);
+}
+.file-close-dialog p{
+  margin-top:var(--space-2);
+  color:var(--text-3);
+  font:var(--type-sm)/1.5 var(--font);
+  overflow-wrap:anywhere;
+}
+.file-close-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:var(--space-2);
+  margin-top:var(--space-5);
+}
+.file-close-actions button{
+  min-height:30px;
+  padding:0 var(--space-3);
+  border:.5px solid var(--gray-5);
+  border-radius:var(--radius-sm);
+  background:var(--gray-0);
+  color:var(--text-2);
+  font:500 var(--type-sm)/1 var(--font);
+  cursor:pointer;
+}
+.file-close-actions button:hover,
+.file-close-actions button:focus-visible{ background:var(--hover); }
+.file-close-actions #fileCloseSave{ background:var(--text-1); border-color:var(--text-1); color:#fff; }
+.file-close-actions #fileCloseSave:hover{ background:var(--text-2); }
 .tool-file-preview-head{
   flex:none;
   height:38px;
@@ -2358,14 +2491,14 @@ display:flex;
 .open-with-menu{
   position:absolute;
   z-index:90;
-  top:calc(100% + 7px);
+  top:calc(100% + var(--space-2));
   right:0;
   width:220px;
-  padding:6px;
-  border:.5px solid rgba(0,0,0,.1);
-  border-radius:12px;
-  background:#fff;
-  box-shadow:0 14px 34px rgba(0,0,0,.14),0 2px 7px rgba(0,0,0,.05);
+  padding:var(--space-1);
+  border:0;
+  border-radius:var(--menu-radius);
+  background:var(--menu-bg);
+  box-shadow:var(--menu-shadow);
   transform-origin:top right;
   animation:openWithMenuIn .15s cubic-bezier(.22,.68,0,1) both;
 }
@@ -2379,10 +2512,10 @@ display:flex;
   min-height:38px;
   display:flex;
   align-items:center;
-  gap:11px;
-  padding:6px 9px;
+  gap:var(--space-2);
+  padding:var(--space-2);
   border:0;
-  border-radius:7px;
+  border-radius:var(--radius-sm);
   background:transparent;
   color:var(--text-1);
   font:var(--type-md)/1.3 var(--font);
@@ -2392,26 +2525,32 @@ display:flex;
 .open-with-item:hover,
 .open-with-item:focus-visible{ background:var(--hover); outline:none; }
 .open-with-item[data-divider]{
-  margin-top:6px;
-  padding-top:11px;
+  margin-top:var(--space-1);
+  padding-top:var(--space-2);
   border-top:.5px solid var(--gray-4);
-  border-radius:0 0 7px 7px;
+  border-radius:0 0 var(--radius-sm) var(--radius-sm);
 }
 .open-with-item .open-with-app-icon{ flex:0 0 22px; width:22px; height:22px; }
 .open-with-item-label{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.file-mode-toggle{
-  flex:none;
-  height:26px;
-  padding:0 var(--space-2);
-  border:.5px solid var(--gray-5);
-  border-radius:6px;
-  background:#fff;
-  color:var(--text-2);
-  font:500 var(--type-sm)/1 var(--font);
-  cursor:pointer;
+.file-mode-toggle,
+.file-edit-save,
+.file-edit-discard{
+flex:none;
+height:30px;
+padding:0 var(--space-2);
+border:.5px solid var(--gray-5);
+border-radius:9px;
+background:#fff;
+color:var(--text-2);
+font:500 var(--type-sm)/1 var(--font);
+cursor:pointer;
 }
-.file-mode-toggle:hover{ background:var(--gray-2); border-color:var(--gray-6); }
-.file-mode-toggle[hidden]{ display:none; }
+.file-mode-toggle:hover,
+.file-edit-save:hover,
+.file-edit-discard:hover{ background:var(--gray-2); border-color:var(--gray-6); }
+.file-mode-toggle[hidden],
+.file-edit-save[hidden],
+.file-edit-discard[hidden]{ display:none; }
 .tool-tree-reopen{
   width:30px;
   height:30px;
@@ -2438,8 +2577,22 @@ display:flex;
   overflow:auto;
   background:#fff;
 }
-.tool-file-preview-empty{
+.source-editor{
+  display:block;
   width:100%;
+  min-height:100%;
+  margin:0;
+  padding:16px;
+  resize:none;
+  border:0;
+  outline:none;
+  background:#fff;
+  color:#24292f;
+  font:var(--type-sm)/1.65 "SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  tab-size:2;
+}
+.tool-file-preview-empty{
+width:100%;
   height:100%;
   display:flex;
   flex-direction:column;
@@ -2657,8 +2810,8 @@ overflow-wrap:inherit;
 }
 
 /* -- 工作区标签 --
-页签与右侧工具按钮统一为 28px 高，并在 52px 顶栏中垂直居中。
-单页签无需用底色表达选中；多页签时才用浅灰底标识当前项。 */
+   页签与右侧工具按钮统一为 28px 高，并在 52px 顶栏中垂直居中。
+   当前页签始终用浅灰底标识，不受页签数量或目录树显隐影响。 */
 .wb-head{
   position:relative;
   z-index:20;
@@ -2711,9 +2864,6 @@ overflow-wrap:inherit;
   background:var(--gray-3);
   color:var(--text-1);
 }
-.workspace-tab:only-child.active:not([data-workspace-empty="true"]){
-  background:transparent;
-}
 .workspace-tab .ic{ width:14px; height:14px; flex:none; }
 .workspace-tab-title{
   min-width:0;
@@ -2755,7 +2905,7 @@ overflow-wrap:inherit;
   display:grid;
   place-items:center;
   border:0;
-  border-radius:7px;
+  border-radius:var(--radius-sm);
   background:transparent;
   color:var(--text-3);
   cursor:pointer;
@@ -2769,11 +2919,11 @@ overflow-wrap:inherit;
   top:34px;
   left:0;
   width:196px;
-  padding:var(--space-2);
-  border:.5px solid var(--gray-5);
-  border-radius:10px;
-  background:#fff;
-  box-shadow:0 14px 34px rgba(0,0,0,.16), 0 2px 7px rgba(0,0,0,.06);
+  padding:var(--space-1);
+  border:0;
+  border-radius:var(--menu-radius);
+  background:var(--menu-bg);
+  box-shadow:var(--menu-shadow);
   transform-origin:top right;
 }
 .workspace-create-menu[hidden]{ display:none; }
@@ -2790,7 +2940,7 @@ overflow-wrap:inherit;
   gap:var(--space-2);
   padding:var(--space-2);
   border:0;
-  border-radius:7px;
+  border-radius:var(--radius-sm);
   background:transparent;
   color:var(--text-2);
   font-family:inherit;
@@ -2859,11 +3009,11 @@ overflow-wrap:inherit;
   right:-32px;
   max-height:300px;
   overflow:auto;
-  padding:var(--space-2);
-  border:.5px solid var(--gray-5);
-  border-radius:9px;
-  background:#fff;
-  box-shadow:0 12px 28px rgba(0,0,0,.16), 0 2px 6px rgba(0,0,0,.06);
+  padding:var(--space-1);
+  border:0;
+  border-radius:var(--menu-radius);
+  background:var(--menu-bg);
+  box-shadow:var(--menu-shadow);
 }
 .tool-folder-menu[hidden]{ display:none; }
 .tool-folder-option{
@@ -2874,15 +3024,16 @@ overflow-wrap:inherit;
   gap:var(--space-2);
   padding:var(--space-2);
   border:0;
-  border-radius:6px;
+  border-radius:var(--radius-sm);
   background:transparent;
   color:var(--text-2);
   font-family:inherit;
   text-align:left;
   cursor:pointer;
 }
-.tool-folder-option:hover{ background:var(--gray-2); }
-.tool-folder-option.active{ background:rgba(0,0,0,.055); }
+.tool-folder-option:hover,
+.tool-folder-option:focus-visible{ background:var(--hover); outline:none; }
+.tool-folder-option.active{ background:var(--active); }
 .tool-folder-option > .ic{ width:15px; height:15px; flex:none; color:currentColor; }
 .tool-folder-option > span{ min-width:0; display:flex; flex-direction:column; gap:1px; }
 .tool-folder-option strong{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-1); font-size:var(--type-sm); font-weight:500; }
@@ -3853,7 +4004,7 @@ overflow-wrap:inherit;
 }
 
 /* -- PPT 编辑态预览 --
-结构贴近常见桌面演示文稿工具：上方应用栏与功能区、左侧缩略图、中央画布、下方备注。
+结构贴近常见桌面演示文稿工具：上方功能区、左侧缩略图、中央画布、下方备注。
 尺寸全部随容器缩放，使自动全屏和普通面板共用同一套预览。 */
 .pv-ppt{
 height:100%;
@@ -3865,26 +4016,6 @@ background:#f7f8fa;
 color:#25282d;
 font:var(--type-sm)/1.4 var(--font);
 }
-.ppt-appbar{
-height:34px;
-flex:none;
-display:flex;
-align-items:center;
-gap:9px;
-padding:0 12px;
-border-bottom:1px solid #eceef2;
-background:#fff;
-font-size:11px;
-}
-.ppt-traffic{ display:flex; gap:5px; margin-right:8px; }
-.ppt-traffic i{ width:7px; height:7px; border-radius:50%; background:#ff6157; }
-.ppt-traffic i:nth-child(2){ background:#ffbd2e; }
-.ppt-traffic i:nth-child(3){ background:#28c840; }
-.ppt-app-icon{ width:18px; height:18px; display:grid; place-items:center; border-radius:4px; background:#e94a35; color:#fff; font-weight:700; }
-.ppt-appbar strong{ font-size:11px; font-weight:600; }
-.ppt-app-name{ color:#737881; }
-.ppt-appbar em{ padding:2px 7px; border-radius:4px; background:#fff1ef; color:#df4c38; font-size:9px; font-style:normal; }
-.ppt-app-actions{ margin-left:auto; color:#565b64; word-spacing:6px; }
 .ppt-ribbon{
 height:54px;
 flex:none;
@@ -4022,6 +4153,68 @@ box-shadow:0 3px 16px rgba(17,28,40,.22);
 }
 .tool-file-preview-body > .md{ min-height:100%; }
 .tool-file-preview-body > .pv-frame{ min-height:100%; }
+
+/* Word / Excel 演示：工具区内独立滚动，窄栏保留可用的编辑和表格操作。 */
+.pv-office{
+  height:100%; min-height:360px; min-width:0;
+  display:flex; flex-direction:column; overflow:hidden;
+  background:#fff; color:#253044; font:var(--type-sm)/1.5 var(--font);
+}
+.office-toolbar,.office-footer{
+  flex:none; display:flex; align-items:center; gap:12px; padding:0 14px;
+  white-space:nowrap; overflow:hidden; border-bottom:1px solid #e7eaf0;
+}
+.office-toolbar{ height:35px; gap:18px; background:#fdfdfe; color:#626c7b; font-size:11px; }
+.office-status{ margin-left:auto; color:#729c86; }
+.office-footer{ height:29px; justify-content:space-between; border-top:1px solid #e5e8ed; border-bottom:0; color:#818a95; font-size:10px; }
+.word-layout{ flex:1; min-height:0; display:flex; }
+.word-outline{ width:145px; flex:none; display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:18px 10px; border-right:1px solid #e4e8ed; background:#fbfbfc; overflow:auto; }
+.word-outline strong{ margin:0 4px 8px; color:#747d88; font-size:11px; }
+.word-outline button{ padding:8px; border:0; border-radius:5px; background:transparent; color:#4e5a6b; font:inherit; text-align:left; cursor:pointer; }
+.word-outline button:hover,.word-outline button:focus-visible{ background:#edf3ff; outline:none; color:#2868bc; }
+.word-canvas{ flex:1; min-width:0; overflow:auto; padding:26px 16px 48px; background:#f1f2f5; }
+.word-page{ width:min(590px,100%); min-height:690px; margin:auto; padding:clamp(22px,7%,58px); background:#fff; box-shadow:0 2px 14px rgba(25,34,50,.1); font-size:calc(13px * var(--office-zoom, 1)); line-height:1.85; }
+.word-page h1{ margin:0; font-size:1.8em; line-height:1.4; color:#1b2940; }
+.word-subtitle{ margin-top:8px; color:#89919b; font-size:.85em; }
+.word-page hr{ margin:25px 0 30px; border:0; border-top:1px solid #e7eaf0; }
+.word-section{ scroll-margin-top:14px; }.word-section h2{ margin:26px 0 10px; font-size:1.12em; color:#243e67; }
+.word-section p{ min-height:28px; margin:0 0 14px; padding:2px 4px; border-radius:3px; outline:1px solid transparent; }
+.word-section p:hover{ outline-color:#dce8f9; }.word-section p:focus{ outline-color:#4085e9; background:#f8fbff; }
+.word-page footer{ margin-top:48px; padding-top:16px; border-top:1px solid #e8eaf0; color:#929ba6; font-size:.78em; }
+.office-zoom{ display:flex; align-items:center; gap:8px; }.office-zoom button{ border:0; background:transparent; color:#536070; cursor:pointer; }
+.excel-actions,.excel-formula,.excel-tabs{ flex:none; display:flex; align-items:center; gap:10px; padding:5px 12px; border-bottom:1px solid #e4e8ed; }
+.excel-actions{ justify-content:space-between; min-height:42px; font-size:11px; }
+.excel-actions label{ min-width:0; display:flex; align-items:center; gap:6px; }
+.excel-actions input{ width:min(185px,28vw); min-width:70px; height:27px; padding:0 8px; border:1px solid #dfe4e8; border-radius:5px; font:inherit; }
+.excel-actions button{ flex:none; padding:5px 9px; border:1px solid #d5e8dc; border-radius:5px; background:#f4fbf6; color:#197348; font:inherit; cursor:pointer; }
+.excel-actions > span{ color:#88929c; white-space:nowrap; }
+.excel-formula{ height:31px; gap:0; color:#65717f; font-size:11px; }
+.excel-formula > span:first-child{ width:100px; flex:none; border-right:1px solid #e4e8ed; }
+.excel-fx{ padding:0 12px; color:#248152; font-weight:700; }
+.excel-formula output{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.excel-scroll{ flex:1; min-height:0; min-width:0; overflow:auto; background:#fff; }
+.excel-grid{ width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; font-size:11px; }
+.excel-grid th,.excel-grid td{ min-width:105px; max-width:260px; height:32px; padding:5px 10px; border-right:1px solid #e6e9ed; border-bottom:1px solid #e6e9ed; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.excel-grid thead th{ position:sticky; top:0; z-index:2; background:#f4f6f8; font-weight:500; color:#526070; text-align:center; }
+.excel-grid thead tr:nth-child(2) th{ top:32px; background:#f9fafb; }
+.excel-grid .excel-row-number,.excel-grid .excel-corner{ position:sticky; left:0; z-index:3; min-width:38px; width:38px; background:#f7f8fa; color:#929aa4; text-align:center; }
+.excel-grid thead .excel-corner,.excel-grid thead .excel-row-number{ z-index:4; }
+.excel-grid td{ background:#fff; cursor:cell; }.excel-grid tr:hover td{ background:#f8fbfa; }
+.excel-grid td.selected,.excel-grid td:focus{ outline:2px solid #258557; outline-offset:-2px; background:#f2faf5; }
+.excel-cell-input{ width:100%; min-width:85px; height:24px; padding:0; border:0; outline:0; background:#fff; font:inherit; }
+.excel-tabs{ height:34px; gap:0; padding:0 10px; background:#f7f9f8; overflow-x:auto; }
+.excel-tabs button{ align-self:stretch; flex:none; padding:0 16px; border:0; border-right:1px solid #e3e8e5; background:transparent; color:#53645a; font:inherit; cursor:pointer; }
+.excel-tabs button.active{ border-bottom:2px solid #238354; background:#fff; color:#167448; }
+@media (max-width:600px){
+  .word-outline{ display:none; }
+  .word-canvas{ padding:12px 8px 28px; }
+  .word-page{ min-height:550px; padding:22px; }
+  .excel-actions > span{ display:none; }
+  .office-toolbar{ gap:10px; }
+  .excel-actions input{ width:105px; }
+  .office-footer{ gap:10px; }
+  .office-footer > span:last-child{ overflow:hidden; text-overflow:ellipsis; }
+}
 
 /* -- 未接渲染器的类型 -- */
 .pv-empty{
@@ -4352,5 +4545,20 @@ box-shadow:0 3px 16px rgba(17,28,40,.22);
   .sidebar{ opacity:0; pointer-events:none; }
   .greeting{ font-size:22px; white-space:normal; text-align:center; }
   .main{ padding:var(--space-5) var(--space-4); }
-  .content.wb-open{ grid-template-columns: 0 1fr; }
+  .content.wb-open,
+  .content.wb-open.wb-file-workspace,
+  .content.summary-open.wb-open,
+  .content.summary-open.wb-open.wb-file-workspace,
+  .content.wb-open.wb-expanded,
+  .content.summary-open.wb-open.wb-expanded{ grid-template-columns:0 minmax(0,1fr); }
+  .content.wb-open.wb-file-workspace:not(.wb-expanded) .panel-resizer,
+  .content.wb-open:not(.wb-file-workspace):not(.wb-expanded) .panel-resizer{ display:none; }
+  .content.wb-open.wb-file-workspace .summary-toggle-slot,
+  .content.wb-open:not(.wb-file-workspace) .summary-toggle-slot{ right:60px; }
+  .content.wb-open .workbench.file-split .wb-pane[data-pane="file"]{
+    width:calc(100% - var(--user-tree-w, 40%));
+  }
+  .content.wb-open .workbench.file-split .wb-pane[data-pane="files"]{
+    width:var(--user-tree-w, 40%);
+  }
 }
