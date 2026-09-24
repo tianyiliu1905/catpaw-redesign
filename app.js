@@ -20,6 +20,32 @@
 
   /* ---------- 1. 侧边栏折叠 / 展开 ---------- */
   const win = document.getElementById('window');
+
+  // body 下的 fixed 菜单不受应用窗口 overflow 裁切，定位时必须使用白色窗口而非浏览器视口。
+  function menuBounds() {
+    const rect = win.getBoundingClientRect();
+    // 为菜单阴影预留空间，避免菜单本体在窗口内而阴影仍渗入外层灰区。
+    const inset = 32;
+    return {
+      left: rect.left + inset,
+      top: rect.top + inset,
+      right: rect.right - inset,
+      bottom: rect.bottom - inset,
+    };
+  }
+
+  function placeWindowMenu(menu, x, below, above) {
+    const bounds = menuBounds();
+    menu.style.maxWidth = `${Math.max(0, bounds.right - bounds.left)}px`;
+    menu.style.maxHeight = `${Math.max(0, bounds.bottom - bounds.top)}px`;
+    menu.style.overflow = 'auto';
+    const rect = menu.getBoundingClientRect();
+    const left = Math.max(bounds.left, Math.min(x, bounds.right - rect.width));
+    const top = below + rect.height <= bounds.bottom ? below : above - rect.height;
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(Math.max(bounds.top, Math.min(top, bounds.bottom - rect.height)))}px`;
+  }
+
   const collapseBtn = document.getElementById('toggleSidebar');
   const expandBtn = document.getElementById('expandSidebar');
 
@@ -1265,23 +1291,10 @@ renderRecentFiles();
 
     const btn = actBtn.getBoundingClientRect();
     const menu = rowMenu.getBoundingClientRect();
-    const M = 8;   // 与视口边缘至少留这么多
-
-    // 右缘对齐触发按钮；左侧装不下时改为左对齐，始终贴着触发点
-    let left = btn.right - menu.width;
-    if (left < M) left = btn.left;
-    left = Math.min(left, window.innerWidth - menu.width - M);
-    left = Math.max(M, left);
-
-    // 默认向下展开；下方装不下就翻到按钮上方，而不是让菜单顶出视口
-    let top = btn.bottom + 4;
-    if (top + menu.height > window.innerHeight - M) {
-      top = btn.top - menu.height - 4;
-    }
-    top = Math.max(M, top);
-
-    rowMenu.style.left = `${Math.round(left)}px`;
-    rowMenu.style.top  = `${Math.round(top)}px`;
+    const bounds = menuBounds();
+    // 默认与按钮右缘对齐；若超出白色窗口左边界，改为左对齐。
+    const left = btn.right - menu.width < bounds.left ? btn.left : btn.right - menu.width;
+    placeWindowMenu(rowMenu, left, btn.bottom + 4, btn.top - 4);
     // 把 transform 交还给 CSS，菜单回到起始的收拢态
     rowMenu.style.transform = '';
     rowMenu.style.visibility = '';
@@ -2473,14 +2486,7 @@ treeContextMenu.style.visibility = 'hidden';
 treeContextMenu.style.left = '0px';
 treeContextMenu.style.top = '0px';
 treeContextMenu.style.transform = 'none';
-const rect = treeContextMenu.getBoundingClientRect();
-const margin = 8;
-let left = Math.min(event.clientX, window.innerWidth - rect.width - margin);
-let top = Math.min(event.clientY, window.innerHeight - rect.height - margin);
-left = Math.max(margin, left);
-top = Math.max(margin, top);
-treeContextMenu.style.left = `${Math.round(left)}px`;
-treeContextMenu.style.top = `${Math.round(top)}px`;
+placeWindowMenu(treeContextMenu, event.clientX, event.clientY, event.above ?? event.clientY - 4);
 treeContextMenu.style.transform = '';
 treeContextMenu.style.visibility = '';
 requestAnimationFrame(() => treeContextMenu.classList.add('open'));
@@ -3083,7 +3089,7 @@ renderToolFileWorkspace(item);
     const more = event.target.closest('.summary-file-more');
     if (more) {
       const rect = more.getBoundingClientRect();
-      openTreeContextMenu({ clientX: rect.right, clientY: rect.bottom + 4 }, row, { node: entry.node, chain: entry.chain });
+      openTreeContextMenu({ clientX: rect.right, clientY: rect.bottom + 4, above: rect.top - 4 }, row, { node: entry.node, chain: entry.chain });
       return;
     }
     if (event.target.closest('.fitem')) openFileFromSummary(entry.node, entry.chain);
@@ -3139,9 +3145,7 @@ renderToolFileWorkspace(item);
     conversationTaskMenu.classList.add('open');
     conversationTaskMore.setAttribute('aria-expanded', 'true');
     const button = conversationTaskMore.getBoundingClientRect();
-    const menu = conversationTaskMenu.getBoundingClientRect();
-    conversationTaskMenu.style.left = `${Math.max(8, Math.min(button.left, window.innerWidth - menu.width - 8))}px`;
-    conversationTaskMenu.style.top = `${Math.max(8, Math.min(button.bottom + 4, window.innerHeight - menu.height - 8))}px`;
+    placeWindowMenu(conversationTaskMenu, button.left, button.bottom + 4, button.top - 4);
     conversationTaskMenu.querySelector('button')?.focus();
   });
 
