@@ -42,6 +42,18 @@
 
   setCollapsed(false);
 
+  /* 品牌行中的本机 / 云端切换当前只维护界面选中态；数据源仍为演示数据。 */
+  const workspaceLocationOptions = document.querySelectorAll('[data-workspace-location]');
+  workspaceLocationOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      workspaceLocationOptions.forEach((button) => {
+        const selected = button === option;
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+    });
+  });
+
   /* ---------- 1.5 拍平后的任务 / 文件夹列表 ---------- */
   const TASK_LIMIT = 6;   // 任务区默认最多展示的条数
 
@@ -2260,7 +2272,10 @@ function setSummaryOpen(open) {
     setSummaryOpen(summaryPopover.hidden);
   });
   summaryPopover.addEventListener('click', (event) => event.stopPropagation());
-  document.addEventListener('click', () => setSummaryOpen(false));
+  document.addEventListener('click', (event) => {
+    if (!conversationPage.hidden && conversationPage.contains(event.target)) return;
+    setSummaryOpen(false);
+  });
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || summaryPopover.hidden) return;
     setSummaryOpen(false);

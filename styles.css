@@ -230,6 +230,38 @@ body{
   white-space:nowrap;
 }
 
+.workspace-location{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  -webkit-app-region:no-drag;
+}
+.workspace-location-option{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:28px;
+  min-width:28px;
+  padding:0 6px;
+  border:0;
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-3);
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .13s ease,color .13s ease;
+}
+.workspace-location-option .ic{ width:16px; height:16px; }
+.workspace-location-option span{ display:none; font-size:var(--type-sm); font-weight:600; }
+.workspace-location-option.is-selected{
+  background:var(--gray-3);
+  color:var(--text-1);
+}
+.workspace-location-option.is-selected span{ display:inline; }
+.workspace-location-option:hover{ background:var(--hover); color:var(--text-1); }
+.workspace-location-option.is-selected:hover{ background:var(--gray-4); }
+.workspace-location-option:focus-visible{ outline:2px solid var(--text-3); outline-offset:2px; }
 
 /* -- 滚动区 -- */
 .sidebar-scroll{
