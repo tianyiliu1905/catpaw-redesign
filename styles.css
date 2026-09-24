@@ -2771,6 +2771,40 @@ overflow-wrap:inherit;
   gap:2px;
   padding:0;
 }
+.summary-file-row{
+  position:relative;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  border-radius:8px;
+}
+.summary-file-row:hover,
+.summary-file-row:focus-within,
+.summary-file-row.context-open{ background:var(--hover); }
+.summary-file-row .fitem{ flex:1; }
+.summary-file-row .fitem:hover{ background:transparent; }
+.summary-file-more{
+  width:26px;
+  height:26px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  margin-right:6px;
+  padding:0;
+  border:0;
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-3);
+  cursor:pointer;
+  opacity:0;
+  pointer-events:none;
+}
+.summary-file-row:hover .summary-file-more,
+.summary-file-row:focus-within .summary-file-more,
+.summary-file-row.context-open .summary-file-more{ opacity:1; pointer-events:auto; }
+.summary-file-more:hover,
+.summary-file-more:focus-visible{ background:var(--active); color:var(--text-1); outline:none; }
+.summary-file-more .ic{ width:16px; height:16px; fill:currentColor; stroke:none; }
 .summary-file-list .fitem{
   width:100%;
   min-width:0;
@@ -2807,7 +2841,7 @@ overflow-wrap:inherit;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-#fileGrid .fitem:nth-of-type(n+5){ display:none; }
+#fileGrid .summary-file-row:nth-of-type(n+5){ display:none; }
 .summary-file-list .recent-empty{
   padding:12px 7px;
   text-align:left;

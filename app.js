@@ -630,11 +630,11 @@ let recentFilesExpanded = false;
     recentFiles.innerHTML = GRADIENT_DEFS + visibleFiles.map((entry, index) => {
       const type = artifactType(entry.node);
       const thumb = (THUMBS[type] || THUMBS.doc)();
-      return `<button class="fitem recent-file" type="button" data-recent-index="${index}"` +
-        ` data-file-type="${type || 'file'}" title="${esc(entry.node.name)}">` +
-        `<span class="fthumb">${thumb}</span>` +
-        `<span class="fname">${esc(entry.node.name)}</span>` +
-        `</button>`;
+      return `<div class="summary-file-row" data-recent-index="${index}">` +
+        `<button class="fitem recent-file" type="button" data-file-type="${type || 'file'}" title="${esc(entry.node.name)}">` +
+        `<span class="fthumb">${thumb}</span><span class="fname">${esc(entry.node.name)}</span></button>` +
+        `<button class="summary-file-more" type="button" aria-label="更多操作：${esc(entry.node.name)}" aria-haspopup="menu" title="更多操作">` +
+        `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`;
     }).join('');
     summaryExpandRecent.hidden = recentOpenedFiles.length <= RECENT_VISIBLE_COUNT;
     summaryExpandRecent.textContent = recentFilesExpanded ? '收起' : '展开更多';
@@ -664,22 +664,17 @@ let recentFilesExpanded = false;
       return;
     }
 
-    /* 文件夹排在文件前面，与 Finder 的默认排序一致。
-       排序会打乱与原数组的对应关系，故先把原下标绑在每一项上，
-       再写进 data-file-index 供点击时回查。
-       sort 用的是稳定排序，同类项之间维持原有次序。 */
-    const sorted = files;
-
-    fileGrid.innerHTML = GRADIENT_DEFS + sorted
+    // 保留文件夹中的原顺序，同时携带原下标供摘要操作回查同一节点。
+    fileGrid.innerHTML = GRADIENT_DEFS + files
       .map(({ f, i }) => {
         const type = artifactType(f);
         const thumb = (THUMBS[type] || THUMBS.doc)();
         return (
-          `<button class="fitem" data-file-type="${type}"` +
-          ` data-file-index="${i}" title="${f.name}">` +
-          `<span class="fthumb">${thumb}</span>` +
-          `<span class="fname">${f.name}</span>` +
-          `</button>`
+          `<div class="summary-file-row" data-file-index="${i}">` +
+          `<button class="fitem" type="button" data-file-type="${type}" title="${esc(f.name)}">` +
+          `<span class="fthumb">${thumb}</span><span class="fname">${esc(f.name)}</span></button>` +
+          `<button class="summary-file-more" type="button" aria-label="更多操作：${esc(f.name)}" aria-haspopup="menu" title="更多操作">` +
+          `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`
         );
       })
       .join('');
@@ -2264,6 +2259,7 @@ function setSummaryOpen(open) {
   outputToggle.setAttribute('aria-expanded', String(open));
   outputToggle.classList.toggle('active', open);
   if (open) renderSummaryContents();
+  else closeTreeContextMenu();
   requestAnimationFrame(syncSummaryTriggerPosition);
 }
 
@@ -2465,7 +2461,7 @@ treeContextTarget = null;
 treeContextRow = null;
 }
 
-function openTreeContextMenu(event, row, target, path) {
+function openTreeContextMenu(event, row, target, path = null) {
 closeTreeContextMenu();
 closeRowMenu();
 treeContextTarget = { ...target, path };
@@ -2510,15 +2506,6 @@ else if (!conversationPage.hidden) input = conversationPrompt;
 input.value = `${input.value}${input.value && !/\s$/.test(input.value) ? ' ' : ''}${value}`;
 input.dispatchEvent(new Event('input', { bubbles: true }));
 input.focus();
-}
-
-function removeTreeNode(path) {
-const indices = path.replace(/^root\.?/, '').split('.').filter(Boolean).map(Number);
-if (!indices.length) return;
-let parent = activeToolFolder();
-for (const index of indices.slice(0, -1)) parent = (parent.files || [])[index];
-if (!parent?.files) return;
-parent.files.splice(indices.at(-1), 1);
 }
 
 function sourceForNode(node) {
@@ -2915,7 +2902,7 @@ if (!item || !treeContextTarget) return;
 const target = treeContextTarget;
 const node = target.node;
 const relativePath = treeRelativePath(target);
-const absolutePath = `${activeToolFolder().path.replace(/\/$/, '')}/${relativePath}`;
+const absolutePath = `${target.chain[0].path.replace(/\/$/, '')}/${relativePath}`;
 closeTreeContextMenu();
 
 switch (item.dataset.treeContextAct) {
@@ -2942,11 +2929,16 @@ renderWorkspaceTabs();
 const active = currentFileWorkspace();
 if (active) renderToolFileWorkspace(active);
 else renderToolTree();
+renderSummaryContents();
 break;
 }
 case 'delete':
 if (!window.confirm(`确定删除“${node.name}”吗？`)) break;
-removeTreeNode(target.path);
+const parent = target.chain.at(-2);
+const index = parent?.files?.indexOf(node) ?? -1;
+if (index < 0) break;
+parent.files.splice(index, 1);
+recentOpenedFiles = recentOpenedFiles.filter((entry) => entry.node !== node);
 openWorkspaces.forEach((workspace) => {
 if (workspace.node !== node) return;
 workspace.node = null;
@@ -2959,6 +2951,7 @@ renderWorkspaceTabs();
 const active = currentFileWorkspace();
 if (active) renderToolFileWorkspace(active);
 else renderToolTree();
+renderSummaryContents();
 break;
 default:
 break;
@@ -3079,22 +3072,25 @@ renderToolFileWorkspace(item);
     openArtifactPreview(node, chain);
   }
 
-  recentFiles.addEventListener('click', (e) => {
-    const item = e.target.closest('[data-recent-index]');
-    if (!item) return;
-    const entry = recentOpenedFiles[Number(item.dataset.recentIndex)];
-    if (!entry) return;
-    openFileFromSummary(entry.node, entry.chain);
-  });
+  function handleSummaryFileClick(event, list) {
+    const row = event.target.closest('.summary-file-row');
+    if (!row || !list.contains(row)) return;
+    const node = currentNode()?.files?.[Number(row.dataset.fileIndex)];
+    const entry = list === recentFiles
+      ? recentOpenedFiles[Number(row.dataset.recentIndex)]
+      : node && { node, chain: filePath.concat(node) };
+    if (!entry?.node) return;
+    const more = event.target.closest('.summary-file-more');
+    if (more) {
+      const rect = more.getBoundingClientRect();
+      openTreeContextMenu({ clientX: rect.right, clientY: rect.bottom + 4 }, row, { node: entry.node, chain: entry.chain });
+      return;
+    }
+    if (event.target.closest('.fitem')) openFileFromSummary(entry.node, entry.chain);
+  }
 
-  fileGrid.addEventListener('click', (e) => {
-    const item = e.target.closest('.fitem');
-    if (!item) return;
-
-    const node = (currentNode().files || [])[Number(item.dataset.fileIndex)];
-    if (!node || node.type === 'folder') return;
-    openFileFromSummary(node, filePath.concat(node));
-  });
+  recentFiles.addEventListener('click', (event) => handleSummaryFileClick(event, recentFiles));
+  fileGrid.addEventListener('click', (event) => handleSummaryFileClick(event, fileGrid));
 
   /* ---------- 5.6 示例对话 ----------
      选中左侧指定任务后，首页让位给一轮对话；对话和产物面板打开的文件
