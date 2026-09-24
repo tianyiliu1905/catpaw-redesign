@@ -263,6 +263,13 @@ body{
 .workspace-location-option.is-selected:hover{ background:var(--gray-4); }
 .workspace-location-option:focus-visible{ outline:2px solid var(--text-3); outline-offset:2px; }
 
+/* 新建任务与品牌行同为固定区域，其余侧栏内容独立滚动。 */
+.sidebar-pinned{
+  flex:none;
+  padding:var(--space-1) var(--space-2) 0 var(--space-3);
+  background:var(--sidebar-bg);
+}
+
 /* -- 滚动区 -- */
 .sidebar-scroll{
   flex:1;
@@ -316,6 +323,27 @@ body{
   padding: var(--space-5) var(--space-2) var(--space-2);
   letter-spacing:.2px;
 }
+.section-label[hidden],
+#looseTasks[hidden],
+#folderGroups[hidden]{ display:none; }
+.section-toggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.section-toggle:hover{ color:var(--text-2); }
+.section-toggle:focus-visible{ outline:2px solid var(--text-3); outline-offset:3px; border-radius:var(--radius-sm); }
+.section-toggle .ic{ width:14px; height:14px; transition:transform .18s ease; }
+.section-toggle[aria-expanded="true"] .ic{ transform:rotate(90deg); }
 
 /* -- 分组 -- */
 .group{ margin-bottom: 4px; }

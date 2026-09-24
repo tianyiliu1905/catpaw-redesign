@@ -42,15 +42,19 @@
         </div>
       </div>
 
+      <!-- 固定入口：仅下方内容滚动 -->
+      <div class="sidebar-pinned">
+        <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
+          <svg viewBox="0 0 24 24" class="ic"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          <span>新建任务</span>
+        </a>
+      </div>
+
       <!-- 滚动区 -->
       <div class="sidebar-scroll">
 
         <nav class="nav" id="nav">
           <!-- 通用 -->
-          <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-            <span>新建任务</span>
-          </a>
           <a class="nav-item" href="#" data-scope="all">
             <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span>定时任务</span>
@@ -78,7 +82,7 @@
         </nav>
 
         <!-- 任务：不属于任何文件夹，跨原场景统一展示，超出上限折叠 -->
-        <div class="section-label" id="labelTasks">任务</div>
+        <div class="section-label"><button class="section-toggle" id="toggleTasksSection" type="button" aria-controls="looseTasks" aria-expanded="true"><span id="labelTasks">任务</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
 
         <!-- 不在文件夹里的任务左侧顶头，状态一律靠右：
              running=转圈（不显示时间） / new=绿点 / await=待确认 / 其余=时间 -->
@@ -220,8 +224,9 @@
           <button class="expand" data-expand-tasks hidden>展开</button>
         </div>
 
-        <div class="section-label" id="labelFolders">文件夹</div>
+        <div class="section-label"><button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">文件夹</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
 
+        <div id="folderGroups">
         <!-- 分组：服务零售 -->
         <section class="group" data-group data-scope="office" data-folder="retail">
           <div class="group-head">
@@ -378,6 +383,7 @@
             </a>
           </div>
         </section>
+        </div>
 
       </div>
 

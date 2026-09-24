@@ -92,6 +92,22 @@
   const groups     = Array.from(document.querySelectorAll('[data-group]'));
   const labelTasks   = document.getElementById('labelTasks');
   const labelFolders = document.getElementById('labelFolders');
+  const toggleTasksSection = document.getElementById('toggleTasksSection');
+  const toggleFoldersSection = document.getElementById('toggleFoldersSection');
+  const folderGroupsEl = document.getElementById('folderGroups');
+
+  function setSectionExpanded(button, content, expanded) {
+    button.setAttribute('aria-expanded', String(expanded));
+    content.hidden = !expanded;
+    requestAnimationFrame(refreshClipped);
+  }
+
+  toggleTasksSection.addEventListener('click', () => {
+    setSectionExpanded(toggleTasksSection, looseTasksEl, looseTasksEl.hidden);
+  });
+  toggleFoldersSection.addEventListener('click', () => {
+    setSectionExpanded(toggleFoldersSection, folderGroupsEl, folderGroupsEl.hidden);
+  });
 
   let tasksExpanded = false;   // 任务区是否已展开全部
 
@@ -109,7 +125,7 @@ labelTasks.textContent = `任务 (${shown})`;
 // 按钮只表达展开状态；剩余数量不在操作文案中重复展示。
 expandTasksBtn.textContent = tasksExpanded ? '收起' : '展开';
 
-labelTasks.hidden = shown === 0;
+toggleTasksSection.parentElement.hidden = shown === 0;
   }
 
   expandTasksBtn.addEventListener('click', (e) => {
@@ -152,7 +168,7 @@ function renderGroups() {
 groups.forEach((group) => {
 group.hidden = false;
 });
-labelFolders.hidden = groups.length === 0;
+toggleFoldersSection.parentElement.hidden = groups.length === 0;
 }
 
   /* ---------- 1.7 文件夹数据源 ----------
