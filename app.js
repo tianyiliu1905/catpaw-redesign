@@ -48,15 +48,97 @@
 
   const collapseBtn = document.getElementById('toggleSidebar');
   const expandBtn = document.getElementById('expandSidebar');
+  const conversationExpandBtn = document.getElementById('expandSidebarFromConversation');
+  const sidebarResizer = document.getElementById('sidebarResizer');
+  const SIDEBAR_COLLAPSE_THRESHOLD = 156;
+  let preferredSidebarWidth = null;
+  let sidebarResizePointer = null;
+  let sidebarCollapseReady = false;
+
+  function sidebarBounds() {
+    const available = win.clientWidth;
+    const mainContent = document.getElementById('content');
+    const rightWidth = mainContent.classList.contains('wb-open') && !mainContent.classList.contains('wb-expanded')
+      ? document.getElementById('workbench').getBoundingClientRect().width : 0;
+    return { min: 188, max: Math.max(188, Math.min(480, available - rightWidth - 320)) };
+  }
+
+  function syncSidebarWidth() {
+    if (win.classList.contains('collapsed')) return;
+    const bounds = sidebarBounds();
+    const defaultWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+    const width = Math.round(Math.min(bounds.max, Math.max(bounds.min, preferredSidebarWidth ?? defaultWidth)));
+    win.style.setProperty('--user-sidebar-w', `${width}px`);
+    sidebarResizer.setAttribute('aria-valuemin', '0');
+    sidebarResizer.setAttribute('aria-valuemax', String(bounds.max));
+    sidebarResizer.setAttribute('aria-valuenow', String(width));
+  }
 
   function setCollapsed(collapsed) {
     win.classList.toggle('collapsed', collapsed);
     collapseBtn.setAttribute('aria-expanded', String(!collapsed));
     expandBtn.setAttribute('aria-expanded', String(!collapsed));
+    conversationExpandBtn.setAttribute('aria-expanded', String(!collapsed));
+    if (!collapsed) syncSidebarWidth();
   }
+
+  function finishSidebarResize(event) {
+    if (sidebarResizePointer === null || (event && event.pointerId !== sidebarResizePointer)) return;
+    const pointerId = sidebarResizePointer;
+    sidebarResizePointer = null;
+    const collapse = event?.type === 'pointerup' && sidebarCollapseReady &&
+      preferredSidebarWidth !== null && preferredSidebarWidth < SIDEBAR_COLLAPSE_THRESHOLD;
+    sidebarCollapseReady = false;
+    if (sidebarResizer.hasPointerCapture?.(pointerId)) sidebarResizer.releasePointerCapture(pointerId);
+    win.classList.remove('is-resizing');
+    document.body.classList.remove('is-resizing-panels');
+    if (collapse) {
+      preferredSidebarWidth = null;
+      requestAnimationFrame(() => setCollapsed(true));
+    } else syncSidebarWidth();
+  }
+
+  sidebarResizer.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0 || win.classList.contains('collapsed') || window.matchMedia('(max-width: 860px)').matches) return;
+    event.preventDefault();
+    // 只有从最小宽度开始的下一次拖拽，才能越过断点收起侧边栏。
+    sidebarCollapseReady = Number(sidebarResizer.getAttribute('aria-valuenow')) <= sidebarBounds().min;
+    sidebarResizePointer = event.pointerId;
+    sidebarResizer.setPointerCapture(event.pointerId);
+    win.classList.add('is-resizing');
+    document.body.classList.add('is-resizing-panels');
+  });
+  sidebarResizer.addEventListener('pointermove', (event) => {
+    if (sidebarResizePointer !== event.pointerId) return;
+    const width = event.clientX - win.getBoundingClientRect().left;
+    const bounds = sidebarBounds();
+    preferredSidebarWidth = Math.min(bounds.max, Math.max(sidebarCollapseReady ? 0 : bounds.min, width));
+    win.style.setProperty('--user-sidebar-w', `${preferredSidebarWidth}px`);
+    sidebarResizer.setAttribute('aria-valuenow', String(Math.round(preferredSidebarWidth)));
+  });
+  sidebarResizer.addEventListener('pointerup', finishSidebarResize);
+  sidebarResizer.addEventListener('pointercancel', finishSidebarResize);
+  sidebarResizer.addEventListener('lostpointercapture', finishSidebarResize);
+  sidebarResizer.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const bounds = sidebarBounds();
+    if (event.key === 'Home' || (event.key === 'ArrowLeft' && Number(sidebarResizer.getAttribute('aria-valuenow')) <= bounds.min)) {
+      preferredSidebarWidth = null;
+      setCollapsed(true);
+      (document.getElementById('conversationPage').hidden ? expandBtn : conversationExpandBtn).focus();
+      return;
+    }
+    const current = Number(sidebarResizer.getAttribute('aria-valuenow'));
+    preferredSidebarWidth = event.key === 'End' ? bounds.max : Math.min(bounds.max, Math.max(bounds.min, current + (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? 32 : 16)));
+    syncSidebarWidth();
+  });
+  const sidebarLayoutObserver = new ResizeObserver(syncSidebarWidth);
+  sidebarLayoutObserver.observe(win);
 
   collapseBtn.addEventListener('click', () => setCollapsed(true));
   expandBtn.addEventListener('click', () => setCollapsed(false));
+  conversationExpandBtn.addEventListener('click', () => setCollapsed(false));
 
   // ⌘/Ctrl + B 切换
   document.addEventListener('keydown', (e) => {
@@ -67,18 +149,6 @@
   });
 
   setCollapsed(false);
-
-  /* 品牌行中的本机 / 云端切换当前只维护界面选中态；数据源仍为演示数据。 */
-  const workspaceLocationOptions = document.querySelectorAll('[data-workspace-location]');
-  workspaceLocationOptions.forEach((option) => {
-    option.addEventListener('click', () => {
-      workspaceLocationOptions.forEach((button) => {
-        const selected = button === option;
-        button.classList.toggle('is-selected', selected);
-        button.setAttribute('aria-pressed', String(selected));
-      });
-    });
-  });
 
   /* ---------- 1.5 拍平后的任务 / 文件夹列表 ---------- */
   const TASK_LIMIT = 6;   // 任务区默认最多展示的条数
@@ -1379,6 +1449,61 @@ renderRecentFiles();
     handleRowAct(e);
   });
 
+  /* 两处输入框分别维护访问模式；安全屋仅用于主页创建任务。 */
+  const accessPickers = Array.from(document.querySelectorAll('[data-access-picker]'));
+  const safeHouseToggle = document.getElementById('safeHouseToggle');
+  const homeComposerFoot = safeHouseToggle.closest('.composer-foot');
+
+  function closeAccessMenus(except = null) {
+    accessPickers.forEach((picker) => {
+      if (picker === except) return;
+      picker.querySelector('.access-menu').hidden = true;
+      picker.querySelector('.foot-item').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  accessPickers.forEach((picker) => {
+    const trigger = picker.querySelector('.foot-item');
+    const menu = picker.querySelector('.access-menu');
+    const pageName = picker.closest('.conversation-page') ? '对话' : '主页';
+    trigger.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const opening = menu.hidden;
+      closeAccessMenus();
+      if (opening) {
+        setFolderOpen(false);
+        setBranchOpen(false);
+        menu.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+    menu.addEventListener('click', (event) => {
+      const option = event.target.closest('[data-access-mode]');
+      if (!option) return;
+      const mode = option.dataset.accessMode;
+      picker.querySelector('[data-access-label]').textContent = option.textContent;
+      trigger.setAttribute('aria-label', `${pageName}访问模式：${option.textContent}`);
+      menu.querySelectorAll('[data-access-mode]').forEach((item) => {
+        item.setAttribute('aria-checked', String(item.dataset.accessMode === mode));
+      });
+      closeAccessMenus();
+      trigger.focus();
+    });
+  });
+
+  safeHouseToggle.addEventListener('click', () => {
+    const active = safeHouseToggle.getAttribute('aria-pressed') !== 'true';
+    safeHouseToggle.setAttribute('aria-pressed', String(active));
+    homeComposerFoot.classList.toggle('safe-house-active', active);
+    closeAccessMenus();
+  });
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('[data-access-picker]')) closeAccessMenus();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAccessMenus();
+  });
+
   /* ---------- 4. 输入框：自适应高度 + 焦点态 + 发送态 ---------- */
   const prompt = document.getElementById('prompt');
   const card = document.getElementById('composerCard');
@@ -1928,6 +2053,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   let preferredPanelWidths = { file: null, compact: null };
   let preferredTreeWidth = null;
   let activeResize = null;
+  const PANEL_EXPAND_OVERDRAG = 32;
 
   function panelWidthKey() { return content.classList.contains('wb-file-workspace') ? 'file' : 'compact'; }
   function panelBounds() {
@@ -1946,15 +2072,19 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   function syncResizeLayout() {
     const mobile = window.matchMedia('(max-width: 860px)').matches;
     const panelActive = content.classList.contains('wb-open') && !workbenchExpanded && !mobile;
-    const panelPreference = preferredPanelWidths[panelWidthKey()];
-    const bounds = panelBounds();
-    if (panelActive) {
-      const root = getComputedStyle(document.documentElement);
-      const defaultWidth = panelWidthKey() === 'file'
-        ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), content.clientWidth * .62)
-        : parseFloat(root.getPropertyValue('--workbench-w'));
-      content.style.setProperty('--user-panel-w', `${clampWidth(panelPreference ?? defaultWidth, bounds)}px`);
-    } else content.style.removeProperty('--user-panel-w');
+      const panelPreference = preferredPanelWidths[panelWidthKey()];
+      const bounds = panelBounds();
+      if (panelActive) {
+        const root = getComputedStyle(document.documentElement);
+        const defaultWidth = panelWidthKey() === 'file'
+          ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), content.clientWidth * .62)
+          : parseFloat(root.getPropertyValue('--workbench-w'));
+        const dragWidth = activeResize?.kind === 'panel' ? activeResize.previewWidth : null;
+        const panelWidth = dragWidth !== null
+          ? Math.round(Math.min(content.clientWidth, dragWidth))
+          : clampWidth(panelPreference ?? defaultWidth, bounds);
+        content.style.setProperty('--user-panel-w', `${panelWidth}px`);
+      } else content.style.removeProperty('--user-panel-w');
     const treeActive = content.classList.contains('wb-open') && workbench.classList.contains('file-split') && rightPanel === 'tools';
     const treeLimits = treeBounds();
     if (treeActive) {
@@ -1974,13 +2104,19 @@ const fileCloseSave = document.getElementById('fileCloseSave');
       panelResizer.setAttribute('aria-valuenow', String(panelWidth));
     }
   }
-  function endResize() {
+  function endResize(event) {
     if (!activeResize) return;
-    activeResize.element.releasePointerCapture?.(activeResize.pointerId);
+    const { element, pointerId, expandOnRelease } = activeResize;
     activeResize = null;
+    if (element.hasPointerCapture?.(pointerId)) element.releasePointerCapture(pointerId);
     content.classList.remove('is-resizing');
     workbench.classList.remove('is-resizing');
     document.body.classList.remove('is-resizing-panels');
+    if (event?.type === 'pointerup' && expandOnRelease) {
+      requestAnimationFrame(() => setWorkbenchExpanded(true));
+    } else {
+      syncResizeLayout();
+    }
   }
   function setupResizer(element, kind) {
     element.addEventListener('pointerdown', (event) => {
@@ -1989,7 +2125,10 @@ const fileCloseSave = document.getElementById('fileCloseSave');
           (kind === 'tree' && !workbench.classList.contains('file-split'))) return;
       event.preventDefault();
       endResize();
-      activeResize = { element, kind, pointerId: event.pointerId };
+      const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
+      const expandReady = kind === 'panel' && item?.kind === 'file' &&
+        Math.round(workbench.getBoundingClientRect().width) >= panelBounds().max - 1;
+      activeResize = { element, kind, pointerId: event.pointerId, expandReady };
       element.setPointerCapture(event.pointerId);
       content.classList.toggle('is-resizing', kind === 'panel');
       workbench.classList.toggle('is-resizing', kind === 'tree');
@@ -1998,7 +2137,12 @@ const fileCloseSave = document.getElementById('fileCloseSave');
     element.addEventListener('pointermove', (event) => {
       if (!activeResize || activeResize.element !== element || activeResize.pointerId !== event.pointerId) return;
       if (kind === 'panel') {
-        preferredPanelWidths[panelWidthKey()] = clampWidth(content.getBoundingClientRect().right - event.clientX, panelBounds());
+        const rawWidth = content.getBoundingClientRect().right - event.clientX;
+        const bounds = panelBounds();
+        // 首次到达最大宽度即吸附；只有从断点重新拖动，才允许越过它进入全屏。
+        activeResize.previewWidth = Math.max(bounds.min, Math.min(activeResize.expandReady ? content.clientWidth : bounds.max, rawWidth));
+        activeResize.expandOnRelease = activeResize.expandReady && rawWidth > bounds.max + PANEL_EXPAND_OVERDRAG;
+        preferredPanelWidths[panelWidthKey()] = clampWidth(rawWidth, bounds);
       } else {
         preferredTreeWidth = clampWidth(workbench.getBoundingClientRect().right - event.clientX, treeBounds());
       }
@@ -3129,6 +3273,43 @@ renderToolFileWorkspace(item);
   const conversationTaskMore = document.getElementById('conversationTaskMore');
   const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
   const conversationArtifact = document.getElementById('conversationArtifact');
+  const conversationAgentItems = document.getElementById('conversationAgentItems');
+  const conversationAgentSummary = document.getElementById('conversationAgentSummary');
+  const conversationAiTaskItems = document.getElementById('conversationAiTaskItems');
+  const conversationAiTaskSummary = document.getElementById('conversationAiTaskSummary');
+  const conversationStatusStack = conversationPage.querySelector('.conversation-status-stack');
+  const aiTasks = Array.from(conversationAiTaskItems.querySelectorAll('.conversation-status-item'));
+  const runningAiTasks = aiTasks.filter((item) => item.querySelector('.is-running')).length;
+  conversationAiTaskSummary.textContent = `共 ${aiTasks.length} 项 · ${runningAiTasks} 项进行中`;
+  const statusSpinner = '<span class="spinner" aria-hidden="true"></span>';
+  const statusCheck = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+
+  function renderConversationAgents() {
+    const agents = Array.from(conversationTask.closest('[data-agent-task]').querySelectorAll('.subagent-task'));
+    conversationAgentSummary.textContent = `使用了 ${agents.length} 个子 Agent`;
+    conversationAgentItems.innerHTML = agents.map((agent) => {
+      const running = agent.dataset.state === 'running';
+      const name = agent.querySelector('.task-name').textContent.trim();
+      return `<button class="conversation-status-item" type="button" aria-pressed="false">` +
+        `<span class="conversation-status-name">${esc(name)}</span>` +
+        `<span class="conversation-status-state ${running ? 'is-running' : 'is-done'}">` +
+        `${running ? statusSpinner : statusCheck}${running ? '进行中' : '已完成'}</span></button>`;
+    }).join('');
+  }
+
+  conversationStatusStack.addEventListener('click', (event) => {
+    const trigger = event.target.closest('.conversation-status-trigger');
+    if (trigger) {
+      const expanded = trigger.getAttribute('aria-expanded') !== 'true';
+      trigger.setAttribute('aria-expanded', String(expanded));
+      document.getElementById(trigger.getAttribute('aria-controls')).hidden = !expanded;
+      return;
+    }
+    const item = event.target.closest('.conversation-status-item');
+    if (item) item.setAttribute('aria-pressed', String(item.getAttribute('aria-pressed') !== 'true'));
+  });
+  renderConversationAgents();
+
   const conversationTaskMenu = document.createElement('div');
   conversationTaskMenu.id = 'conversationTaskMenu';
   conversationTaskMenu.className = 'row-menu';
@@ -3221,6 +3402,8 @@ renderToolFileWorkspace(item);
   const newTaskNav = document.getElementById('newTaskNav');
 
   function setConversationOpen(open) {
+    closeAccessMenus();
+    if (open) renderConversationAgents();
     if (!open) closeConversationTaskMenu();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
@@ -3231,7 +3414,7 @@ renderToolFileWorkspace(item);
 if (!summaryPopover.hidden) renderSummaryContents();
 if (open) {
       setWorkbench(false);
-      requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+      requestAnimationFrame(() => { conversationScroll.scrollTop = 0; });
     }
   }
 
@@ -3345,6 +3528,151 @@ if (open) {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setMobilePop(false);
   });
+
+  /* ---------- 输入框添加信息：首页与对话页共用一个分级菜单 ---------- */
+  const addMenu = document.createElement('div');
+  addMenu.className = 'composer-add-menu';
+  addMenu.id = 'composerAddMenu';
+  addMenu.setAttribute('role', 'menu');
+  addMenu.setAttribute('aria-label', '添加信息');
+  addMenu.hidden = true;
+  document.body.appendChild(addMenu);
+  const addFileInput = document.createElement('input');
+  addFileInput.type = 'file';
+  addFileInput.multiple = true;
+  addFileInput.hidden = true;
+  document.body.appendChild(addFileInput);
+  const attachedLocalFiles = new WeakMap();
+  const addTriggers = Array.from(document.querySelectorAll('.composer-add-trigger'));
+  let activeAddTrigger = null;
+  let addMenuPage = 'root';
+  let pendingAddKind = '';
+  const addIcons = {
+    file: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7a2 2 0 0 1-2-2H4a2 2 0 0 0-2 2v14Z"/>',
+    local: '<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>',
+    library: '<path d="M4 4h16v16H4zM8 4v16M12 8h5M12 12h5"/>',
+    skill: '<path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/>',
+    expert: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+    mcp: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/><path d="M6.5 10v3l5.5 1M17.5 10v3L12 14"/>',
+    goal: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    back: '<path d="m15 18-6-6 6-6"/>',
+    chevron: '<path d="m9 18 6-6-6-6"/>',
+  };
+  function addIcon(kind, extraClass = '') {
+    return `<svg viewBox="0 0 24 24" class="ic ${extraClass}" aria-hidden="true">${addIcons[kind]}</svg>`;
+  }
+  function addItem(kind, label, next = false) {
+    return `<button class="composer-add-item" type="button" role="menuitem" data-add-kind="${kind}">${addIcon(kind)}<span>${esc(label)}</span>${next ? addIcon('chevron', 'composer-add-chevron') : ''}</button>`;
+  }
+  function addTarget() {
+    return activeAddTrigger?.closest('.conversation-page') ? conversationPrompt : prompt;
+  }
+  function appendAddReference(label) {
+    const input = addTarget();
+    if (!input) return;
+    input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${label} `;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    closeAddMenu();
+    input.focus();
+  }
+  function closeAddMenu(restoreFocus = false) {
+    addMenu.hidden = true;
+    if (activeAddTrigger) activeAddTrigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) activeAddTrigger?.focus();
+    activeAddTrigger = null;
+    addMenuPage = 'root';
+  }
+  function renderAddMenu() {
+    const back = addItem('back', '返回');
+    if (addMenuPage === 'root') {
+      addMenu.innerHTML = addItem('file', '添加文件', true) + addItem('skill', '技能', true) + addItem('expert', '专家', true) + addItem('mcp', 'MCP', true) + addItem('goal', '目标', true);
+    } else if (addMenuPage === 'file') {
+      addMenu.innerHTML = back + addItem('local', '本地文件') + addItem('library', '从知识库添加', true);
+    } else if (addMenuPage === 'library') {
+      const entries = FOLDERS.flatMap(folder => (folder.files || []).filter(file => file.type !== 'folder').map(file => ({ name: file.name, folder: folder.name })));
+      addMenu.innerHTML = back + entries.map((entry, index) => `<button class="composer-add-item" type="button" role="menuitem" data-add-library="${index}">${addIcon('file')}<span>${esc(entry.name)}</span></button>`).join('');
+      addMenu._libraryEntries = entries;
+    } else {
+      const labels = { skill: '技能', expert: '专家', mcp: 'MCP', goal: '目标' };
+      addMenu.innerHTML = back + `<label for="composerAddName">${labels[pendingAddKind]}名称</label><input class="composer-add-input" id="composerAddName" type="text" placeholder="输入${labels[pendingAddKind]}名称" autocomplete="off"><button class="composer-add-item composer-add-submit" type="button" role="menuitem" data-add-submit>添加${labels[pendingAddKind]}</button>`;
+      addMenu.querySelector('input').focus();
+    }
+  }
+  function placeAddMenu() {
+    if (!activeAddTrigger || addMenu.hidden) return;
+    const trigger = activeAddTrigger.getBoundingClientRect();
+    const bounds = win.getBoundingClientRect();
+    const width = addMenu.getBoundingClientRect().width;
+    const height = addMenu.getBoundingClientRect().height;
+    addMenu.style.left = `${Math.max(bounds.left + 8, Math.min(trigger.left, bounds.right - width - 8))}px`;
+    addMenu.style.top = `${trigger.top - height - 6 >= bounds.top + 8 ? trigger.top - height - 6 : Math.min(trigger.bottom + 6, bounds.bottom - height - 8)}px`;
+  }
+  addTriggers.forEach(trigger => {
+    trigger.setAttribute('aria-controls', addMenu.id);
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      if (activeAddTrigger === trigger && !addMenu.hidden) { closeAddMenu(); return; }
+      closeAddMenu();
+      activeAddTrigger = trigger;
+      trigger.setAttribute('aria-expanded', 'true');
+      addMenuPage = 'root';
+      addMenu.hidden = false;
+      renderAddMenu();
+      placeAddMenu();
+      addMenu.querySelector('button')?.focus();
+    });
+  });
+  addMenu.addEventListener('click', event => {
+    const libraryButton = event.target.closest('[data-add-library]');
+    if (libraryButton) {
+      const entry = addMenu._libraryEntries[Number(libraryButton.dataset.addLibrary)];
+      if (entry) appendAddReference(entry.name);
+      return;
+    }
+    if (event.target.closest('[data-add-submit]')) {
+      const name = addMenu.querySelector('input')?.value.trim();
+      if (name) appendAddReference(`${{ skill: '技能', expert: '专家', mcp: 'MCP', goal: '目标' }[pendingAddKind]}:${name}`);
+      else addMenu.querySelector('input')?.focus();
+      return;
+    }
+    const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
+    if (!kind) return;
+    if (kind === 'back') addMenuPage = addMenuPage === 'library' ? 'file' : 'root';
+    else if (kind === 'local') { addFileInput.click(); return; }
+    else if (kind === 'file' || kind === 'library') addMenuPage = kind;
+    else { pendingAddKind = kind; addMenuPage = 'name'; }
+    renderAddMenu();
+    placeAddMenu();
+    (addMenuPage === 'name' ? addMenu.querySelector('input') : addMenu.querySelector('button'))?.focus();
+  });
+  addFileInput.addEventListener('change', () => {
+    const files = Array.from(addFileInput.files || []);
+    if (files.length && activeAddTrigger) {
+      const input = addTarget();
+      attachedLocalFiles.set(input, [...(attachedLocalFiles.get(input) || []), ...files]);
+      files.forEach(file => {
+        input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${file.name} `;
+      });
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      closeAddMenu();
+      input.focus();
+    }
+    addFileInput.value = '';
+  });
+  addMenu.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && event.target.matches('.composer-add-input')) {
+      event.preventDefault();
+      addMenu.querySelector('[data-add-submit]').click();
+    }
+    if (event.key === 'Escape') { event.stopPropagation(); closeAddMenu(true); }
+  });
+  document.addEventListener('click', event => {
+    if (!addMenu.hidden && !addMenu.contains(event.target) && !event.target.closest('.composer-add-trigger')) closeAddMenu();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !addMenu.hidden) closeAddMenu(true);
+  });
+  window.addEventListener('resize', placeAddMenu);
 
   /* ---------- 6. 交通灯（侧边栏 / 主区两处） ---------- */
   document.querySelectorAll('.light.close').forEach((btn) => {

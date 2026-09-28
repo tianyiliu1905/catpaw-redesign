@@ -28,20 +28,6 @@
         </div>
       </header>
 
-      <div class="brand-row">
-        <span class="brand-name">CatPaw</span>
-        <div class="workspace-location" role="group" aria-label="工作位置">
-          <button class="workspace-location-option is-selected" type="button" data-workspace-location="local" aria-label="本机" aria-pressed="true" title="本机">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
-            <span>本机</span>
-          </button>
-          <button class="workspace-location-option" type="button" data-workspace-location="cloud" aria-label="云端" aria-pressed="false" title="云端">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M20 16.6A4.5 4.5 0 0 0 17 9a6 6 0 0 0-11.5 1.8A4 4 0 0 0 6 19h13a3 3 0 0 0 1-2.4Z"/></svg>
-            <span>云端</span>
-          </button>
-        </div>
-      </div>
-
       <!-- 固定入口：仅下方内容滚动 -->
       <div class="sidebar-pinned">
         <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
@@ -432,6 +418,7 @@
         </div>
       </footer>
     </aside>
+    <div class="sidebar-resizer" id="sidebarResizer" role="separator" tabindex="0" aria-label="调整左侧面板宽度" aria-orientation="vertical" aria-controls="sidebar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
 
     <!-- ============ 主内容 ============ -->
     <div class="content" id="content">
@@ -473,6 +460,9 @@
            产物卡片可直接在右侧以纯预览模式打开。 -->
       <section class="conversation-page" id="conversationPage" aria-label="任务对话" hidden>
         <header class="conversation-task-bar">
+          <button class="icon-btn conversation-task-expand" id="expandSidebarFromConversation" type="button" title="展开侧边栏" aria-label="展开侧边栏" aria-expanded="true">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+          </button>
           <span id="conversationTaskTitle">整理本周门店履约异常明细</span>
           <button class="conversation-task-more" id="conversationTaskMore" type="button" aria-label="任务操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationTaskMenu">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
@@ -499,15 +489,52 @@
           </div>
         </div>
         <div class="conversation-composer-wrap">
+          <div class="conversation-status-stack" aria-label="任务执行状态">
+            <section class="conversation-status-group" data-status-group>
+              <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAgentItems">
+                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                <span class="conversation-status-heading">子 Agent</span>
+                <span class="conversation-status-summary" id="conversationAgentSummary">使用了 3 个子 Agent</span>
+              </button>
+              <div class="conversation-status-items" id="conversationAgentItems" hidden></div>
+            </section>
+            <section class="conversation-status-group" data-status-group>
+              <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAiTaskItems">
+                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                <span class="conversation-status-heading">AI 任务</span>
+                <span class="conversation-status-summary" id="conversationAiTaskSummary">共 3 项 · 1 项进行中</span>
+              </button>
+              <div class="conversation-status-items" id="conversationAiTaskItems" hidden>
+                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">持续监测新增异常订单</span><span class="conversation-status-state is-running"><span class="spinner" aria-hidden="true"></span>进行中</span></button>
+                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">汇总本周门店履约明细</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>已完成</span></button>
+                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">生成履约异常看板</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>已完成</span></button>
+              </div>
+            </section>
+          </div>
           <div class="conversation-composer" id="conversationComposer">
             <textarea id="conversationPrompt" rows="1" placeholder="继续对话"></textarea>
             <div class="conversation-composer-actions">
-              <button class="round-btn" type="button" title="添加附件" aria-label="添加附件">
-                <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              </button>
+              <div class="composer-add-picker">
+                <button class="round-btn composer-add-trigger" type="button" title="添加信息" aria-label="添加信息" aria-haspopup="menu" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </button>
+              </div>
               <button class="conversation-send" id="conversationSend" type="button" title="发送" aria-label="发送" disabled>
                 <svg viewBox="0 0 24 24" class="ic"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
               </button>
+            </div>
+          </div>
+          <div class="conversation-composer-foot">
+            <div class="access-picker" data-access-picker>
+              <button class="foot-item" type="button" aria-label="对话访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <span data-access-label>完全访问</span>
+                <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="access-menu" role="menu" aria-label="选择对话访问模式" hidden>
+                <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
+                <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
+              </div>
             </div>
           </div>
           <p class="conversation-note">CatPaw 可能会犯错，请核查重要信息。</p>
@@ -539,9 +566,11 @@
 
             <div class="composer-row">
               <div class="composer-left">
-                <button class="round-btn" title="添加附件">
-                  <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                </button>
+                <div class="composer-add-picker">
+                  <button class="round-btn composer-add-trigger" type="button" title="添加信息" aria-label="添加信息" aria-haspopup="menu" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  </button>
+                </div>
 
                 <button class="chip-agent" title="切换智能体">
                   <span class="avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4.5 20c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5"/></svg></span>
@@ -584,12 +613,18 @@
             </div>
 
             <div class="foot-group right">
-              <button class="foot-item">
-                <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                <span>完全访问</span>
-                <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
-              </button>
-              <button class="foot-item">
+              <div class="access-picker" data-access-picker>
+                <button class="foot-item" type="button" aria-label="主页访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                  <span data-access-label>完全访问</span>
+                  <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="access-menu" role="menu" aria-label="选择主页访问模式" hidden>
+                  <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
+                  <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
+                </div>
+              </div>
+              <button class="foot-item safe-house-toggle" id="safeHouseToggle" type="button" aria-pressed="false">
                 <svg viewBox="0 0 24 24" class="ic"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
                 <span>安全屋</span>
               </button>
