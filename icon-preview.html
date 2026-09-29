@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CatPaw · 基础图标预览</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background: #fafafa;
+      color: #1d1d1f;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 48px 24px 80px; }
+    button { font: inherit; }
+    .page { max-width: 1060px; margin: 0 auto; }
+    .eyebrow { margin: 0 0 10px; color: #86868b; font-size: 12px; font-weight: 650; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(30px, 5vw, 44px); font-weight: 700; letter-spacing: -.055em; }
+    .intro { max-width: 620px; margin: 12px 0 40px; color: #6e6e73; font-size: 14px; line-height: 1.7; }
+    h2 { margin: 0 0 16px; font-size: 17px; letter-spacing: -.025em; }
+    .gallery-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .gallery-heading h2 { margin: 0; }
+    .keyline-toggle { padding: 7px 11px; border: 1px solid #e8e8ed; border-radius: 8px; background: #fff; color: #55555b; font-size: 12px; cursor: pointer; }
+    .keyline-toggle:hover { border-color: #d2d2d7; color: #1d1d1f; }
+    .keyline-toggle:focus-visible { outline: 2px solid #555; outline-offset: 3px; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .card { display: flex; flex-direction: column; min-height: 246px; padding: 22px; border: 1px solid #e8e8ed; border-radius: 20px; background: #fff; }
+    .icon-well { position: relative; display: grid; place-items: center; width: 100px; height: 100px; margin-bottom: 19px; border-radius: 17px; background: #f5f5f7; color: #37373b; }
+    .icon-well svg { grid-area: 1 / 1; width: 80px; height: 80px; }
+    .icon-well .icon { position: relative; z-index: 1; }
+    .icon-well .keyline { pointer-events: none; }
+    .keyline .grid { fill: none; stroke: #c8c8ce; stroke-width: .18; }
+    .keyline .shape { fill: none; stroke: #ef7eaa; stroke-width: .25; }
+    .keyline .axis { fill: none; stroke: #b6b6bd; stroke-width: .16; stroke-dasharray: .5 .5; }
+    .gallery:not(.show-keylines) .keyline { display: none; }
+    .card h3 { margin: 0; font-size: 15px; font-weight: 650; }
+    .card .caption { margin: 5px 0 14px; color: #86868b; font-size: 12px; }
+    .download { align-self: flex-start; margin-top: auto; padding: 0; border: 0; background: none; color: #55555b; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .download:hover { color: #111; text-decoration: underline; text-underline-offset: 3px; }
+    .download:focus-visible { outline: 2px solid #555; outline-offset: 4px; border-radius: 2px; }
+    .preview { display: grid; grid-template-columns: minmax(260px, 350px) minmax(0, 1fr); gap: 18px; margin-top: 48px; }
+    .sidebar-sample { padding: 23px 16px; border-radius: 20px; background: #383838; color: #ededed; }
+    .sidebar-sample h2 { margin: 0 14px 18px; color: #aaa; font-size: 11px; font-weight: 650; letter-spacing: .13em; text-transform: uppercase; }
+    .sample-row { display: flex; align-items: center; gap: 13px; min-height: 48px; padding: 0 13px; border-radius: 11px; font-size: 14px; letter-spacing: .01em; }
+    .sample-row:first-of-type { background: #4a4a4a; color: #fff; }
+    .sample-row svg { width: 22px; height: 22px; flex: none; }
+    .scale-sample { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 30px; border: 1px solid #e8e8ed; border-radius: 20px; background: #fff; }
+    .scale-sample h2 { margin-bottom: 0; }
+    .scale-row { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 28px; }
+    .scale-item { display: flex; flex-direction: column; align-items: center; gap: 11px; color: #86868b; font-size: 11px; }
+    .scale-item svg { color: #37373b; }
+    .scale-item:nth-child(1) svg { width: 16px; height: 16px; }
+    .scale-item:nth-child(2) svg { width: 24px; height: 24px; }
+    .scale-item:nth-child(3) svg { width: 32px; height: 32px; }
+    .scale-item:nth-child(4) svg { width: 48px; height: 48px; }
+    .note { margin: 0; color: #86868b; font-size: 12px; line-height: 1.7; }
+    .icon { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    @media (max-width: 720px) { body { padding: 32px 16px 60px; } .preview { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">CatPaw / Icon study 01</p>
+    <h1>基础图标</h1>
+    <p class="intro">参考侧边栏的五个入口，以 24 × 24 网格、圆润转角和简洁线条绘制。粉色轮廓与灰色网格是检查用 keyline，不属于图标本身。</p>
+
+    <template id="keyline-template">
+      <svg class="keyline" viewBox="0 0 24 24" aria-hidden="true">
+        <g class="grid">
+          <rect x=".25" y=".25" width="23.5" height="23.5" />
+          <path d="M4 0v24M8 0v24M16 0v24M20 0v24M0 4h24M0 8h24M0 16h24M0 20h24M0 0l24 24M24 0 0 24" />
+        </g>
+        <g class="axis"><path d="M12 0v24M0 12h24" /></g>
+        <g class="shape">
+          <circle cx="12" cy="12" r="10" />
+          <rect x="2" y="2" width="20" height="20" rx="5" />
+          <rect x="4" y="4" width="16" height="16" rx="3" />
+        </g>
+      </svg>
+    </template>
+
+    <section aria-labelledby="gallery-title">
+      <div class="gallery-heading">
+        <h2 id="gallery-title">图标一览 · Keyline 检查</h2>
+        <button class="keyline-toggle" id="keyline-toggle" type="button" aria-pressed="true">隐藏 Keyline</button>
+      </div>
+      <div class="gallery show-keylines" id="icon-gallery">
+        <article class="card" data-filename="new-task.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="新任务图标">
+              <path d="M13.7 4H6.8A3.8 3.8 0 0 0 3 7.8v9.4A3.8 3.8 0 0 0 6.8 21h9.4a3.8 3.8 0 0 0 3.8-3.8v-6" />
+              <path d="m7.3 14.2 9.5-9.5a2.1 2.1 0 0 1 3 3l-9.5 9.5-4 1z" />
+            </svg>
+          </div>
+          <h3>新任务</h3><p class="caption">留一笔空白，等待新的开始</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="scheduled-task.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="定时任务图标">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 6.7v5.7l3.8 2.3" />
+            </svg>
+          </div>
+          <h3>定时任务</h3><p class="caption">轻巧的表盘与指针</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="experts-skills-connectors.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="专家技能连接器图标">
+              <rect x="3" y="3.5" width="18" height="17" rx="4" />
+              <path d="M8 8v8M12 8v8M16 8l2 8" />
+            </svg>
+          </div>
+          <h3>专家·技能·连接器</h3><p class="caption">三本并排的小工具书</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="library.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="资料库图标">
+              <path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z" />
+              <path d="M12 6.3v14.2M6.5 9.3c1-.1 2 0 2.9.3M6.5 12.6c1-.1 2 0 2.9.3" />
+            </svg>
+          </div>
+          <h3>资料库</h3><p class="caption">一本摊开的资料册</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="design-resources.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="设计资源图标">
+              <rect x="4" y="5" width="16" height="14" rx="3" />
+              <circle cx="8.5" cy="9" r=".8" />
+              <path d="m6.5 16 4-4 4.5 4.5 2-2" />
+            </svg>
+          </div>
+          <h3>设计资源</h3><p class="caption">一张轻盈的素材画板</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="folder.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="文件夹图标">
+              <path d="M3 8V6.5A2.5 2.5 0 0 1 5.5 4h4l2.3 2.3H18.5A2.5 2.5 0 0 1 21 8.8v8.7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" />
+              <path d="M3 10.5h18" />
+            </svg>
+          </div>
+          <h3>文件夹</h3><p class="caption">带圆角标签的收纳夹</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="open-folder.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="打开文件夹图标">
+              <path d="M3 11V6.5A2.5 2.5 0 0 1 5.5 4h4l2.3 2.3H18.5A2.5 2.5 0 0 1 21 8.8V11" />
+              <path d="M5 10.5h13.8a2.4 2.4 0 0 1 2.4 2.9l-1 4.5a2.6 2.6 0 0 1-2.5 2.1H5.4a2.6 2.6 0 0 1-2.5-2.1l-1-4.5A2.4 2.4 0 0 1 4.3 10.5H5Z" />
+              <path d="M9 16h6" />
+            </svg>
+          </div>
+          <h3>打开文件夹</h3><p class="caption">展开的前盖露出内容</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="new-folder.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="新建文件夹图标">
+              <path d="M3 10V7a2.5 2.5 0 0 1 2.5-2.5H9l2.5 2.5H15" />
+              <path d="M3 11h14a3 3 0 0 1 3 3v3.5a2.5 2.5 0 0 1-2.5 2.5h-12A2.5 2.5 0 0 1 3 17.5z" />
+              <path d="M19 2.5v5M16.5 5h5" />
+            </svg>
+          </div>
+          <h3>新建文件夹</h3><p class="caption">右上独立加号，缩小也清晰</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+        <article class="card" data-filename="website-nocode.svg">
+          <div class="icon-well">
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="网站 NoCode 图标">
+              <path d="M4.2 20v-7.1c0-3.2 1.2-5.7 3.1-7.7l1.4 2.1a8.7 8.7 0 0 1 6.6 0l1.4-2.1c1.9 2 3.1 4.5 3.1 7.7v2.2c0 2.1-1 3.3-2.5 4.9" />
+              <path d="M8.1 12.9h.1M15.8 12.9h.1M10.2 16.2c1.2.8 2.4.8 3.6 0" />
+            </svg>
+          </div>
+          <h3>网站·NoCode</h3><p class="caption">保留一点 CatPaw 的猫咪感</p>
+          <button class="download" type="button">下载 SVG ↗</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="preview" aria-label="应用效果">
+      <div class="sidebar-sample">
+        <h2>深色侧边栏预览</h2>
+        <div class="sample-row">新任务</div>
+        <div class="sample-row">定时任务</div>
+        <div class="sample-row">专家·技能·连接器</div>
+        <div class="sample-row">资料库</div>
+        <div class="sample-row">设计资源</div>
+        <div class="sample-row">文件夹</div>
+        <div class="sample-row">打开文件夹</div>
+        <div class="sample-row">新建文件夹</div>
+        <div class="sample-row">网站·NoCode</div>
+      </div>
+      <div class="scale-sample">
+        <h2>缩放预览</h2>
+        <div class="scale-row" id="scale-row"></div>
+        <p class="note">统一描边，无填充。可在深浅背景下使用，也可以通过 CSS 的 color 属性换色。</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const icons = [...document.querySelectorAll('.card .icon')];
+    const keyline = document.getElementById('keyline-template');
+    document.querySelectorAll('.icon-well').forEach(well => well.prepend(keyline.content.cloneNode(true)));
+    const gallery = document.getElementById('icon-gallery');
+    const toggle = document.getElementById('keyline-toggle');
+    toggle.addEventListener('click', () => {
+      const visible = gallery.classList.toggle('show-keylines');
+      toggle.setAttribute('aria-pressed', String(visible));
+      toggle.textContent = visible ? '隐藏 Keyline' : '显示 Keyline';
+    });
+    document.querySelectorAll('.sample-row').forEach((row, index) => {
+      const icon = icons[index].cloneNode(true);
+      icon.removeAttribute('role');
+      icon.setAttribute('aria-hidden', 'true');
+      row.prepend(icon);
+    });
+    [16, 24, 32, 48].forEach(size => {
+      const item = document.createElement('div');
+      item.className = 'scale-item';
+      const icon = icons[0].cloneNode(true);
+      icon.removeAttribute('role');
+      icon.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.textContent = `${size} px`;
+      item.append(icon, label);
+      document.getElementById('scale-row').append(item);
+    });
+    document.querySelectorAll('.download').forEach(button => {
+      button.addEventListener('click', () => {
+        const card = button.closest('.card');
+        const svg = card.querySelector('.icon').cloneNode(true);
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('width', '24');
+        svg.setAttribute('height', '24');
+        svg.removeAttribute('role');
+        svg.removeAttribute('aria-label');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '1.8');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.removeAttribute('class');
+        const file = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = card.dataset.filename;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+    });
+  </script>
+</body>
+</html>

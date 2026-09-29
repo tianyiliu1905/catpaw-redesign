@@ -4,6 +4,18 @@
 (function () {
   'use strict';
 
+  const themeButtons = document.querySelectorAll('[data-set-theme]');
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    themeButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.setTheme === theme)));
+    try { localStorage.setItem('catpaw-theme', theme); } catch (_) { /* Keep switching without storage. */ }
+  }
+  const initialTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  themeButtons.forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.setTheme === initialTheme));
+    button.addEventListener('click', () => setTheme(button.dataset.setTheme));
+  });
+
   const timeGreeting = document.getElementById('timeGreeting');
 
   function updateTimeGreeting() {
@@ -167,6 +179,10 @@
   // 子任务由父任务负责显隐，不参与顶层「展示 6 条」的计数。
   const looseTasks = Array.from(looseTasksEl.children)
     .filter((item) => item.matches('.task, [data-agent-task]'));
+  const looseTasksInner = document.createElement('div');
+  looseTasksInner.className = 'loose-tasks-inner';
+  while (looseTasksEl.firstChild) looseTasksInner.appendChild(looseTasksEl.firstChild);
+  looseTasksEl.appendChild(looseTasksInner);
   const groups     = Array.from(document.querySelectorAll('[data-group]'));
   const labelTasks   = document.getElementById('labelTasks');
   const labelFolders = document.getElementById('labelFolders');
@@ -181,7 +197,11 @@
   }
 
   toggleTasksSection.addEventListener('click', () => {
-    setSectionExpanded(toggleTasksSection, looseTasksEl, looseTasksEl.hidden);
+    const expanded = toggleTasksSection.getAttribute('aria-expanded') !== 'true';
+    toggleTasksSection.setAttribute('aria-expanded', String(expanded));
+    looseTasksEl.classList.toggle('folded', !expanded);
+    looseTasksEl.inert = !expanded;
+    requestAnimationFrame(refreshClipped);
   });
   toggleFoldersSection.addEventListener('click', () => {
     setSectionExpanded(toggleFoldersSection, folderGroupsEl, folderGroupsEl.hidden);
@@ -510,6 +530,12 @@ toggleFoldersSection.parentElement.hidden = groups.length === 0;
       id: 'retail', name: '服务零售', scope: 'office',
       path: '~/CatPaw/服务零售',
       files: [
+        { name: 'AI 工具约束配置报告.docx', type: 'word', artifact: true, preview: {
+          kind: 'word', title: 'AI 工具约束配置报告', sections: [
+            { heading: '配置概览', paragraphs: ['已梳理 AI 工具的权限边界、文件访问范围与执行约束。'] },
+            { heading: '校验结果', paragraphs: ['配置项检查完成，关键约束均已生效。'] },
+          ],
+        } },
         { name: 'nocode生成效果文件备份',    type: 'folder' },
         { name: 'CONTEXT-PROMPT.md',        type: 'doc' },
         { name: '医药代表备案推文-产品推广优化稿.docx', type: 'doc' },
@@ -1378,8 +1404,8 @@ renderRecentFiles();
     );
   }
 
-  /* 任务：只有一个「更多」出口，点开是下面那张菜单 */
-  document.querySelectorAll('.task').forEach((task) => {
+  /* 普通任务保留「更多」操作，SubAgent 只显示执行状态。 */
+  document.querySelectorAll('.task:not(.subagent-task)').forEach((task) => {
     const acts = document.createElement('span');
     acts.className = 'row-acts';
     acts.innerHTML = makeAct('task-more', '更多', DOTS_SVG);
@@ -1620,6 +1646,8 @@ renderRecentFiles();
     promptChipText.textContent = label;
     promptChipSourceIcon.innerHTML = iconMarkup;
     promptChip.hidden = !text;
+    prompt.style.setProperty('--prompt-chip-indent', text ? `${promptChip.getBoundingClientRect().width + 8}px` : '0px');
+    autoResize();
     refreshSendState();
   }
 
@@ -1983,6 +2011,10 @@ renderRecentFiles();
     const casesEl = document.getElementById('cases');
     if (!casesEl) return;
     const THUMBS_MAP = caseThumbs();
+    const iconByKind = {
+      dashboard: 'html', article: 'doc', deck: 'ppt',
+      web: 'html', code: 'html', visual: 'image',
+    };
     const list = visibleCaseData(scope);
     casesEl.innerHTML =
       `<div class="cases-head">` +
@@ -1995,7 +2027,7 @@ renderRecentFiles();
         ` style="animation-delay:${i * 70}ms">` +
         `<span class="cthumb">${(THUMBS_MAP[c.kind] || THUMBS_MAP.article)()}</span>` +
         `<span class="cmeta">` +
-        `<span class="ctype">${c.type}</span>` +
+        `<span class="ctype"><img src="assets/artifact-${iconByKind[c.kind] || 'doc'}.svg" alt="" aria-hidden="true">${c.type}</span>` +
         `<span class="ctitle">${c.title}</span>` +
         `</span>` +
         `</button>`
@@ -3418,25 +3450,91 @@ renderToolFileWorkspace(item);
   fileGrid.addEventListener('click', (event) => handleSummaryFileClick(event, fileGrid));
 
   /* ---------- 5.6 示例对话 ----------
-     选中左侧指定任务后，首页让位给一轮对话；对话和产物面板打开的文件
+     选中左侧指定任务后，首页让位给对应对话；对话和产物面板打开的文件
      统一进入右侧页签，并在本次对话中保留到用户手动关闭。 */
   const mainView = document.querySelector('.main');
   const conversationPage = document.getElementById('conversationPage');
   const conversationThread = document.getElementById('conversationThread');
   const conversationScroll = document.getElementById('conversationScroll');
+  const conversationTurnNav = document.getElementById('conversationTurnNav');
   const conversationPrompt = document.getElementById('conversationPrompt');
   const conversationComposer = document.getElementById('conversationComposer');
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
+  const retailConversationTask = document.getElementById('retailFirstConversationTask');
+  const conversationExamples = new Map([
+    [conversationTask, {
+      folderId: 'default',
+      turns: [
+        {
+          prompt: '帮我整理本周门店履约异常明细，并标出需要优先处理的问题。',
+          reply: [
+            '## 本周门店履约异常 · 初步汇总',
+            '',
+            '我先按异常类型和影响范围梳理了本周记录。**共 18 条异常**，其中 5 条建议优先核实；这个优先级不是只按出现次数排序，还考虑超时时长、受影响订单数和重复发生情况。',
+            '',
+            '### 异常分布',
+            '',
+            '- **配送超时（9 条）**：主要集中在晚高峰，需区分骑手到店晚和门店交接等待。',
+            '- **商家出餐延迟（6 条）**：集中在订单量较高的门店，高峰期备餐排队值得进一步排查。',
+            '- **其他原因（3 条）**：先保留原始记录，待补齐原因后再归类。',
+            '',
+            '### 建议的处理顺序',
+            '',
+            '1. 优先复核重复超时的门店，核对异常时间和交接记录。',
+            '2. 对照配送到店时间与实际出餐时间，确认延误发生在哪个环节。',
+            '3. 在明细表中标注负责人和跟进状态，再汇总到看板供后续追踪。',
+            '',
+            '> 目前的原因归属仍是初步判断，责任方需以订单记录和门店反馈核实为准。',
+            '',
+            '我会保留每条记录的 `异常时间`、`影响订单数` 和 `待核实原因`，方便你继续追问或调整优先级。',
+          ].join('\n'),
+        },
+        {
+          prompt: '先看看整体有多少条异常，主要集中在哪些环节？',
+          reply: '本周共记录 18 条履约异常：配送超时 9 条、商家出餐延迟 6 条、其他原因 3 条。超时问题主要出现在晚高峰，出餐延迟则集中在订单量较高的门店。',
+        },
+        {
+          prompt: '把需要优先处理的单独挑出来，别只按异常次数排序。',
+          reply: '结合超时时长、受影响订单数和重复发生情况，筛出 5 条高优先级异常。其中 3 条与配送衔接有关，2 条与出餐延迟有关；其余 13 条可以纳入日常跟进。',
+        },
+        {
+          prompt: '这 5 条能再区分一下原因和责任方吗？',
+          reply: '可以。配送类问题中，2 条发生在骑手接单后到店阶段，1 条是门店交接等待过长；出餐类问题集中在高峰时段备餐排队。明细里会保留异常时间、门店、影响订单和待核实责任方，避免把尚未确认的原因写成定论。',
+        },
+        {
+          prompt: '给我一个门店侧能直接执行的处理顺序。',
+          reply: '建议先联系涉及重复超时的门店核对交接记录，再与配送侧复盘晚高峰到店时间；随后排查两家出餐延迟门店的备餐排班。每项问题都可以在明细表中补充负责人和跟进状态。',
+        },
+        {
+          prompt: '好，做成看板、异常明细表和一份分析文档，我要方便继续跟进。',
+          reply: '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。看板展示整体分布，明细表列出优先级与跟进信息，分析文档汇总原因及处理建议。',
+        },
+      ],
+      files: ['门店履约异常看板.html', '门店履约异常明细.xlsx', '门店履约分析.docx'],
+    }],
+    [retailConversationTask, {
+      folderId: 'retail',
+      prompt: '请配置并校验 AI 工具约束文件，整理成一份报告。',
+      reply: '已完成 AI 工具约束文件的配置与校验，并生成配置报告。',
+      files: ['AI 工具约束配置报告.docx'],
+    }],
+  ]);
+  const conversationThreads = new Map();
+  let activeConversationTask = null;
   const conversationTaskTitle = document.getElementById('conversationTaskTitle');
   const conversationTaskMore = document.getElementById('conversationTaskMore');
   const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
-  const conversationArtifact = document.getElementById('conversationArtifact');
   const conversationAgentItems = document.getElementById('conversationAgentItems');
   const conversationAgentSummary = document.getElementById('conversationAgentSummary');
   const conversationAiTaskItems = document.getElementById('conversationAiTaskItems');
   const conversationAiTaskSummary = document.getElementById('conversationAiTaskSummary');
   const conversationStatusStack = conversationPage.querySelector('.conversation-status-stack');
+  // 状态条浮在滚动区之上；用它的可见高度为消息末尾预留可滚动空间。
+  const conversationStatusObserver = new ResizeObserver(() => {
+    conversationScroll.style.setProperty('--conversation-status-clearance', `${conversationStatusStack.getBoundingClientRect().height}px`);
+  });
+  conversationStatusObserver.observe(conversationStatusStack);
   const aiTasks = Array.from(conversationAiTaskItems.querySelectorAll('.conversation-status-item'));
   const runningAiTasks = aiTasks.filter((item) => item.querySelector('.is-running')).length;
   conversationAiTaskSummary.textContent = `共 ${aiTasks.length} 项 · ${runningAiTasks} 项进行中`;
@@ -3444,7 +3542,7 @@ renderToolFileWorkspace(item);
   const statusCheck = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
 
   function renderConversationAgents() {
-    const agents = Array.from(conversationTask.closest('[data-agent-task]').querySelectorAll('.subagent-task'));
+    const agents = Array.from(activeConversationTask?.closest('[data-agent-task]')?.querySelectorAll('.subagent-task') || []);
     conversationAgentSummary.textContent = `使用了 ${agents.length} 个子 Agent`;
     conversationAgentItems.innerHTML = agents.map((agent) => {
       const running = agent.dataset.state === 'running';
@@ -3496,7 +3594,8 @@ renderToolFileWorkspace(item);
     event.stopPropagation();
     if (!conversationTaskMenu.hidden) { closeConversationTaskMenu(); return; }
     closeRowMenu();
-    conversationTaskMenu.querySelector('[data-conversation-act="pin"] span').textContent = conversationTask.closest('[data-agent-task]').dataset.pinned === 'true' ? '取消置顶' : '置顶';
+    const container = activeConversationTask.matches('.task-parent') ? activeConversationTask.closest('[data-agent-task]') : activeConversationTask;
+    conversationTaskMenu.querySelector('[data-conversation-act="pin"] span').textContent = container.dataset.pinned === 'true' ? '取消置顶' : '置顶';
     conversationTaskMenu.hidden = false;
     conversationTaskMenu.classList.add('open');
     conversationTaskMore.setAttribute('aria-expanded', 'true');
@@ -3508,7 +3607,7 @@ renderToolFileWorkspace(item);
   async function runTaskMenuAction(action, task) {
     const container = task.matches('.task-parent') ? task.closest('[data-agent-task]') : task;
     const nameEl = task.querySelector('.task-name');
-    const isCurrentConversation = task === conversationTask;
+    const isCurrentConversation = task === activeConversationTask;
     if (action === 'pin') {
       const pinned = container.dataset.pinned !== 'true';
       container.dataset.pinned = String(pinned);
@@ -3546,7 +3645,7 @@ renderToolFileWorkspace(item);
     const action = event.target.closest('[data-conversation-act]')?.dataset.conversationAct;
     if (!action) return;
     closeConversationTaskMenu();
-    void runTaskMenuAction(action, conversationTask);
+    void runTaskMenuAction(action, activeConversationTask);
     if (!conversationPage.hidden) conversationTaskMore.focus();
   });
 
@@ -3560,20 +3659,127 @@ renderToolFileWorkspace(item);
   window.addEventListener('scroll', () => closeConversationTaskMenu(), true);
   const newTaskNav = document.getElementById('newTaskNav');
 
-  function setConversationOpen(open) {
+  const artifactIconByExtension = {
+    doc: 'doc', docx: 'doc', xls: 'excel', xlsx: 'excel', csv: 'excel',
+    html: 'html', htm: 'html', png: 'image', jpg: 'image', jpeg: 'image',
+    gif: 'image', webp: 'image', md: 'markdown', pdf: 'pdf', ppt: 'ppt', pptx: 'ppt',
+  };
+
+  function renderConversationArtifacts(task) {
+    const example = conversationExamples.get(task);
+    const conversationArtifacts = conversationThread.querySelector('#conversationArtifacts');
+    conversationArtifacts.classList.toggle('is-single', example.files.length === 1);
+    conversationArtifacts.innerHTML = example.files.map((name, index) => {
+      const extension = name.split('.').pop().toLowerCase();
+      const icon = artifactIconByExtension[extension] || 'doc';
+      return `<button class="conversation-artifact" type="button" data-artifact-index="${index}" aria-label="查看产物：${esc(name)}">` +
+        `<span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span>` +
+        `<span><strong>${esc(name)}</strong><small>查看产物</small></span>` +
+        `<svg viewBox="0 0 24 24" class="ic conversation-artifact-arrow" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>`;
+    }).join('');
+  }
+
+  function conversationTurns() {
+    return Array.from(conversationThread.querySelectorAll('.user-message'));
+  }
+
+  function updateConversationTurnNav(previewIndex = -1) {
+    const turns = conversationTurns();
+    if (turns.length < 2 || conversationTurnNav.hidden) return;
+    const buttons = Array.from(conversationTurnNav.querySelectorAll('.conversation-turn'));
+    const position = conversationScroll.getBoundingClientRect().top + conversationScroll.clientHeight * .32;
+    let activeIndex = 0;
+    turns.forEach((turn, index) => {
+      if (turn.getBoundingClientRect().top <= position) activeIndex = index;
+    });
+    if (conversationScroll.scrollTop + conversationScroll.clientHeight >= conversationScroll.scrollHeight - 2) {
+      activeIndex = turns.length - 1;
+    }
+    buttons.forEach((button, index) => {
+      button.classList.toggle('is-completed', index < activeIndex);
+      button.classList.toggle('is-active', index === activeIndex);
+      button.classList.toggle('is-previewed', index === previewIndex);
+      button.classList.toggle('is-preview-neighbor', Math.abs(index - previewIndex) === 1 && previewIndex >= 0);
+      if (index === activeIndex) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+  }
+
+  function renderConversationTurnNav() {
+    const turns = conversationTurns();
+    conversationTurnNav.hidden = turns.length < 2;
+    conversationTurnNav.innerHTML = turns.length < 2 ? '' : turns.map((turn, index) => {
+      const question = turn.querySelector('.message-bubble')?.textContent.trim() || '对话';
+      const answer = turn.nextElementSibling?.querySelector('.assistant-content')?.textContent.trim() || '';
+      return `<button class="conversation-turn" type="button" data-turn-index="${index}" aria-label="跳转到第 ${index + 1} 轮：${esc(question)}">` +
+        `<span class="conversation-turn-preview" aria-hidden="true"><strong>${esc(question)}</strong>${answer ? `<br>${esc(answer.slice(0, 90))}${answer.length > 90 ? '…' : ''}` : ''}</span></button>`;
+    }).join('');
+    updateConversationTurnNav();
+  }
+
+  conversationScroll.addEventListener('scroll', () => {
+    const hovered = conversationTurnNav.querySelector('.conversation-turn:hover, .conversation-turn:focus-visible');
+    updateConversationTurnNav(hovered ? Number(hovered.dataset.turnIndex) : -1);
+  }, { passive:true });
+  conversationTurnNav.addEventListener('pointerover', (event) => {
+    const button = event.target.closest('.conversation-turn');
+    if (button) updateConversationTurnNav(Number(button.dataset.turnIndex));
+  });
+  conversationTurnNav.addEventListener('pointerleave', () => updateConversationTurnNav());
+  conversationTurnNav.addEventListener('focusin', (event) => {
+    const button = event.target.closest('.conversation-turn');
+    if (button) updateConversationTurnNav(Number(button.dataset.turnIndex));
+  });
+  conversationTurnNav.addEventListener('focusout', () => requestAnimationFrame(() => {
+    if (!conversationTurnNav.contains(document.activeElement)) updateConversationTurnNav();
+  }));
+  conversationTurnNav.addEventListener('click', (event) => {
+    const button = event.target.closest('.conversation-turn');
+    if (!button) return;
+    const turn = conversationTurns()[Number(button.dataset.turnIndex)];
+    if (turn) conversationScroll.scrollTo({
+      top:conversationScroll.scrollTop + turn.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 16,
+      behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    });
+  });
+
+  function setConversationOpen(open, task = activeConversationTask || conversationTask) {
     closeAccessMenus();
-    if (open) renderConversationAgents();
     if (!open) closeConversationTaskMenu();
+    if (open && activeConversationTask !== task) {
+      if (activeConversationTask) conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+      activeConversationTask?.setAttribute('aria-current', 'false');
+      activeConversationTask = task;
+      const example = conversationExamples.get(task);
+      if (conversationThreads.has(task)) {
+        conversationThread.innerHTML = conversationThreads.get(task);
+      } else {
+        const turns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
+        conversationThread.innerHTML = turns.map(({ prompt, reply }, index) =>
+          `<div class="conversation-message user-message"><div class="message-bubble">${esc(prompt)}</div></div>` +
+          `<div class="conversation-message assistant-message"><div class="assistant-content"><article class="md conversation-reply">${renderMarkdown(reply)}</article>` +
+          (index === turns.length - 1 ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
+          '</div></div>'
+        ).join('');
+      }
+      renderConversationArtifacts(task);
+      const folder = FOLDERS.find((entry) => entry.id === example.folderId);
+      if (folder) selectFolder(folder.id);
+      conversationStatusStack.hidden = task !== conversationTask;
+    }
+    if (open) renderConversationAgents();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
-    conversationTask.setAttribute('aria-current', open ? 'page' : 'false');
-    if (open && conversationTaskTitle) {
-      conversationTaskTitle.textContent = conversationTask.querySelector('.task-name')?.textContent.trim() || '当前任务';
-    }
-if (!summaryPopover.hidden) renderSummaryContents();
-if (open) {
+    activeConversationTask?.setAttribute('aria-current', open ? 'page' : 'false');
+    if (open) conversationTaskTitle.textContent = task.querySelector('.task-name')?.textContent.trim() || '当前任务';
+    if (!summaryPopover.hidden) renderSummaryContents();
+    if (open) {
       setWorkbench(false);
-      requestAnimationFrame(() => { conversationScroll.scrollTop = 0; });
+      renderConversationTurnNav();
+      requestAnimationFrame(() => {
+        conversationScroll.scrollTop = 0;
+        updateConversationTurnNav();
+      });
     }
   }
 
@@ -3588,15 +3794,18 @@ if (open) {
     if (!text) return;
     conversationThread.insertAdjacentHTML('beforeend',
       `<div class="conversation-message user-message"><div class="message-bubble">${esc(text)}</div></div>`);
+    renderConversationTurnNav();
     conversationPrompt.value = '';
     resizeConversationPrompt();
     requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
   }
 
-  conversationTask.addEventListener('click', (e) => {
-    if (e.target.closest('[data-toggle-agents], .row-acts, .row-act')) return;
-    e.preventDefault();
-    setConversationOpen(true);
+  conversationExamples.forEach((example, task) => {
+    task.addEventListener('click', (e) => {
+      if (e.target.closest('[data-toggle-agents], .row-acts, .row-act')) return;
+      e.preventDefault();
+      setConversationOpen(true, task);
+    });
   });
   newTaskNav.addEventListener('click', (e) => {
     e.preventDefault();
@@ -3610,9 +3819,13 @@ if (open) {
     sendConversationMessage();
   });
   conversationSend.addEventListener('click', sendConversationMessage);
-  conversationArtifact.addEventListener('click', () => {
-    const node = FOLDERS[0].files.find((file) => file.name === '门店履约异常看板.html');
-    if (node) openArtifactPreview(node, [FOLDERS[0], node]);
+  conversationThread.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-artifact-index]');
+    if (!button || !activeConversationTask) return;
+    const example = conversationExamples.get(activeConversationTask);
+    const folder = FOLDERS.find((entry) => entry.id === example.folderId);
+    const node = folder?.files.find((file) => file.name === example.files[Number(button.dataset.artifactIndex)]);
+    if (node) openArtifactPreview(node, [folder, node]);
   });
 
   /* ---------- 5.6 浏览器工作区 ---------- */

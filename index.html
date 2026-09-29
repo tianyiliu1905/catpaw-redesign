@@ -3,10 +3,25 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+  try {
+    const savedTheme = localStorage.getItem('catpaw-theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.dataset.theme = savedTheme;
+  } catch (_) { /* Storage may be unavailable in preview contexts. */ }
+</script>
 <title>CatPaw</title>
 <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+
+<div class="theme-panel" role="group" aria-label="外观模式">
+  <button type="button" data-set-theme="light" aria-label="切换为浅色模式" aria-pressed="true" title="浅色模式">
+    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+  </button>
+  <button type="button" data-set-theme="dark" aria-label="切换为暗色模式" aria-pressed="false" title="暗色模式">
+    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M20.9 13.1A9 9 0 0 1 10.9 3.1 9 9 0 1 0 20.9 13.1Z"/></svg>
+  </button>
+</div>
 
 <div class="stage">
   <div class="window" id="window">
@@ -215,7 +230,7 @@
   <div class="folder-section-actions">
     <button class="folder-section-action" id="toggleAllFolders" type="button" title="全部收起" aria-label="全部收起"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path class="folder-collapse-icon" d="m7 5 5 5 5-5M7 19l5-5 5 5"/><path class="folder-expand-icon" d="m7 10 5-5 5 5M7 14l5 5 5-5"/></svg></button>
     <button class="folder-section-action" id="folderSortButton" type="button" title="排序" aria-label="排序" aria-haspopup="menu" aria-expanded="false" aria-controls="folderSortMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/></svg></button>
-    <button class="folder-section-action" id="createSidebarFolder" type="button" title="新建文件夹（暂不可用）" aria-label="新建文件夹（暂不可用）" disabled><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3M3 7v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M16 13h6m-3-3v6"/></svg></button>
+    <button class="folder-section-action" id="createSidebarFolder" type="button" title="新建文件夹" aria-label="新建文件夹"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3M3 7v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M16 13h6m-3-3v6"/></svg></button>
   </div>
 </div>
 <div class="folder-sort-menu" id="folderSortMenu" role="menu" aria-label="文件夹排序" hidden>
@@ -242,7 +257,7 @@
             <!-- 这两行不再展示运行 / 待确认状态，但保留空的 .task-state：
                  它撑着 26px 的最小宽，hover 时浮现的行内操作正好落在这块预留区里，
                  拆掉的话任务名会一直铺到行尾，被三点按钮压住。 -->
-            <a class="task" href="#">
+            <a class="task" id="retailFirstConversationTask" href="#" data-open-conversation>
               <span class="task-name">AI 工具约束文件配置与校验</span>
               <span class="task-state"></span>
             </a>
@@ -473,7 +488,7 @@
         </div>
       </div>
 
-      <!-- 示例对话：点击左侧指定任务进入。只保留一轮消息与底部输入框，
+      <!-- 示例对话：点击左侧指定任务进入。消息区独立滚动，底部输入框固定；
            产物卡片可直接在右侧以纯预览模式打开。 -->
       <section class="conversation-page" id="conversationPage" aria-label="任务对话" hidden>
         <header class="conversation-task-bar">
@@ -486,21 +501,18 @@
           </button>
           <span class="conversation-task-feedback" id="conversationTaskFeedback" role="status" aria-live="polite"></span>
         </header>
-        <div class="conversation-scroll" id="conversationScroll">
-          <div class="conversation-thread" id="conversationThread">
-            <div class="conversation-message user-message">
-              <div class="message-bubble">帮我整理本周门店履约异常明细，并标出需要优先处理的问题。</div>
-            </div>
-            <div class="conversation-message assistant-message">
-              <div class="assistant-content">
-                <p>已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。</p>
-                <button class="conversation-artifact" id="conversationArtifact" type="button">
-                  <span class="conversation-artifact-icon">
-                    <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h8M8 17h5"/></svg>
-                  </span>
-                  <span><strong>门店履约异常看板.html</strong><small>查看产物</small></span>
-                  <svg viewBox="0 0 24 24" class="ic conversation-artifact-arrow"><path d="m9 18 6-6-6-6"/></svg>
-                </button>
+        <div class="conversation-scroll-area">
+          <nav class="conversation-turn-nav" id="conversationTurnNav" aria-label="对话轮次导航" hidden></nav>
+          <div class="conversation-scroll" id="conversationScroll">
+            <div class="conversation-thread" id="conversationThread">
+              <div class="conversation-message user-message">
+                <div class="message-bubble">帮我整理本周门店履约异常明细，并标出需要优先处理的问题。</div>
+              </div>
+              <div class="conversation-message assistant-message">
+                <div class="assistant-content">
+                  <p>已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。</p>
+                  <div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -509,17 +521,19 @@
           <div class="conversation-status-stack" aria-label="任务执行状态">
             <section class="conversation-status-group" data-status-group>
               <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAgentItems">
-                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-icon" aria-hidden="true"><rect x="8" y="3" width="8" height="7" rx="1.5"/><rect x="2" y="16" width="7" height="5" rx="1.5"/><rect x="15" y="16" width="7" height="5" rx="1.5"/><path d="M12 10v3M5.5 16v-3h13v3"/></svg>
                 <span class="conversation-status-heading">子 Agent</span>
                 <span class="conversation-status-summary" id="conversationAgentSummary">使用了 3 个子 Agent</span>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
               </button>
               <div class="conversation-status-items" id="conversationAgentItems" hidden></div>
             </section>
             <section class="conversation-status-group" data-status-group>
               <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAiTaskItems">
-                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 1.5 1.5L11 8M13 9h4M7 15h4M13 15h4"/></svg>
                 <span class="conversation-status-heading">AI 任务</span>
                 <span class="conversation-status-summary" id="conversationAiTaskSummary">共 3 项 · 1 项进行中</span>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
               </button>
               <div class="conversation-status-items" id="conversationAiTaskItems" hidden>
                 <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">持续监测新增异常订单</span><span class="conversation-status-state is-running"><span class="spinner" aria-hidden="true"></span>进行中</span></button>
