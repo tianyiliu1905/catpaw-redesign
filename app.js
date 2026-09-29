@@ -54,12 +54,14 @@
   let preferredSidebarWidth = null;
   let sidebarResizePointer = null;
   let sidebarCollapseReady = false;
+  let adaptiveLayoutReady = false;
 
   function sidebarBounds() {
     const available = win.clientWidth;
     const mainContent = document.getElementById('content');
-    const rightWidth = mainContent.classList.contains('wb-open') && !mainContent.classList.contains('wb-expanded')
-      ? document.getElementById('workbench').getBoundingClientRect().width : 0;
+    const rightWidth = mainContent.classList.contains('wb-open') && !mainContent.classList.contains('wb-expanded') &&
+      !mainContent.classList.contains('wb-auto-collapsed')
+      ? parseFloat(mainContent.style.getPropertyValue('--user-panel-w')) || 0 : 0;
     return { min: 188, max: Math.max(188, Math.min(480, available - rightWidth - 320)) };
   }
 
@@ -79,7 +81,8 @@
     collapseBtn.setAttribute('aria-expanded', String(!collapsed));
     expandBtn.setAttribute('aria-expanded', String(!collapsed));
     conversationExpandBtn.setAttribute('aria-expanded', String(!collapsed));
-    if (!collapsed) syncSidebarWidth();
+    if (adaptiveLayoutReady) syncAdaptiveLayout();
+    else if (!collapsed) syncSidebarWidth();
   }
 
   function finishSidebarResize(event) {
@@ -95,11 +98,14 @@
     if (collapse) {
       preferredSidebarWidth = null;
       requestAnimationFrame(() => setCollapsed(true));
-    } else syncSidebarWidth();
+    } else {
+      preferredSidebarWidth = Math.max(sidebarBounds().min, preferredSidebarWidth ?? sidebarBounds().min);
+      syncAdaptiveLayout();
+    }
   }
 
   sidebarResizer.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0 || win.classList.contains('collapsed') || window.matchMedia('(max-width: 860px)').matches) return;
+    if (event.button !== 0 || win.classList.contains('collapsed') || win.classList.contains('sidebar-auto-collapsed')) return;
     event.preventDefault();
     // 只有从最小宽度开始的下一次拖拽，才能越过断点收起侧边栏。
     sidebarCollapseReady = Number(sidebarResizer.getAttribute('aria-valuenow')) <= sidebarBounds().min;
@@ -131,9 +137,11 @@
     }
     const current = Number(sidebarResizer.getAttribute('aria-valuenow'));
     preferredSidebarWidth = event.key === 'End' ? bounds.max : Math.min(bounds.max, Math.max(bounds.min, current + (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? 32 : 16)));
-    syncSidebarWidth();
+    syncAdaptiveLayout();
   });
-  const sidebarLayoutObserver = new ResizeObserver(syncSidebarWidth);
+  const sidebarLayoutObserver = new ResizeObserver(() => {
+    if (adaptiveLayoutReady) syncAdaptiveLayout();
+  });
   sidebarLayoutObserver.observe(win);
 
   collapseBtn.addEventListener('click', () => setCollapsed(true));
@@ -1213,10 +1221,8 @@ renderRecentFiles();
 
   initializeFlatSidebar();
 
-  /* ---------- 2. 分组折叠 ----------
-     使用 0fr → 1fr 的网格轨道过渡，避免读取 scrollHeight 和强制回流。
-     内容高度发生变化时由浏览器直接插值，连续点击也不会卡在中间高度。 */
-  document.querySelectorAll('[data-group]').forEach((group) => {
+  /* ---------- 2. 分组折叠与文件夹操作 ---------- */
+  function initSidebarGroup(group) {
     const head = group.querySelector('[data-toggle-group]');
     const body = group.querySelector('.group-body');
     const inner = document.createElement('div');
@@ -1224,13 +1230,99 @@ renderRecentFiles();
     while (body.firstChild) inner.appendChild(body.firstChild);
     body.appendChild(inner);
     head.setAttribute('aria-expanded', String(!group.classList.contains('folded')));
-
     head.addEventListener('click', () => {
       const folded = group.classList.toggle('folded');
       head.setAttribute('aria-expanded', String(!folded));
+      updateToggleAllFolders();
       requestAnimationFrame(refreshClipped);
     });
+  }
+  groups.forEach(initSidebarGroup);
+
+  const toggleAllFolders = document.getElementById('toggleAllFolders');
+  const folderSortButton = document.getElementById('folderSortButton');
+  const folderSortMenu = document.getElementById('folderSortMenu');
+  let folderLayout = 'project';
+  let folderOrder = 'updated';
+  let showAllFolderTasks = true;
+  const folderSequence = new Map(groups.map((group, index) => [group, index]));
+  const folderUpdateSequence = new Map(groups.map((group, index) => [group, index]));
+
+  function updateToggleAllFolders() {
+    const allFolded = groups.length > 0 && groups.every((group) => group.classList.contains('folded'));
+    const label = allFolded ? '全部展开' : '全部收起';
+    toggleAllFolders.title = label;
+    toggleAllFolders.setAttribute('aria-label', label);
+    toggleAllFolders.dataset.allFolded = String(allFolded);
+  }
+  toggleAllFolders.addEventListener('click', () => {
+    if (folderLayout === 'time') { folderLayout = 'project'; applyFolderSort(); }
+    const shouldFold = groups.some((group) => !group.classList.contains('folded'));
+    groups.forEach((group) => {
+      group.classList.toggle('folded', shouldFold);
+      group.querySelector('[data-toggle-group]').setAttribute('aria-expanded', String(!shouldFold));
+    });
+    updateToggleAllFolders();
+    requestAnimationFrame(refreshClipped);
   });
+
+  function closeFolderSort() {
+    folderSortMenu.hidden = true;
+    folderSortButton.setAttribute('aria-expanded', 'false');
+  }
+  folderSortButton.addEventListener('click', () => {
+    const open = folderSortMenu.hidden;
+    if (!open) { closeFolderSort(); return; }
+    folderSortMenu.hidden = false;
+    const button = folderSortButton.getBoundingClientRect();
+    const menu = folderSortMenu.getBoundingClientRect();
+    folderSortMenu.style.left = `${Math.max(8, Math.min(button.right - menu.width, window.innerWidth - menu.width - 8))}px`;
+    folderSortMenu.style.top = `${button.bottom + menu.height + 8 <= window.innerHeight ? button.bottom + 5 : Math.max(8, button.top - menu.height - 5)}px`;
+    folderSortButton.setAttribute('aria-expanded', 'true');
+  });
+  function applyFolderSort() {
+    folderGroupsEl.classList.toggle('time-list', folderLayout === 'time');
+    folderGroupsEl.classList.toggle('show-all', showAllFolderTasks);
+    groups.sort((a, b) => folderOrder === 'created'
+      ? folderSequence.get(b) - folderSequence.get(a)
+      : folderUpdateSequence.get(a) - folderUpdateSequence.get(b));
+    groups.forEach((group) => folderGroupsEl.appendChild(group));
+    // 时间列表脱离文件夹标题，按示例任务所显示的相对时间排序；无时间的任务保持原顺序。
+    let taskIndex = 0;
+    folderGroupsEl.querySelectorAll('.group .task').forEach((task) => {
+      const time = task.querySelector('.task-time')?.textContent?.trim();
+      const match = time?.match(/^(\d+)([hmd])$/);
+      const minutes = match ? Number(match[1]) * ({ m: 1, h: 60, d: 1440 }[match[2]]) : null;
+      task.style.order = String(folderOrder === 'created'
+        ? -taskIndex++
+        : minutes === null ? 100000 + taskIndex++ : minutes);
+    });
+    folderSortMenu.querySelectorAll('[data-folder-layout]').forEach((item) => item.setAttribute('aria-checked', String(item.dataset.folderLayout === folderLayout)));
+    folderSortMenu.querySelectorAll('[data-folder-order]').forEach((item) => item.setAttribute('aria-checked', String(item.dataset.folderOrder === folderOrder)));
+    folderSortMenu.querySelector('[data-folder-show-all]').setAttribute('aria-checked', String(showAllFolderTasks));
+    requestAnimationFrame(refreshClipped);
+  }
+  folderSortMenu.addEventListener('click', (e) => {
+    const option = e.target.closest('.folder-sort-option');
+    if (!option) return;
+    if (option.dataset.folderLayout) folderLayout = option.dataset.folderLayout;
+    if (option.dataset.folderOrder) folderOrder = option.dataset.folderOrder;
+    if (option.hasAttribute('data-folder-show-all')) showAllFolderTasks = !showAllFolderTasks;
+    applyFolderSort();
+    closeFolderSort();
+    folderSortButton.focus();
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!folderSortMenu.contains(e.target) && e.target !== folderSortButton && !folderSortButton.contains(e.target)) closeFolderSort();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !folderSortMenu.hidden) { closeFolderSort(); folderSortButton.focus(); }
+  });
+  window.addEventListener('resize', closeFolderSort);
+  window.addEventListener('scroll', closeFolderSort, true);
+
+  updateToggleAllFolders();
+  applyFolderSort();
 
   /* ---------- 3. 展开显示 / 收起 ----------
      附加任务自身也采用网格轨道动画；收起时内容不会先消失再留下空白。 */
@@ -1998,6 +2090,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
 
   let rightPanel = null;
   let workbenchExpanded = false;
+  let compactPanelRequested = false;
 
   function syncFullscreenChat() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
@@ -2030,8 +2123,8 @@ const fileCloseSave = document.getElementById('fileCloseSave');
     } else {
       content.classList.remove('wb-restoring');
     }
-    content.classList.toggle('wb-expanded', workbenchExpanded);
     content.classList.toggle('wb-file-active', canExpandFile);
+    syncAdaptiveLayout();
     wbExpandToggle.disabled = !canExpandFile;
     wbExpandToggle.setAttribute('aria-pressed', String(workbenchExpanded));
     wbExpandToggle.title = workbenchExpanded ? '退出文件全屏' : '全屏显示文件';
@@ -2056,47 +2149,93 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   const PANEL_EXPAND_OVERDRAG = 32;
 
   function panelWidthKey() { return content.classList.contains('wb-file-workspace') ? 'file' : 'compact'; }
+  function desiredPanelWidth(width, sidebarWidth) {
+    const root = getComputedStyle(document.documentElement);
+    return preferredPanelWidths[panelWidthKey()] ?? (panelWidthKey() === 'file'
+      ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), (width - sidebarWidth) * .62)
+      : parseFloat(root.getPropertyValue('--workbench-w')));
+  }
   function panelBounds() {
     const available = content.clientWidth;
-    const mainMin = Math.min(320, Math.floor(available * .48));
+    const mainMin = Math.min(320, available);
     const panelMin = Math.min(panelWidthKey() === 'file' ? 360 : 300, available - mainMin);
     return { min: panelMin, max: Math.max(panelMin, available - mainMin) };
   }
-  function treeBounds() {
-    const available = workbench.clientWidth;
+  function treeBounds(available = workbench.clientWidth) {
     const previewMin = Math.min(240, Math.floor(available * .52));
     const treeMin = Math.min(180, available - previewMin);
     return { min: treeMin, max: Math.max(treeMin, available - previewMin) };
   }
   function clampWidth(value, bounds) { return Math.round(Math.min(bounds.max, Math.max(bounds.min, value))); }
+
+  // 窗口收窄时依次让出右侧工具区、左侧边栏，最后才压缩对话区。
+  // 不改写用户的开关与拖拽偏好，窗口重新变宽时可以自然恢复。
+  function syncAdaptiveLayout() {
+    if (!adaptiveLayoutReady) return;
+    const width = win.clientWidth;
+    const mainMin = Math.min(320, width);
+    const root = getComputedStyle(document.documentElement);
+    const sidebarDesired = win.classList.contains('collapsed') ? 0
+      : Math.min(480, preferredSidebarWidth ?? parseFloat(root.getPropertyValue('--sidebar-w')));
+    const panelOpen = content.classList.contains('wb-open');
+    const panelDesired = panelOpen ? desiredPanelWidth(width, sidebarDesired) : 0;
+    // 窄窗口中主动打开工具区时，空间不足以保留完整双栏就让它替代对话区；
+    // 被动缩窄仍按右栏优先自动收起，且手动文件全屏状态保持独立。
+    const compactFull = panelOpen && compactPanelRequested && width - sidebarDesired - panelDesired < 320;
+    if (compactPanelRequested && !compactFull) compactPanelRequested = false;
+    const fullPanel = panelOpen && (workbenchExpanded || compactFull);
+    content.classList.toggle('wb-expanded', fullPanel);
+    const availableRight = Math.max(0, width - sidebarDesired - mainMin);
+    const rightCandidate = Math.min(panelDesired, availableRight);
+    const leftCandidate = Math.min(sidebarDesired, Math.max(0, width - rightCandidate - mainMin));
+    const leftWidth = fullPanel
+      ? width - sidebarDesired >= (panelWidthKey() === 'file' ? 360 : 300) ? sidebarDesired : 0
+      : leftCandidate >= 188 ? leftCandidate : 0;
+    const rightWidth = fullPanel ? Math.max(0, width - leftWidth)
+      : rightCandidate >= (panelWidthKey() === 'file' ? 360 : 300) ? rightCandidate : 0;
+    if (sidebarResizePointer === null && !win.classList.contains('collapsed')) {
+      win.style.setProperty('--user-sidebar-w', `${Math.round(leftWidth)}px`);
+      sidebarResizer.setAttribute('aria-valuenow', String(Math.round(leftWidth)));
+    }
+    if (panelOpen && !fullPanel) {
+      const previewWidth = activeResize?.kind === 'panel' ? activeResize.previewWidth : null;
+      content.style.setProperty('--user-panel-w', `${Math.round(previewWidth ?? rightWidth)}px`);
+    } else if (!panelOpen) content.style.removeProperty('--user-panel-w');
+    const rightHidden = panelOpen && !fullPanel && rightWidth === 0;
+    const leftHidden = sidebarResizePointer === null && !win.classList.contains('collapsed') && leftWidth === 0;
+    content.classList.toggle('wb-auto-collapsed', rightHidden);
+    win.classList.toggle('sidebar-auto-collapsed', leftHidden);
+    workbench.setAttribute('aria-hidden', String(!panelOpen || rightHidden));
+  }
+
   function syncResizeLayout() {
+    syncAdaptiveLayout();
     const mobile = window.matchMedia('(max-width: 860px)').matches;
-    const panelActive = content.classList.contains('wb-open') && !workbenchExpanded && !mobile;
-      const panelPreference = preferredPanelWidths[panelWidthKey()];
-      const bounds = panelBounds();
-      if (panelActive) {
-        const root = getComputedStyle(document.documentElement);
-        const defaultWidth = panelWidthKey() === 'file'
-          ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), content.clientWidth * .62)
-          : parseFloat(root.getPropertyValue('--workbench-w'));
-        const dragWidth = activeResize?.kind === 'panel' ? activeResize.previewWidth : null;
-        const panelWidth = dragWidth !== null
-          ? Math.round(Math.min(content.clientWidth, dragWidth))
-          : clampWidth(panelPreference ?? defaultWidth, bounds);
-        content.style.setProperty('--user-panel-w', `${panelWidth}px`);
-      } else content.style.removeProperty('--user-panel-w');
+    const panelActive = content.classList.contains('wb-open') && !content.classList.contains('wb-expanded') && !content.classList.contains('wb-auto-collapsed');
+    const bounds = panelBounds();
     const treeActive = content.classList.contains('wb-open') && workbench.classList.contains('file-split') && rightPanel === 'tools';
-    const treeLimits = treeBounds();
     if (treeActive) {
-      const fallback = workbenchExpanded && !mobile
+      // 面板打开时用目标宽度计算目录树，不让它随网格过渡从 0 宽逐帧长出来。
+      const targetWidth = content.classList.contains('wb-expanded') ? content.clientWidth
+        : panelActive && activeResize?.kind !== 'panel'
+          ? parseFloat(content.style.getPropertyValue('--user-panel-w'))
+          : workbench.clientWidth;
+      const treeLimits = treeBounds(targetWidth);
+      const fallback = content.classList.contains('wb-expanded') && !mobile
         ? Math.min(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--workbench-folder-w')) * .4, content.clientWidth * .248)
-        : workbench.clientWidth * .4;
+        : targetWidth * .4;
       const treeWidth = clampWidth(preferredTreeWidth ?? fallback, treeLimits);
       workbench.style.setProperty('--user-tree-w', `${treeWidth}px`);
+      // 目录树不随外层网格移动；面板到达目标宽度后一次性显示完整内容。
+      workbench.classList.toggle('tree-revealed', activeResize?.kind === 'panel' ||
+        workbench.clientWidth >= targetWidth - 1);
       treeResizer.setAttribute('aria-valuemin', String(treeLimits.min));
       treeResizer.setAttribute('aria-valuemax', String(treeLimits.max));
       treeResizer.setAttribute('aria-valuenow', String(treeWidth));
-    } else workbench.style.removeProperty('--user-tree-w');
+    } else {
+      workbench.style.removeProperty('--user-tree-w');
+      workbench.classList.remove('tree-revealed');
+    }
     if (panelActive) {
       const panelWidth = Math.round(workbench.getBoundingClientRect().width);
       panelResizer.setAttribute('aria-valuemin', String(bounds.min));
@@ -2121,7 +2260,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   function setupResizer(element, kind) {
     element.addEventListener('pointerdown', (event) => {
       if (event.button !== 0 || !content.classList.contains('wb-open') ||
-          (kind === 'panel' && (workbenchExpanded || window.matchMedia('(max-width: 860px)').matches)) ||
+          (kind === 'panel' && (content.classList.contains('wb-expanded') || content.classList.contains('wb-auto-collapsed'))) ||
           (kind === 'tree' && !workbench.classList.contains('file-split'))) return;
       event.preventDefault();
       endResize();
@@ -2164,6 +2303,8 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   }
   setupResizer(panelResizer, 'panel');
   setupResizer(treeResizer, 'tree');
+  adaptiveLayoutReady = true;
+  syncAdaptiveLayout();
   const layoutResizeObserver = new ResizeObserver(syncResizeLayout);
   layoutResizeObserver.observe(content);
   layoutResizeObserver.observe(workbench);
@@ -2171,7 +2312,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
 
   function syncSummaryTriggerPosition() {
     const main = document.querySelector('.main');
-    if (rightPanel !== 'tools' || workbenchExpanded || !main || !summaryToggleSlot) {
+    if (rightPanel !== 'tools' || content.classList.contains('wb-expanded') || !main || !summaryToggleSlot) {
       content.style.removeProperty('--summary-float-left');
       content.style.removeProperty('--summary-float-top');
       summaryPopover.style.removeProperty('position');
@@ -2198,16 +2339,32 @@ const fileCloseSave = document.getElementById('fileCloseSave');
 
   function setRightPanel(panel) {
     const next = panel || null;
+    const opening = Boolean(next) && (!content.classList.contains('wb-open') || content.classList.contains('wb-auto-collapsed'));
     if (next === 'tools' && openWorkspaces.length === 0) ensureDefaultFileWorkspace();
     rightPanel = next;
     syncWorkbenchWidth();
+    const instantFileOpen = opening && content.classList.contains('wb-file-workspace');
+    if (instantFileOpen) content.classList.add('wb-opening');
     const open = Boolean(next);
     content.classList.toggle('wb-open', open);
+    if (opening) {
+      const width = win.clientWidth;
+      const root = getComputedStyle(document.documentElement);
+      const sidebarWidth = win.classList.contains('collapsed') ? 0
+        : Math.min(480, preferredSidebarWidth ?? parseFloat(root.getPropertyValue('--sidebar-w')));
+      compactPanelRequested = width - sidebarWidth - desiredPanelWidth(width, sidebarWidth) < 320;
+    }
+    if (!next) compactPanelRequested = false;
     workbench.dataset.panel = next || '';
+    syncAdaptiveLayout();
     setWorkbenchExpanded(workbenchExpanded);
-    workbench.setAttribute('aria-hidden', String(!open));
+    workbench.setAttribute('aria-hidden', String(!open || content.classList.contains('wb-auto-collapsed')));
     wbToggle.setAttribute('aria-expanded', String(next === 'tools'));
     wbToggle.title = next === 'tools' ? '收起工具' : '工具';
+    if (instantFileOpen) {
+      syncResizeLayout();
+      requestAnimationFrame(() => content.classList.remove('wb-opening'));
+    }
     requestAnimationFrame(() => {
       syncResizeLayout();
       syncSummaryTriggerPosition();
@@ -2225,6 +2382,8 @@ const fileCloseSave = document.getElementById('fileCloseSave');
       rightPanel = null;
       content.classList.remove('wb-open', 'wb-file-workspace', 'wb-expanded', 'wb-file-active');
       workbenchExpanded = false;
+      compactPanelRequested = false;
+      syncAdaptiveLayout();
       wbExpandToggle.disabled = true;
       wbExpandToggle.setAttribute('aria-pressed', 'false');
       wbExpandToggle.title = '全屏显示文件';
@@ -2449,7 +2608,7 @@ function setSummaryOpen(open) {
 
   wbToggle.addEventListener('click', (event) => {
     event.stopPropagation();
-    const toolsOpen = content.classList.contains('wb-open') && workbench.dataset.panel === 'tools';
+    const toolsOpen = content.classList.contains('wb-open') && !content.classList.contains('wb-auto-collapsed') && workbench.dataset.panel === 'tools';
     setRightPanel(toolsOpen ? null : 'tools');
   });
   workspaceAdd.addEventListener('click', (e) => {
@@ -2481,7 +2640,7 @@ function setSummaryOpen(open) {
     if (e.key === 'Escape') setWorkspaceCreate(false);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
       e.preventDefault();
-      const toolsOpen = content.classList.contains('wb-open') && workbench.dataset.panel === 'tools';
+      const toolsOpen = content.classList.contains('wb-open') && !content.classList.contains('wb-auto-collapsed') && workbench.dataset.panel === 'tools';
       setRightPanel(toolsOpen ? null : 'tools');
     }
   });

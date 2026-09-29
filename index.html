@@ -210,7 +210,24 @@
           <button class="expand" data-expand-tasks hidden>展开</button>
         </div>
 
-        <div class="section-label"><button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">文件夹</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+        <div class="section-label folder-section-label">
+  <button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">文件夹</span></button>
+  <div class="folder-section-actions">
+    <button class="folder-section-action" id="toggleAllFolders" type="button" title="全部收起" aria-label="全部收起"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path class="folder-collapse-icon" d="m7 5 5 5 5-5M7 19l5-5 5 5"/><path class="folder-expand-icon" d="m7 10 5-5 5 5M7 14l5 5 5-5"/></svg></button>
+    <button class="folder-section-action" id="folderSortButton" type="button" title="排序" aria-label="排序" aria-haspopup="menu" aria-expanded="false" aria-controls="folderSortMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/></svg></button>
+    <button class="folder-section-action" id="createSidebarFolder" type="button" title="新建文件夹（暂不可用）" aria-label="新建文件夹（暂不可用）" disabled><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3M3 7v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M16 13h6m-3-3v6"/></svg></button>
+  </div>
+</div>
+<div class="folder-sort-menu" id="folderSortMenu" role="menu" aria-label="文件夹排序" hidden>
+  <div class="folder-sort-heading">整理</div>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-layout="project" aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 4h6l2 2h8v5H4zM4 14h16v6H4z"/></svg><span>按工作项目</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-layout="time" aria-checked="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 6h2m4 0h10M4 12h2m4 0h10M4 18h2m4 0h10"/></svg><span>时间顺序列表</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <div class="folder-sort-divider"></div><div class="folder-sort-heading">排序条件</div>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-order="created" aria-checked="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>已创建</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-order="updated" aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5M12 7v5l3 2"/></svg><span>已更新</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <div class="folder-sort-divider"></div><div class="folder-sort-heading">显示</div>
+  <button class="folder-sort-option" type="button" role="menuitemcheckbox" data-folder-show-all aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 7 12 3l9 4-9 4-9-4Zm0 5 9 4 9-4M3 17l9 4 9-4"/></svg><span>所有任务</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+</div>
 
         <div id="folderGroups">
         <!-- 分组：服务零售 -->
