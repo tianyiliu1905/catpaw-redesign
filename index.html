@@ -16,10 +16,10 @@
 
 <div class="theme-panel" role="group" aria-label="外观模式">
   <button type="button" data-set-theme="light" aria-label="切换为浅色模式" aria-pressed="true" title="浅色模式">
-    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
   </button>
   <button type="button" data-set-theme="dark" aria-label="切换为暗色模式" aria-pressed="false" title="暗色模式">
-    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M20.9 13.1A9 9 0 0 1 10.9 3.1 9 9 0 1 0 20.9 13.1Z"/></svg>
+    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M20.5 13a8.8 8.8 0 0 1-9.5-9.5A9 9 0 1 0 20.5 13Z"/></svg>
   </button>
 </div>
 
@@ -38,7 +38,7 @@
         </div>
         <div class="titlebar-actions">
           <button class="icon-btn" id="toggleSidebar" title="折叠侧边栏">
-            <svg viewBox="0 0 24 24" class="ic"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/></svg>
           </button>
         </div>
       </header>
@@ -46,7 +46,7 @@
       <!-- 固定入口：仅下方内容滚动 -->
       <div class="sidebar-pinned">
         <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
-          <svg viewBox="0 0 24 24" class="ic"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          <svg viewBox="0 0 24 24" class="ic"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/></svg>
           <span>新建任务</span>
         </a>
       </div>
@@ -57,27 +57,27 @@
         <nav class="nav" id="nav">
           <!-- 通用 -->
           <a class="nav-item" href="#" data-scope="all">
-            <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 6.7v5.7l3.8 2.3"/></svg>
             <span>定时任务</span>
           </a>
           <a class="nav-item" href="#" data-scope="all">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M15.536 11.293a1 1 0 0 0 0 1.414l2.376 2.377a1 1 0 0 0 1.414 0l2.377-2.377a1 1 0 0 0 0-1.414l-2.377-2.377a1 1 0 0 0-1.414 0z"/><path d="M2.297 11.293a1 1 0 0 0 0 1.414l2.377 2.377a1 1 0 0 0 1.414 0l2.377-2.377a1 1 0 0 0 0-1.414L6.088 8.916a1 1 0 0 0-1.414 0z"/><path d="M8.916 17.912a1 1 0 0 0 0 1.415l2.377 2.376a1 1 0 0 0 1.414 0l2.377-2.376a1 1 0 0 0 0-1.415l-2.377-2.376a1 1 0 0 0-1.414 0z"/><path d="M8.916 4.674a1 1 0 0 0 0 1.414l2.377 2.376a1 1 0 0 0 1.414 0l2.377-2.376a1 1 0 0 0 0-1.414l-2.377-2.377a1 1 0 0 0-1.414 0z"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg>
             <span>专家 · 技能</span>
           </a>
 
           <!-- 原办公、开发、设计能力统一拍平展示，场景仅保留为数据归属 -->
           <a class="nav-item" href="#" data-scope="office">
-            <svg viewBox="0 0 24 24" class="ic"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/></svg>
             <span>资料库</span>
           </a>
 
           <a class="nav-item" href="#" data-scope="dev">
-            <svg viewBox="0 0 24 24" class="ic"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="7" height="7" rx="2.3"/><rect x="14" y="3" width="7" height="7" rx="2.3"/><rect x="3" y="14" width="7" height="7" rx="2.3"/><rect x="14" y="14" width="7" height="7" rx="2.3"/></svg>
             <span>应用</span>
           </a>
 
           <a class="nav-item" href="#" data-scope="design">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect x="14" y="2" width="8" height="8" rx="1"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 10h18M10 10v11"/></svg>
             <span>设计系统</span>
           </a>
         </nav>
@@ -93,7 +93,7 @@
             <a class="task flush task-parent" id="demoConversationTask" href="#" data-scope="office" data-state="running" data-open-conversation>
               <span class="agent-disclosure" role="button" tabindex="0" data-toggle-agents
                     aria-label="展开 SubAgent 任务" aria-expanded="false">
-                <svg viewBox="0 0 24 24" class="ic"><path d="m9 18 6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" class="ic"><path d="m9 6 6 6-6 6"/></svg>
               </span>
               <span class="task-name">整理本周门店履约异常明细</span>
               <span class="task-state"><span class="spinner"></span></span>
@@ -105,11 +105,11 @@
               </a>
               <a class="task subagent-task" href="#" data-state="done" title="SubAgent：合并各门店履约明细">
                 <span class="task-name">表格处理 · 合并门店明细</span>
-                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4 4L19 6"/></svg></span>
+                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4.5 4.5L19 7"/></svg></span>
               </a>
               <a class="task subagent-task" href="#" data-state="done" title="SubAgent：复核履约指标统计口径">
                 <span class="task-name">指标校验 · 复核统计口径</span>
-                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4 4L19 6"/></svg></span>
+                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4.5 4.5L19 7"/></svg></span>
               </a>
             </div>
           </div>
@@ -230,18 +230,18 @@
   <div class="folder-section-actions">
     <button class="folder-section-action" id="toggleAllFolders" type="button" title="全部收起" aria-label="全部收起"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path class="folder-collapse-icon" d="m7 5 5 5 5-5M7 19l5-5 5 5"/><path class="folder-expand-icon" d="m7 10 5-5 5 5M7 14l5 5 5-5"/></svg></button>
     <button class="folder-section-action" id="folderSortButton" type="button" title="排序" aria-label="排序" aria-haspopup="menu" aria-expanded="false" aria-controls="folderSortMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/></svg></button>
-    <button class="folder-section-action" id="createSidebarFolder" type="button" title="新建文件夹" aria-label="新建文件夹"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3M3 7v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M16 13h6m-3-3v6"/></svg></button>
+    <button class="folder-section-action" id="createSidebarFolder" type="button" title="新建文件夹" aria-label="新建文件夹"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M12 10.5v6M9 13.5h6"/></svg></button>
   </div>
 </div>
 <div class="folder-sort-menu" id="folderSortMenu" role="menu" aria-label="文件夹排序" hidden>
   <div class="folder-sort-heading">整理</div>
-  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-layout="project" aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 4h6l2 2h8v5H4zM4 14h16v6H4z"/></svg><span>按工作项目</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
-  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-layout="time" aria-checked="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 6h2m4 0h10M4 12h2m4 0h10M4 18h2m4 0h10"/></svg><span>时间顺序列表</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-layout="project" aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="8" rx="2.5"/><rect x="3" y="14" width="18" height="7" rx="2.5"/><path d="M7 7h5M7 17.5h5"/></svg><span>按工作项目</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-layout="time" aria-checked="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M10 6h11M10 12h11M10 18h11M4 6h2M4 12h2M4 18h2"/></svg><span>时间顺序列表</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button>
   <div class="folder-sort-divider"></div><div class="folder-sort-heading">排序条件</div>
-  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-order="created" aria-checked="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>已创建</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
-  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-order="updated" aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5M12 7v5l3 2"/></svg><span>已更新</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-order="created" aria-checked="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>已创建</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemradio" data-folder-order="updated" aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g transform="translate(0 -.5)"><path d="M3.5 9.5a9 9 0 1 1-.5 4M3.5 5V9.5H8"/><path d="M12 7.5v5l3 2"/></g></svg><span>已更新</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button>
   <div class="folder-sort-divider"></div><div class="folder-sort-heading">显示</div>
-  <button class="folder-sort-option" type="button" role="menuitemcheckbox" data-folder-show-all aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 7 12 3l9 4-9 4-9-4Zm0 5 9 4 9-4M3 17l9 4 9-4"/></svg><span>所有任务</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+  <button class="folder-sort-option" type="button" role="menuitemcheckbox" data-folder-show-all aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>所有任务</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button>
 </div>
 
         <div id="folderGroups">
@@ -249,7 +249,7 @@
         <section class="group" data-group data-scope="office" data-folder="retail">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic folder"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>服务零售</span>
             </button>
           </div>
@@ -291,7 +291,7 @@
         <section class="group" data-group data-scope="office" data-folder="reports">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic folder"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>经营月报</span>
             </button>
           </div>
@@ -311,7 +311,7 @@
         <section class="group" data-group data-scope="design" data-folder="mtd_skills">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic folder"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>mtd_skills</span>
             </button>
           </div>
@@ -327,7 +327,7 @@
         <section class="group" data-group data-scope="dev" data-folder="nocode_fe">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic folder"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>nocode_fe</span>
             </button>
           </div>
@@ -339,14 +339,6 @@
             <a class="task" href="#">
               <span class="task-name">添加缺失的逻辑内边距变量</span>
               <span class="task-state"><span class="task-time">3d</span></span>
-            </a>
-            <a class="task sub" href="#" data-state="await">
-              <span class="task-name">添加 font-feature-settings</span>
-              <span class="task-state"><em class="tag-await">待确认</em></span>
-            </a>
-            <a class="task sub" href="#">
-              <span class="task-name">Fix InlineChatBlock 渲染闪烁</span>
-              <span class="task-state"><span class="task-time">4d</span></span>
             </a>
             <a class="task" href="#">
               <span class="task-name">补齐字体特性在暗色模式的回退</span>
@@ -366,7 +358,7 @@
         <section class="group" data-group data-scope="dev" data-folder="infra">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic folder"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>基建与部署</span>
             </button>
           </div>
@@ -386,7 +378,7 @@
         <section class="group" data-group data-scope="design" data-folder="brand">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic folder"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>品牌视觉</span>
             </button>
           </div>
@@ -408,13 +400,13 @@
       <!-- 底部 -->
       <footer class="sidebar-foot">
         <a class="nav-item" href="#">
-          <svg viewBox="0 0 24 24" class="ic"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg viewBox="0 0 24 24" class="ic"><path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/></svg>
           <span>设置</span>
         </a>
         <!-- 手机端下载 -->
         <div class="mobile-entry" id="mobileEntry">
           <button class="icon-btn" id="mobileBtn" title="下载手机端" aria-expanded="false">
-            <svg viewBox="0 0 24 24" class="ic"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="5" y="2" width="14" height="20" rx="4"/><path d="M11 18h2"/></svg>
           </button>
 
           <div class="mobile-pop" id="mobilePop" role="dialog" aria-label="下载手机端">
@@ -438,11 +430,11 @@
 
             <div class="mobile-stores">
               <button class="store-btn">
-                <svg viewBox="0 0 24 24" class="ic"><path d="M12 6.528V3a1 1 0 0 1 1-1"/><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21"/></svg>
+                <svg viewBox="0 0 24 24" class="ic"><g fill="currentColor" stroke="none"><path d="M11.8 7.3c-1.6 0-2.3-.8-4.1-.8-3.3 0-5 2.7-5 6.3 0 3.7 2.4 7.8 4.9 8.5 1.5.4 2.7-.7 4.4-.7 1.6 0 2.7 1.1 4.2.7 1.8-.5 3.4-2.6 4.3-4.7-2.3-.5-3.3-2.2-3.3-3.8 0-1.6 1.1-3.3 3-4-1.2-1.5-3-2.3-4.7-2.3-1.8 0-2.4.8-3.7.8Z"/><path d="M12.1 5.4c.2-2.3 2-3.7 5.1-4-.1 2.2-1.7 3.7-5.1 4Z"/></g></svg>
                 <span>App Store</span>
               </button>
               <button class="store-btn">
-                <svg viewBox="0 0 24 24" class="ic"><path d="m5 3 14 9-14 9z"/></svg>
+                <svg viewBox="0 0 24 24" class="ic"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M5.6 9.2a6.4 6.4 0 0 1 12.8 0Zm4.2-2a.55.55 0 1 0-1.1 0 .55.55 0 1 0 1.1 0Zm5.5 0a.55.55 0 1 0-1.1 0 .55.55 0 1 0 1.1 0Z"/><path d="M5.6 10.3h12.8v6.2a1.3 1.3 0 0 1-1.3 1.3h-.9v2.7a1.1 1.1 0 0 1-2.2 0v-2.7h-4v2.7a1.1 1.1 0 0 1-2.2 0v-2.7h-.9a1.3 1.3 0 0 1-1.3-1.3Z"/><rect x="2.7" y="10.4" width="2.1" height="6.2" rx="1.05"/><rect x="19.2" y="10.4" width="2.1" height="6.2" rx="1.05"/></g><path d="M8.2 4.9 6.7 2.5m9.1 2.4 1.5-2.4" stroke-width="1.3"/></svg>
                 <span>Android</span>
               </button>
             </div>
@@ -458,10 +450,10 @@
     <!-- 工具面板控制始终位于窗口右上角；全屏仅在文件面板激活时出现。 -->
     <div class="wb-toggle-slot" role="group" aria-label="文件工具面板">
       <button class="icon-btn wb-expand-toggle" id="toggleWorkbenchExpand" title="全屏显示文件" aria-label="全屏显示文件" aria-pressed="false" disabled>
-        <svg viewBox="0 0 24 24" class="ic"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+        <svg viewBox="0 0 24 24" class="ic"><path d="m14 10 7-7m-7 0h7v7M10 14l-7 7m0-7v7h7"/></svg>
       </button>
       <button class="icon-btn" id="toggleWorkbench" title="工具" aria-label="工具" aria-expanded="false">
-        <svg viewBox="0 0 24 24" class="ic"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
+        <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18"/></svg>
       </button>
     </div>
 
@@ -483,7 +475,7 @@
         </div>
         <div class="topbar-actions">
           <button class="icon-btn" id="expandSidebar" title="展开侧边栏">
-            <svg viewBox="0 0 24 24" class="ic"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/></svg>
           </button>
         </div>
       </div>
@@ -493,11 +485,11 @@
       <section class="conversation-page" id="conversationPage" aria-label="任务对话" hidden>
         <header class="conversation-task-bar">
           <button class="icon-btn conversation-task-expand" id="expandSidebarFromConversation" type="button" title="展开侧边栏" aria-label="展开侧边栏" aria-expanded="true">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/></svg>
           </button>
           <span id="conversationTaskTitle">整理本周门店履约异常明细</span>
           <button class="conversation-task-more" id="conversationTaskMore" type="button" aria-label="任务操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationTaskMenu">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg>
           </button>
           <span class="conversation-task-feedback" id="conversationTaskFeedback" role="status" aria-live="polite"></span>
         </header>
@@ -521,51 +513,59 @@
           <div class="conversation-status-stack" aria-label="任务执行状态">
             <section class="conversation-status-group" data-status-group>
               <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAgentItems">
-                <svg viewBox="0 0 24 24" class="ic conversation-status-icon" aria-hidden="true"><rect x="8" y="3" width="8" height="7" rx="1.5"/><rect x="2" y="16" width="7" height="5" rx="1.5"/><rect x="15" y="16" width="7" height="5" rx="1.5"/><path d="M12 10v3M5.5 16v-3h13v3"/></svg>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-icon" aria-hidden="true"><rect x="9" y="3" width="6" height="6" rx="2"/><rect x="3.5" y="16.5" width="5" height="4.5" rx="1.8"/><rect x="15.5" y="16.5" width="5" height="4.5" rx="1.8"/><path d="M12 9v3.5M6 16.5v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg>
                 <span class="conversation-status-heading">子 Agent</span>
                 <span class="conversation-status-summary" id="conversationAgentSummary">使用了 3 个子 Agent</span>
-                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
               </button>
               <div class="conversation-status-items" id="conversationAgentItems" hidden></div>
             </section>
             <section class="conversation-status-group" data-status-group>
               <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAiTaskItems">
-                <svg viewBox="0 0 24 24" class="ic conversation-status-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 1.5 1.5L11 8M13 9h4M7 15h4M13 15h4"/></svg>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="m7 9 1.5 1.5L11 8M14 9h3M7 16h10"/></svg>
                 <span class="conversation-status-heading">AI 任务</span>
                 <span class="conversation-status-summary" id="conversationAiTaskSummary">共 3 项 · 1 项进行中</span>
-                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
               </button>
               <div class="conversation-status-items" id="conversationAiTaskItems" hidden>
                 <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">持续监测新增异常订单</span><span class="conversation-status-state is-running"><span class="spinner" aria-hidden="true"></span>进行中</span></button>
-                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">汇总本周门店履约明细</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>已完成</span></button>
-                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">生成履约异常看板</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>已完成</span></button>
+                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">汇总本周门店履约明细</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成</span></button>
+                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-status-name">生成履约异常看板</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成</span></button>
               </div>
             </section>
           </div>
           <div class="conversation-composer" id="conversationComposer">
             <textarea id="conversationPrompt" rows="1" placeholder="继续对话"></textarea>
-            <div class="conversation-composer-actions">
-              <div class="composer-add-picker">
-                <button class="round-btn composer-add-trigger" type="button" title="添加信息" aria-label="添加信息" aria-haspopup="menu" aria-expanded="false">
-                  <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <div class="conversation-composer-actions">
+          <div class="composer-add-picker">
+            <button class="round-btn composer-add-trigger" type="button" title="添加信息" aria-label="添加信息" aria-haspopup="menu" aria-expanded="false">
+              <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <span class="expert-chip">
+            <button class="chip-agent conversation-expert-trigger" type="button" title="切换专家" aria-label="切换专家，当前：数据开发" aria-haspopup="menu" aria-expanded="false">
+              <span class="avatar" aria-hidden="true"></span><span class="expert-name">数据开发</span>
+            </button>
+            <button class="expert-clear" type="button" title="取消选择专家" aria-label="取消选择专家"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>
+          </span>
+          <div class="composer-capability-group" aria-label="已添加的对话能力">
+                <div class="connector-tray" id="conversationConnectorTray" aria-label="已选择的连接器" hidden></div>
+                <button class="composer-goal-summary" type="button" title="编辑对话目标" hidden></button>
+              </div>
+              <div class="access-picker" data-access-picker>
+                <button class="foot-item" type="button" aria-label="对话访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                  <span data-access-label>完全访问</span>
+                  <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
+                <div class="access-menu" role="menu" aria-label="选择对话访问模式" hidden>
+                  <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
+                  <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
+                </div>
               </div>
               <button class="conversation-send" id="conversationSend" type="button" title="发送" aria-label="发送" disabled>
-                <svg viewBox="0 0 24 24" class="ic"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                <svg viewBox="0 0 24 24" class="ic"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>
               </button>
-            </div>
-          </div>
-          <div class="conversation-composer-foot">
-            <div class="access-picker" data-access-picker>
-              <button class="foot-item" type="button" aria-label="对话访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
-                <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                <span data-access-label>完全访问</span>
-                <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
-              </button>
-              <div class="access-menu" role="menu" aria-label="选择对话访问模式" hidden>
-                <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
-                <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
-              </div>
             </div>
           </div>
           <p class="conversation-note">CatPaw 可能会犯错，请核查重要信息。</p>
@@ -576,8 +576,7 @@
 
         <!-- 问候语随本地时间自动更新，工作引导保持固定。 -->
         <h1 class="greeting">
-          <span id="timeGreeting">下午好，</span><span>想在</span
-          ><span class="greeting-brand">CatPaw</span><span>中完成哪些工作？</span>
+          <span id="timeGreeting">下午好，</span><span>今天想完成什么？</span>
         </h1>
 
         <!-- 输入组合区 -->
@@ -588,7 +587,7 @@
             <div class="prompt-chip" id="promptChip" hidden>
               <button class="prompt-chip-clear" id="promptChipClear" type="button" aria-label="删除标签" title="删除标签">
                 <span class="prompt-chip-source-icon" id="promptChipSourceIcon" aria-hidden="true"></span>
-                <svg viewBox="0 0 24 24" class="ic prompt-chip-remove-icon" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+                <svg viewBox="0 0 24 24" class="ic prompt-chip-remove-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
               </button>
               <span id="promptChipText"></span>
             </div>
@@ -599,20 +598,27 @@
               <div class="composer-left">
                 <div class="composer-add-picker">
                   <button class="round-btn composer-add-trigger" type="button" title="添加信息" aria-label="添加信息" aria-haspopup="menu" aria-expanded="false">
-                    <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
                 </div>
 
-                <button class="chip-agent" title="切换智能体">
-                  <span class="avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4.5 20c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5"/></svg></span>
-                  <span>数据开发</span>
-                </button>
+                <span class="expert-chip">
+                  <button class="chip-agent" type="button" title="切换专家" aria-haspopup="menu" aria-expanded="false">
+                    <span class="avatar" aria-hidden="true"></span>
+                    <span class="expert-name">数据开发</span>
+                  </button>
+                  <button class="expert-clear" type="button" title="取消选择专家" aria-label="取消选择专家"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>
+                </span>
+                <div class="composer-capability-group" aria-label="已添加的对话能力">
+                  <div class="connector-tray" id="connectorTray" aria-label="已选择的连接器" hidden></div>
+                  <button class="composer-goal-summary" type="button" title="编辑对话目标" hidden></button>
+                </div>
               </div>
 
               <div class="composer-right">
                 <button class="model-btn">GLM–5.2</button>
                 <button class="send-btn" id="sendBtn" title="发送" disabled>
-                  <svg viewBox="0 0 24 24" class="ic"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                  <svg viewBox="0 0 24 24" class="ic"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>
                 </button>
               </div>
             </div>
@@ -625,7 +631,7 @@
               <!-- 归属文件夹：选项来自侧边栏的真实文件夹，随场景过滤 -->
               <div class="folder-picker" id="folderPicker">
                 <button class="foot-item" id="folderBtn" aria-expanded="false" aria-haspopup="listbox">
-                  <svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                  <svg viewBox="0 0 24 24" class="ic"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
                   <span id="folderBtnName">默认文件夹</span>
                   <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -635,7 +641,7 @@
               <!-- 分支：仅当归属文件夹关联了代码仓库时出现 -->
               <div class="branch-picker" id="branchPicker" hidden>
                 <button class="foot-item" id="branchBtn" aria-expanded="false" aria-haspopup="listbox">
-                  <svg viewBox="0 0 24 24" class="ic"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+                  <svg viewBox="0 0 24 24" class="ic"><path d="M6 3v12M18 9a9 9 0 0 1-9 9"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/></svg>
                   <span id="branchBtnName">main</span>
                   <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -646,7 +652,7 @@
             <div class="foot-group right">
               <div class="access-picker" data-access-picker>
                 <button class="foot-item" type="button" aria-label="主页访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
-                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
                   <span data-access-label>完全访问</span>
                   <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -656,9 +662,21 @@
                 </div>
               </div>
               <button class="foot-item safe-house-toggle" id="safeHouseToggle" type="button" aria-pressed="false">
-                <svg viewBox="0 0 24 24" class="ic"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                <svg viewBox="0 0 24 24" class="ic"><path d="M12 3c2.5 1.8 5.2 2.6 8 2.6V12c0 4.6-2.8 7.7-8 9-5.2-1.3-8-4.4-8-9V5.6C6.8 5.6 9.5 4.8 12 3Z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></svg>
                 <span>安全屋</span>
               </button>
+              <div class="composer-foot-more">
+                <button class="foot-item composer-foot-more-trigger" type="button" aria-label="更多设置" aria-haspopup="menu" aria-controls="composerFootMoreMenu" aria-expanded="false" title="更多设置">
+                  <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg>
+                </button>
+                <div class="composer-foot-more-menu" id="composerFootMoreMenu" role="menu" aria-label="更多设置" hidden>
+                  <div class="composer-foot-more-heading">访问模式</div>
+                  <button type="button" role="menuitemradio" data-foot-access-mode="full" aria-checked="true">完全访问</button>
+                  <button type="button" role="menuitemradio" data-foot-access-mode="confirm" aria-checked="false">按需确认</button>
+                  <div class="composer-foot-more-divider" role="separator"></div>
+                  <button type="button" role="menuitemcheckbox" data-foot-safe-house aria-checked="false">安全屋</button>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -669,21 +687,21 @@
           <div class="quick" id="primaryPrompts" aria-label="一级 Prompt 推荐">
           <!-- 图标随文案一同换掉：地球对应的是「网站」，看板的识别物是坐标轴与柱形 -->
           <button class="pill" data-prompt-category="dashboard" aria-pressed="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><g transform="translate(1 0)"><path d="M2 5v12a3 3 0 0 0 3 3h15M8 16.4v-6M12 16.4v-10M16 16.4v-8"/></g></svg>
             <span>创建数据看板</span>
           </button>
           <button class="pill" data-prompt-category="files" aria-pressed="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1"/><path d="M2 13h10"/><path d="m9 16 3-3-3-3"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="M3.5 8 6.5 4h11l3 4v11a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M3.5 8h17M9 13.5h6"/></svg>
             <span>整理文件</span>
           </button>
           <button class="pill" data-prompt-category="slides" aria-pressed="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="14" rx="4"/><path d="M12 17v4m-5 0h10M7 8h10m-10 4h6"/></svg>
             <span>制作幻灯片</span>
           </button>
           <!-- 原「更多」是个无图标的出口按钮；换成具体动作后补齐图标，
                与前三颗同形，否则它会被读成仍然是「展开更多」 -->
           <button class="pill" data-prompt-category="article" aria-pressed="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="M5 21h14M6 14l9.5-9.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/></svg>
             <span>写推文</span>
           </button>
           </div>
@@ -724,28 +742,28 @@
       <header class="wb-head">
         <div class="workspace-tabs" id="workspaceTabs" role="tablist" aria-label="工作区标签">
           <div class="workspace-tab active" role="tab" tabindex="0" data-workspace-tab="file-default" aria-selected="true" title="打开文件">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>
             <span class="workspace-tab-title">打开文件</span>
             <button class="workspace-tab-close" type="button" title="关闭" aria-label="关闭 打开文件">
-              <svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <svg viewBox="0 0 24 24" class="ic"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
             </button>
           </div>
         </div>
         <div class="workspace-create" id="workspaceCreate">
           <button class="workspace-add" id="workspaceAdd" type="button" title="新建" aria-label="新建工作区" aria-haspopup="menu" aria-expanded="false">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
           </button>
           <div class="workspace-create-menu" id="workspaceCreateMenu" role="menu" hidden>
             <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="file">
-              <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+              <svg viewBox="0 0 24 24" class="ic"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>
               <span><strong>文件</strong><small>从当前文件夹选择并预览</small></span>
             </button>
             <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="browser">
-              <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9c2.5-2.5 3.8-5.5 3.8-9S14.5 5.5 12 3Z"/></svg>
               <span><strong>浏览器</strong><small>打开网页工作区</small></span>
             </button>
             <button class="workspace-create-item" type="button" role="menuitem" data-create-workspace="terminal">
-              <svg viewBox="0 0 24 24" class="ic"><path d="M12 19h8"/><path d="m4 17 6-6-6-6"/></svg>
+              <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="4" width="18" height="16" rx="5"/><path d="m7 9 3 3-3 3m6 0h4"/></svg>
               <span><strong>终端</strong><small>启动命令行</small></span>
             </button>
           </div>
@@ -769,21 +787,21 @@
           <div class="tool-folder-picker" id="toolFolderPicker">
             <button class="tool-folder-trigger" id="toolFolderBtn" type="button"
                     aria-haspopup="listbox" aria-expanded="false">
-              <svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              <svg viewBox="0 0 24 24" class="ic"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span id="toolFolderName">默认文件夹</span>
-              <svg viewBox="0 0 24 24" class="ic tool-folder-chev"><path d="m7 10 5 5 5-5"/></svg>
+              <svg viewBox="0 0 24 24" class="ic tool-folder-chev"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div class="tool-folder-menu" id="toolFolderMenu" role="listbox" aria-label="切换任务文件夹" hidden></div>
           </div>
           <button class="icon-btn sm tool-tree-close" id="toolTreeClose" type="button" title="收起文件树" aria-label="收起文件树">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/><path d="m10 9-3 3 3 3"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-5-8-2-2 2-2"/></svg>
           </button>
         </div>
         <label class="tool-tree-search" for="toolTreeSearch">
-          <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.7"/><path d="m15.95 15.95 4.55 4.55"/></svg>
           <input id="toolTreeSearch" type="search" placeholder="搜索当前文件夹" autocomplete="off" />
           <button id="toolTreeSearchClear" type="button" title="清除搜索" aria-label="清除搜索" hidden>
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
           </button>
         </label>
         <div class="tool-tree" id="toolFileTree" role="tree" aria-label="当前任务文件夹目录"></div>
@@ -794,23 +812,23 @@
 
         <div class="wb-bar">
           <button class="icon-btn sm" title="后退">
-            <svg viewBox="0 0 24 24" class="ic"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="m11 5-7 7 7 7M4 12h16"/></svg>
           </button>
           <button class="icon-btn sm" title="前进">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="m13 5 7 7-7 7M20 12H4"/></svg>
           </button>
           <button class="icon-btn sm" title="刷新">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><g transform="translate(0 -.5)"><path d="M20.5 10a9 9 0 1 0 .5 4M20.5 5.5V10H16"/></g></svg>
           </button>
           <div class="url-bar">
-            <svg viewBox="0 0 24 24" class="ic"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><circle cx="10.5" cy="10.5" r="7.7"/><path d="m15.95 15.95 4.55 4.55"/></svg>
             <input type="text" id="urlInput" placeholder="搜索或输入网址" value="" />
           </div>
         </div>
 
         <div class="wb-body browser-body" id="browserBody">
           <div class="wb-empty">
-            <svg viewBox="0 0 24 24" class="wb-empty-ic"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <svg viewBox="0 0 24 24" class="wb-empty-ic"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9c2.5-2.5 3.8-5.5 3.8-9S14.5 5.5 12 3Z"/></svg>
             <p class="wb-empty-title">浏览器已就绪</p>
             <p class="wb-empty-desc">在上方输入网址，或让 AI 代你浏览网页</p>
             <div class="wb-shortcuts">
@@ -830,7 +848,7 @@
            左侧保持空白。产物或对话入口仍可进入不带目录树的纯预览。 -->
       <section class="wb-pane tool-file-preview" data-pane="file">
         <header class="tool-file-preview-head">
-          <svg viewBox="0 0 24 24" class="ic"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+          <svg viewBox="0 0 24 24" class="ic"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>
           <span id="toolFilePreviewTitle">选择文件</span>
           <button class="file-mode-toggle" id="toolFileModeToggle" type="button" hidden>编辑代码</button>
           <button class="file-edit-save" id="toolFileEditSave" type="button" hidden>保存</button>
@@ -840,12 +858,12 @@
               <span class="open-with-app-icon" id="openWithPrimaryIcon" aria-hidden="true"></span>
             </button>
             <button class="open-with-toggle" id="openWithToggle" type="button" title="选择打开方式" aria-label="选择打开方式" aria-haspopup="menu" aria-expanded="false">
-              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+              <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div class="open-with-menu" id="openWithMenu" role="menu" aria-label="打开方式" hidden></div>
           </div>
           <button class="tool-tree-reopen" id="toolTreeReopen" type="button" title="展开文件树" aria-label="展开文件树" aria-pressed="false" hidden>
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/><path d="m7 9 3 3-3 3"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-7-8 2-2-2-2"/></svg>
           </button>
         </header>
         <div class="tool-file-preview-body" id="toolFilePreviewBody"></div>
@@ -856,7 +874,7 @@
         <div class="wb-bar">
           <span class="term-title">zsh — catpaw-desktop-ui</span>
           <button class="icon-btn sm" title="新建终端">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>
 
@@ -878,11 +896,11 @@
     <!-- 面板全屏时浮在预览上方的快捷对话框，不占用文件内容布局。 -->
     <div class="fullscreen-chat" id="fullscreenChat" hidden>
       <button class="fullscreen-chat-attach" type="button" title="添加附件" aria-label="添加附件">
-        <svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
       </button>
       <textarea id="fullscreenChatInput" rows="1" placeholder="询问或修改当前文件"></textarea>
       <button class="fullscreen-chat-send" id="fullscreenChatSend" type="button" title="发送" aria-label="发送" disabled>
-        <svg viewBox="0 0 24 24" class="ic"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+        <svg viewBox="0 0 24 24" class="ic"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>
       </button>
     </div>
 
@@ -896,9 +914,9 @@
 <dialog class="case-dialog" id="caseDialog" aria-labelledby="caseDialogTitle">
   <div class="case-dialog-shell">
     <button class="case-dialog-close" id="caseDialogClose" type="button" title="关闭" aria-label="关闭案例详情">
-      <svg viewBox="0 0 24 24" class="ic"><path d="m6 6 12 12"/><path d="M18 6 6 18"/></svg>
+      <svg viewBox="0 0 24 24" class="ic"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
     </button>
-    <div class="case-dialog-visual" id="caseDialogVisual" aria-hidden="true"></div>
+    <div class="case-dialog-visual" id="caseDialogVisual" aria-label="案例产物预览"></div>
     <div class="case-dialog-content">
       <div class="case-dialog-copy">
         <h2 class="case-dialog-title" id="caseDialogTitle"></h2>
@@ -907,10 +925,54 @@
           <span class="case-dialog-label">Prompt</span>
           <p class="case-dialog-prompt" id="caseDialogPrompt"></p>
         </div>
+        <div class="case-dialog-skill-block">
+          <span class="case-dialog-label">使用的 Skill</span>
+          <div class="case-dialog-skill"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/></svg><span id="caseDialogSkill"></span><button class="case-dialog-skill-action" id="caseDialogSkillAction" type="button"></button></div>
+        </div>
+        <div class="case-dialog-artifact-block">
+          <span class="case-dialog-label">生成物</span>
+          <div class="case-dialog-artifact">
+            <img class="case-dialog-artifact-icon" id="caseDialogArtifactIcon" src="assets/artifact-html.svg" alt="" aria-hidden="true"><span class="case-dialog-artifact-name" id="caseDialogArtifact"></span>
+            <button class="case-dialog-download" id="caseDialogDownload" type="button" title="下载预览" aria-label="下载案例 HTML 预览"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3.5v10.8m-4.5-3.3 3.8 3.8a1 1 0 0 0 1.4 0l3.8-3.8"/><path d="M3 15.5v2.2a2.8 2.8 0 0 0 2.8 2.8h12.4a2.8 2.8 0 0 0 2.8-2.8v-2.2"/></svg></button>
+          </div>
+        </div>
+        <div class="case-dialog-related-block">
+          <span class="case-dialog-label">相似案例</span>
+          <div class="case-dialog-related" id="caseDialogRelated"></div>
+        </div>
       </div>
       <button class="case-dialog-primary" id="caseDialogPrimary" type="button">做同款</button>
     </div>
   </div>
+</dialog>
+
+<!-- 自定义模版：与成品案例独立，保存的是可反复使用的任务配置。 -->
+<dialog class="template-dialog" id="templateDialog" aria-labelledby="templateDialogTitle">
+  <div class="template-dialog-head">
+    <div><span class="template-eyebrow">MY WORKFLOWS</span><h2 id="templateDialogTitle">我的模版</h2><p>把好用的 Prompt 和能力组合保存下来，下次直接开始。</p></div>
+    <button class="template-close" type="button" id="templateClose" aria-label="关闭模版">×</button>
+  </div>
+  <div class="template-toolbar" id="templateToolbar">
+    <button class="template-create" type="button" data-template-action="new">＋ 新建模版</button>
+    <button class="template-secondary" type="button" data-template-action="import">导入分享模版</button>
+    <input id="templateImport" type="file" accept=".json,application/json" hidden>
+  </div>
+  <p class="template-status" id="templateStatus" role="status" hidden></p>
+  <div class="template-list" id="templateList"></div>
+  <form class="template-form" id="templateForm" hidden>
+    <div class="template-form-intro"><button class="template-back" type="button" data-template-action="back">← 我的模版</button><h3 id="templateFormTitle">新建模版</h3></div>
+    <label>模版名称 <input name="title" required maxlength="60" placeholder="例如：每周经营复盘"></label>
+    <label>用途说明 <input name="description" maxlength="120" placeholder="这套流程适合什么时候使用？"></label>
+    <label>Prompt <textarea name="prompt" required rows="5" placeholder="写下每次复用的核心任务指令，可在使用时继续修改"></textarea></label>
+    <div class="template-form-grid">
+      <label>Skill <input name="skills" placeholder="多个用逗号分隔，如 数据分析, 文档写作"></label>
+      <label>MCP <input name="mcps" placeholder="多个用逗号分隔，如 文件系统连接器"></label>
+      <label>专家 <select name="expert"><option value="">不指定专家</option><option>数据开发</option><option>产品顾问</option><option>数据分析师</option><option>前端工程师</option><option>设计顾问</option><option>内容策划</option><option>自动化工程师</option></select></label>
+      <label>资料引用 <input name="resources" placeholder="多个用逗号分隔，仅保存在本机"></label>
+    </div>
+    <p class="template-help">当前为交互原型：能力和资料以名称引用写入输入框，不会自动安装或绑定；专家单独记录，资料引用只在本机保存，分享时不会导出。</p>
+    <div class="template-form-actions"><button class="template-secondary" type="button" data-template-action="back">取消</button><button class="template-create" type="submit">保存模版</button></div>
+  </form>
 </dialog>
 
 <script src="./app.js"></script>

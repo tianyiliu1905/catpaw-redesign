@@ -780,7 +780,7 @@ let recentFilesExpanded = false;
         `<button class="fitem recent-file" type="button" data-file-type="${type || 'file'}" title="${esc(entry.node.name)}">` +
         `<span class="fthumb">${thumb}</span><span class="fname">${esc(entry.node.name)}</span></button>` +
         `<button class="summary-file-more" type="button" aria-label="更多操作：${esc(entry.node.name)}" aria-haspopup="menu" title="更多操作">` +
-        `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`;
+        `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
     }).join('');
     summaryExpandRecent.hidden = recentOpenedFiles.length <= RECENT_VISIBLE_COUNT;
     summaryExpandRecent.textContent = recentFilesExpanded ? '收起' : '展开更多';
@@ -820,7 +820,7 @@ let recentFilesExpanded = false;
           `<button class="fitem" type="button" data-file-type="${type}" title="${esc(f.name)}">` +
           `<span class="fthumb">${thumb}</span><span class="fname">${esc(f.name)}</span></button>` +
           `<button class="summary-file-more" type="button" aria-label="更多操作：${esc(f.name)}" aria-haspopup="menu" title="更多操作">` +
-          `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></div>`
+          `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`
         );
       })
       .join('');
@@ -1025,8 +1025,8 @@ let recentFilesExpanded = false;
     return (
       `<div class="pv-empty">` +
       `<svg viewBox="0 0 24 24" class="pv-empty-ic">` +
-      `<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>` +
-      `<path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>` +
+      `<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/>` +
+      `<path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>` +
       `<p class="pv-empty-title">${esc(node.name)}</p>` +
       `<p class="pv-empty-desc">这类文件的预览还没接上，可先在系统中打开</p>` +
       `</div>`
@@ -1060,7 +1060,12 @@ renderRecentFiles();
   // 拍平后的通用列表共享一份文件夹选择状态
   const folderByScope = { all: 'default' };
 
+  function fitUpwardMenu(menu, trigger) {
+    menu.style.maxHeight = `${Math.max(0, trigger.getBoundingClientRect().top - 16)}px`;
+  }
+
   function setFolderOpen(open) {
+    if (open) fitUpwardMenu(folderMenu, folderBtn);
     folderPicker.classList.toggle('open', open);
     folderBtn.setAttribute('aria-expanded', String(open));
   }
@@ -1098,9 +1103,9 @@ renderRecentFiles();
             `<button class="folder-opt${f.id === activeId ? ' active' : ''}"` +
             ` role="option" aria-selected="${f.id === activeId}"` +
             ` data-folder-id="${f.id}"${f.isDefault && i === 0 ? ' data-divider' : ''}>` +
-            `<svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>` +
+            `<svg viewBox="0 0 24 24" class="ic"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>` +
             `<span class="folder-opt-name">${f.name}</span>` +
-            `<svg viewBox="0 0 24 24" class="ic tick"><path d="M20 6 9 17l-5-5"/></svg>` +
+            `<svg viewBox="0 0 24 24" class="ic tick"><path d="m5 12 4.5 4.5L19 7"/></svg>` +
             `</button>`
         )
         .join('') +
@@ -1111,11 +1116,11 @@ renderRecentFiles();
          具体交互后续再补。 */
       `<div class="folder-menu-foot">` +
       `<button class="folder-act" data-folder-act="pick">` +
-      `<svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="m9 13 3 3 3-3"/></svg>` +
+      `<svg viewBox="0 0 24 24" class="ic"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>` +
       `<span>选择文件夹…</span>` +
       `</button>` +
       `<button class="folder-act" data-folder-act="create">` +
-      `<svg viewBox="0 0 24 24" class="ic"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M9 13h6"/><path d="M12 10v6"/></svg>` +
+      `<svg viewBox="0 0 24 24" class="ic"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M12 10.5v6M9 13.5h6"/></svg>` +
       `<span>新建文件夹</span>` +
       `</button>` +
       `</div>`;
@@ -1152,6 +1157,7 @@ renderRecentFiles();
   const branchByFolder = {};   // { 文件夹 id: 分支名 }
 
   function setBranchOpen(open) {
+    if (open) fitUpwardMenu(branchMenu, branchBtn);
     branchPicker.classList.toggle('open', open);
     branchBtn.setAttribute('aria-expanded', String(open));
   }
@@ -1197,10 +1203,10 @@ renderRecentFiles();
           return (
             `<button class="branch-opt${b.name === active ? ' active' : ''}"` +
             ` role="option" aria-selected="${b.name === active}" data-branch="${b.name}">` +
-            `<svg viewBox="0 0 24 24" class="ic"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>` +
+            `<svg viewBox="0 0 24 24" class="ic"><path d="M6 3v12M18 9a9 9 0 0 1-9 9"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/></svg>` +
             `<span class="branch-opt-name">${b.name}</span>` +
             meta +
-            `<svg viewBox="0 0 24 24" class="ic tick"><path d="M20 6 9 17l-5-5"/></svg>` +
+            `<svg viewBox="0 0 24 24" class="ic tick"><path d="m5 12 4.5 4.5L19 7"/></svg>` +
             `</button>`
           );
         })
@@ -1231,6 +1237,7 @@ renderRecentFiles();
   let currentScope = 'all';
   // 当前一级 Prompt 分类；切换分类时保留，让推荐案例继续围绕用户意图。
   let selectedPromptCategory = null;
+  let caseThumbResizeObserver = null;
 
   function initializeFlatSidebar() {
     tasksExpanded = false;
@@ -1392,10 +1399,9 @@ renderRecentFiles();
      任务是 <a>，HTML 不允许在链接里再嵌按钮，因此操作用
      span[role=button] 而非 <button>，避免落到非法的嵌套结构上。 */
   const DOTS_SVG =
-    '<svg viewBox="0 0 24 24" class="ic dots"><circle cx="12" cy="12" r="1.6"/>' +
-    '<circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="12" r="1.6"/></svg>';
+    '<svg viewBox="0 0 24 24" class="ic dots"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg>';
   const PLUS_SVG =
-    '<svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/><path d="M12 5v14"/></svg>';
+    '<svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>';
 
   function makeAct(action, label, svg) {
     return (
@@ -1436,9 +1442,9 @@ renderRecentFiles();
     { act: 'rename', label: '重命名',
       svg: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>' },
     { act: 'copy-directory', label: '复制工作目录', divider: true,
-      svg: '<path d="M2 7.5V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2z"/><path d="M2 10h20"/>' },
+      svg: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>' },
     { act: 'copy-id', label: '复制会话 ID',
-      svg: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
+      svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
     { act: 'delete', label: '删除', divider: true, danger: true,
       svg: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
   ];
@@ -1580,6 +1586,18 @@ renderRecentFiles();
     });
   }
 
+  function selectAccessMode(picker, option, pageName, restoreFocus = true) {
+    const trigger = picker.querySelector('.foot-item');
+    const menu = picker.querySelector('.access-menu');
+    picker.querySelector('[data-access-label]').textContent = option.textContent;
+    trigger.setAttribute('aria-label', `${pageName}访问模式：${option.textContent}`);
+    menu.querySelectorAll('[data-access-mode]').forEach((item) => {
+      item.setAttribute('aria-checked', String(item.dataset.accessMode === option.dataset.accessMode));
+    });
+    closeAccessMenus();
+    if (restoreFocus) trigger.focus();
+  }
+
   accessPickers.forEach((picker) => {
     const trigger = picker.querySelector('.foot-item');
     const menu = picker.querySelector('.access-menu');
@@ -1598,29 +1616,69 @@ renderRecentFiles();
     menu.addEventListener('click', (event) => {
       const option = event.target.closest('[data-access-mode]');
       if (!option) return;
-      const mode = option.dataset.accessMode;
-      picker.querySelector('[data-access-label]').textContent = option.textContent;
-      trigger.setAttribute('aria-label', `${pageName}访问模式：${option.textContent}`);
-      menu.querySelectorAll('[data-access-mode]').forEach((item) => {
-        item.setAttribute('aria-checked', String(item.dataset.accessMode === mode));
-      });
-      closeAccessMenus();
-      trigger.focus();
+      selectAccessMode(picker, option, pageName);
     });
   });
 
-  safeHouseToggle.addEventListener('click', () => {
+  function toggleSafeHouse() {
     const active = safeHouseToggle.getAttribute('aria-pressed') !== 'true';
     safeHouseToggle.setAttribute('aria-pressed', String(active));
     homeComposerFoot.classList.toggle('safe-house-active', active);
+    homeComposerFoot.closest('.composer').classList.toggle('safe-house-active', active);
     closeAccessMenus();
+  }
+  safeHouseToggle.addEventListener('click', toggleSafeHouse);
+
+  const footMore = homeComposerFoot.querySelector('.composer-foot-more');
+  const footMoreTrigger = footMore.querySelector('.composer-foot-more-trigger');
+  const footMoreMenu = footMore.querySelector('.composer-foot-more-menu');
+  const homeAccessPicker = homeComposerFoot.querySelector('[data-access-picker]');
+  function syncFootMore() {
+    const mode = homeAccessPicker.querySelector('[data-access-mode][aria-checked="true"]').dataset.accessMode;
+    footMoreMenu.querySelectorAll('[data-foot-access-mode]').forEach((item) => {
+      item.setAttribute('aria-checked', String(item.dataset.footAccessMode === mode));
+    });
+    footMoreMenu.querySelector('[data-foot-safe-house]').setAttribute('aria-checked', safeHouseToggle.getAttribute('aria-pressed'));
+  }
+  function closeFootMore(restoreFocus = false) {
+    if (footMoreMenu.hidden) return;
+    footMoreMenu.hidden = true;
+    footMoreTrigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus && getComputedStyle(footMore).display !== 'none') footMoreTrigger.focus();
+  }
+  footMoreTrigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!footMoreMenu.hidden) { closeFootMore(); return; }
+    closeAccessMenus();
+    setFolderOpen(false);
+    setBranchOpen(false);
+    syncFootMore();
+    footMoreMenu.hidden = false;
+    footMoreTrigger.setAttribute('aria-expanded', 'true');
+    footMoreMenu.querySelector('button').focus();
+  });
+  footMoreMenu.addEventListener('click', (event) => {
+    const mode = event.target.closest('[data-foot-access-mode]');
+    const safeHouse = event.target.closest('[data-foot-safe-house]');
+    if (!mode && !safeHouse) return;
+    event.stopPropagation();
+    if (mode) selectAccessMode(homeAccessPicker, homeAccessPicker.querySelector(`[data-access-mode="${mode.dataset.footAccessMode}"]`), '主页', false);
+    else toggleSafeHouse();
+    syncFootMore();
+    closeFootMore(true);
   });
   document.addEventListener('click', (event) => {
     if (!event.target.closest('[data-access-picker]')) closeAccessMenus();
+    if (!footMore.contains(event.target)) closeFootMore();
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeAccessMenus();
+    if (event.key !== 'Escape') return;
+    closeAccessMenus();
+    if (!footMoreMenu.hidden) { event.preventDefault(); closeFootMore(true); }
   });
+  new ResizeObserver(() => {
+    if (getComputedStyle(footMore).display === 'none') closeFootMore();
+  }).observe(homeComposerFoot.closest('.main'));
 
   /* ---------- 4. 输入框：自适应高度 + 焦点态 + 发送态 ---------- */
   const prompt = document.getElementById('prompt');
@@ -1723,17 +1781,17 @@ renderRecentFiles();
         guide: '帮我创建数据看板：',
         tag: '数据看板',
         secondary: [
-          '创建销售业绩数据看板',
-          '创建营销投放效果看板',
-          '创建项目进度与风险看板',
-          '创建用户增长分析看板',
-          '创建财务收支与预算看板',
+          '创建餐饮门店经营看板',
+          '创建物流履约时效看板',
+          '创建市场投放效果看板',
+          '创建用户复购分析看板',
+          '创建连锁餐饮成本分析看板',
         ],
         cases: [
-          { kind: 'dashboard', type: '销售看板', title: '全国销售业绩驾驶舱', prompt: '汇总全国各区域销售额、目标达成率、同比增长和重点商品表现，制作支持区域与时间筛选的销售业绩看板。' },
-          { kind: 'dashboard', type: '营销看板', title: '全渠道投放效果看板', prompt: '整合各营销渠道的曝光、点击、转化和投入产出数据，制作可对比渠道效果与趋势的营销投放看板。' },
-          { kind: 'dashboard', type: '项目看板', title: '重点项目风险监控台', prompt: '按项目展示里程碑进度、资源投入、延期风险和待解决事项，制作项目进度与风险看板。' },
-          { kind: 'dashboard', type: '增长看板', title: '用户增长分析中心', prompt: '围绕新增、活跃、留存、转化和用户分层制作增长分析看板，并突出关键变化与异常。' },
+          { kind: 'dashboard', type: '餐饮数据看板', title: '连锁餐饮门店经营看板', prompt: '汇总各区域餐饮门店的订单量、营业额、客单价和翻台率，对比目标与上期，突出经营异常门店并支持区域筛选。' },
+          { kind: 'dashboard', type: '物流数据看板', title: '同城配送履约时效看板', prompt: '按城市、时段和配送站点分析配送量、准时率、平均配送时长和超时原因，标记需要优先处理的站点。' },
+          { kind: 'dashboard', type: '市场数据看板', title: '餐饮品牌投放效果看板', prompt: '整合餐饮品牌在各渠道的曝光、到店、核销和投入产出数据，比较活动转化与预算效率。' },
+          { kind: 'dashboard', type: '用户分析看板', title: '外卖用户复购分析看板', prompt: '按新老客、城市和品类分析外卖用户首购、复购、留存及客单价，识别复购下滑的关键人群。' },
         ],
       },
       files: {
@@ -1741,32 +1799,32 @@ renderRecentFiles();
         tag: '整理文件',
         secondary: ['按项目归档工作文件', '批量规范文件命名', '整理会议材料与纪要', '清理重复和过期文件', '生成文件目录与摘要'],
         cases: [
-          { kind: 'article', type: '文件清单', title: '季度项目资料归档', prompt: '按项目、季度和文件类型整理现有资料，统一命名并输出清晰的归档目录与文件清单。' },
-          { kind: 'code', type: '整理规则', title: '批量文件命名规范', prompt: '根据文件内容与日期生成统一命名规则，识别不规范文件名并给出批量重命名方案。' },
-          { kind: 'article', type: '会议资料', title: '经营会议材料合集', prompt: '汇总本月经营会议的议程、演示稿、纪要和行动项，按会议日期整理并生成索引。' },
-          { kind: 'dashboard', type: '存储分析', title: '重复文件清理报告', prompt: '扫描重复、过期和大体积文件，按风险与可释放空间分类，生成可执行的清理建议。' },
+          { kind: 'article', type: '资料目录', title: '餐饮门店巡检资料归档', prompt: '按城市、门店和巡检日期归档餐饮门店的巡检照片、整改记录和验收材料，输出资料目录与缺失项清单。' },
+          { kind: 'code', type: '整理规则', title: '物流签收单批量命名规则', prompt: '根据运单号、站点和签收日期制定物流签收单命名规则，识别重复文件并给出批量重命名方案。' },
+          { kind: 'article', type: '会议资料', title: '餐饮区域经营会议资料', prompt: '汇总区域餐饮经营会议的指标表、汇报稿、纪要和行动项，按会议日期与议题建立索引。' },
+          { kind: 'dashboard', type: '资料分析', title: '市场调研资料清理看板', prompt: '扫描市场调研资料中的重复版本、过期报告和缺少来源的文件，生成分类统计与清理建议。' },
         ],
       },
       slides: {
         guide: '帮我制作幻灯片：',
         tag: '幻灯片',
-        secondary: ['制作季度经营复盘汇报', '制作项目方案汇报', '制作产品发布演示', '制作培训课程课件', '制作品牌提案'],
+        secondary: ['制作餐饮季度经营复盘', '制作物流提效方案汇报', '制作市场行业趋势汇报', '制作门店培训课件', '制作餐饮品牌营销提案'],
         cases: [
-          { kind: 'deck', type: '经营汇报', title: 'Q2 经营复盘演示', prompt: '制作第二季度经营复盘演示，包含目标达成、业务亮点、问题归因和下一季度行动计划。' },
-          { kind: 'deck', type: '项目提案', title: '增长项目立项方案', prompt: '制作增长项目立项汇报，说明机会判断、用户洞察、实施路径、资源需求和预期收益。' },
-          { kind: 'deck', type: '产品发布', title: '新品发布会演示稿', prompt: '制作新品发布演示稿，突出用户痛点、核心卖点、产品体验和上市节奏，整体简洁有冲击力。' },
-          { kind: 'deck', type: '培训课件', title: '新人业务培训课件', prompt: '制作新人业务培训课件，覆盖业务全景、关键流程、常用工具、典型案例和课后练习。' },
+          { kind: 'deck', type: '经营汇报', title: '连锁餐饮 Q2 经营复盘', prompt: '制作连锁餐饮第二季度经营复盘，展示营业额、门店表现、客单价变化、成本问题和下季度行动计划。' },
+          { kind: 'deck', type: '物流提案', title: '同城配送高峰期提效方案', prompt: '制作同城配送高峰期提效汇报，说明订单波峰、运力缺口、调度策略、资源投入和预期履约改善。' },
+          { kind: 'deck', type: '行业汇报', title: '现制饮品市场趋势简报', prompt: '制作现制饮品行业趋势简报，梳理消费场景、价格带、品类创新、渠道变化及市场机会。' },
+          { kind: 'deck', type: '培训课件', title: '餐饮门店高峰运营培训', prompt: '制作餐饮门店高峰期运营课件，覆盖备餐、排班、出餐协同、异常处理与课后演练。' },
         ],
       },
       article: {
         guide: '帮我写推文：',
         tag: '写推文',
-        secondary: ['撰写产品功能上新推文', '撰写活动招募推文', '撰写行业洞察长文', '撰写客户案例故事', '撰写品牌节日推文'],
+        secondary: ['撰写餐饮新品上市推文', '撰写城市美食节活动推文', '撰写餐饮行业趋势长文', '撰写物流服务客户故事', '撰写品牌节日推广稿'],
         cases: [
-          { kind: 'article', type: '产品推文', title: '智能报表功能上新', prompt: '撰写智能报表新功能推文，说明核心能力、典型使用场景和操作入口，语言清晰有吸引力。' },
-          { kind: 'article', type: '活动推文', title: '年度伙伴大会招募', prompt: '撰写年度伙伴大会招募推文，突出活动价值、嘉宾阵容、议程亮点和报名方式。' },
-          { kind: 'article', type: '行业洞察', title: '本地生活趋势观察', prompt: '围绕本地生活行业近期变化撰写洞察文章，包含趋势判断、数据依据、案例分析和行动建议。' },
-          { kind: 'article', type: '客户案例', title: '连锁品牌增长故事', prompt: '以真实叙事方式撰写连锁品牌增长案例，呈现挑战、解决过程、关键成果和可复用经验。' },
+          { kind: 'article', type: '餐饮推文', title: '秋季餐饮新品上市推文', prompt: '为连锁餐饮品牌撰写秋季新品上市推文，介绍口味亮点、适用场景和到店体验，引导读者了解活动。' },
+          { kind: 'article', type: '活动推文', title: '城市美食节招募推文', prompt: '撰写城市美食节商家招募推文，说明参与权益、报名方式、活动节奏和适合的餐饮商家类型。' },
+          { kind: 'article', type: '行业洞察', title: '餐饮消费市场趋势观察', prompt: '围绕餐饮消费市场近期变化撰写洞察文章，梳理价格带、消费场景、品类和渠道趋势，并区分事实与判断。' },
+          { kind: 'article', type: '客户案例', title: '餐饮品牌同城配送增长故事', prompt: '撰写餐饮品牌优化同城配送服务的案例故事，呈现履约挑战、协同过程、结果指标和可复用经验。' },
         ],
       },
     };
@@ -1872,7 +1930,7 @@ renderRecentFiles();
      而是侧边栏行操作、标签条等后续模块全部不再初始化。
      函数声明整体提升，因此无论放在哪一节都能被提前调用。 */
 
-  /* 缩略图沿用决策 7 的抽象层级：画「内容形态」，不截图、不绑品牌。
+  /* 旧版抽象缩略图保留作历史参考；当前案例统一使用下方有内容的示例产物。
      截图在小尺寸下会糊，且每换一个案例就得重新出图；
      这里的图形是矢量的，缩放到任何尺寸都清晰。
 
@@ -1975,27 +2033,88 @@ renderRecentFiles();
    };
   }
 
+  /* 案例预览使用有内容的示例产物，而非抽象占位图。首页缩略图与详情共用同一份结构。 */
+  function caseArtifact(item, thumbnail = false) {
+    const title = esc(item.title);
+    if (item.kind === 'dashboard') {
+      const isLogistics = /配送|履约|站点/.test(item.title);
+      const isRestaurant = !/投放|市场|用户复购|资料清理/.test(item.title) && /餐饮|门店/.test(item.title);
+      const isUser = /用户复购/.test(item.title);
+      const isArchive = /资料清理/.test(item.title);
+      const rows = isLogistics
+        ? [['北京 · 朝阳站', '248', '94.8%', '高峰运力不足', '高'], ['上海 · 静安站', '196', '96.2%', '商家出餐慢', '中'], ['广州 · 天河站', '182', '98.1%', '地址异常', '低'], ['成都 · 春熙站', '163', '95.4%', '天气影响', '高']]
+        : isRestaurant
+          ? [['北京 · 朝阳门店', '248', '104.8%', '高峰排队', '高'], ['上海 · 静安门店', '196', '96.2%', '备货延迟', '中'], ['广州 · 天河门店', '182', '108.1%', '无异常', '低'], ['成都 · 春熙门店', '163', '95.4%', '排班不足', '高']]
+          : isUser
+            ? [['北京 · 新客', '248', '28.4%', '首购流失', '高'], ['上海 · 老客', '196', '42.2%', '频次下降', '中'], ['广州 · 新客', '182', '36.1%', '无异常', '低'], ['成都 · 老客', '163', '29.4%', '券后流失', '高']]
+            : isArchive
+              ? [['餐饮调研报告', '248', '84.8%', '版本重复', '中'], ['物流时效资料', '196', '76.2%', '来源缺失', '高'], ['品类研究资料', '182', '98.1%', '无异常', '低'], ['区域市场简报', '163', '85.4%', '资料过期', '中']]
+              : [['短视频投放', '248', '8.4%', '成本偏高', '高'], ['本地搜索', '196', '12.2%', '素材疲劳', '中'], ['社群活动', '182', '16.1%', '无异常', '低'], ['达人合作', '163', '9.4%', '核销偏低', '高']];
+      const category = isLogistics ? '物流分析 / 配送履约' : isRestaurant ? '餐饮分析 / 门店经营' : isUser ? '数据分析 / 用户复购' : isArchive ? '市场研究 / 资料管理' : '市场分析 / 投放与转化';
+      const dimension = isLogistics ? '配送站点' : isRestaurant ? '门店' : isUser ? '用户分层' : isArchive ? '资料类别' : '投放渠道';
+      const volume = isLogistics ? '配送量' : isRestaurant ? '订单量' : isUser ? '用户数' : isArchive ? '文件数' : '线索量';
+      const rate = isLogistics ? '准时率' : isRestaurant ? '达成率' : isUser ? '复购率' : isArchive ? '有效率' : '转化率';
+      return `<div class="case-artifact case-artifact-sheet"><div class="artifact-sheet-body"><div class="artifact-sheet-eyebrow">${category}</div><h3>${title}</h3><p>更新于 09:30 · ${isLogistics ? '全国 4 个站点' : isRestaurant ? '全国 4 家门店' : `4 个${dimension}`}</p><div class="artifact-metrics"><div><small>${isLogistics ? '配送订单量' : isRestaurant ? '门店订单量' : isUser ? '活跃用户数' : isArchive ? '资料总数' : '活动曝光量'}</small><strong>${isLogistics ? '12,486' : isRestaurant ? '8,624' : isUser ? '24,860' : isArchive ? '789' : '186,420'}</strong><em>↑ 8.2%</em></div><div><small>${isLogistics ? '准时送达率' : isRestaurant ? '营业额达成率' : isUser ? '30 日复购率' : isArchive ? '资料有效率' : '到店转化率'}</small><strong>${isLogistics ? '96.4%' : isRestaurant ? '108.6%' : isUser ? '38.2%' : isArchive ? '86.4%' : '12.8%'}</strong><em>↑ 1.3%</em></div><div><small>待处理异常</small><strong>${isLogistics ? '126' : isRestaurant ? '24' : isUser ? '18' : isArchive ? '42' : '38'}</strong><em class="alert">需关注</em></div></div><div class="artifact-chart"><div class="artifact-chart-heading">${isLogistics ? '各站点准时率趋势' : isRestaurant ? '各门店营收趋势' : isUser ? '分层用户复购趋势' : isArchive ? '资料有效率趋势' : '各渠道转化趋势'} <span>近 7 日</span></div><div class="artifact-bars">${[56,68,61,78,70,89,82,93,75,86,95,88].map((n,i) => `<i style="height:${n}%;${i > 8 ? 'background:#38a873' : ''}"></i>`).join('')}</div><div class="artifact-chart-axis">周一 <span>周三</span><span>周五</span><span>今日</span></div></div><div class="artifact-table-wrap"><div class="artifact-table-title">${isLogistics ? '配送站点异常明细' : isRestaurant ? '门店经营明细' : isUser ? '用户分层明细' : isArchive ? '资料清理明细' : '渠道投放明细'} <span>共 ${rows.length} 条</span></div><table><thead><tr><th>${dimension}</th><th>${volume}</th><th>${rate}</th><th>异常类型</th><th>级别</th></tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell,i) => `<td${i === 4 ? ' class="artifact-level"' : ''}>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div></div>`;
+    }
+    if (item.kind === 'web') {
+      const festival = /美食节/.test(item.title);
+      return `<div class="case-artifact case-artifact-web"><div class="artifact-web-scroll" tabindex="0" aria-label="滚动查看网页预览"><div class="artifact-web-header"><strong>${festival ? '城市美食节' : '餐饮消费观察'} <span>2026</span></strong><span>首页　 ${festival ? '活动日程　 合作商家' : '行业趋势　 品类洞察'}</span></div><div class="artifact-web-layout"><aside><b>${festival ? '活动导航' : '市场洞察'}</b><span class="selected">${festival ? '本周精选' : '消费概览'}</span><span>${festival ? '主题餐厅' : '热门品类'}</span><span>${festival ? '活动日程' : '价格带'}</span><span>${festival ? '合作商家' : '区域机会'}</span><b>更多内容</b><span>数据与说明</span></aside><main><span class="artifact-web-crumb">${festival ? '城市活动 / 餐饮生活' : '市场行业 / 餐饮消费'}</span><h3>${title}</h3><p>${festival ? '发现街区好味道，逛一场属于城市的美食节。' : '从价格带、品类与消费场景出发，观察本地餐饮的新变化。'}</p><h4>${festival ? '本周活动亮点' : '品类热度观察'}</h4><div class="artifact-web-demo"><span class="primary">${festival ? '查看活动日程' : '现制饮品 ↑ 18%'}</span><span>${festival ? '街区主题餐厅' : '快餐简餐 ↑ 12%'}</span></div><h4>${festival ? '逛吃路线' : '价格带变化'}</h4><p>${festival ? '从午间简餐到夜间小食，按街区和时间发现适合自己的餐饮活动。' : '高性价比套餐与特色单品同步增长，工作日午餐和周末聚餐呈现不同选择。'}</p><div class="artifact-web-demo muted"><span>${festival ? '午市 · 主题套餐' : '20–40 元 · 日常简餐'}</span><span>${festival ? '晚市 · 街区夜食' : '60–100 元 · 聚会餐饮'}</span></div><h4>${festival ? '合作商家' : '区域机会'}</h4><table><tr><th>城市</th><th>${festival ? '特色主题' : '热门场景'}</th><th>关注度</th></tr><tr><td>北京</td><td>${festival ? '胡同小馆' : '工作日午餐'}</td><td>较高</td></tr><tr><td>上海</td><td>${festival ? '创意融合菜' : '周末聚餐'}</td><td>上升</td></tr><tr><td>广州</td><td>${festival ? '岭南风味' : '下午茶'}</td><td>稳定</td></tr></table><h4>说明</h4><p>本页为交互示例，图表和数值均为演示数据，不代表真实市场结论。</p></main></div></div></div>`;
+    }
+    if (item.kind === 'visual') {
+      const festival = /美食节/.test(item.title);
+      return `<div class="case-artifact case-artifact-visual"><div class="artifact-poster"><div class="artifact-poster-top"><span>${festival ? 'CITY FOOD FESTIVAL' : 'SEASONAL MENU'}</span><span>2026 / AUTUMN</span></div><div class="artifact-poster-orbit"><span></span></div><div class="artifact-poster-copy"><small>${festival ? '一城好味 · 限时开席' : '餐饮品牌秋季企划'}</small><h3>${festival ? '把城市，<br>吃个遍。' : '秋天的第一口<br>好味道。'}</h3><p>${festival ? '探索街区餐厅与城市限定菜单' : '当季新品 · 现在尝鲜'}</p><strong>${festival ? '查看活动 ↗' : '了解新品 ↗'}</strong></div><div class="artifact-poster-bottom">${festival ? 'TASTE THE CITY' : 'TASTE THE SEASON'} <span>01 — 04</span></div></div></div>`;
+    }
+    if (item.kind === 'deck') {
+      const isDelivery = /配送/.test(item.title);
+      const isMarket = /市场|饮品|拓展/.test(item.title);
+      const metrics = isDelivery ? [['配送订单', '+18%'], ['准时送达', '96%'], ['超时占比', '4%']]
+        : isMarket ? [['品类关注', '+18%'], ['新客占比', '34%'], ['复购意向', '42%']]
+          : [['营收达成', '108%'], ['订单增长', '+18%'], ['复购提升', '+12%']];
+      const actions = isDelivery ? ['优化高峰时段站点排班', '对异常订单做原因归类', '按城市复盘配送时效']
+        : isMarket ? ['筛选值得验证的价格带', '走访重点城市和消费场景', '小范围测试新品与渠道组合']
+          : ['优化高峰时段门店协同', '关注单店营收与成本变化', '跟踪客群反馈与复购变化'];
+      const slides = [
+        `<div class="artifact-slide-cover"><small>CATPAW / BUSINESS REVIEW</small><h3>${title}</h3><p>洞察趋势 · 识别机会 · 推动行动</p><span>2026 · 业务分析示例</span></div>`,
+        `<div class="artifact-slide-analysis"><small>01 / KEY METRICS</small><h3>${isDelivery ? '配送高峰表现' : isMarket ? '市场趋势一览' : '门店经营表现'}</h3><div>${metrics.map(([label, value]) => `<span>${label}<strong>${value}</strong></span>`).join('')}</div><p>示例数据：对比不同区域与时段，识别重点业务机会。</p></div>`,
+        `<div class="artifact-slide-plan"><small>02 / NEXT STEPS</small><h3>下一阶段行动</h3><p>${isDelivery ? '围绕物流履约持续改善' : isMarket ? '从市场观察走向小范围验证' : '围绕餐饮经营持续改善'}</p><ol>${actions.map(action => `<li>${action}</li>`).join('')}</ol></div>`,
+      ];
+      const previews = [
+        `<span class="artifact-deck-thumb-cover"><small>CATPAW / BUSINESS REVIEW</small><strong>${title}</strong></span>`,
+        `<span class="artifact-deck-thumb-analysis"><small>01 / KEY METRICS</small><strong>${isDelivery ? '配送高峰表现' : isMarket ? '市场趋势一览' : '门店经营表现'}</strong><i></i><i></i><i></i></span>`,
+        `<span class="artifact-deck-thumb-plan"><small>02 / NEXT STEPS</small><strong>下一阶段行动</strong><i></i><i></i><i></i></span>`,
+      ];
+      return `<div class="case-artifact case-artifact-deck"><div class="artifact-slide" data-slide="0">${slides[0]}</div>${thumbnail ? '' : `<div class="artifact-deck-carousel" aria-label="幻灯片轮播"><div class="artifact-deck-thumbs">${previews.map((preview, index) => `<button class="artifact-deck-thumb" type="button" data-slide-index="${index}" aria-label="查看第 ${index + 1} 页" aria-current="${index === 0 ? 'true' : 'false'}">${preview}</button>`).join('')}</div><div class="artifact-deck-controls"><button type="button" data-slide-step="-1" aria-label="上一页" disabled>‹</button><span class="artifact-slide-count">1 / ${slides.length}</span><button type="button" data-slide-step="1" aria-label="下一页">›</button></div></div><div class="artifact-slide-data" hidden>${slides.map(slide => `<template>${slide}</template>`).join('')}</div>`}</div>`;
+    }
+    if (item.kind === 'code') {
+      return `<div class="case-artifact case-artifact-code"><div class="artifact-code-body"><div class="artifact-code-tree">▾ analytics<br>　▸ orders<br>　▸ reports<br>　<span>analyze.py</span></div><pre><code><span># ${title}</span>\nfrom collections import defaultdict\n\ndef analyze(orders):\n    by_station = defaultdict(list)\n    for order in orders:\n        key = order["station_id"]\n        by_station[key].append(order)\n\n    return {station: {\n        "orders": len(items),\n        "late_rate": sum(\n            item["is_late"] for item in items\n        ) / len(items),\n    } for station, items in by_station.items()}\n\n<span># 示例结构：实际分析需校验数据口径</span></code></pre></div></div>`;
+    }
+    const isPromo = /推文|推广/.test(item.title);
+    const isLogistics = /配送|物流|签收/.test(item.title);
+    const isArchive = /资料|归档/.test(item.title);
+    return `<div class="case-artifact case-artifact-document"><div class="artifact-document-scroll" tabindex="0" aria-label="滚动查看文档预览"><article class="artifact-page"><div class="artifact-page-meta">${isPromo ? '餐饮品牌 / 推广内容' : isArchive ? '业务资料 / 归档目录' : isLogistics ? '物流服务 / 案例文档' : '市场行业 / 分析报告'}</div><h3>${title}</h3><p class="artifact-page-lead">${isPromo ? '从城市餐桌出发，发现值得尝试的好味道。' : isArchive ? '按城市、日期和业务环节归类材料，让信息更易查找。' : isLogistics ? '聚焦履约体验与站点协同，梳理可执行的改善路径。' : '从消费场景与品类变化出发，梳理市场信号与行动建议。'}</p><div class="artifact-page-rule"></div><h4>${isPromo ? '一、活动亮点' : isArchive ? '一、资料范围' : '一、背景与研究范围'}</h4><p>${isPromo ? '汇聚城市里的特色餐厅与当季菜单，在不同街区发现适合聚会、工作餐和周末休闲的餐饮选择。' : isArchive ? '汇总门店巡检、经营会议或市场调研的材料，核对版本、来源与时间，形成统一目录。' : isLogistics ? '围绕配送时效、运力供需与异常订单，按城市和时段梳理问题，明确关键指标口径。' : '围绕餐饮消费市场，观察价格带、热门品类与到店场景的变化，明确分析范围与数据口径。'}</p><h4>${isPromo ? '二、参与方式' : isArchive ? '二、归档清单' : '二、关键发现'}</h4><ol><li>${isPromo ? '选择感兴趣的街区与餐饮主题。' : isArchive ? '按城市与业务环节整理原始文件。' : '汇总可用数据与资料，校验来源和统计口径。'}</li><li>${isPromo ? '浏览参与商家、活动时段与菜单信息。' : isArchive ? '标记重复版本与缺失的附件。' : '识别高频变化、区域差异及其影响范围。'}</li><li>${isPromo ? '查看活动规则并按页面提示参与。' : isArchive ? '建立可检索目录和待补齐清单。' : '区分事实与推测，提出分阶段行动建议。'}</li></ol><div class="artifact-page-note">说明：这是页面示例，文中的趋势与数值需以实际调研数据为准。</div><h4>三、下一步建议</h4><p><strong>聚焦高价值场景</strong><br>按城市与消费时段筛选重点机会，结合真实反馈验证判断。</p><p><strong>建立复盘机制</strong><br>持续跟踪用户体验、订单变化与执行结果，定期调整策略。</p><div class="artifact-page-footer">CATPAW · 内容示例 <span>01 / 01</span></div></article></div></div>`;
+  }
+
   /* 保留原场景案例池作为内容来源；默认跨池取样，Prompt 选中后按意图展示。
      prompt 会在详情弹窗中完整展示，并可通过「做同款」直接带回输入框。 */
   function caseData() {
    return {
     office: [
-      { kind: 'dashboard', type: '数据看板', title: '门店履约异常看板', prompt: '汇总本月各门店的履约数据，按区域、异常类型和影响程度制作一份可筛选的数据看板，并突出需要优先处理的问题。' },
-      { kind: 'article', type: '推广推文', title: '医药代表备案推广稿', prompt: '面向医药代表撰写一篇备案服务推广稿，说明办理流程、所需材料和常见问题，语气专业可信，适合公众号发布。' },
-      { kind: 'deck', type: '演示文稿', title: 'Q1 经营复盘汇报', prompt: '根据第一季度经营数据制作一份管理层复盘汇报，包含目标达成、关键增长点、问题归因和下一季度行动计划。' },
-      { kind: 'article', type: '分析报告', title: '客户反馈洞察报告', prompt: '整理近期客户反馈，归纳高频问题、情绪倾向和核心诉求，并给出按优先级排序的产品改进建议。' },
+      { kind: 'dashboard', type: '物流数据看板', title: '同城配送履约异常看板', prompt: '汇总本月各配送站点的订单、准时率和超时原因，按城市、时段与异常等级制作明细看板，突出需要优先处理的站点。' },
+      { kind: 'article', type: '分析报告', title: '餐饮趋势报告', prompt: '整理近期餐饮消费市场资料，分析价格带、品类和消费场景的变化，注明数据来源并给出餐饮品牌可执行的建议。' },
+      { kind: 'deck', type: '演示文稿', title: '餐饮 Q1 经营复盘', prompt: '根据第一季度连锁餐饮经营数据制作管理层复盘，包含门店表现、营收与客单价变化、成本问题和下一季度行动计划。' },
+      { kind: 'article', type: '用户洞察报告', title: '外卖用户反馈洞察报告', prompt: '整理近期外卖用户关于配送时效、餐品品质与售后的反馈，归纳高频问题并给出按影响程度排序的改进建议。' },
     ],
     dev: [
-      { kind: 'web', type: '应用开发', title: 'NoCode 组件文档站', prompt: '为 NoCode 组件库制作一个清晰易查的文档网站，包含组件分类、交互示例、参数说明和复制代码入口。' },
-      { kind: 'code', type: '代码配置', title: '灰度发布流水线配置', prompt: '生成一份支持分批放量、自动健康检查、失败回滚和发布通知的灰度发布流水线配置。' },
-      { kind: 'dashboard', type: '监控看板', title: '服务健康度监控台', prompt: '制作服务健康度监控台，展示可用率、响应时延、错误率和告警趋势，并支持按服务与时间范围筛选。' },
-      { kind: 'code', type: '技术方案', title: '接口性能优化方案', prompt: '分析订单查询接口的性能瓶颈，给出缓存、数据库索引、并发控制和可观测性方面的优化方案与示例代码。' },
+      { kind: 'web', type: '网页', title: '餐饮趋势洞察', prompt: '制作可滚动的餐饮消费趋势网页，呈现品类热度、价格带、消费场景与区域机会，并标明示例数据口径。' },
+      { kind: 'code', type: '数据处理脚本', title: '配送异常订单归因脚本', prompt: '编写处理配送订单明细的脚本，按站点、时段与异常类型归因超时订单，输出可复核的汇总结果。' },
+      { kind: 'dashboard', type: '物流监控看板', title: '即时配送站点健康度看板', prompt: '制作即时配送站点健康度看板，展示订单量、准时率、运力缺口和异常趋势，并支持按城市及时间筛选。' },
+      { kind: 'code', type: '分析方案', title: '餐饮订单高峰预测方案', prompt: '分析餐饮订单高峰期的历史数据，给出节假日特征、需求预测、误差监测和运力调度的实现方案。' },
     ],
     design: [
-      { kind: 'visual', type: '网页设计', title: '节点运营主视觉', prompt: '设计一张节点运营活动主视觉，突出限时氛围与核心权益，构图简洁有冲击力，并适配横版活动页面。' },
-      { kind: 'deck', type: '设计提案', title: '品牌升级提案', prompt: '制作一份品牌升级提案，梳理品牌现状、设计策略、核心视觉语言和多场景应用示例。' },
-      { kind: 'web', type: '交互原型', title: '设计系统组件预览', prompt: '搭建设计系统组件预览页，覆盖基础控件、状态变化、组合示例和设计规范，整体风格简洁统一。' },
-      { kind: 'visual', type: '界面设计', title: '会员中心焕新方案', prompt: '重新设计会员中心首页，强化等级权益、成长进度和常用服务入口，输出兼顾信息效率与品牌感的界面方案。' },
+      { kind: 'visual', type: '视觉设计', title: '城市美食节主视觉', prompt: '为城市美食节设计活动主视觉，突出本地餐饮特色与限时活动信息，适配横版活动页面。' },
+      { kind: 'deck', type: '市场提案', title: '餐饮品牌市场拓展提案', prompt: '制作餐饮品牌进入新城市的市场提案，梳理目标客群、竞品格局、品牌定位和渠道策略。' },
+      { kind: 'web', type: '活动网页', title: '城市美食节活动页面', prompt: '设计可滚动的城市美食节活动网页，展示主题餐厅、活动日程、报名入口和合作商家信息。' },
+      { kind: 'visual', type: '品牌视觉', title: '餐饮品牌秋季上新视觉', prompt: '为餐饮品牌设计秋季新品推广视觉，突出产品特色、季节氛围和清晰的购买行动入口。' },
     ],
    };
   }
@@ -2004,13 +2123,12 @@ renderRecentFiles();
     const category = selectedPromptCategory && promptCategoryData()[selectedPromptCategory];
     if (category) return category.cases;
     const cases = caseData();
-    return cases[scope] || [cases.office[0], cases.dev[0], cases.design[0], cases.office[1]];
+    return cases[scope] || [cases.office[2], cases.dev[0], cases.design[0], cases.office[1]];
   }
 
   function renderCases(scope) {
     const casesEl = document.getElementById('cases');
     if (!casesEl) return;
-    const THUMBS_MAP = caseThumbs();
     const iconByKind = {
       dashboard: 'html', article: 'doc', deck: 'ppt',
       web: 'html', code: 'html', visual: 'image',
@@ -2019,13 +2137,14 @@ renderRecentFiles();
     casesEl.innerHTML =
       `<div class="cases-head">` +
       `<span class="cases-title">看看别人做出了什么</span>` +
+      `<button class="cases-template-entry" type="button" id="openTemplates" aria-haspopup="dialog"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h6"/></svg>我的模版</button>` +
       `</div>` +
       `<div class="cases-row">` +
       list.map((c, i) =>
         `<button class="case" data-case-index="${i}" aria-label="查看案例：${c.title}"` +
         // 错峰入场：与导航项的场景切换动画同一手法
         ` style="animation-delay:${i * 70}ms">` +
-        `<span class="cthumb">${(THUMBS_MAP[c.kind] || THUMBS_MAP.article)()}</span>` +
+        `<span class="cthumb">${caseArtifact(c, true)}</span>` +
         `<span class="cmeta">` +
         `<span class="ctype"><img src="assets/artifact-${iconByKind[c.kind] || 'doc'}.svg" alt="" aria-hidden="true">${c.type}</span>` +
         `<span class="ctitle">${c.title}</span>` +
@@ -2033,7 +2152,18 @@ renderRecentFiles();
         `</button>`
       ).join('') +
       `</div>`;
+    casesEl.querySelectorAll('.cthumb').forEach(frame => {
+      frame.style.setProperty('--artifact-scale', frame.clientWidth / 460);
+      caseThumbResizeObserver?.observe(frame);
+    });
   }
+
+  caseThumbResizeObserver = new ResizeObserver(entries => {
+    entries.forEach(({ target }) => {
+      target.style.setProperty('--artifact-scale', target.clientWidth / 460);
+    });
+  });
+  document.querySelectorAll('#cases .cthumb').forEach(frame => caseThumbResizeObserver.observe(frame));
 
   /* ---------- 5.5 右上角摘要浮窗与工具抽屉 ---------- */
   const content = document.getElementById('content');
@@ -2082,22 +2212,22 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   const WORKSPACE_META = {
     files: {
       title: '文件夹',
-      icon: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+      icon: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>',
     },
     file: {
       title: '打开文件',
-      icon: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+      icon: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
     },
     browser: {
       title: '新标签页',
-      icon: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+      icon: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9c2.5-2.5 3.8-5.5 3.8-9S14.5 5.5 12 3Z"/>',
     },
     terminal: {
       title: '终端',
-      icon: '<path d="M12 19h8"/><path d="m4 17 6-6-6-6"/>',
+      icon: '<rect x="3" y="4" width="18" height="16" rx="5"/><path d="m7 9 3 3-3 3m6 0h4"/>',
     },
   };
-  const WORKSPACE_CLOSE = '<svg viewBox="0 0 24 24" class="ic"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  const WORKSPACE_CLOSE = '<svg viewBox="0 0 24 24" class="ic"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>';
   let workspaceSeq = 0;
   let openWorkspaces = [{
     id: 'file-default',
@@ -2682,8 +2812,8 @@ function setSummaryOpen(open) {
   let activeFilePath = null;
   let toolTreeQuery = '';
   const TREE_ICONS = {
-    folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
-    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+    folder: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>',
+    file: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
   };
 
   function fileExtension(name) {
@@ -2750,7 +2880,7 @@ function setSummaryOpen(open) {
           ` data-tree-folder="${isFolder}" aria-expanded="${isFolder ? String(expanded) : ''}"` +
           ` class="tool-tree-row${!isFolder && `${activeToolFolder().id}:${path}` === activeFilePath ? ' selected' : ''}"` +
           ` style="--tree-depth:${depth}" title="${esc(node.name)}">` +
-          `<svg viewBox="0 0 24 24" class="tool-tree-chevron${isFolder ? '' : ' blank'}"><path d="m9 18 6-6-6-6"/></svg>` +
+          `<svg viewBox="0 0 24 24" class="tool-tree-chevron${isFolder ? '' : ' blank'}"><path d="m9 6 6 6-6 6"/></svg>` +
           `<span class="tool-tree-file-icon" data-file-kind="${icon.kind}"><svg viewBox="0 0 24 24" class="tool-tree-icon">${icon.icon}</svg><i>${esc(icon.label)}</i></span>` +
           `<span>${esc(node.name)}</span>` +
           `</button>${children}</div>`;
@@ -2787,7 +2917,7 @@ const empty = toolTreeQuery && !childrenHtml
 toolFileTree.innerHTML = `<div class="tool-tree-node tool-tree-root">` +
 `<button class="tool-tree-row" type="button" role="treeitem" data-tree-path="root"` +
 ` data-tree-folder="true" aria-expanded="${expanded}" style="--tree-depth:0" title="${esc(folder.path)}">` +
-`<svg viewBox="0 0 24 24" class="tool-tree-chevron"><path d="m9 18 6-6-6-6"/></svg>` +
+`<svg viewBox="0 0 24 24" class="tool-tree-chevron"><path d="m9 6 6 6-6 6"/></svg>` +
 `<span class="tool-tree-file-icon" data-file-kind="folder"><svg viewBox="0 0 24 24" class="tool-tree-icon">${TREE_ICONS.folder}</svg></span>` +
 `<span>${esc(folder.name)}</span>` +
 `</button>${children}${empty}</div>`;
@@ -2796,10 +2926,10 @@ renderToolFolderPicker();
 
 /* 文件树右键菜单挂到 body，避免被目录面板的 overflow 裁切。 */
 const TREE_CONTEXT_ITEMS = [
-{ act: 'chat', label: '添加到对话', svg: '<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M12 7v8M8 11h8"/>' },
-{ act: 'copy-path', label: '复制路径', divider: true, svg: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
-{ act: 'copy-relative-path', label: '复制相对路径', svg: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>' },
-{ act: 'reveal', label: '在 Finder 中显示', svg: '<path d="M2 7.5V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2z"/><path d="M2 10h20"/>' },
+{ act: 'chat', label: '添加到对话', svg: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>' },
+{ act: 'copy-path', label: '复制路径', divider: true, svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
+{ act: 'copy-relative-path', label: '复制相对路径', svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
+{ act: 'reveal', label: '在 Finder 中显示', svg: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>' },
 { act: 'rename', label: '重命名', divider: true, svg: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>' },
 { act: 'delete', label: '删除', svg: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
 ];
@@ -2882,7 +3012,7 @@ const preview = node.preview;
   }
 
   const TOOL_FILE_EMPTY = `<div class="tool-file-preview-empty" role="status">
-    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>
     <strong>尚未选择文件</strong>
     <span>从右侧文件夹中选择一个文件打开</span>
   </div>`;
@@ -3367,20 +3497,77 @@ renderToolFileWorkspace(item);
   const caseDialogType = document.getElementById('caseDialogType');
   const caseDialogTitle = document.getElementById('caseDialogTitle');
   const caseDialogPrompt = document.getElementById('caseDialogPrompt');
+  const caseDialogSkill = document.getElementById('caseDialogSkill');
+  const caseDialogSkillAction = document.getElementById('caseDialogSkillAction');
+  const caseDialogArtifact = document.getElementById('caseDialogArtifact');
+  const caseDialogArtifactIcon = document.getElementById('caseDialogArtifactIcon');
+  const caseIconByKind = { dashboard: 'excel', article: 'doc', deck: 'ppt', web: 'html', code: 'html', visual: 'image' };
+  const caseDialogDownload = document.getElementById('caseDialogDownload');
+  const caseDialogRelated = document.getElementById('caseDialogRelated');
   const caseDialogPrimary = document.getElementById('caseDialogPrimary');
+  const caseSkills = {
+    dashboard: '数据分析', article: '文档写作', deck: '幻灯片制作',
+    web: '网页制作', code: '代码开发', visual: '视觉设计',
+  };
   let activeCase = null;
   let caseReturnFocus = null;
 
+  function updateCaseSkillAction() {
+    const skill = caseDialogSkill.textContent;
+    const installed = installedAddItems.skill.includes(skill);
+    caseDialogSkillAction.textContent = installed ? '已有' : '添加';
+    caseDialogSkillAction.disabled = installed;
+    caseDialogSkillAction.setAttribute('aria-label', installed ? `${skill}已添加` : `添加${skill}`);
+  }
+
+  caseDialogSkillAction.addEventListener('click', () => {
+    const skill = caseDialogSkill.textContent;
+    if (!activeCase || installedAddItems.skill.includes(skill)) return;
+    installedAddItems.skill.push(skill);
+    updateCaseSkillAction();
+  });
+
+  function similarCases(item) {
+    const all = [...Object.values(caseData()).flat(),
+      ...Object.values(promptCategoryData()).flatMap(category => category.cases)];
+    const unique = [...new Map(all.map(candidate => [candidate.title, candidate])).values()]
+      .filter(candidate => candidate.title !== item.title);
+    return unique.sort((a, b) => Number(b.kind === item.kind) - Number(a.kind === item.kind)).slice(0, 3);
+  }
+
   function openCaseDialog(item, trigger) {
     if (!item) return;
-    const thumbs = caseThumbs();
     activeCase = item;
-    caseReturnFocus = trigger;
-    caseDialogVisual.innerHTML = (thumbs[item.kind] || thumbs.article)();
+    if (!caseDialog.open) caseReturnFocus = trigger;
+    caseDialogVisual.innerHTML = caseArtifact(item);
+    caseDialogVisual.dataset.kind = item.kind;
     caseDialogType.textContent = item.type;
     caseDialogTitle.textContent = item.title;
+    caseDialogSkill.textContent = caseSkills[item.kind] || '内容创作';
+    updateCaseSkillAction();
     caseDialogPrompt.textContent = item.prompt;
-    caseDialog.showModal();
+    caseDialogArtifact.textContent = `${item.title} · HTML 示例预览`;
+    caseDialogArtifactIcon.src = `assets/artifact-${caseIconByKind[item.kind] || 'doc'}.svg`;
+    document.querySelectorAll('.case.is-selected').forEach(card => card.classList.remove('is-selected'));
+    if (trigger?.classList.contains('case')) trigger.classList.add('is-selected');
+    caseDialogRelated.querySelectorAll('.cthumb').forEach(frame => caseThumbResizeObserver.unobserve(frame));
+    caseDialogRelated.replaceChildren(...similarCases(item).map(candidate => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'case-dialog-related-item';
+      button.setAttribute('aria-label', `查看案例：${candidate.title}`);
+      button.innerHTML = `<span class="cthumb">${caseArtifact(candidate, true)}</span><span class="case-dialog-related-title">${esc(candidate.title)}</span>`;
+      button.addEventListener('click', () => {
+        openCaseDialog(candidate);
+        caseDialogClose.focus();
+      });
+      return button;
+    }));
+    if (!caseDialog.open) caseDialog.showModal();
+    caseDialogRelated.querySelectorAll('.cthumb').forEach(frame => {
+      frame.style.setProperty('--artifact-scale', frame.clientWidth / 460);
+      caseThumbResizeObserver.observe(frame);
+    });
   }
 
   function closeCaseDialog() {
@@ -3395,11 +3582,44 @@ renderToolFileWorkspace(item);
     openCaseDialog(item, caseCard);
   });
 
+  caseDialogVisual.addEventListener('click', event => {
+    const control = event.target.closest('[data-slide-step], [data-slide-index]');
+    if (!control) return;
+    const deck = control.closest('.case-artifact-deck');
+    const stage = deck.querySelector('.artifact-slide');
+    const slides = [...deck.querySelectorAll('.artifact-slide-data template')];
+    const index = control.hasAttribute('data-slide-index') ? Number(control.dataset.slideIndex)
+      : Math.max(0, Math.min(slides.length - 1, Number(stage.dataset.slide) + Number(control.dataset.slideStep)));
+    stage.replaceChildren(slides[index].content.cloneNode(true));
+    stage.dataset.slide = index;
+    deck.querySelector('.artifact-slide-count').textContent = `${index + 1} / ${slides.length}`;
+    deck.querySelector('[data-slide-step="-1"]').disabled = index === 0;
+    deck.querySelector('[data-slide-step="1"]').disabled = index === slides.length - 1;
+    deck.querySelectorAll('[data-slide-index]').forEach(button => button.setAttribute('aria-current', String(Number(button.dataset.slideIndex) === index)));
+  });
+
+  caseDialogDownload.addEventListener('click', () => {
+    if (!activeCase) return;
+    const css = [...document.styleSheets].flatMap(sheet => {
+      try { return [...sheet.cssRules].filter(rule => rule.selectorText === ':root' || /artifact-|case-artifact/.test(rule.cssText)).map(rule => rule.cssText); }
+      catch (_) { return []; }
+    }).join('\n');
+    const markup = caseArtifact(activeCase);
+    const html = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(activeCase.title)}</title><style>${css}\nbody{margin:0;padding:32px;background:#f6f6f8;font-family:Arial,sans-serif}.case-artifact{width:min(460px,100%);height:520px;margin:auto}</style><div id="preview">${markup}</div><script>document.addEventListener('click',e=>{const b=e.target.closest('[data-slide-step],[data-slide-index]');if(!b)return;const d=b.closest('.case-artifact-deck'),s=d.querySelector('.artifact-slide'),a=[...d.querySelectorAll('template')],i=b.hasAttribute('data-slide-index')?Number(b.dataset.slideIndex):Math.max(0,Math.min(a.length-1,Number(s.dataset.slide)+Number(b.dataset.slideStep)));s.innerHTML=a[i].innerHTML;s.dataset.slide=i;d.querySelector('.artifact-slide-count').textContent=(i+1)+' / '+a.length;d.querySelector('[data-slide-step="-1"]').disabled=i===0;d.querySelector('[data-slide-step="1"]').disabled=i===a.length-1;d.querySelectorAll('[data-slide-index]').forEach(t=>t.setAttribute('aria-current',String(Number(t.dataset.slideIndex)===i)))})<\/script></html>`;
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${activeCase.title.replace(/[\\/:*?"<>|]/g, '-')}-预览.html`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
   caseDialogClose.addEventListener('click', closeCaseDialog);
   caseDialog.addEventListener('click', (e) => {
     if (e.target === caseDialog) closeCaseDialog();
   });
   caseDialog.addEventListener('close', () => {
+    document.querySelectorAll('.case.is-selected').forEach(card => card.classList.remove('is-selected'));
     if (caseReturnFocus && caseReturnFocus.isConnected) caseReturnFocus.focus();
     caseReturnFocus = null;
   });
@@ -3510,6 +3730,10 @@ renderToolFileWorkspace(item);
           prompt: '好，做成看板、异常明细表和一份分析文档，我要方便继续跟进。',
           reply: '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。看板展示整体分布，明细表列出优先级与跟进信息，分析文档汇总原因及处理建议。',
         },
+        {
+          prompt: '再看一下异常明细文件，确认哪些门店需要优先跟进。',
+          reply: '',
+        },
       ],
       files: ['门店履约异常看板.html', '门店履约异常明细.xlsx', '门店履约分析.docx'],
     }],
@@ -3539,7 +3763,7 @@ renderToolFileWorkspace(item);
   const runningAiTasks = aiTasks.filter((item) => item.querySelector('.is-running')).length;
   conversationAiTaskSummary.textContent = `共 ${aiTasks.length} 项 · ${runningAiTasks} 项进行中`;
   const statusSpinner = '<span class="spinner" aria-hidden="true"></span>';
-  const statusCheck = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+  const statusCheck = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
 
   function renderConversationAgents() {
     const agents = Array.from(activeConversationTask?.closest('[data-agent-task]')?.querySelectorAll('.subagent-task') || []);
@@ -3675,7 +3899,7 @@ renderToolFileWorkspace(item);
       return `<button class="conversation-artifact" type="button" data-artifact-index="${index}" aria-label="查看产物：${esc(name)}">` +
         `<span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span>` +
         `<span><strong>${esc(name)}</strong><small>查看产物</small></span>` +
-        `<svg viewBox="0 0 24 24" class="ic conversation-artifact-arrow" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>`;
+        `<svg viewBox="0 0 24 24" class="ic conversation-artifact-arrow" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
     }).join('');
   }
 
@@ -3757,8 +3981,9 @@ renderToolFileWorkspace(item);
         const turns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
         conversationThread.innerHTML = turns.map(({ prompt, reply }, index) =>
           `<div class="conversation-message user-message"><div class="message-bubble">${esc(prompt)}</div></div>` +
-          `<div class="conversation-message assistant-message"><div class="assistant-content"><article class="md conversation-reply">${renderMarkdown(reply)}</article>` +
-          (index === turns.length - 1 ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
+          `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
+          (index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
+          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><div class="conversation-activity-file"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span>已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></div><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="M3 7v10l9 5 9-5V7M12 12v10"/></svg><span>正在思考</span></div></div>` : '') +
           '</div></div>'
         ).join('');
       }
@@ -3777,7 +4002,7 @@ renderToolFileWorkspace(item);
       setWorkbench(false);
       renderConversationTurnNav();
       requestAnimationFrame(() => {
-        conversationScroll.scrollTop = 0;
+        conversationScroll.scrollTop = task === conversationTask ? conversationScroll.scrollHeight : 0;
         updateConversationTurnNav();
       });
     }
@@ -3819,13 +4044,52 @@ renderToolFileWorkspace(item);
     sendConversationMessage();
   });
   conversationSend.addEventListener('click', sendConversationMessage);
+  let stopArtifactScrollAnchor = null;
+  function anchorConversationToArtifact(button) {
+    stopArtifactScrollAnchor?.();
+    const top = button.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top;
+    const previousOverflowAnchor = conversationScroll.style.overflowAnchor;
+    conversationScroll.style.overflowAnchor = 'none';
+    let frame;
+    let active = true;
+    const keepPosition = () => {
+      if (!active) return;
+      if (!button.isConnected) { stop(); return; }
+      const currentTop = button.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top;
+      conversationScroll.scrollTop += currentTop - top;
+      updateConversationTurnNav();
+      frame = requestAnimationFrame(keepPosition);
+    };
+    const stop = () => {
+      active = false;
+      cancelAnimationFrame(frame);
+      clearTimeout(timeout);
+      content.removeEventListener('transitionend', onTransitionEnd);
+      conversationScroll.removeEventListener('wheel', stop);
+      conversationScroll.removeEventListener('touchstart', stop);
+      conversationScroll.style.overflowAnchor = previousOverflowAnchor;
+      if (stopArtifactScrollAnchor === stop) stopArtifactScrollAnchor = null;
+    };
+    const onTransitionEnd = (event) => {
+      if (event.target === content && event.propertyName === 'grid-template-columns') stop();
+    };
+    const timeout = setTimeout(stop, 500);
+    content.addEventListener('transitionend', onTransitionEnd);
+    conversationScroll.addEventListener('wheel', stop, { passive: true });
+    conversationScroll.addEventListener('touchstart', stop, { passive: true });
+    stopArtifactScrollAnchor = stop;
+    frame = requestAnimationFrame(keepPosition);
+  }
   conversationThread.addEventListener('click', (event) => {
     const button = event.target.closest('[data-artifact-index]');
     if (!button || !activeConversationTask) return;
     const example = conversationExamples.get(activeConversationTask);
     const folder = FOLDERS.find((entry) => entry.id === example.folderId);
     const node = folder?.files.find((file) => file.name === example.files[Number(button.dataset.artifactIndex)]);
-    if (node) openArtifactPreview(node, [folder, node]);
+    if (node) {
+      anchorConversationToArtifact(button);
+      openArtifactPreview(node, [folder, node]);
+    }
   });
 
   /* ---------- 5.6 浏览器工作区 ---------- */
@@ -3909,6 +4173,13 @@ renderToolFileWorkspace(item);
   addMenu.setAttribute('aria-label', '添加信息');
   addMenu.hidden = true;
   document.body.appendChild(addMenu);
+  const addSubmenu = document.createElement('div');
+  addSubmenu.className = 'composer-add-menu composer-add-submenu';
+  addSubmenu.id = 'composerAddSubmenu';
+  addSubmenu.setAttribute('role', 'menu');
+  addSubmenu.setAttribute('aria-label', '添加信息子菜单');
+  addSubmenu.hidden = true;
+  document.body.appendChild(addSubmenu);
   const addFileInput = document.createElement('input');
   addFileInput.type = 'file';
   addFileInput.multiple = true;
@@ -3918,23 +4189,184 @@ renderToolFileWorkspace(item);
   const addTriggers = Array.from(document.querySelectorAll('.composer-add-trigger'));
   let activeAddTrigger = null;
   let addMenuPage = 'root';
-  let pendingAddKind = '';
+  let addSubmenuTimer;
+  const addLabels = { skill: '技能', expert: '专家', mcp: 'MCP' };
+  // 原型没有实际广场接口：专家和 MCP 预置已添加示例，新增项保留在当前会话状态中。
+  const installedAddItems = { skill: [], expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'], mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'] };
+  const connectorTrays = new Map([
+    [prompt, document.getElementById('connectorTray')],
+    [conversationPrompt, document.getElementById('conversationConnectorTray')],
+  ]);
+  const selectedConnectors = new Map([...connectorTrays.keys()].map(input => [input, new Set()]));
+  function activeConnectors() {
+    return selectedConnectors.get(addTarget()) || selectedConnectors.get(prompt);
+  }
+  const galleryExamples = {
+    skill: ['文档总结', '数据分析', '网页制作'],
+    expert: ['设计顾问', '内容策划', '自动化工程师'],
+    mcp: ['知识库连接器', '项目管理连接器', '数据库连接器'],
+  };
+  // 沿用网站·NoCode 图标的耳朵与脸部轮廓，用面色和底色区分专家。
+  const expertLooks = {
+    '数据开发': 'data',
+    '产品顾问': 'product',
+    '数据分析师': 'analysis',
+    '前端工程师': 'frontend',
+    '设计顾问': 'design',
+    '内容策划': 'content',
+    '自动化工程师': 'automation',
+  };
+  const expertDescriptions = {
+    '数据开发': '搭建数据流程，处理复杂数据任务',
+    '产品顾问': '梳理用户需求，完善产品方案',
+    '数据分析师': '洞察数据变化，提炼业务结论',
+    '前端工程师': '实现页面交互，优化使用体验',
+    '设计顾问': '打磨视觉方案，统一设计语言',
+    '内容策划': '规划内容结构，写出清晰表达',
+    '自动化工程师': '串联工具流程，减少重复操作',
+  };
+  function expertOptionCopy(name) {
+    return `<span class="expert-option-copy"><strong>${esc(name)}</strong><small title="${esc(expertDescriptions[name] || '协助完成专业任务')}">${esc(expertDescriptions[name] || '协助完成专业任务')}</small></span>`;
+  }
+  function expertAvatar(name) {
+    const palette = expertLooks[name] || expertLooks['数据开发'];
+    return `<svg class="expert-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="12" fill="var(--expert-${palette}-background)"/><path d="M4.2 24V12.3c0-3.4 1-6.5 2.8-8.9l2 3.4a8.5 8.5 0 0 1 6.4-.5l1.3-2.9c2 2.8 3.3 5.6 3.3 8.9 0 3.2-1.2 5.3-3.2 6.1-.5.2-.6.5-.6 1V24Z" fill="var(--expert-${palette}-face)"/><circle cx="10.6" cy="11.7" r="1" fill="var(--expert-${palette}-accent)"/><circle cx="15.8" cy="11.4" r="1" fill="var(--expert-${palette}-accent)"/></svg>`;
+  }
+  // 连接器使用各自的服务头像，不把所有 MCP 都画成同一个通用插头。
+  const connectorLooks = {
+    '日历连接器': ['#e8f0ff', '<rect x="6" y="7" width="12" height="11" rx="2" fill="white" stroke="#4285f4" stroke-width="1.5"/><path d="M6 10h12M9 5.5v3M15 5.5v3" fill="none" stroke="#4285f4" stroke-width="1.5" stroke-linecap="round"/><path d="m10 14 1.4 1.4 2.8-3" fill="none" stroke="#34a853" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+    '文件系统连接器': ['#fff2db', '<path d="M4.5 8a2 2 0 0 1 2-2h4l1.7 1.8h5.3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2Z" fill="#f5b841"/><path d="M4.5 10.5h15v6a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2Z" fill="#f8cd70"/>'],
+    '浏览器连接器': ['#e5f3ff', '<circle cx="12" cy="12" r="7.8" fill="#278ee5"/><path d="M4.7 10.8h14.6M12 4.3c-2.5 2-3.6 4.6-3.6 7.7s1.1 5.7 3.6 7.7c2.5-2 3.6-4.6 3.6-7.7S14.5 6.3 12 4.3Z" fill="none" stroke="white" stroke-width="1.25"/><path d="M6.1 15.6h11.8" stroke="white" stroke-width="1.2"/>'],
+    '知识库连接器': ['#f0eafd', '<path d="M5 5.5c2.7-1.2 5-1 7 .4 2-1.4 4.3-1.6 7-.4v12.8c-2.7-1.2-5-1-7 .4-2-1.4-4.3-1.6-7-.4Z" fill="#9068d2"/><path d="M12 6v12.5M7 9h3M14 9h3M7 12h3M14 12h3" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round"/>'],
+    '项目管理连接器': ['#fff0e8', '<rect x="5" y="5" width="14" height="14" rx="3" fill="#f28a4c"/><path d="M9 9h6M9 12h4M9 15h6" stroke="white" stroke-width="1.6" stroke-linecap="round"/>'],
+    '数据库连接器': ['#e2f6f2', '<ellipse cx="12" cy="7" rx="6.3" ry="2.5" fill="#2fb89b"/><path d="M5.7 7v9.5c0 1.4 2.8 2.5 6.3 2.5s6.3-1.1 6.3-2.5V7" fill="#2fb89b"/><path d="M5.7 11.7c0 1.4 2.8 2.5 6.3 2.5s6.3-1.1 6.3-2.5" fill="none" stroke="white" stroke-width="1.2"/>'],
+  };
+  function connectorAvatar(name) {
+    const look = connectorLooks[name];
+    if (!look) {
+      const hue = [...name].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 360, 0);
+      return `<span class="connector-avatar connector-avatar-fallback" style="--connector-hue:${hue}" aria-hidden="true">${esc(name.replace(/连接器$/, '').slice(0, 1))}</span>`;
+    }
+    return `<svg class="connector-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="12" fill="${look[0]}"/>${look[1]}</svg>`;
+  }
+  const expertTriggers = [...document.querySelectorAll('.chip-agent')];
+  let selectedExpert = '数据开发';
+  let activeExpertTrigger = null;
+  const expertMenu = document.createElement('div');
+  expertMenu.className = 'expert-switch-menu';
+  expertMenu.id = 'expertSwitchMenu';
+  expertMenu.setAttribute('role', 'menu');
+  expertMenu.setAttribute('aria-label', '选择专家');
+  expertMenu.hidden = true;
+  document.body.appendChild(expertMenu);
+  function updateExpertTriggers() {
+    expertTriggers.forEach(trigger => {
+      const chip = trigger.closest('.expert-chip');
+      trigger.querySelector('.avatar').innerHTML = selectedExpert ? expertAvatar(selectedExpert) : '';
+      trigger.querySelector('.expert-name').textContent = selectedExpert || '选择专家';
+      trigger.setAttribute('aria-label', selectedExpert ? `切换专家，当前：${selectedExpert}` : '选择专家');
+      chip.dataset.expertSelected = String(Boolean(selectedExpert));
+      chip.querySelector('.expert-clear').disabled = !selectedExpert;
+    });
+  }
+  function selectExpert(name) {
+    selectedExpert = name;
+    updateExpertTriggers();
+  }
+  function closeExpertMenu(restoreFocus = false) {
+    expertMenu.hidden = true;
+    activeExpertTrigger?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) activeExpertTrigger?.focus();
+    activeExpertTrigger = null;
+  }
+  function placeExpertMenu() {
+    if (!activeExpertTrigger || expertMenu.hidden) return;
+    const trigger = activeExpertTrigger.getBoundingClientRect();
+    const width = expertMenu.offsetWidth;
+    const height = expertMenu.offsetHeight;
+    expertMenu.style.left = `${Math.max(8, Math.min(trigger.left, window.innerWidth - width - 8))}px`;
+    expertMenu.style.top = `${trigger.top - height - 6 >= 8 ? trigger.top - height - 6 : Math.min(trigger.bottom + 6, window.innerHeight - height - 8)}px`;
+  }
+  updateExpertTriggers();
+  document.querySelectorAll('.expert-clear').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation();
+    selectExpert(null);
+    closeExpertMenu();
+    button.closest('.expert-chip').querySelector('.chip-agent').focus();
+  }));
+  expertTriggers.forEach(trigger => {
+    trigger.setAttribute('aria-controls', expertMenu.id);
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      if (activeExpertTrigger === trigger) { closeExpertMenu(); return; }
+      closeExpertMenu();
+      activeExpertTrigger = trigger;
+      trigger.setAttribute('aria-expanded', 'true');
+      expertMenu.innerHTML = installedAddItems.expert.map((name, index) => `<button class="expert-switch-item" type="button" role="menuitemradio" aria-checked="${name === selectedExpert}" data-expert-index="${index}">${expertAvatar(name)}${expertOptionCopy(name)}${name === selectedExpert ? '<span class="expert-switch-current">✓</span>' : ''}</button>`).join('');
+      expertMenu.hidden = false;
+      placeExpertMenu();
+      (expertMenu.querySelector('[aria-checked="true"]') || expertMenu.querySelector('.expert-switch-item'))?.focus();
+    });
+  });
+  expertMenu.addEventListener('click', event => {
+    const option = event.target.closest('[data-expert-index]');
+    if (!option) return;
+    selectExpert(installedAddItems.expert[Number(option.dataset.expertIndex)]);
+    closeExpertMenu(true);
+  });
+  document.addEventListener('click', event => {
+    if (!expertMenu.hidden && !expertMenu.contains(event.target) && !event.target.closest('.chip-agent')) closeExpertMenu();
+  });
+  expertMenu.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeExpertMenu(true); }
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const options = [...expertMenu.querySelectorAll('[data-expert-index]')];
+    const index = options.indexOf(document.activeElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1
+      : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+    options[next]?.focus();
+  });
+  window.addEventListener('resize', placeExpertMenu);
+  const addDialog = document.createElement('dialog');
+  addDialog.className = 'composer-add-dialog';
+  addDialog.setAttribute('aria-label', '选择要添加的信息');
+  document.body.appendChild(addDialog);
+  let dialogPage = 'library';
+  let dialogFolder = null;
+  let dialogQuery = '';
   const addIcons = {
-    file: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7a2 2 0 0 1-2-2H4a2 2 0 0 0-2 2v14Z"/>',
+    file: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
     local: '<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>',
-    library: '<path d="M4 4h16v16H4zM8 4v16M12 8h5M12 12h5"/>',
+    library: '<path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/>',
     skill: '<path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/>',
-    expert: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
-    mcp: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/><path d="M6.5 10v3l5.5 1M17.5 10v3L12 14"/>',
-    goal: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-    back: '<path d="m15 18-6-6 6-6"/>',
-    chevron: '<path d="m9 18 6-6-6-6"/>',
+    expert: '<path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/>',
+    mcp: '<path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/>',
+    goal: '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/>',
+    back: '<path d="m11 5-7 7 7 7M4 12h16"/>',
+    chevron: '<path d="m9 6 6 6-6 6"/>',
   };
   function addIcon(kind, extraClass = '') {
     return `<svg viewBox="0 0 24 24" class="ic ${extraClass}" aria-hidden="true">${addIcons[kind]}</svg>`;
   }
+  function renderConnectorTray(input) {
+    const tray = connectorTrays.get(input);
+    const names = [...selectedConnectors.get(input)];
+    tray.hidden = names.length === 0;
+    tray.innerHTML = names.map(name => `<button class="connector-token" type="button" data-connector-name="${esc(name)}" aria-label="断开${esc(name)}" title="${esc(name)} · 已连接，点击断开">${connectorAvatar(name)}<span class="connector-status-dot" aria-hidden="true"></span></button>`).join('');
+  }
+  connectorTrays.forEach((tray, input) => tray.addEventListener('click', event => {
+    const token = event.target.closest('[data-connector-name]');
+    if (!token) return;
+    selectedConnectors.get(input).delete(token.dataset.connectorName);
+    renderConnectorTray(input);
+    if (activeAddTrigger && addTarget() === input && addMenuPage === 'mcp' && !addSubmenu.hidden) renderAddList(addSubmenu.querySelector('.composer-add-input')?.value.trim() || '');
+  }));
   function addItem(kind, label, next = false) {
-    return `<button class="composer-add-item" type="button" role="menuitem" data-add-kind="${kind}">${addIcon(kind)}<span>${esc(label)}</span>${next ? addIcon('chevron', 'composer-add-chevron') : ''}</button>`;
+    const submenuAttrs = next && kind !== 'library' ? ` aria-haspopup="menu" aria-controls="${addSubmenu.id}" aria-expanded="${addMenuPage === kind}"` : '';
+    return `<button class="composer-add-item" type="button" role="menuitem" data-add-kind="${kind}"${submenuAttrs}>${addIcon(kind)}<span>${esc(label)}</span>${next ? addIcon('chevron', 'composer-add-chevron') : ''}</button>`;
   }
   function addTarget() {
     return activeAddTrigger?.closest('.conversation-page') ? conversationPrompt : prompt;
@@ -3948,28 +4380,144 @@ renderToolFileWorkspace(item);
     input.focus();
   }
   function closeAddMenu(restoreFocus = false) {
+    clearTimeout(addSubmenuTimer);
     addMenu.hidden = true;
+    addSubmenu.hidden = true;
     if (activeAddTrigger) activeAddTrigger.setAttribute('aria-expanded', 'false');
     if (restoreFocus) activeAddTrigger?.focus();
     activeAddTrigger = null;
     addMenuPage = 'root';
   }
+  function renderAddList(query = '') {
+    const kind = addMenuPage;
+    const list = addSubmenu.querySelector('.composer-add-list');
+    if (!list || !addLabels[kind]) return;
+    const items = installedAddItems[kind].filter(name => name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    list.innerHTML = items.length
+      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' || kind === 'expert' ? ` aria-pressed="${kind === 'expert' ? name === selectedExpert : activeConnectors().has(name)}"` : ''}>${kind === 'expert' ? expertAvatar(name) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<small class="composer-add-selected">已选</small>' : ''}${kind === 'mcp' ? `<span class="composer-add-check" aria-hidden="true">${activeConnectors().has(name) ? '✓' : ''}</span>` : ''}</button>`).join('')
+      : `<p class="composer-add-empty">${query ? '没有匹配的' + addLabels[kind] : '还没有添加' + addLabels[kind]}</p>`;
+    addSubmenu._visibleInstalled = items;
+    placeAddSubmenu();
+  }
   function renderAddMenu() {
+    addMenu.innerHTML = addItem('file', '添加文件', true) + addItem('skill', '技能', true)
+      + `<button class="composer-add-item composer-add-goal" type="button" role="menuitem" data-add-kind="goal">${addIcon('goal')}<span>目标</span><small>对话任务持续实现的目标</small></button>`
+      + '<div class="composer-add-divider" role="separator" aria-label="分组"></div>'
+      + addItem('expert', '专家', true) + addItem('mcp', 'MCP', true);
+  }
+  function renderAddSubmenu() {
+    if (addMenuPage === 'root') { addSubmenu.hidden = true; return; }
     const back = addItem('back', '返回');
-    if (addMenuPage === 'root') {
-      addMenu.innerHTML = addItem('file', '添加文件', true) + addItem('skill', '技能', true) + addItem('expert', '专家', true) + addItem('mcp', 'MCP', true) + addItem('goal', '目标', true);
-    } else if (addMenuPage === 'file') {
-      addMenu.innerHTML = back + addItem('local', '本地文件') + addItem('library', '从知识库添加', true);
+    if (addMenuPage === 'file') {
+      addSubmenu.innerHTML = addItem('local', '上传本地文件') + addItem('library', '从资料库添加', true);
     } else if (addMenuPage === 'library') {
-      const entries = FOLDERS.flatMap(folder => (folder.files || []).filter(file => file.type !== 'folder').map(file => ({ name: file.name, folder: folder.name })));
-      addMenu.innerHTML = back + entries.map((entry, index) => `<button class="composer-add-item" type="button" role="menuitem" data-add-library="${index}">${addIcon('file')}<span>${esc(entry.name)}</span></button>`).join('');
-      addMenu._libraryEntries = entries;
+      const entries = recentOpenedFiles.slice(0, 5);
+      addSubmenu._libraryEntries = entries;
+      addSubmenu.innerHTML = back + '<div class="composer-add-section">最近打开</div>'
+        + (entries.length ? entries.map((entry, index) => `<button class="composer-add-item composer-add-file" type="button" data-add-library="${index}">${addIcon('file')}<span title="${esc(entry.node.name)}">${esc(entry.node.name)}</span><small>${esc(entry.chain.slice(0, -1).map(node => node.name).join(' / '))}</small></button>`).join('') : '<p class="composer-add-empty">还没有最近打开的文件</p>')
+        + `<div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="library">${addIcon('library')}<span>浏览全部资料库文件</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+    } else if (addLabels[addMenuPage]) {
+      const kind = addMenuPage;
+      addSubmenu.innerHTML = `<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="搜索已添加的${addLabels[kind]}" placeholder="搜索已添加的${addLabels[kind]}" autocomplete="off"><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>去广场添加更多${addLabels[kind]}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      renderAddList();
+    }
+    addSubmenu.hidden = false;
+    addMenu.querySelectorAll('[aria-haspopup="menu"]').forEach(item => {
+      item.setAttribute('aria-expanded', String(item.dataset.addKind === (addMenuPage === 'library' ? 'file' : addMenuPage)));
+    });
+    placeAddSubmenu();
+  }
+  function showAddSubmenu(kind, focus = false) {
+    clearTimeout(addSubmenuTimer);
+    if (addMenuPage !== kind || addSubmenu.hidden) {
+      addMenuPage = kind;
+      renderAddSubmenu();
+    }
+    if (focus) addSubmenu.querySelector(addLabels[kind] ? '.composer-add-input' : 'button')?.focus();
+  }
+  function hideAddSubmenu() {
+    clearTimeout(addSubmenuTimer);
+    addMenuPage = 'root';
+    addSubmenu.hidden = true;
+    addMenu.querySelectorAll('[aria-haspopup="menu"]').forEach(item => item.setAttribute('aria-expanded', 'false'));
+  }
+  function libraryEntries() {
+    const entries = [];
+    const visit = (nodes, chain) => (nodes || []).forEach(node => {
+      const path = chain.concat(node);
+      if (node.type === 'folder') visit(node.files, path);
+      else entries.push({ node, chain: path });
+    });
+    FOLDERS.forEach(folder => visit(folder.files, [folder]));
+    return entries;
+  }
+  function renderAddDialog() {
+    const isLibrary = dialogPage === 'library';
+    const title = isLibrary ? '从资料库添加' : `添加${addLabels[dialogPage]}`;
+    addDialog.innerHTML = `<div class="composer-dialog-head"><div><h2>${title}</h2><p>${isLibrary ? '选择文件，添加到当前对话' : '广场示例 · 添加后可在加号菜单中使用'}</p></div><button type="button" class="composer-dialog-close" data-dialog-close aria-label="关闭">×</button></div>`
+      + `<input class="composer-add-input composer-dialog-search" type="search" aria-label="搜索${isLibrary ? '资料库文件' : title}" placeholder="搜索${isLibrary ? '全部文件' : '广场' + addLabels[dialogPage]}" value="${esc(dialogQuery)}" autocomplete="off">`
+      + '<div class="composer-dialog-results"></div>';
+    renderAddDialogResults();
+  }
+  function renderAddDialogResults() {
+    const container = addDialog.querySelector('.composer-dialog-results');
+    if (!container) return;
+    if (dialogPage === 'library') {
+      const all = libraryEntries();
+      const nodes = dialogQuery ? all.filter(entry => entry.node.name.toLocaleLowerCase().includes(dialogQuery.toLocaleLowerCase()))
+        : dialogFolder ? all.filter(entry => entry.chain[0] === dialogFolder) : all;
+      const folders = !dialogQuery && !dialogFolder ? `<div class="composer-add-section">文件夹</div>${FOLDERS.map((folder, index) => `<button type="button" class="composer-dialog-row" data-dialog-folder="${index}">${addIcon('file')}<span>${esc(folder.name)}</span>${addIcon('chevron')}</button>`).join('')}` : '';
+      container.innerHTML = (dialogFolder && !dialogQuery ? `<button type="button" class="composer-dialog-back" data-dialog-back>${addIcon('back')} 全部文件夹</button>` : '')
+        + folders + `<div class="composer-add-section">${dialogQuery ? '搜索结果' : dialogFolder ? esc(dialogFolder.name) : '全部文件'}</div>`
+        + (nodes.length ? nodes.map(entry => `<button type="button" class="composer-dialog-row" data-dialog-file="${all.indexOf(entry)}">${addIcon('file')}<span>${esc(entry.node.name)}<small>${esc(entry.chain.slice(0, -1).map(node => node.name).join(' / '))}</small></span>${addIcon('chevron')}</button>`).join('') : '<p class="composer-add-empty">没有找到文件</p>');
+      addDialog._libraryEntries = all;
     } else {
-      const labels = { skill: '技能', expert: '专家', mcp: 'MCP', goal: '目标' };
-      addMenu.innerHTML = back + `<label for="composerAddName">${labels[pendingAddKind]}名称</label><input class="composer-add-input" id="composerAddName" type="text" placeholder="输入${labels[pendingAddKind]}名称" autocomplete="off"><button class="composer-add-item composer-add-submit" type="button" role="menuitem" data-add-submit>添加${labels[pendingAddKind]}</button>`;
-      addMenu.querySelector('input').focus();
+      const examples = galleryExamples[dialogPage].filter(name => name.toLocaleLowerCase().includes(dialogQuery.toLocaleLowerCase()));
+      container.innerHTML = examples.length ? examples.map(name => `<div class="composer-dialog-row">${dialogPage === 'expert' ? expertAvatar(name) : dialogPage === 'mcp' ? connectorAvatar(name) : addIcon(dialogPage)}${dialogPage === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}<button type="button" class="composer-dialog-install" data-dialog-install="${esc(name)}" ${installedAddItems[dialogPage].includes(name) ? 'disabled' : ''}>${installedAddItems[dialogPage].includes(name) ? '已添加' : '添加'}</button></div>`).join('') : '<p class="composer-add-empty">没有匹配的结果</p>';
     }
   }
+  function openAddDialog(page) {
+    dialogPage = page;
+    dialogFolder = null;
+    dialogQuery = '';
+    addMenu.hidden = true;
+    addSubmenu.hidden = true;
+    renderAddDialog();
+    addDialog.showModal();
+    addDialog.querySelector('.composer-dialog-search')?.focus();
+  }
+  function returnFromAddDialog() {
+    if (!activeAddTrigger) return;
+    addMenu.hidden = false;
+    renderAddMenu();
+    placeAddMenu();
+    renderAddSubmenu();
+    (addSubmenu.hidden ? addMenu : addSubmenu).querySelector('.composer-add-input, button')?.focus();
+  }
+  addDialog.addEventListener('close', returnFromAddDialog);
+  addDialog.addEventListener('input', event => {
+    if (!event.target.matches('.composer-dialog-search')) return;
+    dialogQuery = event.target.value.trim();
+    renderAddDialogResults();
+  });
+  addDialog.addEventListener('click', event => {
+    if (event.target === addDialog || event.target.closest('[data-dialog-close]')) { addDialog.close(); return; }
+    const folder = event.target.closest('[data-dialog-folder]');
+    if (folder) { dialogFolder = FOLDERS[Number(folder.dataset.dialogFolder)]; renderAddDialogResults(); return; }
+    if (event.target.closest('[data-dialog-back]')) { dialogFolder = null; renderAddDialogResults(); return; }
+    const file = event.target.closest('[data-dialog-file]');
+    if (file) {
+      const entry = addDialog._libraryEntries[Number(file.dataset.dialogFile)];
+      addDialog.close();
+      if (entry) appendAddReference(entry.node.name);
+      return;
+    }
+    const install = event.target.closest('[data-dialog-install]');
+    if (install && !install.disabled) {
+      installedAddItems[dialogPage].push(install.dataset.dialogInstall);
+      renderAddDialogResults();
+    }
+  });
   function placeAddMenu() {
     if (!activeAddTrigger || addMenu.hidden) return;
     const trigger = activeAddTrigger.getBoundingClientRect();
@@ -3978,6 +4526,17 @@ renderToolFileWorkspace(item);
     const height = addMenu.getBoundingClientRect().height;
     addMenu.style.left = `${Math.max(bounds.left + 8, Math.min(trigger.left, bounds.right - width - 8))}px`;
     addMenu.style.top = `${trigger.top - height - 6 >= bounds.top + 8 ? trigger.top - height - 6 : Math.min(trigger.bottom + 6, bounds.bottom - height - 8)}px`;
+    placeAddSubmenu();
+  }
+  function placeAddSubmenu() {
+    if (!activeAddTrigger || addMenu.hidden || addSubmenu.hidden) return;
+    const bounds = win.getBoundingClientRect();
+    const parent = addMenu.getBoundingClientRect();
+    const width = addSubmenu.getBoundingClientRect().width;
+    const height = addSubmenu.getBoundingClientRect().height;
+    const right = parent.right + 6;
+    addSubmenu.style.left = `${right + width <= bounds.right - 8 ? right : Math.max(bounds.left + 8, parent.left - width - 6)}px`;
+    addSubmenu.style.top = `${Math.max(bounds.top + 8, Math.min(parent.top, bounds.bottom - height - 8))}px`;
   }
   addTriggers.forEach(trigger => {
     trigger.setAttribute('aria-controls', addMenu.id);
@@ -3991,31 +4550,64 @@ renderToolFileWorkspace(item);
       addMenu.hidden = false;
       renderAddMenu();
       placeAddMenu();
-      addMenu.querySelector('button')?.focus();
+      addMenu.querySelector('.composer-add-input, button')?.focus();
     });
   });
+  addMenu.addEventListener('pointerover', event => {
+    if (event.pointerType === 'touch') return;
+    const item = event.target.closest('[data-add-kind]');
+    if (!item || !addMenu.contains(item) || item.contains(event.relatedTarget)) return;
+    const kind = item.dataset.addKind;
+    if (['file', 'skill', 'expert', 'mcp'].includes(kind)) showAddSubmenu(kind);
+    else hideAddSubmenu();
+  });
+  addMenu.addEventListener('pointerleave', event => {
+    if (addSubmenu.contains(event.relatedTarget)) return;
+    clearTimeout(addSubmenuTimer);
+    addSubmenuTimer = setTimeout(() => {
+      if (!addSubmenu.contains(document.activeElement)) hideAddSubmenu();
+    }, 180);
+  });
+  addSubmenu.addEventListener('pointerenter', () => clearTimeout(addSubmenuTimer));
+  addSubmenu.addEventListener('pointerleave', event => {
+    if (addMenu.contains(event.relatedTarget)) return;
+    clearTimeout(addSubmenuTimer);
+    addSubmenuTimer = setTimeout(() => {
+      if (!addSubmenu.contains(document.activeElement)) hideAddSubmenu();
+    }, 180);
+  });
   addMenu.addEventListener('click', event => {
+    event.stopPropagation();
+    const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
+    if (kind === 'goal') openGoalDialog(activeAddTrigger);
+    else if (['file', 'skill', 'expert', 'mcp'].includes(kind)) showAddSubmenu(kind, true);
+  });
+  addSubmenu.addEventListener('click', event => {
+    event.stopPropagation();
     const libraryButton = event.target.closest('[data-add-library]');
     if (libraryButton) {
-      const entry = addMenu._libraryEntries[Number(libraryButton.dataset.addLibrary)];
-      if (entry) appendAddReference(entry.name);
+      const entry = addSubmenu._libraryEntries[Number(libraryButton.dataset.addLibrary)];
+      if (entry) appendAddReference(entry.node.name);
       return;
     }
-    if (event.target.closest('[data-add-submit]')) {
-      const name = addMenu.querySelector('input')?.value.trim();
-      if (name) appendAddReference(`${{ skill: '技能', expert: '专家', mcp: 'MCP', goal: '目标' }[pendingAddKind]}:${name}`);
-      else addMenu.querySelector('input')?.focus();
+    const installedButton = event.target.closest('[data-add-installed]');
+    if (installedButton) {
+      const name = addSubmenu._visibleInstalled[Number(installedButton.dataset.addInstalled)];
+      if (name && addMenuPage === 'mcp') toggleConnector(installedButton, addSubmenu);
+      else if (name && addMenuPage === 'expert') {
+        selectExpert(name);
+        closeAddMenu();
+      } else if (name) appendAddReference(`${addLabels[addMenuPage]}:${name}`);
       return;
     }
+    const dialogButton = event.target.closest('[data-add-open-dialog]');
+    if (dialogButton) { openAddDialog(dialogButton.dataset.addOpenDialog); return; }
     const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
-    if (!kind) return;
-    if (kind === 'back') addMenuPage = addMenuPage === 'library' ? 'file' : 'root';
-    else if (kind === 'local') { addFileInput.click(); return; }
-    else if (kind === 'file' || kind === 'library') addMenuPage = kind;
-    else { pendingAddKind = kind; addMenuPage = 'name'; }
-    renderAddMenu();
-    placeAddMenu();
-    (addMenuPage === 'name' ? addMenu.querySelector('input') : addMenu.querySelector('button'))?.focus();
+    if (kind === 'back') {
+      if (addMenuPage === 'library') showAddSubmenu('file', true);
+      else hideAddSubmenu();
+    } else if (kind === 'local') addFileInput.click();
+    else if (kind === 'library') showAddSubmenu('library', true);
   });
   addFileInput.addEventListener('change', () => {
     const files = Array.from(addFileInput.files || []);
@@ -4031,20 +4623,251 @@ renderToolFileWorkspace(item);
     }
     addFileInput.value = '';
   });
-  addMenu.addEventListener('keydown', event => {
-    if (event.key === 'Enter' && event.target.matches('.composer-add-input')) {
-      event.preventDefault();
-      addMenu.querySelector('[data-add-submit]').click();
-    }
-    if (event.key === 'Escape') { event.stopPropagation(); closeAddMenu(true); }
+  function toggleConnector(button, menu) {
+    const name = menu._visibleInstalled[Number(button.dataset.addInstalled)];
+    if (!name) return;
+    const connectors = activeConnectors();
+    if (connectors.has(name)) connectors.delete(name);
+    else connectors.add(name);
+    renderConnectorTray(addTarget());
+    renderAddList(menu.querySelector('.composer-add-input')?.value.trim() || '');
+    menu.querySelectorAll('[data-add-installed]')[Number(button.dataset.addInstalled)]?.focus();
+  }
+  addSubmenu.addEventListener('input', event => {
+    if (event.target.matches('#composerAddSearch')) renderAddList(event.target.value.trim());
   });
+  [addMenu, addSubmenu].forEach(menu => menu.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      if (menu === addSubmenu && addMenuPage !== 'root') {
+        const kind = addMenuPage === 'library' ? 'file' : addMenuPage;
+        hideAddSubmenu();
+        addMenu.querySelector(`[data-add-kind="${kind}"]`)?.focus();
+      } else closeAddMenu(true);
+    } else if (menu === addMenu && event.key === 'ArrowRight') {
+      const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
+      if (['file', 'skill', 'expert', 'mcp'].includes(kind)) { event.preventDefault(); showAddSubmenu(kind, true); }
+    } else if (menu === addSubmenu && event.key === 'ArrowLeft') {
+      event.preventDefault();
+      const kind = addMenuPage === 'library' ? 'file' : addMenuPage;
+      hideAddSubmenu();
+      addMenu.querySelector(`[data-add-kind="${kind}"]`)?.focus();
+    }
+  }));
   document.addEventListener('click', event => {
-    if (!addMenu.hidden && !addMenu.contains(event.target) && !event.target.closest('.composer-add-trigger')) closeAddMenu();
+    if (!addMenu.hidden && !addMenu.contains(event.target) && !addSubmenu.contains(event.target) && !event.target.closest('.composer-add-trigger')) closeAddMenu();
   });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !addMenu.hidden) closeAddMenu(true);
   });
   window.addEventListener('resize', placeAddMenu);
+
+  // 目标属于对话能力配置，不作为 @信息 插入消息正文。
+  const goalDialog = document.createElement('dialog');
+  goalDialog.className = 'composer-goal-dialog';
+  goalDialog.setAttribute('aria-label', '设置对话目标');
+  document.body.appendChild(goalDialog);
+  const conversationGoals = new Map();
+  let goalTrigger = null;
+  function openGoalDialog(trigger) {
+    if (!trigger) return;
+    const input = trigger.closest('.conversation-page') ? conversationPrompt : prompt;
+    closeAddMenu();
+    goalTrigger = trigger;
+    goalDialog.innerHTML = `<form method="dialog" class="composer-goal-form"><div class="composer-dialog-head"><div><h2>对话目标</h2><p>让 CatPaw 在后续对话中持续关注这个目标</p></div><button type="button" class="composer-dialog-close" data-goal-close aria-label="关闭">×</button></div><label for="composerGoalText">目标内容</label><textarea id="composerGoalText" rows="4" placeholder="例如：持续追踪门店履约异常，给出可执行的改进建议"></textarea><div class="composer-goal-actions"><button type="button" class="composer-goal-clear" data-goal-clear>移除目标</button><button type="submit" class="composer-goal-save">保存目标</button></div></form>`;
+    goalDialog.querySelector('textarea').value = conversationGoals.get(input) || '';
+    goalDialog.querySelector('[data-goal-clear]').disabled = !conversationGoals.has(input);
+    goalDialog.showModal();
+    goalDialog.querySelector('textarea').focus();
+  }
+  document.querySelectorAll('.composer-goal-summary').forEach(trigger => trigger.addEventListener('click', () => openGoalDialog(trigger)));
+  function updateGoal(input, value) {
+    if (value) conversationGoals.set(input, value);
+    else conversationGoals.delete(input);
+    const summary = input === conversationPrompt
+      ? document.querySelector('.conversation-composer-actions .composer-goal-summary')
+      : document.querySelector('.composer-row .composer-goal-summary');
+    summary.textContent = `目标 · ${value}`;
+    summary.title = `编辑对话目标：${value}`;
+    summary.setAttribute('aria-label', `编辑对话目标：${value}`);
+    summary.hidden = !value;
+  }
+  goalDialog.addEventListener('submit', event => {
+    event.preventDefault();
+    const input = goalTrigger.closest('.conversation-page') ? conversationPrompt : prompt;
+    updateGoal(input, goalDialog.querySelector('textarea').value.trim());
+    goalDialog.close();
+  });
+  goalDialog.addEventListener('click', event => {
+    if (event.target === goalDialog || event.target.closest('[data-goal-close]')) goalDialog.close();
+    if (event.target.closest('[data-goal-clear]')) {
+      updateGoal(goalTrigger.closest('.conversation-page') ? conversationPrompt : prompt, '');
+      goalDialog.close();
+    }
+  });
+  goalDialog.addEventListener('close', () => {
+    if (goalTrigger?.isConnected) goalTrigger.focus();
+    goalTrigger = null;
+  });
+
+  /* ---------- 5.8 自定义模版：本机配置与可移植分享 ---------- */
+  const templateDialog = document.getElementById('templateDialog');
+  const templateList = document.getElementById('templateList');
+  const templateForm = document.getElementById('templateForm');
+  const templateToolbar = document.getElementById('templateToolbar');
+  const templateImport = document.getElementById('templateImport');
+  const templateStatus = document.getElementById('templateStatus');
+  const templateStorageKey = 'catpaw-custom-templates-v1';
+  let templates = [];
+  let editingTemplateId = null;
+  let templateReturnFocus = null;
+
+  function normalizeTemplate(value) {
+    if (!value || typeof value !== 'object' || typeof value.title !== 'string' || typeof value.prompt !== 'string'
+      || !value.title.trim() || !value.prompt.trim()) return null;
+    const list = items => Array.isArray(items) ? items.filter(item => typeof item === 'string').map(item => item.trim()).filter(Boolean).slice(0, 20) : [];
+    return {
+      id: crypto.randomUUID(), title: value.title.trim().slice(0, 60),
+      description: typeof value.description === 'string' ? value.description.trim().slice(0, 120) : '',
+      prompt: value.prompt.trim().slice(0, 10000), skills: list(value.skills), mcps: list(value.mcps),
+      expert: typeof value.expert === 'string' ? value.expert.trim().slice(0, 60) : '',
+      resources: list(value.resources),
+    };
+  }
+  const exampleTemplates = [
+    { title: '每周经营复盘', description: '汇总指标变化，形成可执行的周度复盘', prompt: '汇总本周经营指标，对比上周和目标，找出关键变化与异常，分析可能原因，并按优先级列出下周行动。', skills: ['数据分析', '文档写作'], mcps: [], expert: '数据分析师', resources: [], example: true },
+    { title: '项目资料整理', description: '把零散材料整理成目录和摘要', prompt: '按照项目、日期和文件类型整理资料，识别重复及缺失项，输出清晰的目录与重点内容摘要。', skills: ['文档总结'], mcps: ['文件系统连接器'], expert: '', resources: [], example: true },
+    { title: '产品方案评审', description: '用固定检查项快速审阅新方案', prompt: '审阅产品方案，梳理用户场景、关键流程、异常分支、依赖与风险，并列出待确认问题和改进建议。', skills: ['产品分析'], mcps: [], expert: '产品顾问', resources: [], example: true },
+  ];
+  try {
+    const saved = localStorage.getItem(templateStorageKey);
+    const stored = saved === null ? exampleTemplates : JSON.parse(saved);
+    if (Array.isArray(stored)) templates = stored.map(value => {
+      const item = normalizeTemplate(value);
+      return item && { ...item, id: typeof value.id === 'string' ? value.id : item.id, example: value.example === true };
+    }).filter(Boolean);
+    if (saved === null) localStorage.setItem(templateStorageKey, JSON.stringify(templates));
+  } catch (_) { /* 存储不可用时仍可在本次会话使用。 */ }
+
+  function templateMessage(text) {
+    templateStatus.textContent = text;
+    templateStatus.hidden = !text;
+  }
+  function saveTemplates() {
+    try { localStorage.setItem(templateStorageKey, JSON.stringify(templates)); return true; }
+    catch (_) { templateMessage('当前环境无法持久保存，模版仅在本次页面会话中可用。'); return false; }
+  }
+  function renderTemplates() {
+    templateList.innerHTML = templates.length ? templates.map(item => {
+      const tags = [...item.skills.map(name => `Skill · ${name}`), ...item.mcps.map(name => `MCP · ${name}`),
+        ...(item.expert ? [`专家 · ${item.expert}`] : []), ...(item.resources.length ? [`资料 · ${item.resources.length} 项（仅本机）`] : [])];
+      return `<article class="template-item" data-template-id="${esc(item.id)}"><div class="template-item-main"><span class="template-item-mark" aria-hidden="true">✳</span><div><h3>${esc(item.title)}${item.example ? '<span class="template-example-tag">示例</span>' : ''}</h3><p>${esc(item.description || item.prompt)}</p><div class="template-tags">${tags.map(tag => `<span>${esc(tag)}</span>`).join('')}</div></div></div><div class="template-item-actions"><button type="button" data-template-action="use">使用</button><button type="button" data-template-action="edit">编辑</button><button type="button" data-template-action="duplicate">复制</button><button type="button" data-template-action="share">分享</button><button type="button" class="template-danger" data-template-action="delete">删除</button></div></article>`;
+    }).join('') : '<div class="template-empty"><span aria-hidden="true">✳</span><h3>把常用流程变成自己的模版</h3><p>组合 Prompt、Skill、MCP、专家和资料；使用时仍可在输入框里调整。</p><button type="button" class="template-create" data-template-action="new">创建第一个模版</button></div>';
+  }
+  function showTemplateList() {
+    templateForm.hidden = true;
+    templateToolbar.hidden = false;
+    templateList.hidden = false;
+    editingTemplateId = null;
+    renderTemplates();
+  }
+  function editTemplate(item = null) {
+    templateMessage('');
+    templateForm.reset();
+    editingTemplateId = item?.id || null;
+    document.getElementById('templateFormTitle').textContent = item ? '编辑模版' : '新建模版';
+    if (item) for (const name of ['title', 'description', 'prompt', 'skills', 'mcps', 'expert', 'resources']) {
+      templateForm.elements[name].value = Array.isArray(item[name]) ? item[name].join('，') : item[name];
+    }
+    templateToolbar.hidden = true;
+    templateList.hidden = true;
+    templateForm.hidden = false;
+    templateForm.elements.title.focus();
+  }
+  document.getElementById('cases').addEventListener('click', event => {
+    if (!event.target.closest('#openTemplates')) return;
+    templateReturnFocus = event.target.closest('#openTemplates');
+    templateMessage('');
+    showTemplateList();
+    templateDialog.showModal();
+  });
+  document.getElementById('templateClose').addEventListener('click', () => templateDialog.close());
+  templateDialog.addEventListener('click', event => { if (event.target === templateDialog) templateDialog.close(); });
+  templateDialog.addEventListener('close', () => {
+    if (templateReturnFocus?.isConnected) templateReturnFocus.focus();
+    templateReturnFocus = null;
+  });
+  const splitTemplateField = value => value.split(/[,，\n]/).map(part => part.trim()).filter(Boolean);
+  templateForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = templateForm.elements;
+    const item = normalizeTemplate({
+      title: fields.title.value, description: fields.description.value, prompt: fields.prompt.value,
+      skills: splitTemplateField(fields.skills.value), mcps: splitTemplateField(fields.mcps.value),
+      expert: fields.expert.value, resources: splitTemplateField(fields.resources.value),
+    });
+    if (!item) return;
+    if (editingTemplateId) {
+      const index = templates.findIndex(value => value.id === editingTemplateId);
+      if (index < 0) return;
+      templates[index] = { ...item, id: editingTemplateId, example: templates[index].example };
+    } else templates.unshift(item);
+    templateMessage('模版已保存。');
+    saveTemplates();
+    showTemplateList();
+  });
+  templateDialog.addEventListener('click', event => {
+    const button = event.target.closest('[data-template-action]');
+    if (!button) return;
+    const action = button.dataset.templateAction;
+    const item = templates.find(value => value.id === button.closest('[data-template-id]')?.dataset.templateId);
+    if (action === 'new') editTemplate();
+    else if (action === 'back') showTemplateList();
+    else if (action === 'import') templateImport.click();
+    else if (item && action === 'edit') editTemplate(item);
+    else if (item && action === 'duplicate') {
+      templates.unshift({ ...item, id: crypto.randomUUID(), example: false, title: `${item.title}（副本）`.slice(0, 60), skills: [...item.skills], mcps: [...item.mcps], resources: [...item.resources] });
+      saveTemplates(); renderTemplates(); templateMessage('已复制模版。');
+    } else if (item && action === 'delete') {
+      if (!window.confirm(`删除模版「${item.title}」？此操作不能撤销。`)) return;
+      templates = templates.filter(value => value.id !== item.id);
+      saveTemplates(); renderTemplates(); templateMessage('模版已删除。');
+    } else if (item && action === 'use') {
+      const references = [...item.skills.map(name => `@技能:${name}`), ...item.mcps.map(name => `@MCP:${name}`),
+        ...(item.expert ? [`@专家:${item.expert}`] : []), ...item.resources.map(name => `@${name}`)];
+      prompt.value = `${item.prompt}${references.length ? `\n\n${references.join(' ')}` : ''}`;
+      setPromptGuide('');
+      autoResize(); refreshSendState();
+      templateDialog.close();
+      requestAnimationFrame(() => { prompt.focus(); prompt.setSelectionRange(prompt.value.length, prompt.value.length); });
+    } else if (item && action === 'share') {
+      if (!window.confirm('将导出 Prompt、Skill、MCP 和专家名称；资料引用不会导出。请确认 Prompt 本身不包含敏感内容。继续？')) return;
+      const { title, description, prompt: instruction, skills, mcps, expert } = item;
+      const payload = { format: 'catpaw-template', version: 1, template: { title, description, prompt: instruction, skills, mcps, expert } };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${title.replace(/[\\/:*?"<>|]/g, '-')}-模版.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      templateMessage('分享文件已导出；本机资料引用未包含在内。');
+    }
+  });
+  templateImport.addEventListener('change', async () => {
+    const file = templateImport.files?.[0];
+    if (!file) return;
+    try {
+      if (file.size > 100000) throw new Error('文件过大');
+      const payload = JSON.parse(await file.text());
+      if (payload.format !== 'catpaw-template' || payload.version !== 1) throw new Error('格式不匹配');
+      const imported = normalizeTemplate(payload.template);
+      if (!imported) throw new Error('缺少模版名称或 Prompt');
+      imported.resources = [];
+      templates.unshift(imported);
+      saveTemplates(); renderTemplates(); templateMessage(`已导入「${imported.title}」，可先编辑再使用。`);
+    } catch (error) { templateMessage(`导入失败：${error.message}`); }
+    templateImport.value = '';
+  });
 
   /* ---------- 6. 交通灯（侧边栏 / 主区两处） ---------- */
   document.querySelectorAll('.light.close').forEach((btn) => {
