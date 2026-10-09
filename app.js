@@ -1035,6 +1035,11 @@ let recentFilesExpanded = false;
 
 function renderSummaryContents() {
 const hasActiveTask = document.querySelector('.main')?.classList.contains('conversation-open');
+const goal = hasActiveTask ? conversationGoals.get(activeConversationTask) || conversationExamples.get(activeConversationTask)?.goal || '' : '';
+const goalSection = document.getElementById('summaryGoalSection');
+goalSection.hidden = !goal;
+document.getElementById('summaryGoalDivider').hidden = !goal;
+document.getElementById('summaryGoalText').textContent = goal;
 const folder = currentNode();
 if (!hasActiveTask) fileGrid.innerHTML = '<p class="summary-empty">无</p>';
 else if (folder) renderFileGrid(folder);
@@ -1440,7 +1445,7 @@ renderRecentFiles();
     { act: 'pin', label: '置顶',
       svg: '<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>' },
     { act: 'rename', label: '重命名',
-      svg: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>' },
+      svg: '<path d="M5 21h14M6 14l9.5-9.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>' },
     { act: 'copy-directory', label: '复制工作目录', divider: true,
       svg: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>' },
     { act: 'copy-id', label: '复制会话 ID',
@@ -1620,14 +1625,49 @@ renderRecentFiles();
     });
   });
 
-  function toggleSafeHouse() {
-    const active = safeHouseToggle.getAttribute('aria-pressed') !== 'true';
-    safeHouseToggle.setAttribute('aria-pressed', String(active));
-    homeComposerFoot.classList.toggle('safe-house-active', active);
-    homeComposerFoot.closest('.composer').classList.toggle('safe-house-active', active);
-    closeAccessMenus();
-  }
-  safeHouseToggle.addEventListener('click', toggleSafeHouse);
+const safeHouseCard = document.getElementById('composerCard');
+const safeHouseSweep = safeHouseCard.querySelector('.safe-house-sweep');
+const safeHouseSweepPath = safeHouseSweep.querySelector('path');
+// 将 540px 的扫光分成短弧段，使透明度渐变能跟着圆角一起转弯。
+const safeHouseSweepSegments = Array.from({ length: 45 }, (_, index) => {
+  const segment = index ? safeHouseSweepPath.cloneNode() : safeHouseSweepPath;
+  segment.style.setProperty('--safe-house-sweep-segment-length', index === 44 ? '12px' : '12.75px');
+  segment.style.setProperty('--safe-house-sweep-segment-position', `${index * 12}px`);
+  segment.style.opacity = String(Math.sin(Math.PI * index / 44) ** 1.4);
+  if (index) safeHouseSweep.append(segment);
+  return segment;
+});
+function syncSafeHouseSweepPath() {
+const { width, height } = safeHouseSweep.getBoundingClientRect();
+if (!width || !height) return;
+const radius = Math.min(parseFloat(getComputedStyle(safeHouseCard).borderTopLeftRadius) || 0, width / 2 - 1, height / 2 - 1);
+const arcRadius = Math.max(0, radius - 1);
+const x = width - 1;
+const y = height - radius;
+// 从白卡左下圆角与绿色工具条左边缘相接处起步，尺寸变化时保持对齐。
+const cardRect = safeHouseCard.getBoundingClientRect();
+const footRect = homeComposerFoot.getBoundingClientRect();
+const arcStartX = Math.max(1, Math.min(radius, footRect.left - cardRect.left));
+const arcStartY = y + Math.sqrt(Math.max(0, arcRadius ** 2 - (radius - arcStartX) ** 2));
+// 右下圆角与工具条右边缘相接处，与左侧起点对称。
+const arcEndX = Math.max(width - radius, Math.min(x, footRect.right - cardRect.left));
+const arcEndY = y + Math.sqrt(Math.max(0, arcRadius ** 2 - (arcEndX - (width - radius)) ** 2));
+safeHouseSweep.setAttribute('viewBox', `0 0 ${width} ${height}`);
+const path = `M ${arcStartX} ${arcStartY} A ${arcRadius} ${arcRadius} 0 0 1 1 ${y} V ${radius} A ${arcRadius} ${arcRadius} 0 0 1 ${radius} 1 H ${width - radius} A ${arcRadius} ${arcRadius} 0 0 1 ${x} ${radius} V ${y} A ${arcRadius} ${arcRadius} 0 0 1 ${arcEndX} ${arcEndY}`;
+safeHouseSweepSegments.forEach(segment => segment.setAttribute('d', path));
+safeHouseSweep.style.setProperty('--safe-house-sweep-distance', `${safeHouseSweepPath.getTotalLength()}px`);
+}
+new ResizeObserver(syncSafeHouseSweepPath).observe(safeHouseCard);
+
+function toggleSafeHouse() {
+const active = safeHouseToggle.getAttribute('aria-pressed') !== 'true';
+if (active) syncSafeHouseSweepPath();
+safeHouseToggle.setAttribute('aria-pressed', String(active));
+homeComposerFoot.classList.toggle('safe-house-active', active);
+homeComposerFoot.closest('.composer').classList.toggle('safe-house-active', active);
+closeAccessMenus();
+}
+safeHouseToggle.addEventListener('click', toggleSafeHouse);
 
   const footMore = homeComposerFoot.querySelector('.composer-foot-more');
   const footMoreTrigger = footMore.querySelector('.composer-foot-more-trigger');
@@ -1688,6 +1728,7 @@ renderRecentFiles();
   const promptChipText = document.getElementById('promptChipText');
   const promptChipClear = document.getElementById('promptChipClear');
   const promptChipSourceIcon = document.getElementById('promptChipSourceIcon');
+  const homeGoalTag = document.getElementById('homeGoalTag');
   let promptGuide = '';
 
   function autoResize() {
@@ -1696,15 +1737,16 @@ renderRecentFiles();
   }
 
   function refreshSendState() {
-    sendBtn.disabled = prompt.value.trim().length === 0 && !promptGuide;
+    sendBtn.disabled = prompt.value.trim().length === 0 && (homeGoalTag.hidden ? !promptGuide && !selectedLibraryFiles?.get(prompt)?.length && !selectedSkills?.get(prompt)?.length : true);
   }
 
-  function setPromptGuide(text = '', label = text, iconMarkup = '') {
-    promptGuide = text;
+function setPromptGuide(text = '', label = text, iconMarkup = '') {
+if (text && !homeGoalTag.hidden) setGoalMode(prompt, false);
+promptGuide = text;
     promptChipText.textContent = label;
     promptChipSourceIcon.innerHTML = iconMarkup;
-    promptChip.hidden = !text;
-    prompt.style.setProperty('--prompt-chip-indent', text ? `${promptChip.getBoundingClientRect().width + 8}px` : '0px');
+    promptChip.hidden = !text || !homeGoalTag.hidden;
+    syncComposerTags(prompt);
     autoResize();
     refreshSendState();
   }
@@ -1726,9 +1768,17 @@ renderRecentFiles();
 
   function submit() {
     const text = prompt.value.trim();
-    if (!text && !promptGuide) return;
-    console.log('[CatPaw] 提交需求：', `${promptGuide}${text}`);
+    if (!text && (!promptGuide || !homeGoalTag.hidden) && !selectedLibraryFiles.get(prompt).length && !selectedSkills.get(prompt).length) return;
+    if (!homeGoalTag.hidden) {
+      if (!text) return;
+      updateGoal(prompt, text);
+      setGoalMode(prompt, false);
+    }
+    const skillReferences = selectedSkills.get(prompt).map(name => `skill:${name}`).join(' ');
+    console.log('[CatPaw] 提交需求：', [promptGuide + text, skillReferences].filter(Boolean).join(' '), selectedLibraryFiles.get(prompt).map(entry => entry.node.name));
     prompt.value = '';
+    clearSkillTags(prompt);
+    clearLibraryFileCards(prompt);
     setPromptGuide('');
     autoResize();
     refreshSendState();
@@ -1743,6 +1793,27 @@ renderRecentFiles();
   const primaryPrompts = document.getElementById('primaryPrompts');
   const primaryPromptButtons = Array.from(primaryPrompts.querySelectorAll('.pill'));
   const secondaryPrompts = document.getElementById('secondaryPrompts');
+  const promptMoreTrigger = document.getElementById('promptMoreTrigger');
+  const promptMoreMenu = document.getElementById('promptMoreMenu');
+  const morePrompts = [
+    { title: '文件整理', prompt: '帮我整理 [文件或文件夹]，按照 [分类方式] 归类，并输出 [结果形式]。' },
+    { title: '文档处理', description: '合并分析文档和编辑文档', prompt: '帮我修改这份 [文档]，重点优化 [修改目标]，同时保留 [约束或要求]。', skill: 'docx' },
+    { title: '内容创作', prompt: '帮我创作一篇关于 [主题] 的内容，[类型与受众]，采用 [语气或风格]。' },
+    { title: 'PDF 处理', prompt: '处理我提供的 PDF，帮我完成 [任务]，结果输出为 [格式]，并注意 [特殊要求]。', skill: 'pdf' },
+    { title: '表格制作', prompt: '处理我提供的表格，帮我完成 [任务]，重点关注 [指标]，结果输出为 [形式]。', skill: 'xlsx' },
+    { title: '技能开发', prompt: '帮我创建一个用于 [任务] 的技能，在 [使用场景] 下运行，期望输出 [结果]。', skill: 'skill-creator' },
+  ];
+  const morePromptIcons = [
+    '<path d="M3 7a3 3 0 0 1 3-3h4l2 2h6a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3Z"/>',
+    '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5M8 13h8m-8 4h6"/>',
+    '<path d="m4 20 4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20ZM14.5 7.5l3 3"/>',
+    '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5M8 16h8"/>',
+    '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M10 10v10m0-5h11"/>',
+    '<rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/>',
+  ];
+  promptMoreMenu.innerHTML = morePrompts.map(({ title, description }, index) =>
+    `<button type="button" role="menuitem" data-more-prompt="${index}"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${morePromptIcons[index]}</svg><span class="prompt-more-copy"><strong>${title}</strong>${description ? `<small>${description}</small>` : ''}</span></button>`
+  ).join('');
   const casesEl = document.getElementById('cases');
 
   function updatePromptScrollEdges(row) {
@@ -1776,56 +1847,42 @@ renderRecentFiles();
   let caseTransitionTimer = null;
 
   function promptCategoryData() {
+    const pptScenarios = [
+      { label: '财报解读', title: '泡泡玛特业绩分析', theme: 'finance', prompt: '解读泡泡玛特财报，制作一份业绩分析 PPT，数据图表为主、克制专业风。' },
+      { label: '工作总结', title: '季度工作总结汇报', theme: 'summary', prompt: '季度工作总结汇报 PPT，简约商务风，含业绩回顾、亮点、不足、下季计划。' },
+      { label: '新品发布会', title: '新产品发布会演示', theme: 'launch', prompt: '新产品发布会演示 PPT，科技感暗调，含痛点、产品亮点、演示、发售信息。' },
+      { label: '培训课件', title: '新员工入职培训', theme: 'onboarding', prompt: '新员工入职培训课件 PPT，清爽分模块、多图示少文字，含文化、制度、流程。' },
+    ];
+    const websiteScenarios = [
+      { label: '企业网站首页', theme: 'corporate', prompt: '创建一个企业网站，风格要大气、商务、专业。设计一个完整的企业网站首页，包括导航栏、hero 区域、服务介绍、公司优势、客户评价等部分。' },
+      { label: '电商网页', theme: 'shop', prompt: '设计一个复古波普艺术风格的电商网页，背景使用鲜艳的橙色和粉色撞色，融入漫画风格的圆点图案和手绘插图。商品展示区以波普画框形式呈现，按钮带有手写字体和跳跃动画。整体风格活泼有趣，适合潮流服饰或艺术品销售。' },
+      { label: '电商运营后台', theme: 'commerce', prompt: '设计一个现代化电商运营后台，背景为纯白，顶部导航使用渐变主题色（#4F46E5 → #2563EB）。订单处理采用卡片流设计，商品管理支持拖拽排序。数据分析区使用动态仪表盘，支持多维度筛选。整体风格简洁高效。' },
+      { label: '话题社区', theme: 'community', prompt: '参考微博的能力和布局生成一个暗黑色调的话题社区。' },
+    ];
+    const appScenarios = [
+      { label: '健身打卡', theme: 'fitness', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
+      { label: '国风阅读', theme: 'reading', prompt: '设计并开发一个国风阅读 App，宣纸米底 + 水墨留白，含书架、翻页阅读器、书签笔记、书城推荐。' },
+      { label: '露营装备租赁', theme: 'camping', prompt: '设计并开发一个露营装备租赁 App，户外大地色系，含装备浏览、租赁下单、取还日期、订单管理。' },
+      { label: '宠物健康管理', theme: 'petcare', prompt: '设计并开发一款宠物健康管理 App，温馨圆润的暖橙色系，含宠物档案、疫苗/驱虫提醒、健康日记、附近宠物服务。' },
+    ];
     return {
-      dashboard: {
-        guide: '帮我创建数据看板：',
-        tag: '数据看板',
-        secondary: [
-          '创建餐饮门店经营看板',
-          '创建物流履约时效看板',
-          '创建市场投放效果看板',
-          '创建用户复购分析看板',
-          '创建连锁餐饮成本分析看板',
-        ],
-        cases: [
-          { kind: 'dashboard', type: '餐饮数据看板', title: '连锁餐饮门店经营看板', prompt: '汇总各区域餐饮门店的订单量、营业额、客单价和翻台率，对比目标与上期，突出经营异常门店并支持区域筛选。' },
-          { kind: 'dashboard', type: '物流数据看板', title: '同城配送履约时效看板', prompt: '按城市、时段和配送站点分析配送量、准时率、平均配送时长和超时原因，标记需要优先处理的站点。' },
-          { kind: 'dashboard', type: '市场数据看板', title: '餐饮品牌投放效果看板', prompt: '整合餐饮品牌在各渠道的曝光、到店、核销和投入产出数据，比较活动转化与预算效率。' },
-          { kind: 'dashboard', type: '用户分析看板', title: '外卖用户复购分析看板', prompt: '按新老客、城市和品类分析外卖用户首购、复购、留存及客单价，识别复购下滑的关键人群。' },
-        ],
+      apps: {
+        guide: '帮我设计并开发 App：',
+        tag: 'App 设计与开发',
+        secondary: appScenarios,
+        cases: appScenarios.map(({ label, theme, prompt }) => ({ kind: 'app', type: 'App 设计与开发', title: label, theme, prompt })),
       },
-      files: {
-        guide: '帮我整理文件：',
-        tag: '整理文件',
-        secondary: ['按项目归档工作文件', '批量规范文件命名', '整理会议材料与纪要', '清理重复和过期文件', '生成文件目录与摘要'],
-        cases: [
-          { kind: 'article', type: '资料目录', title: '餐饮门店巡检资料归档', prompt: '按城市、门店和巡检日期归档餐饮门店的巡检照片、整改记录和验收材料，输出资料目录与缺失项清单。' },
-          { kind: 'code', type: '整理规则', title: '物流签收单批量命名规则', prompt: '根据运单号、站点和签收日期制定物流签收单命名规则，识别重复文件并给出批量重命名方案。' },
-          { kind: 'article', type: '会议资料', title: '餐饮区域经营会议资料', prompt: '汇总区域餐饮经营会议的指标表、汇报稿、纪要和行动项，按会议日期与议题建立索引。' },
-          { kind: 'dashboard', type: '资料分析', title: '市场调研资料清理看板', prompt: '扫描市场调研资料中的重复版本、过期报告和缺少来源的文件，生成分类统计与清理建议。' },
-        ],
+      websites: {
+        guide: '帮我开发网站：',
+        tag: '网站开发',
+        secondary: websiteScenarios,
+        cases: websiteScenarios.map(({ label, theme, prompt }) => ({ kind: 'web', type: '网站开发', title: label, theme, prompt })),
       },
       slides: {
-        guide: '帮我制作幻灯片：',
-        tag: '幻灯片',
-        secondary: ['制作餐饮季度经营复盘', '制作物流提效方案汇报', '制作市场行业趋势汇报', '制作门店培训课件', '制作餐饮品牌营销提案'],
-        cases: [
-          { kind: 'deck', type: '经营汇报', title: '连锁餐饮 Q2 经营复盘', prompt: '制作连锁餐饮第二季度经营复盘，展示营业额、门店表现、客单价变化、成本问题和下季度行动计划。' },
-          { kind: 'deck', type: '物流提案', title: '同城配送高峰期提效方案', prompt: '制作同城配送高峰期提效汇报，说明订单波峰、运力缺口、调度策略、资源投入和预期履约改善。' },
-          { kind: 'deck', type: '行业汇报', title: '现制饮品市场趋势简报', prompt: '制作现制饮品行业趋势简报，梳理消费场景、价格带、品类创新、渠道变化及市场机会。' },
-          { kind: 'deck', type: '培训课件', title: '餐饮门店高峰运营培训', prompt: '制作餐饮门店高峰期运营课件，覆盖备餐、排班、出餐协同、异常处理与课后演练。' },
-        ],
-      },
-      article: {
-        guide: '帮我写推文：',
-        tag: '写推文',
-        secondary: ['撰写餐饮新品上市推文', '撰写城市美食节活动推文', '撰写餐饮行业趋势长文', '撰写物流服务客户故事', '撰写品牌节日推广稿'],
-        cases: [
-          { kind: 'article', type: '餐饮推文', title: '秋季餐饮新品上市推文', prompt: '为连锁餐饮品牌撰写秋季新品上市推文，介绍口味亮点、适用场景和到店体验，引导读者了解活动。' },
-          { kind: 'article', type: '活动推文', title: '城市美食节招募推文', prompt: '撰写城市美食节商家招募推文，说明参与权益、报名方式、活动节奏和适合的餐饮商家类型。' },
-          { kind: 'article', type: '行业洞察', title: '餐饮消费市场趋势观察', prompt: '围绕餐饮消费市场近期变化撰写洞察文章，梳理价格带、消费场景、品类和渠道趋势，并区分事实与判断。' },
-          { kind: 'article', type: '客户案例', title: '餐饮品牌同城配送增长故事', prompt: '撰写餐饮品牌优化同城配送服务的案例故事，呈现履约挑战、协同过程、结果指标和可复用经验。' },
-        ],
+        guide: '帮我制作 PPT：',
+        tag: 'PPT 制作',
+        secondary: pptScenarios,
+        cases: pptScenarios.map(({ title, theme, prompt }) => ({ kind: 'deck', type: 'PPT 制作', title, theme, prompt })),
       },
     };
   }
@@ -1837,9 +1894,9 @@ renderRecentFiles();
       secondaryPrompts.innerHTML = '';
       return;
     }
-    secondaryPrompts.innerHTML = data.secondary.map((label, index) =>
+    secondaryPrompts.innerHTML = data.secondary.map((item, index) =>
       `<button class="secondary-prompt" type="button" data-secondary-index="${index}"` +
-      ` style="animation-delay:${index * 55}ms">${label}</button>`
+      ` style="animation-delay:${index * 55}ms">${esc(typeof item === 'string' ? item : item.label)}</button>`
     ).join('');
     secondaryPrompts.hidden = false;
     secondaryPrompts.scrollLeft = 0;
@@ -1889,17 +1946,64 @@ renderRecentFiles();
     transitionCases();
   }
 
+  function closePromptMore(restoreFocus = false) {
+    if (promptMoreMenu.hidden) return;
+    promptMoreMenu.hidden = true;
+    promptMoreTrigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) promptMoreTrigger.focus();
+  }
+
+  promptMoreTrigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!promptMoreMenu.hidden) { closePromptMore(); return; }
+    promptMoreMenu.hidden = false;
+    const trigger = promptMoreTrigger.getBoundingClientRect();
+    const parent = promptMoreMenu.parentElement.getBoundingClientRect();
+    promptMoreMenu.style.left = `${Math.max(0, Math.min(trigger.left - parent.left, parent.width - promptMoreMenu.offsetWidth))}px`;
+    promptMoreTrigger.setAttribute('aria-expanded', 'true');
+    promptMoreMenu.querySelector('[role="menuitem"]')?.focus();
+  });
+  promptMoreMenu.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-more-prompt]');
+    if (!button) return;
+    const item = morePrompts[Number(button.dataset.morePrompt)];
+    if (selectedPromptCategory) setPromptCategory(selectedPromptCategory);
+    prompt.value = item.prompt;
+    if (item.skill) addSkillTag(prompt, item.skill);
+    autoResize();
+    refreshSendState();
+    closePromptMore();
+    prompt.focus();
+    prompt.setSelectionRange(prompt.value.length, prompt.value.length);
+  });
+  promptMoreMenu.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { event.preventDefault(); closePromptMore(true); return; }
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const items = [...promptMoreMenu.querySelectorAll('[role="menuitem"]')];
+    const index = items.indexOf(document.activeElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+      : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items[next]?.focus();
+  });
+  document.addEventListener('click', (event) => {
+    if (!promptMoreMenu.contains(event.target) && !promptMoreTrigger.contains(event.target)) closePromptMore();
+  });
+
   primaryPrompts.addEventListener('click', (event) => {
     const button = event.target.closest('.pill');
-    if (button) setPromptCategory(button.dataset.promptCategory);
+    if (button && button !== promptMoreTrigger) {
+      closePromptMore();
+      setPromptCategory(button.dataset.promptCategory);
+    }
   });
 
   secondaryPrompts.addEventListener('click', (event) => {
     const button = event.target.closest('.secondary-prompt');
     if (!button || !selectedPromptCategory) return;
     const item = promptCategoryData()[selectedPromptCategory].secondary[Number(button.dataset.secondaryIndex)];
-    // 一级分类保留为简短 Tag，二级推荐作为可继续编辑的普通文本写入输入框。
-    prompt.value = item;
+    // 一级分类保留为简短 Tag；带完整提示词的二级推荐填入提示词，其余沿用按钮文案。
+    prompt.value = typeof item === 'string' ? item : item.prompt;
     autoResize();
     refreshSendState();
     prompt.focus();
@@ -2056,6 +2160,24 @@ renderRecentFiles();
       const rate = isLogistics ? '准时率' : isRestaurant ? '达成率' : isUser ? '复购率' : isArchive ? '有效率' : '转化率';
       return `<div class="case-artifact case-artifact-sheet"><div class="artifact-sheet-body"><div class="artifact-sheet-eyebrow">${category}</div><h3>${title}</h3><p>更新于 09:30 · ${isLogistics ? '全国 4 个站点' : isRestaurant ? '全国 4 家门店' : `4 个${dimension}`}</p><div class="artifact-metrics"><div><small>${isLogistics ? '配送订单量' : isRestaurant ? '门店订单量' : isUser ? '活跃用户数' : isArchive ? '资料总数' : '活动曝光量'}</small><strong>${isLogistics ? '12,486' : isRestaurant ? '8,624' : isUser ? '24,860' : isArchive ? '789' : '186,420'}</strong><em>↑ 8.2%</em></div><div><small>${isLogistics ? '准时送达率' : isRestaurant ? '营业额达成率' : isUser ? '30 日复购率' : isArchive ? '资料有效率' : '到店转化率'}</small><strong>${isLogistics ? '96.4%' : isRestaurant ? '108.6%' : isUser ? '38.2%' : isArchive ? '86.4%' : '12.8%'}</strong><em>↑ 1.3%</em></div><div><small>待处理异常</small><strong>${isLogistics ? '126' : isRestaurant ? '24' : isUser ? '18' : isArchive ? '42' : '38'}</strong><em class="alert">需关注</em></div></div><div class="artifact-chart"><div class="artifact-chart-heading">${isLogistics ? '各站点准时率趋势' : isRestaurant ? '各门店营收趋势' : isUser ? '分层用户复购趋势' : isArchive ? '资料有效率趋势' : '各渠道转化趋势'} <span>近 7 日</span></div><div class="artifact-bars">${[56,68,61,78,70,89,82,93,75,86,95,88].map((n,i) => `<i style="height:${n}%;${i > 8 ? 'background:#38a873' : ''}"></i>`).join('')}</div><div class="artifact-chart-axis">周一 <span>周三</span><span>周五</span><span>今日</span></div></div><div class="artifact-table-wrap"><div class="artifact-table-title">${isLogistics ? '配送站点异常明细' : isRestaurant ? '门店经营明细' : isUser ? '用户分层明细' : isArchive ? '资料清理明细' : '渠道投放明细'} <span>共 ${rows.length} 条</span></div><table><thead><tr><th>${dimension}</th><th>${volume}</th><th>${rate}</th><th>异常类型</th><th>级别</th></tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell,i) => `<td${i === 4 ? ' class="artifact-level"' : ''}>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div></div>`;
     }
+    if (item.kind === 'app' && item.theme) {
+      const appPreviews = {
+        fitness: `<div class="artifact-app-top"><small>周五 · 10 月 09 日</small><b>练好每一天 <span>◉</span></b></div><section class="artifact-app-hero"><small>今日训练计划　/　第 3 周</small><h3>继续突破<br>自己的纪录。</h3><p>全身力量 · 35 分钟 · 中级</p><strong>开始训练　↗</strong><span class="artifact-app-hero-mark">↗</span></section><section class="artifact-app-section"><h4>打卡日历 <small>本周已完成 4 天</small></h4><div class="artifact-app-calendar"><span>一<b>5</b></span><span>二<b>6</b></span><span>三<b>7</b></span><span>四<b>8</b></span><span>五<b>9</b></span><span>六<b>10</b></span><span>日<b>11</b></span></div></section><section class="artifact-app-section"><h4>训练数据 <small>查看统计 ↗</small></h4><div class="artifact-app-stats"><article><small>累计训练</small><strong>24<em>天</em></strong></article><article><small>本周时长</small><strong>168<em>分钟</em></strong></article></div><div class="artifact-app-note">✦　坚持达人徽章已解锁　<span>查看成就 ↗</span></div></section>`,
+        reading: `<div class="artifact-app-top"><small>纸上有山河</small><b>墨间书屋 <span>☰</span></b></div><section class="artifact-app-hero"><small>正在读 · 第三卷</small><h3>读书如行远路，<br>亦见山河。</h3><p>给自己一段安静的阅读时光。</p><strong>继续阅读　→</strong><span class="artifact-app-hero-mark">山</span></section><section class="artifact-app-section"><h4>我的书架 <small>全部书籍 ↗</small></h4><div class="artifact-app-books"><article><b>山海经</b><small>已读 68%</small></article><article><b>人间词话</b><small>已读 32%</small></article><article><b>浮生六记</b><small>尚未阅读</small></article></div></section><section class="artifact-app-section"><h4>今日书摘 <small>笔记 12 则</small></h4><blockquote>“且将新火试新茶，诗酒趁年华。”<small>—— 苏轼 · 望江南</small></blockquote><div class="artifact-app-note">书城荐读　<span>翻开更多好书 ↗</span></div></section>`,
+        camping: `<div class="artifact-app-top"><small>去野 · 租装备</small><b>出发去户外 <span>⌕</span></b></div><section class="artifact-app-hero"><small>本周精选 / 野趣计划</small><h3>带上热爱，<br>即刻出发。</h3><p>好装备轻松租，周末说走就走。</p><strong>探索装备　↗</strong><span class="artifact-app-hero-mark">▲</span></section><section class="artifact-app-section"><h4>选择取还日期 <small>修改日期 ↗</small></h4><div class="artifact-app-dates"><span>取件　<b>10月17日 · 周六</b></span><span>还件　<b>10月19日 · 周一</b></span></div></section><section class="artifact-app-section"><h4>人气装备 <small>查看全部 ↗</small></h4><div class="artifact-app-gear"><article><div>△</div><strong>山野双人帐</strong><small>¥ 68 / 天　·　可下单</small></article><article><div>☼</div><strong>露营氛围灯</strong><small>¥ 18 / 天　·　可下单</small></article></div><div class="artifact-app-note">我的租赁订单　<span>查看进度 ↗</span></div></section>`,
+        petcare: `<div class="artifact-app-top"><small>陪伴每一个健康日常</small><b>早安，毛孩子 <span>♡</span></b></div><section class="artifact-app-hero"><small>宠物档案 / 2 岁 3 个月</small><h3>豆包今天<br>也要元气满满！</h3><p>金毛犬 · 最近体重 24.5 kg</p><strong>查看健康档案　↗</strong><span class="artifact-app-hero-mark">✿</span></section><section class="artifact-app-section"><h4>健康提醒 <small>全部提醒 ↗</small></h4><div class="artifact-app-reminders"><article><b>疫苗接种</b><span>10月15日 · 还有 6 天</span></article><article><b>体外驱虫</b><span>10月28日 · 还有 19 天</span></article></div></section><section class="artifact-app-section"><h4>健康日记 <small>记录今天 +</small></h4><div class="artifact-app-note">今天精神不错，饭也吃光啦！　<span>查看日记 ↗</span></div><h4>附近宠物服务</h4><div class="artifact-app-nearby">⌖　附近的宠物医院　<span>1.2 km ↗</span></div></section>`,
+      };
+      return `<div class="case-artifact case-artifact-app artifact-app-${item.theme}"><div class="artifact-app-scroll"${thumbnail ? '' : ' tabindex="0" aria-label="滚动查看 App 预览"'}><div class="artifact-app-phone"><div class="artifact-app-status">9:41 <span>●●● ▰</span></div>${appPreviews[item.theme]}<nav class="artifact-app-nav"><span>⌂<small>首页</small></span><span>▦<small>${item.theme === 'reading' ? '书城' : item.theme === 'camping' ? '分类' : '发现'}</small></span><span>◷<small>${item.theme === 'petcare' ? '日记' : '记录'}</small></span><span>◉<small>我的</small></span></nav></div></div></div>`;
+    }
+    if (item.kind === 'web' && item.theme) {
+      const websitePreviews = {
+        corporate: `<header class="artifact-site-nav"><strong>ATLAS<span> / GROUP</span></strong><span>首页　关于我们　服务领域　客户案例　联系我们</span><b>预约咨询 ↗</b></header><section class="artifact-site-hero"><small>ATLAS GROUP　/　SINCE 2008</small><h3>以专业洞见<br>驱动企业增长。</h3><p>连接战略、技术与执行，为每一次关键决策创造长期价值。</p><b>了解我们的服务　↗</b></section><section class="artifact-site-section"><small>OUR SERVICES / 服务领域</small><h4>面向未来的综合解决方案</h4><div class="artifact-site-grid"><article><span>01 /</span><h4>战略咨询</h4><p>从洞察到落地，明确增长方向。</p></article><article><span>02 /</span><h4>数字化转型</h4><p>让技术成为业务的核心竞争力。</p></article><article><span>03 /</span><h4>运营赋能</h4><p>以高效协同推动组织持续进化。</p></article></div></section><section class="artifact-site-proof"><strong>18 年</strong><strong>500+ 客户</strong><strong>30+ 行业</strong></section><section class="artifact-site-quote">“专业可靠的团队，让复杂挑战变成清晰可执行的路径。”<small>— 合作客户评价</small></section>`,
+        shop: `<header class="artifact-pop-nav"><strong>POP! MART</strong><span>新鲜上架　 /　 街头服饰　 /　 艺术玩物</span><b>购物袋 (2)</b></header><section class="artifact-pop-hero"><small>NEW DROP!　 ✳　 2026 EDITION</small><h3>大胆一点，<br>好玩一点！</h3><p>穿上灵感，逛进色彩的世界。</p><b>立即开逛 ↗</b><span class="artifact-pop-sticker">WOW!</span></section><section class="artifact-pop-products"><h4>本周超人气 <span>✷ HAND PICKED</span></h4><div class="artifact-pop-grid"><article><div>✳</div><strong>涂鸦撞色 T 恤</strong><span>¥ 199</span></article><article><div>★</div><strong>复古波普帽</strong><span>¥ 129</span></article><article><div>✦</div><strong>画框帆布袋</strong><span>¥ 89</span></article></div></section>`,
+        commerce: `<header class="artifact-admin-nav"><strong>✦　云选 · 运营中心</strong><span>总览　订单　商品　营销　数据分析</span><b>运营管理员　◉</b></header><div class="artifact-admin-layout"><aside><b>工作台</b><span>▦　数据总览</span><span>▤　订单处理</span><span>▧　商品管理</span><span>◫　营销中心</span><span>◷　客户管理</span></aside><main><small>工作台 / 数据总览</small><h3>运营总览 <span>近 7 天　⌄</span></h3><div class="artifact-admin-metrics"><article>成交金额<strong>¥ 328,490</strong><small>↗ 18.6%</small></article><article>待处理订单<strong>128</strong><small>今日新增 34</small></article><article>访客数<strong>25,680</strong><small>↗ 12.3%</small></article></div><div class="artifact-admin-panels"><section><h4>交易趋势　<small>渠道 ⌄　地区 ⌄</small></h4><div class="artifact-admin-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></section><section><h4>订单处理　<small>查看全部 ↗</small></h4><p>待付款　<span>36 单</span></p><p>待发货　<span>58 单</span></p><p>售后处理中　<span>12 单</span></p></section></div><section class="artifact-admin-products"><h4>商品管理　<small>拖拽调整排序　↕</small></h4><p>⠿　春季新品系列　<span>在售 · 1,204 件</span></p></section></main></div>`,
+        community: `<div class="artifact-social-layout"><aside><strong>✳　热议</strong><span>⌂　首页</span><span>#　发现</span><span>♧　关注</span><span>✉　消息</span><b>＋ 发布动态</b></aside><main><header><strong>热门话题</strong><span>为你推荐　 /　 关注动态</span></header><div class="artifact-social-compose">分享你的新鲜事…… <b>发布 ↗</b></div><article><small>●　城市观察家　·　2 小时前</small><h4># 周末去哪里玩 #</h4><p>收集城市里值得一逛的小店和展览。你最想推荐哪一处？</p><footer>♡ 1.2k　↪ 268　◉ 83</footer></article><article><small>●　设计灵感站　·　4 小时前</small><h4># 今日灵感 #</h4><p>来分享一个最近让你眼前一亮的设计细节。</p><footer>♡ 896　↪ 154　◉ 47</footer></article></main><aside class="artifact-social-trending"><strong>正在热议</strong><p><b>01</b>　城市生活新提案 <small>248万讨论</small></p><p><b>02</b>　我的周末片单 <small>167万讨论</small></p><p><b>03</b>　创作者日常 <small>86万讨论</small></p></aside></div>`,
+      };
+      return `<div class="case-artifact case-artifact-web artifact-website artifact-website-${item.theme}"><div class="artifact-web-scroll" tabindex="0" aria-label="滚动查看网页预览">${websitePreviews[item.theme]}</div></div>`;
+    }
     if (item.kind === 'web') {
       const festival = /美食节/.test(item.title);
       return `<div class="case-artifact case-artifact-web"><div class="artifact-web-scroll" tabindex="0" aria-label="滚动查看网页预览"><div class="artifact-web-header"><strong>${festival ? '城市美食节' : '餐饮消费观察'} <span>2026</span></strong><span>首页　 ${festival ? '活动日程　 合作商家' : '行业趋势　 品类洞察'}</span></div><div class="artifact-web-layout"><aside><b>${festival ? '活动导航' : '市场洞察'}</b><span class="selected">${festival ? '本周精选' : '消费概览'}</span><span>${festival ? '主题餐厅' : '热门品类'}</span><span>${festival ? '活动日程' : '价格带'}</span><span>${festival ? '合作商家' : '区域机会'}</span><b>更多内容</b><span>数据与说明</span></aside><main><span class="artifact-web-crumb">${festival ? '城市活动 / 餐饮生活' : '市场行业 / 餐饮消费'}</span><h3>${title}</h3><p>${festival ? '发现街区好味道，逛一场属于城市的美食节。' : '从价格带、品类与消费场景出发，观察本地餐饮的新变化。'}</p><h4>${festival ? '本周活动亮点' : '品类热度观察'}</h4><div class="artifact-web-demo"><span class="primary">${festival ? '查看活动日程' : '现制饮品 ↑ 18%'}</span><span>${festival ? '街区主题餐厅' : '快餐简餐 ↑ 12%'}</span></div><h4>${festival ? '逛吃路线' : '价格带变化'}</h4><p>${festival ? '从午间简餐到夜间小食，按街区和时间发现适合自己的餐饮活动。' : '高性价比套餐与特色单品同步增长，工作日午餐和周末聚餐呈现不同选择。'}</p><div class="artifact-web-demo muted"><span>${festival ? '午市 · 主题套餐' : '20–40 元 · 日常简餐'}</span><span>${festival ? '晚市 · 街区夜食' : '60–100 元 · 聚会餐饮'}</span></div><h4>${festival ? '合作商家' : '区域机会'}</h4><table><tr><th>城市</th><th>${festival ? '特色主题' : '热门场景'}</th><th>关注度</th></tr><tr><td>北京</td><td>${festival ? '胡同小馆' : '工作日午餐'}</td><td>较高</td></tr><tr><td>上海</td><td>${festival ? '创意融合菜' : '周末聚餐'}</td><td>上升</td></tr><tr><td>广州</td><td>${festival ? '岭南风味' : '下午茶'}</td><td>稳定</td></tr></table><h4>说明</h4><p>本页为交互示例，图表和数值均为演示数据，不代表真实市场结论。</p></main></div></div></div>`;
@@ -2065,6 +2187,21 @@ renderRecentFiles();
       return `<div class="case-artifact case-artifact-visual"><div class="artifact-poster"><div class="artifact-poster-top"><span>${festival ? 'CITY FOOD FESTIVAL' : 'SEASONAL MENU'}</span><span>2026 / AUTUMN</span></div><div class="artifact-poster-orbit"><span></span></div><div class="artifact-poster-copy"><small>${festival ? '一城好味 · 限时开席' : '餐饮品牌秋季企划'}</small><h3>${festival ? '把城市，<br>吃个遍。' : '秋天的第一口<br>好味道。'}</h3><p>${festival ? '探索街区餐厅与城市限定菜单' : '当季新品 · 现在尝鲜'}</p><strong>${festival ? '查看活动 ↗' : '了解新品 ↗'}</strong></div><div class="artifact-poster-bottom">${festival ? 'TASTE THE CITY' : 'TASTE THE SEASON'} <span>01 — 04</span></div></div></div>`;
     }
     if (item.kind === 'deck') {
+      const pptExamples = {
+        finance: { eyebrow: 'FINANCIAL REVIEW / 01', subtitle: '从营收结构到增长质量', insight: '用图表读懂业绩', measures: ['营收趋势', '业务结构', '增长动因'], next: '值得关注的三个问题', steps: ['核心业务表现', '区域与渠道变化', '风险与后续展望'] },
+        summary: { eyebrow: 'QUARTERLY REVIEW / 02', subtitle: '回顾成果，明确下一步', insight: '季度工作一览', measures: ['业绩回顾', '关键亮点', '改进空间'], next: '下季度行动计划', steps: ['聚焦重点目标', '补齐协作短板', '按阶段复盘成效'] },
+        launch: { eyebrow: 'PRODUCT LAUNCH / 03', subtitle: '让下一次体验，领先一步', insight: '从痛点到产品亮点', measures: ['用户痛点', '产品亮点', '现场演示'], next: '发布与发售信息', steps: ['产品正式亮相', '体验与演示', '发售安排'] },
+        onboarding: { eyebrow: 'WELCOME ABOARD / 04', subtitle: '从第一天，走进新的团队', insight: '入职学习地图', measures: ['团队文化', '基本制度', '协作流程'], next: '快速开启你的旅程', steps: ['认识团队与文化', '熟悉工作制度', '掌握日常流程'] },
+      };
+      const example = pptExamples[item.theme];
+      if (example) {
+        const slides = [
+          `<div class="artifact-ppt-cover"><small>${example.eyebrow}</small><div class="artifact-ppt-cover-body"><span>CATPAW / PRESENTATION</span><h3>${title}</h3><p>${example.subtitle}</p></div><div class="artifact-ppt-cover-graphic" aria-hidden="true"><i></i><i></i><i></i></div><footer>演示示例 <span>01 / 03</span></footer></div>`,
+          `<div class="artifact-ppt-detail"><small>${example.eyebrow}</small><h3>${example.insight}</h3><div class="artifact-ppt-visual"><div class="artifact-ppt-chart" aria-label="示意图表"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="artifact-ppt-metrics">${example.measures.map((label, index) => `<div><b>0${index + 1}</b><strong>${label}</strong><span>重点内容</span></div>`).join('')}</div></div><footer>结构示意 · 非实际数据 <span>02 / 03</span></footer></div>`,
+          `<div class="artifact-ppt-detail artifact-ppt-outro"><small>${example.eyebrow}</small><h3>${example.next}</h3><div class="artifact-ppt-steps">${example.steps.map((step, index) => `<div><span>0${index + 1}</span><strong>${step}</strong><i aria-hidden="true"></i></div>`).join('')}</div><footer>演示示例 <span>03 / 03</span></footer></div>`,
+        ];
+        return `<div class="case-artifact case-artifact-deck artifact-ppt-${item.theme}"><div class="artifact-deck-pages"${thumbnail ? '' : ' tabindex="0" aria-label="滚动查看幻灯片"'}>${(thumbnail ? slides.slice(0, 1) : slides).map(slide => `<div class="artifact-slide">${slide}</div>`).join('')}</div></div>`;
+      }
       const isDelivery = /配送/.test(item.title);
       const isMarket = /市场|饮品|拓展/.test(item.title);
       const metrics = isDelivery ? [['配送订单', '+18%'], ['准时送达', '96%'], ['超时占比', '4%']]
@@ -2078,12 +2215,7 @@ renderRecentFiles();
         `<div class="artifact-slide-analysis"><small>01 / KEY METRICS</small><h3>${isDelivery ? '配送高峰表现' : isMarket ? '市场趋势一览' : '门店经营表现'}</h3><div>${metrics.map(([label, value]) => `<span>${label}<strong>${value}</strong></span>`).join('')}</div><p>示例数据：对比不同区域与时段，识别重点业务机会。</p></div>`,
         `<div class="artifact-slide-plan"><small>02 / NEXT STEPS</small><h3>下一阶段行动</h3><p>${isDelivery ? '围绕物流履约持续改善' : isMarket ? '从市场观察走向小范围验证' : '围绕餐饮经营持续改善'}</p><ol>${actions.map(action => `<li>${action}</li>`).join('')}</ol></div>`,
       ];
-      const previews = [
-        `<span class="artifact-deck-thumb-cover"><small>CATPAW / BUSINESS REVIEW</small><strong>${title}</strong></span>`,
-        `<span class="artifact-deck-thumb-analysis"><small>01 / KEY METRICS</small><strong>${isDelivery ? '配送高峰表现' : isMarket ? '市场趋势一览' : '门店经营表现'}</strong><i></i><i></i><i></i></span>`,
-        `<span class="artifact-deck-thumb-plan"><small>02 / NEXT STEPS</small><strong>下一阶段行动</strong><i></i><i></i><i></i></span>`,
-      ];
-      return `<div class="case-artifact case-artifact-deck"><div class="artifact-slide" data-slide="0">${slides[0]}</div>${thumbnail ? '' : `<div class="artifact-deck-carousel" aria-label="幻灯片轮播"><div class="artifact-deck-thumbs">${previews.map((preview, index) => `<button class="artifact-deck-thumb" type="button" data-slide-index="${index}" aria-label="查看第 ${index + 1} 页" aria-current="${index === 0 ? 'true' : 'false'}">${preview}</button>`).join('')}</div><div class="artifact-deck-controls"><button type="button" data-slide-step="-1" aria-label="上一页" disabled>‹</button><span class="artifact-slide-count">1 / ${slides.length}</span><button type="button" data-slide-step="1" aria-label="下一页">›</button></div></div><div class="artifact-slide-data" hidden>${slides.map(slide => `<template>${slide}</template>`).join('')}</div>`}</div>`;
+      return `<div class="case-artifact case-artifact-deck"><div class="artifact-deck-pages"${thumbnail ? '' : ' tabindex="0" aria-label="滚动查看幻灯片"'}>${(thumbnail ? slides.slice(0, 1) : slides).map(slide => `<div class="artifact-slide">${slide}</div>`).join('')}</div></div>`;
     }
     if (item.kind === 'code') {
       return `<div class="case-artifact case-artifact-code"><div class="artifact-code-body"><div class="artifact-code-tree">▾ analytics<br>　▸ orders<br>　▸ reports<br>　<span>analyze.py</span></div><pre><code><span># ${title}</span>\nfrom collections import defaultdict\n\ndef analyze(orders):\n    by_station = defaultdict(list)\n    for order in orders:\n        key = order["station_id"]\n        by_station[key].append(order)\n\n    return {station: {\n        "orders": len(items),\n        "late_rate": sum(\n            item["is_late"] for item in items\n        ) / len(items),\n    } for station, items in by_station.items()}\n\n<span># 示例结构：实际分析需校验数据口径</span></code></pre></div></div>`;
@@ -2094,14 +2226,14 @@ renderRecentFiles();
     return `<div class="case-artifact case-artifact-document"><div class="artifact-document-scroll" tabindex="0" aria-label="滚动查看文档预览"><article class="artifact-page"><div class="artifact-page-meta">${isPromo ? '餐饮品牌 / 推广内容' : isArchive ? '业务资料 / 归档目录' : isLogistics ? '物流服务 / 案例文档' : '市场行业 / 分析报告'}</div><h3>${title}</h3><p class="artifact-page-lead">${isPromo ? '从城市餐桌出发，发现值得尝试的好味道。' : isArchive ? '按城市、日期和业务环节归类材料，让信息更易查找。' : isLogistics ? '聚焦履约体验与站点协同，梳理可执行的改善路径。' : '从消费场景与品类变化出发，梳理市场信号与行动建议。'}</p><div class="artifact-page-rule"></div><h4>${isPromo ? '一、活动亮点' : isArchive ? '一、资料范围' : '一、背景与研究范围'}</h4><p>${isPromo ? '汇聚城市里的特色餐厅与当季菜单，在不同街区发现适合聚会、工作餐和周末休闲的餐饮选择。' : isArchive ? '汇总门店巡检、经营会议或市场调研的材料，核对版本、来源与时间，形成统一目录。' : isLogistics ? '围绕配送时效、运力供需与异常订单，按城市和时段梳理问题，明确关键指标口径。' : '围绕餐饮消费市场，观察价格带、热门品类与到店场景的变化，明确分析范围与数据口径。'}</p><h4>${isPromo ? '二、参与方式' : isArchive ? '二、归档清单' : '二、关键发现'}</h4><ol><li>${isPromo ? '选择感兴趣的街区与餐饮主题。' : isArchive ? '按城市与业务环节整理原始文件。' : '汇总可用数据与资料，校验来源和统计口径。'}</li><li>${isPromo ? '浏览参与商家、活动时段与菜单信息。' : isArchive ? '标记重复版本与缺失的附件。' : '识别高频变化、区域差异及其影响范围。'}</li><li>${isPromo ? '查看活动规则并按页面提示参与。' : isArchive ? '建立可检索目录和待补齐清单。' : '区分事实与推测，提出分阶段行动建议。'}</li></ol><div class="artifact-page-note">说明：这是页面示例，文中的趋势与数值需以实际调研数据为准。</div><h4>三、下一步建议</h4><p><strong>聚焦高价值场景</strong><br>按城市与消费时段筛选重点机会，结合真实反馈验证判断。</p><p><strong>建立复盘机制</strong><br>持续跟踪用户体验、订单变化与执行结果，定期调整策略。</p><div class="artifact-page-footer">CATPAW · 内容示例 <span>01 / 01</span></div></article></div></div>`;
   }
 
-  /* 保留原场景案例池作为内容来源；默认跨池取样，Prompt 选中后按意图展示。
+  /* 保留原场景案例池作为默认内容来源；未选择 Prompt 分类时展示不同类型的案例。
      prompt 会在详情弹窗中完整展示，并可通过「做同款」直接带回输入框。 */
   function caseData() {
    return {
     office: [
       { kind: 'dashboard', type: '物流数据看板', title: '同城配送履约异常看板', prompt: '汇总本月各配送站点的订单、准时率和超时原因，按城市、时段与异常等级制作明细看板，突出需要优先处理的站点。' },
       { kind: 'article', type: '分析报告', title: '餐饮趋势报告', prompt: '整理近期餐饮消费市场资料，分析价格带、品类和消费场景的变化，注明数据来源并给出餐饮品牌可执行的建议。' },
-      { kind: 'deck', type: '演示文稿', title: '餐饮 Q1 经营复盘', prompt: '根据第一季度连锁餐饮经营数据制作管理层复盘，包含门店表现、营收与客单价变化、成本问题和下一季度行动计划。' },
+      { kind: 'deck', type: 'PPT 制作', title: '餐饮 Q1 经营复盘', prompt: '根据第一季度连锁餐饮经营数据制作管理层复盘，包含门店表现、营收与客单价变化、成本问题和下一季度行动计划。' },
       { kind: 'article', type: '用户洞察报告', title: '外卖用户反馈洞察报告', prompt: '整理近期外卖用户关于配送时效、餐品品质与售后的反馈，归纳高频问题并给出按影响程度排序的改进建议。' },
     ],
     dev: [
@@ -2112,7 +2244,7 @@ renderRecentFiles();
     ],
     design: [
       { kind: 'visual', type: '视觉设计', title: '城市美食节主视觉', prompt: '为城市美食节设计活动主视觉，突出本地餐饮特色与限时活动信息，适配横版活动页面。' },
-      { kind: 'deck', type: '市场提案', title: '餐饮品牌市场拓展提案', prompt: '制作餐饮品牌进入新城市的市场提案，梳理目标客群、竞品格局、品牌定位和渠道策略。' },
+      { kind: 'deck', type: 'PPT 制作', title: '餐饮品牌市场拓展提案', prompt: '制作餐饮品牌进入新城市的市场提案，梳理目标客群、竞品格局、品牌定位和渠道策略。' },
       { kind: 'web', type: '活动网页', title: '城市美食节活动页面', prompt: '设计可滚动的城市美食节活动网页，展示主题餐厅、活动日程、报名入口和合作商家信息。' },
       { kind: 'visual', type: '品牌视觉', title: '餐饮品牌秋季上新视觉', prompt: '为餐饮品牌设计秋季新品推广视觉，突出产品特色、季节氛围和清晰的购买行动入口。' },
     ],
@@ -2123,7 +2255,12 @@ renderRecentFiles();
     const category = selectedPromptCategory && promptCategoryData()[selectedPromptCategory];
     if (category) return category.cases;
     const cases = caseData();
-    return cases[scope] || [cases.office[2], cases.dev[0], cases.design[0], cases.office[1]];
+    return cases[scope] || [
+      promptCategoryData().slides.cases[0],
+      promptCategoryData().websites.cases[0],
+      promptCategoryData().apps.cases[0],
+      cases.office[0],
+    ];
   }
 
   function renderCases(scope) {
@@ -2131,7 +2268,7 @@ renderRecentFiles();
     if (!casesEl) return;
     const iconByKind = {
       dashboard: 'html', article: 'doc', deck: 'ppt',
-      web: 'html', code: 'html', visual: 'image',
+      web: 'html', app: 'html', code: 'html', visual: 'image',
     };
     const list = visibleCaseData(scope);
     casesEl.innerHTML =
@@ -2929,8 +3066,8 @@ const TREE_CONTEXT_ITEMS = [
 { act: 'chat', label: '添加到对话', svg: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>' },
 { act: 'copy-path', label: '复制路径', divider: true, svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
 { act: 'copy-relative-path', label: '复制相对路径', svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
-{ act: 'reveal', label: '在 Finder 中显示', svg: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>' },
-{ act: 'rename', label: '重命名', divider: true, svg: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>' },
+{ act: 'reveal', label: '在 Finder 中显示', svg: '<path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/>' },
+{ act: 'rename', label: '重命名', divider: true, svg: '<path d="M5 21h14M6 14l9.5-9.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>' },
 { act: 'delete', label: '删除', svg: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' },
 ];
 const treeContextMenu = document.createElement('div');
@@ -3144,6 +3281,8 @@ toolTreeReopen.setAttribute('aria-pressed', String(treeVisible));
   }
 
   function openArtifactPreview(node, chain) {
+    // 对话产物和摘要产物都是预览入口：先关闭共享目录树，再激活文件页签。
+    fileTreeVisible = false;
     openFileWorkspace(node, chain, {
       path: null,
       previewMode: 'artifact',
@@ -3497,27 +3636,48 @@ renderToolFileWorkspace(item);
   const caseDialogType = document.getElementById('caseDialogType');
   const caseDialogTitle = document.getElementById('caseDialogTitle');
   const caseDialogPrompt = document.getElementById('caseDialogPrompt');
+  const caseDialogPromptCopy = document.getElementById('caseDialogPromptCopy');
   const caseDialogSkill = document.getElementById('caseDialogSkill');
   const caseDialogSkillAction = document.getElementById('caseDialogSkillAction');
+  const caseDialogSkillUse = document.getElementById('caseDialogSkillUse');
   const caseDialogArtifact = document.getElementById('caseDialogArtifact');
   const caseDialogArtifactIcon = document.getElementById('caseDialogArtifactIcon');
-  const caseIconByKind = { dashboard: 'excel', article: 'doc', deck: 'ppt', web: 'html', code: 'html', visual: 'image' };
+  const caseIconByKind = { dashboard: 'excel', article: 'doc', deck: 'ppt', web: 'html', app: 'html', code: 'html', visual: 'image' };
   const caseDialogDownload = document.getElementById('caseDialogDownload');
-  const caseDialogRelated = document.getElementById('caseDialogRelated');
+  const caseDialogAttach = document.getElementById('caseDialogAttach');
   const caseDialogPrimary = document.getElementById('caseDialogPrimary');
   const caseSkills = {
-    dashboard: '数据分析', article: '文档写作', deck: '幻灯片制作',
-    web: '网页制作', code: '代码开发', visual: '视觉设计',
+    dashboard: 'data-analysis', article: 'docx', deck: 'pptx',
+    web: 'website-development', app: 'app-development', code: 'code-development', visual: 'visual-design',
   };
   let activeCase = null;
   let caseReturnFocus = null;
+  let casePromptCopyTimer;
+
+  caseDialogPromptCopy.addEventListener('click', async () => {
+    if (!activeCase) return;
+    try {
+      await navigator.clipboard.writeText(caseDialogPrompt.textContent);
+      caseDialogPromptCopy.title = '已复制';
+      caseDialogPromptCopy.setAttribute('aria-label', 'Prompt 已复制');
+    } catch (error) {
+      caseDialogPromptCopy.title = '复制失败';
+      caseDialogPromptCopy.setAttribute('aria-label', '复制失败，请重试');
+    }
+    clearTimeout(casePromptCopyTimer);
+    casePromptCopyTimer = setTimeout(() => {
+      caseDialogPromptCopy.title = '复制 Prompt';
+      caseDialogPromptCopy.setAttribute('aria-label', '复制 Prompt');
+    }, 2000);
+  });
 
   function updateCaseSkillAction() {
     const skill = caseDialogSkill.textContent;
     const installed = installedAddItems.skill.includes(skill);
-    caseDialogSkillAction.textContent = installed ? '已有' : '添加';
+    caseDialogSkillAction.querySelector('path').setAttribute('d', installed ? 'm5 12 4.5 4.5L19 7' : 'M12 5v14M5 12h14');
     caseDialogSkillAction.disabled = installed;
-    caseDialogSkillAction.setAttribute('aria-label', installed ? `${skill}已添加` : `添加${skill}`);
+    caseDialogSkillAction.title = installed ? '已安装' : '安装';
+    caseDialogSkillAction.setAttribute('aria-label', installed ? `${skill}已安装` : `安装${skill}`);
   }
 
   caseDialogSkillAction.addEventListener('click', () => {
@@ -3527,13 +3687,19 @@ renderToolFileWorkspace(item);
     updateCaseSkillAction();
   });
 
-  function similarCases(item) {
-    const all = [...Object.values(caseData()).flat(),
-      ...Object.values(promptCategoryData()).flatMap(category => category.cases)];
-    const unique = [...new Map(all.map(candidate => [candidate.title, candidate])).values()]
-      .filter(candidate => candidate.title !== item.title);
-    return unique.sort((a, b) => Number(b.kind === item.kind) - Number(a.kind === item.kind)).slice(0, 3);
-  }
+  caseDialogSkillUse.addEventListener('click', () => {
+    if (!activeCase) return;
+    const skill = caseDialogSkill.textContent;
+    if (!installedAddItems.skill.includes(skill)) installedAddItems.skill.push(skill);
+    const input = conversationPage.hidden ? prompt : conversationPrompt;
+    addSkillTag(input, skill);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    closeCaseDialog();
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  });
 
   function openCaseDialog(item, trigger) {
     if (!item) return;
@@ -3543,31 +3709,18 @@ renderToolFileWorkspace(item);
     caseDialogVisual.dataset.kind = item.kind;
     caseDialogType.textContent = item.type;
     caseDialogTitle.textContent = item.title;
-    caseDialogSkill.textContent = caseSkills[item.kind] || '内容创作';
+    caseDialogSkill.textContent = caseSkills[item.kind] || 'content-creation';
     updateCaseSkillAction();
+    caseDialogSkillUse.setAttribute('aria-label', `立即使用${caseDialogSkill.textContent}`);
     caseDialogPrompt.textContent = item.prompt;
-    caseDialogArtifact.textContent = `${item.title} · HTML 示例预览`;
+    clearTimeout(casePromptCopyTimer);
+    caseDialogPromptCopy.title = '复制 Prompt';
+    caseDialogPromptCopy.setAttribute('aria-label', '复制 Prompt');
+    caseDialogArtifact.textContent = item.title;
     caseDialogArtifactIcon.src = `assets/artifact-${caseIconByKind[item.kind] || 'doc'}.svg`;
     document.querySelectorAll('.case.is-selected').forEach(card => card.classList.remove('is-selected'));
     if (trigger?.classList.contains('case')) trigger.classList.add('is-selected');
-    caseDialogRelated.querySelectorAll('.cthumb').forEach(frame => caseThumbResizeObserver.unobserve(frame));
-    caseDialogRelated.replaceChildren(...similarCases(item).map(candidate => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'case-dialog-related-item';
-      button.setAttribute('aria-label', `查看案例：${candidate.title}`);
-      button.innerHTML = `<span class="cthumb">${caseArtifact(candidate, true)}</span><span class="case-dialog-related-title">${esc(candidate.title)}</span>`;
-      button.addEventListener('click', () => {
-        openCaseDialog(candidate);
-        caseDialogClose.focus();
-      });
-      return button;
-    }));
     if (!caseDialog.open) caseDialog.showModal();
-    caseDialogRelated.querySelectorAll('.cthumb').forEach(frame => {
-      frame.style.setProperty('--artifact-scale', frame.clientWidth / 460);
-      caseThumbResizeObserver.observe(frame);
-    });
   }
 
   function closeCaseDialog() {
@@ -3582,36 +3735,45 @@ renderToolFileWorkspace(item);
     openCaseDialog(item, caseCard);
   });
 
-  caseDialogVisual.addEventListener('click', event => {
-    const control = event.target.closest('[data-slide-step], [data-slide-index]');
-    if (!control) return;
-    const deck = control.closest('.case-artifact-deck');
-    const stage = deck.querySelector('.artifact-slide');
-    const slides = [...deck.querySelectorAll('.artifact-slide-data template')];
-    const index = control.hasAttribute('data-slide-index') ? Number(control.dataset.slideIndex)
-      : Math.max(0, Math.min(slides.length - 1, Number(stage.dataset.slide) + Number(control.dataset.slideStep)));
-    stage.replaceChildren(slides[index].content.cloneNode(true));
-    stage.dataset.slide = index;
-    deck.querySelector('.artifact-slide-count').textContent = `${index + 1} / ${slides.length}`;
-    deck.querySelector('[data-slide-step="-1"]').disabled = index === 0;
-    deck.querySelector('[data-slide-step="1"]').disabled = index === slides.length - 1;
-    deck.querySelectorAll('[data-slide-index]').forEach(button => button.setAttribute('aria-current', String(Number(button.dataset.slideIndex) === index)));
-  });
-
-  caseDialogDownload.addEventListener('click', () => {
-    if (!activeCase) return;
+  function casePreviewHtml(item) {
     const css = [...document.styleSheets].flatMap(sheet => {
       try { return [...sheet.cssRules].filter(rule => rule.selectorText === ':root' || /artifact-|case-artifact/.test(rule.cssText)).map(rule => rule.cssText); }
       catch (_) { return []; }
     }).join('\n');
-    const markup = caseArtifact(activeCase);
-    const html = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(activeCase.title)}</title><style>${css}\nbody{margin:0;padding:32px;background:#f6f6f8;font-family:Arial,sans-serif}.case-artifact{width:min(460px,100%);height:520px;margin:auto}</style><div id="preview">${markup}</div><script>document.addEventListener('click',e=>{const b=e.target.closest('[data-slide-step],[data-slide-index]');if(!b)return;const d=b.closest('.case-artifact-deck'),s=d.querySelector('.artifact-slide'),a=[...d.querySelectorAll('template')],i=b.hasAttribute('data-slide-index')?Number(b.dataset.slideIndex):Math.max(0,Math.min(a.length-1,Number(s.dataset.slide)+Number(b.dataset.slideStep)));s.innerHTML=a[i].innerHTML;s.dataset.slide=i;d.querySelector('.artifact-slide-count').textContent=(i+1)+' / '+a.length;d.querySelector('[data-slide-step="-1"]').disabled=i===0;d.querySelector('[data-slide-step="1"]').disabled=i===a.length-1;d.querySelectorAll('[data-slide-index]').forEach(t=>t.setAttribute('aria-current',String(Number(t.dataset.slideIndex)===i)))})<\/script></html>`;
-    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    const markup = caseArtifact(item);
+    return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(item.title)}</title><style>${css}\nbody{margin:0;padding:32px;background:#f6f6f8;font-family:Arial,sans-serif}.case-artifact{width:min(720px,100%);height:640px;margin:auto}</style><div id="preview">${markup}</div></html>`;
+  }
+
+  caseDialogDownload.addEventListener('click', () => {
+    if (!activeCase) return;
+    const url = URL.createObjectURL(new Blob([casePreviewHtml(activeCase)], { type: 'text/html;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
     link.download = `${activeCase.title.replace(/[\\/:*?"<>|]/g, '-')}-预览.html`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  function attachCaseArtifact(item, input) {
+    const entries = selectedLibraryFiles.get(input);
+    const caseKey = `${item.kind}:${item.title}:${item.prompt}`;
+    if (entries.some(entry => entry.caseKey === caseKey)) return;
+    const node = {
+      name: `${item.title.replace(/[\\/:*?"<>|]/g, '-')}-预览.html`,
+      type: 'html',
+      preview: { kind: 'html', html: casePreviewHtml(item) },
+    };
+    entries.push({ node, chain: [node], caseKey });
+    renderLibraryFileCards(input);
+  }
+
+  caseDialogAttach.addEventListener('click', () => {
+    if (!activeCase) return;
+    const input = conversationPage.hidden ? prompt : conversationPrompt;
+    attachCaseArtifact(activeCase, input);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    closeCaseDialog();
+    input.focus();
   });
 
   caseDialogClose.addEventListener('click', closeCaseDialog);
@@ -3626,10 +3788,15 @@ renderToolFileWorkspace(item);
 
   caseDialogPrimary.addEventListener('click', () => {
     if (!activeCase) return;
+    const skill = caseDialogSkill.textContent;
+    if (!installedAddItems.skill.includes(skill)) installedAddItems.skill.push(skill);
+    setPromptGuide('');
     prompt.value = activeCase.prompt;
+    clearSkillTags(prompt);
+    addSkillTag(prompt, skill);
+    attachCaseArtifact(activeCase, prompt);
+    prompt.dispatchEvent(new Event('input', { bubbles: true }));
     closeCaseDialog();
-    autoResize();
-    refreshSendState();
     requestAnimationFrame(() => {
       prompt.focus();
       prompt.setSelectionRange(prompt.value.length, prompt.value.length);
@@ -3645,7 +3812,6 @@ renderToolFileWorkspace(item);
 
   function openFileFromSummary(node, chain) {
     setSummaryOpen(false);
-    fileTreeVisible = false;
     openArtifactPreview(node, chain);
   }
 
@@ -3678,6 +3844,7 @@ renderToolFileWorkspace(item);
   const conversationScroll = document.getElementById('conversationScroll');
   const conversationTurnNav = document.getElementById('conversationTurnNav');
   const conversationPrompt = document.getElementById('conversationPrompt');
+  const conversationGoalTag = document.getElementById('conversationGoalTag');
   const conversationComposer = document.getElementById('conversationComposer');
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
@@ -3685,6 +3852,7 @@ renderToolFileWorkspace(item);
   const conversationExamples = new Map([
     [conversationTask, {
       folderId: 'default',
+      goal: '基于订单履约事件日志建立可复算的异常识别流程：按订单 ID 去重，对齐接单、到店、出餐与交接时间戳；超时阈值按时段和门店配置，缺失时间戳单列待核验。输出异常明细时保留原始事件 ID、规则版本、优先级计算依据和责任方待确认标记，确保看板指标可追溯到明细。',
       turns: [
         {
           prompt: '帮我整理本周门店履约异常明细，并标出需要优先处理的问题。',
@@ -3709,6 +3877,11 @@ renderToolFileWorkspace(item);
             '',
             '我会保留每条记录的 `异常时间`、`影响订单数` 和 `待核实原因`，方便你继续追问或调整优先级。',
           ].join('\n'),
+        },
+        {
+          prompt: '基于订单履约事件日志建立可复算的异常识别流程：按订单 ID 去重，对齐接单、到店、出餐与交接时间戳；超时阈值按时段和门店配置，缺失时间戳单列待核验。输出异常明细时保留原始事件 ID、规则版本、优先级计算依据和责任方待确认标记，确保看板指标可追溯到明细。',
+          isGoal: true,
+          reply: '目标已设置。后续统计与产物将沿用这套事件口径；缺失字段不会被推断为确定的责任归属。',
         },
         {
           prompt: '先看看整体有多少条异常，主要集中在哪些环节？',
@@ -3745,7 +3918,19 @@ renderToolFileWorkspace(item);
     }],
   ]);
   const conversationThreads = new Map();
+  const conversationGoals = new Map();
+  const conversationQueueStates = new Map();
   let activeConversationTask = null;
+  function queueState(task) {
+    if (!conversationQueueStates.has(task)) conversationQueueStates.set(task, {
+      running: task === conversationTask,
+      prompts: task === conversationTask ? [
+        '把这 5 条高优先级异常按门店和责任方整理成待跟进清单。',
+        '核对异常明细里的缺失时间戳，并标注需要人工确认的订单。',
+      ] : [],
+    });
+    return conversationQueueStates.get(task);
+  }
   const conversationTaskTitle = document.getElementById('conversationTaskTitle');
   const conversationTaskMore = document.getElementById('conversationTaskMore');
   const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
@@ -3967,10 +4152,13 @@ renderToolFileWorkspace(item);
     });
   });
 
+  const conversationGoalLabel = '<span class="conversation-message-goal-label"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg>目标</span>';
+
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
     closeAccessMenus();
     if (!open) closeConversationTaskMenu();
     if (open && activeConversationTask !== task) {
+      if (activeConversationTask) setGoalMode(conversationPrompt, false);
       if (activeConversationTask) conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
       activeConversationTask?.setAttribute('aria-current', 'false');
       activeConversationTask = task;
@@ -3979,18 +4167,18 @@ renderToolFileWorkspace(item);
         conversationThread.innerHTML = conversationThreads.get(task);
       } else {
         const turns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
-        conversationThread.innerHTML = turns.map(({ prompt, reply }, index) =>
-          `<div class="conversation-message user-message"><div class="message-bubble">${esc(prompt)}</div></div>` +
+        conversationThread.innerHTML = turns.map(({ prompt, reply, isGoal }, index) =>
+          `<div class="conversation-message user-message"><div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(prompt)}</div></div>` +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
           (index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
-          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><div class="conversation-activity-file"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span>已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></div><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="M3 7v10l9 5 9-5V7M12 12v10"/></svg><span>正在思考</span></div></div>` : '') +
+          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><div class="conversation-activity-file"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span>已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></div><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div>` : '') +
           '</div></div>'
         ).join('');
       }
       renderConversationArtifacts(task);
       const folder = FOLDERS.find((entry) => entry.id === example.folderId);
       if (folder) selectFolder(folder.id);
-      conversationStatusStack.hidden = task !== conversationTask;
+      renderConversationQueue();
     }
     if (open) renderConversationAgents();
     mainView.classList.toggle('conversation-open', open);
@@ -4008,22 +4196,141 @@ renderToolFileWorkspace(item);
     }
   }
 
-  function resizeConversationPrompt() {
-    conversationPrompt.style.height = 'auto';
-    conversationPrompt.style.height = `${Math.min(conversationPrompt.scrollHeight, 130)}px`;
-    conversationSend.disabled = !conversationPrompt.value.trim();
-  }
+function resizeConversationPrompt() {
+conversationPrompt.style.height = 'auto';
+conversationPrompt.style.height = `${Math.min(conversationPrompt.scrollHeight, 130)}px`;
+    conversationSend.disabled = !conversationPrompt.value.trim() && ((!selectedLibraryFiles?.get(conversationPrompt)?.length && !selectedSkills?.get(conversationPrompt)?.length) || !conversationGoalTag.hidden);
+}
+
+const conversationQueueGroup = document.getElementById('conversationQueueGroup');
+const conversationQueueSummary = document.getElementById('conversationQueueSummary');
+const conversationQueueItems = document.getElementById('conversationQueueItems');
+const queueSendIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>';
+const queueRemoveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+const queueEditIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m4 20 4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20ZM14.5 7.5l3 3"/></svg>';
+const queueSaveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
+
+function renderConversationQueue() {
+  const { running, prompts } = queueState(activeConversationTask);
+  conversationStatusStack.hidden = activeConversationTask !== conversationTask && !running && !prompts.length;
+  conversationQueueGroup.hidden = !running && !prompts.length;
+  conversationQueueSummary.textContent = prompts.length ? `${prompts.length} 条待发送` : '本轮进行中';
+  conversationQueueItems.innerHTML = prompts.map((text, index) =>
+    `<div class="conversation-queue-item"><span class="conversation-queue-text" title="${esc(text)}">${esc(text)}</span><div class="conversation-queue-actions"><button class="conversation-queue-send" type="button" data-queue-send="${index}" aria-label="直接发送队列中的第 ${index + 1} 条" title="直接发送">${queueSendIcon}</button><button class="conversation-queue-remove" type="button" data-queue-remove="${index}" aria-label="删除队列中的第 ${index + 1} 条" title="删除">${queueRemoveIcon}</button><button class="conversation-queue-edit" type="button" data-queue-edit="${index}" aria-label="编辑队列中的第 ${index + 1} 条" title="编辑">${queueEditIcon}</button></div></div>`
+  ).join('');
+}
+
+function beginConversationTurn(text) {
+  conversationThread.insertAdjacentHTML('beforeend',
+    `<div class="conversation-message user-message"><div class="message-bubble">${esc(text)}</div></div>` +
+    '<div class="conversation-message assistant-message"><div class="assistant-content"><div class="conversation-activity conversation-queue-thinking" role="status"><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div></div></div>');
+  queueState(activeConversationTask).running = true;
+  renderConversationTurnNav();
+  renderConversationQueue();
+  requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+}
 
   function sendConversationMessage() {
-    const text = conversationPrompt.value.trim();
+  const text = conversationPrompt.value.trim();
+  const files = selectedLibraryFiles.get(conversationPrompt);
+    if (!text && !files.length && !selectedSkills.get(conversationPrompt).length) return;
+  if (!conversationGoalTag.hidden) {
     if (!text) return;
+    updateGoal(conversationPrompt, text);
     conversationThread.insertAdjacentHTML('beforeend',
-      `<div class="conversation-message user-message"><div class="message-bubble">${esc(text)}</div></div>`);
+      `<div class="conversation-message user-message"><div class="message-bubble">${conversationGoalLabel}${esc(text)}</div></div>` +
+      '<div class="conversation-message assistant-message"><div class="assistant-content"><p>目标已设置，后续对话将以此为约束。</p></div></div>');
+    setGoalMode(conversationPrompt, false);
     renderConversationTurnNav();
+    requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
     conversationPrompt.value = '';
     resizeConversationPrompt();
-    requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+    return;
   }
+    const message = [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`), ...files.map(entry => `@${entry.node.name}`)].filter(Boolean).join(' ');
+  const state = queueState(activeConversationTask);
+  if (state.running) {
+    state.prompts.push(message);
+    renderConversationQueue();
+  } else {
+    beginConversationTurn(message);
+  }
+    conversationPrompt.value = '';
+    clearSkillTags(conversationPrompt);
+    clearLibraryFileCards(conversationPrompt);
+  resizeConversationPrompt();
+}
+
+function finishQueueEdit(input, save) {
+  const index = Number(input.dataset.queue-input);
+  const text = input.value.trim();
+  if (save && !text) {
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+    return;
+  }
+  if (save) queueState(activeConversationTask).prompts[index] = text;
+  renderConversationQueue();
+  conversationQueueItems.querySelector(`[data-queue-edit="${index}"]`)?.focus();
+}
+
+conversationQueueItems.addEventListener('click', (event) => {
+  const edit = event.target.closest('[data-queue-edit]');
+  if (edit) {
+    const activeInput = conversationQueueItems.querySelector('.conversation-queue-input');
+    if (activeInput) { activeInput.focus(); return; }
+    const index = Number(edit.dataset.queueEdit);
+    const row = edit.closest('.conversation-queue-item');
+    const input = document.createElement('input');
+    input.className = 'conversation-queue-input';
+    input.type = 'text';
+    input.dataset.queueInput = String(index);
+    input.setAttribute('aria-label', `编辑队列中的第 ${index + 1} 条，按回车保存，Escape 取消`);
+    input.value = queueState(activeConversationTask).prompts[index];
+    row.querySelector('.conversation-queue-text').replaceWith(input);
+    row.querySelectorAll('.conversation-queue-send, .conversation-queue-remove').forEach(button => { button.disabled = true; });
+    edit.innerHTML = queueSaveIcon;
+    edit.title = '保存';
+    edit.setAttribute('aria-label', `保存队列中的第 ${index + 1} 条`);
+    edit.dataset.queueSave = String(index);
+    delete edit.dataset.queueEdit;
+    input.focus();
+    return;
+  }
+  const save = event.target.closest('[data-queue-save]');
+  if (save) {
+    finishQueueEdit(save.closest('.conversation-queue-item').querySelector('.conversation-queue-input'), true);
+    return;
+  }
+  const send = event.target.closest('[data-queue-send]');
+  if (send) {
+    const state = queueState(activeConversationTask);
+    const [text] = state.prompts.splice(Number(send.dataset.queueSend), 1);
+    if (!text) return;
+    if (state.running) {
+      const activity = conversationThread.querySelector('.assistant-message:last-child .conversation-activity');
+      if (activity) {
+        const content = activity.closest('.assistant-content');
+        activity.remove();
+        if (!content.children.length) content.innerHTML = '<p class="conversation-queue-done">本轮已被新消息中断。</p>';
+      }
+    }
+    beginConversationTurn(text);
+    return;
+  }
+  const remove = event.target.closest('[data-queue-remove]');
+  if (remove) {
+    queueState(activeConversationTask).prompts.splice(Number(remove.dataset.queueRemove), 1);
+    renderConversationQueue();
+    return;
+  }
+});
+conversationQueueItems.addEventListener('keydown', (event) => {
+  if (!event.target.matches('.conversation-queue-input') || event.isComposing) return;
+  if (event.key !== 'Enter' && event.key !== 'Escape') return;
+  event.preventDefault();
+  finishQueueEdit(event.target, event.key === 'Enter');
+});
 
   conversationExamples.forEach((example, task) => {
     task.addEventListener('click', (e) => {
@@ -4186,6 +4493,11 @@ renderToolFileWorkspace(item);
   addFileInput.hidden = true;
   document.body.appendChild(addFileInput);
   const attachedLocalFiles = new WeakMap();
+  const libraryFileCards = new Map([
+    [prompt, document.getElementById('homeFileCards')],
+    [conversationPrompt, document.getElementById('conversationFileCards')],
+  ]);
+  const selectedLibraryFiles = new Map([...libraryFileCards.keys()].map(input => [input, []]));
   const addTriggers = Array.from(document.querySelectorAll('.composer-add-trigger'));
   let activeAddTrigger = null;
   let addMenuPage = 'root';
@@ -4193,6 +4505,64 @@ renderToolFileWorkspace(item);
   const addLabels = { skill: '技能', expert: '专家', mcp: 'MCP' };
   // 原型没有实际广场接口：专家和 MCP 预置已添加示例，新增项保留在当前会话状态中。
   const installedAddItems = { skill: [], expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'], mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'] };
+  const legacySkillNames = {
+    '数据分析': 'data-analysis', '文档写作': 'docx', '文档总结': 'document-summary',
+    '网页制作': 'website-development', 'PPT 制作': 'pptx', 'App 设计与开发': 'app-development',
+    '代码开发': 'code-development', '视觉设计': 'visual-design', '产品分析': 'product-analysis',
+    'Docx': 'docx', 'PDF': 'pdf', 'skill creator': 'skill-creator',
+  };
+  function normalizeSkillName(name) {
+    const clean = String(name || '').trim().replace(/^(?:@技能:|@?skill:)/i, '');
+    return legacySkillNames[clean] || clean;
+  }
+  const skillTagContainers = new Map([
+    [prompt, document.getElementById('homeSkillTags')],
+    [conversationPrompt, document.getElementById('conversationSkillTags')],
+  ]);
+  const selectedSkills = new Map([...skillTagContainers.keys()].map(input => [input, []]));
+  const skillTagIcon = '<svg viewBox="0 0 24 24" class="ic composer-skill-icon" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg>';
+  const skillTagClearIcon = '<svg viewBox="0 0 24 24" class="ic composer-skill-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>';
+  function syncComposerTags(input) {
+    const tags = input.parentElement.querySelector('.composer-inline-tags');
+    const width = tags.offsetWidth;
+    const wrapped = width > input.clientWidth - (input === conversationPrompt ? 82 : 72);
+    input.parentElement.classList.toggle('has-wrapped-tags', wrapped);
+    input.style.setProperty('--composer-tags-indent', width && !wrapped ? `${width + 8}px` : '0px');
+  }
+  function renderSkillTags(input) {
+    const container = skillTagContainers.get(input);
+    const skills = selectedSkills.get(input);
+    container.replaceChildren(...skills.map((name, index) => {
+      const tag = document.createElement('span');
+      tag.className = 'composer-skill-tag';
+      tag.title = `skill:${name}`;
+      tag.innerHTML = `<button class="composer-skill-tag-clear" type="button" data-skill-remove="${index}" title="移除技能">${skillTagIcon}${skillTagClearIcon}</button><span></span>`;
+      tag.querySelector('button').setAttribute('aria-label', `移除技能：${name}`);
+      tag.querySelector('span').textContent = `skill:${name}`;
+      return tag;
+    }));
+    container.hidden = !skills.length;
+    syncComposerTags(input);
+  }
+  function addSkillTag(input, name) {
+    const skillName = normalizeSkillName(name);
+    if (!skillName || selectedSkills.get(input).includes(skillName)) return;
+    selectedSkills.get(input).push(skillName);
+    renderSkillTags(input);
+  }
+  function clearSkillTags(input) {
+    selectedSkills.get(input).length = 0;
+    renderSkillTags(input);
+  }
+  window.addEventListener('resize', () => skillTagContainers.forEach((_, input) => syncComposerTags(input)));
+  skillTagContainers.forEach((container, input) => container.addEventListener('click', event => {
+    const button = event.target.closest('[data-skill-remove]');
+    if (!button) return;
+    selectedSkills.get(input).splice(Number(button.dataset.skillRemove), 1);
+    renderSkillTags(input);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  }));
   const connectorTrays = new Map([
     [prompt, document.getElementById('connectorTray')],
     [conversationPrompt, document.getElementById('conversationConnectorTray')],
@@ -4202,7 +4572,7 @@ renderToolFileWorkspace(item);
     return selectedConnectors.get(addTarget()) || selectedConnectors.get(prompt);
   }
   const galleryExamples = {
-    skill: ['文档总结', '数据分析', '网页制作'],
+    skill: ['document-summary', 'data-analysis', 'website-development'],
     expert: ['设计顾问', '内容策划', '自动化工程师'],
     mcp: ['知识库连接器', '项目管理连接器', '数据库连接器'],
   };
@@ -4304,7 +4674,7 @@ renderToolFileWorkspace(item);
       closeExpertMenu();
       activeExpertTrigger = trigger;
       trigger.setAttribute('aria-expanded', 'true');
-      expertMenu.innerHTML = installedAddItems.expert.map((name, index) => `<button class="expert-switch-item" type="button" role="menuitemradio" aria-checked="${name === selectedExpert}" data-expert-index="${index}">${expertAvatar(name)}${expertOptionCopy(name)}${name === selectedExpert ? '<span class="expert-switch-current">✓</span>' : ''}</button>`).join('');
+      expertMenu.innerHTML = installedAddItems.expert.map((name, index) => `<button class="expert-switch-item" type="button" role="menuitemradio" aria-checked="${name === selectedExpert}" data-expert-index="${index}">${expertAvatar(name)}${expertOptionCopy(name)}${name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}</button>`).join('');
       expertMenu.hidden = false;
       placeExpertMenu();
       (expertMenu.querySelector('[aria-checked="true"]') || expertMenu.querySelector('.expert-switch-item'))?.focus();
@@ -4341,7 +4711,7 @@ renderToolFileWorkspace(item);
     file: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
     local: '<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>',
     library: '<path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/>',
-    skill: '<path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4Z"/>',
+    skill: '<rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/>',
     expert: '<path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/>',
     mcp: '<path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/>',
     goal: '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/>',
@@ -4374,10 +4744,46 @@ renderToolFileWorkspace(item);
   function appendAddReference(label) {
     const input = addTarget();
     if (!input) return;
-    input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${label} `;
+    if (label.startsWith('skill:')) addSkillTag(input, label.slice(6));
+    else input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${label} `;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     closeAddMenu();
     input.focus();
+  }
+  function renderLibraryFileCards(input) {
+    const container = libraryFileCards.get(input);
+    const entries = selectedLibraryFiles.get(input);
+    container.hidden = entries.length === 0;
+    container.innerHTML = entries.map((entry, index) => {
+      const { node } = entry;
+      const type = artifactType(node) || node.type;
+      const image = /\.(?:png|jpe?g|gif|webp|svg)$/i.test(node.name) || ['image', 'png'].includes(node.type);
+      const art = image && node.preview?.kind === 'image' ? node.preview.art : null;
+      const preview = art ? `<img src="data:image/svg+xml,${encodeURIComponent(art)}" alt="">` : (THUMBS[type] || THUMBS[image ? 'image' : 'doc'])();
+      return `<div class="composer-file-card" title="${esc(node.name)}"><span class="composer-file-preview" aria-hidden="true">${preview}</span><span class="composer-file-name">${esc(node.name)}</span><button class="composer-file-remove" type="button" data-library-file-remove="${index}" aria-label="移除文件：${esc(node.name)}" title="移除文件"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button></div>`;
+    }).join('');
+  }
+  libraryFileCards.forEach((container, input) => container.addEventListener('click', event => {
+    const remove = event.target.closest('[data-library-file-remove]');
+    if (!remove) return;
+    selectedLibraryFiles.get(input).splice(Number(remove.dataset.libraryFileRemove), 1);
+    renderLibraryFileCards(input);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  }));
+  function attachLibraryFile(entry) {
+    const input = addTarget();
+    if (!input || !entry) return;
+    const entries = selectedLibraryFiles.get(input);
+    if (!entries.some(item => item.node === entry.node)) entries.push(entry);
+    renderLibraryFileCards(input);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    closeAddMenu();
+    input.focus();
+  }
+  function clearLibraryFileCards(input) {
+    selectedLibraryFiles.get(input).length = 0;
+    renderLibraryFileCards(input);
   }
   function closeAddMenu(restoreFocus = false) {
     clearTimeout(addSubmenuTimer);
@@ -4394,7 +4800,7 @@ renderToolFileWorkspace(item);
     if (!list || !addLabels[kind]) return;
     const items = installedAddItems[kind].filter(name => name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
     list.innerHTML = items.length
-      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' || kind === 'expert' ? ` aria-pressed="${kind === 'expert' ? name === selectedExpert : activeConnectors().has(name)}"` : ''}>${kind === 'expert' ? expertAvatar(name) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<small class="composer-add-selected">已选</small>' : ''}${kind === 'mcp' ? `<span class="composer-add-check" aria-hidden="true">${activeConnectors().has(name) ? '✓' : ''}</span>` : ''}</button>`).join('')
+      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' || kind === 'expert' ? ` aria-pressed="${kind === 'expert' ? name === selectedExpert : activeConnectors().has(name)}"` : ''}>${kind === 'expert' ? expertAvatar(name) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}${kind === 'mcp' ? `<span class="composer-add-check" aria-hidden="true">${activeConnectors().has(name) ? '✓' : ''}</span>` : ''}</button>`).join('')
       : `<p class="composer-add-empty">${query ? '没有匹配的' + addLabels[kind] : '还没有添加' + addLabels[kind]}</p>`;
     addSubmenu._visibleInstalled = items;
     placeAddSubmenu();
@@ -4418,7 +4824,7 @@ renderToolFileWorkspace(item);
         + `<div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="library">${addIcon('library')}<span>浏览全部资料库文件</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
     } else if (addLabels[addMenuPage]) {
       const kind = addMenuPage;
-      addSubmenu.innerHTML = `<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="搜索已添加的${addLabels[kind]}" placeholder="搜索已添加的${addLabels[kind]}" autocomplete="off"><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>去广场添加更多${addLabels[kind]}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      addSubmenu.innerHTML = `<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="搜索已添加的${addLabels[kind]}" placeholder="搜索已添加的${addLabels[kind]}" autocomplete="off"><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'skill' ? '管理技能' : `去广场添加更多${addLabels[kind]}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
       renderAddList();
     }
     addSubmenu.hidden = false;
@@ -4509,7 +4915,7 @@ renderToolFileWorkspace(item);
     if (file) {
       const entry = addDialog._libraryEntries[Number(file.dataset.dialogFile)];
       addDialog.close();
-      if (entry) appendAddReference(entry.node.name);
+      attachLibraryFile(entry);
       return;
     }
     const install = event.target.closest('[data-dialog-install]');
@@ -4579,7 +4985,7 @@ renderToolFileWorkspace(item);
   addMenu.addEventListener('click', event => {
     event.stopPropagation();
     const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
-    if (kind === 'goal') openGoalDialog(activeAddTrigger);
+    if (kind === 'goal') openGoalInput(activeAddTrigger);
     else if (['file', 'skill', 'expert', 'mcp'].includes(kind)) showAddSubmenu(kind, true);
   });
   addSubmenu.addEventListener('click', event => {
@@ -4587,7 +4993,7 @@ renderToolFileWorkspace(item);
     const libraryButton = event.target.closest('[data-add-library]');
     if (libraryButton) {
       const entry = addSubmenu._libraryEntries[Number(libraryButton.dataset.addLibrary)];
-      if (entry) appendAddReference(entry.node.name);
+      attachLibraryFile(entry);
       return;
     }
     const installedButton = event.target.closest('[data-add-installed]');
@@ -4597,7 +5003,7 @@ renderToolFileWorkspace(item);
       else if (name && addMenuPage === 'expert') {
         selectExpert(name);
         closeAddMenu();
-      } else if (name) appendAddReference(`${addLabels[addMenuPage]}:${name}`);
+      } else if (name) appendAddReference(`skill:${name}`);
       return;
     }
     const dialogButton = event.target.closest('[data-add-open-dialog]');
@@ -4662,53 +5068,50 @@ renderToolFileWorkspace(item);
   });
   window.addEventListener('resize', placeAddMenu);
 
-  // 目标属于对话能力配置，不作为 @信息 插入消息正文。
-  const goalDialog = document.createElement('dialog');
-  goalDialog.className = 'composer-goal-dialog';
-  goalDialog.setAttribute('aria-label', '设置对话目标');
-  document.body.appendChild(goalDialog);
-  const conversationGoals = new Map();
-  let goalTrigger = null;
-  function openGoalDialog(trigger) {
+  // 目标使用输入框内的单次输入模式；发送时记录为当前任务目标，而非普通提问。
+  function setGoalMode(input, enabled) {
+    const tag = input === conversationPrompt ? conversationGoalTag : homeGoalTag;
+    tag.hidden = !enabled;
+    input.placeholder = enabled ? '描述具体的技术目标、约束与验收口径' : input === conversationPrompt ? '继续对话' : '描述你的需求，输出专业结果';
+    if (input === prompt) {
+      promptChip.hidden = enabled || !promptGuide;
+      syncComposerTags(input);
+      autoResize();
+      refreshSendState();
+    } else {
+      syncComposerTags(input);
+      resizeConversationPrompt();
+    }
+    if (enabled) input.focus();
+  }
+  function openGoalInput(trigger) {
     if (!trigger) return;
     const input = trigger.closest('.conversation-page') ? conversationPrompt : prompt;
     closeAddMenu();
-    goalTrigger = trigger;
-    goalDialog.innerHTML = `<form method="dialog" class="composer-goal-form"><div class="composer-dialog-head"><div><h2>对话目标</h2><p>让 CatPaw 在后续对话中持续关注这个目标</p></div><button type="button" class="composer-dialog-close" data-goal-close aria-label="关闭">×</button></div><label for="composerGoalText">目标内容</label><textarea id="composerGoalText" rows="4" placeholder="例如：持续追踪门店履约异常，给出可执行的改进建议"></textarea><div class="composer-goal-actions"><button type="button" class="composer-goal-clear" data-goal-clear>移除目标</button><button type="submit" class="composer-goal-save">保存目标</button></div></form>`;
-    goalDialog.querySelector('textarea').value = conversationGoals.get(input) || '';
-    goalDialog.querySelector('[data-goal-clear]').disabled = !conversationGoals.has(input);
-    goalDialog.showModal();
-    goalDialog.querySelector('textarea').focus();
+    setGoalMode(input, true);
   }
-  document.querySelectorAll('.composer-goal-summary').forEach(trigger => trigger.addEventListener('click', () => openGoalDialog(trigger)));
+  document.querySelectorAll('.composer-goal-summary').forEach(trigger => trigger.addEventListener('click', () => openGoalInput(trigger)));
+  document.querySelectorAll('.composer-goal-tag-clear').forEach(button => button.addEventListener('click', () => {
+    const input = button.closest('.conversation-page') ? conversationPrompt : prompt;
+    setGoalMode(input, false);
+    input.focus();
+  }));
   function updateGoal(input, value) {
-    if (value) conversationGoals.set(input, value);
+    if (input === conversationPrompt && activeConversationTask) {
+      if (value) conversationGoals.set(activeConversationTask, value);
+      else conversationGoals.delete(activeConversationTask);
+    } else if (value) conversationGoals.set(input, value);
     else conversationGoals.delete(input);
-    const summary = input === conversationPrompt
-      ? document.querySelector('.conversation-composer-actions .composer-goal-summary')
-      : document.querySelector('.composer-row .composer-goal-summary');
+    if (input === conversationPrompt) {
+      if (!summaryPopover.hidden) renderSummaryContents();
+      return;
+    }
+    const summary = document.querySelector('.composer-row .composer-goal-summary');
     summary.textContent = `目标 · ${value}`;
-    summary.title = `编辑对话目标：${value}`;
-    summary.setAttribute('aria-label', `编辑对话目标：${value}`);
+    summary.title = `设置新目标：${value}`;
+    summary.setAttribute('aria-label', `设置新目标：${value}`);
     summary.hidden = !value;
   }
-  goalDialog.addEventListener('submit', event => {
-    event.preventDefault();
-    const input = goalTrigger.closest('.conversation-page') ? conversationPrompt : prompt;
-    updateGoal(input, goalDialog.querySelector('textarea').value.trim());
-    goalDialog.close();
-  });
-  goalDialog.addEventListener('click', event => {
-    if (event.target === goalDialog || event.target.closest('[data-goal-close]')) goalDialog.close();
-    if (event.target.closest('[data-goal-clear]')) {
-      updateGoal(goalTrigger.closest('.conversation-page') ? conversationPrompt : prompt, '');
-      goalDialog.close();
-    }
-  });
-  goalDialog.addEventListener('close', () => {
-    if (goalTrigger?.isConnected) goalTrigger.focus();
-    goalTrigger = null;
-  });
 
   /* ---------- 5.8 自定义模版：本机配置与可移植分享 ---------- */
   const templateDialog = document.getElementById('templateDialog');
@@ -4729,15 +5132,15 @@ renderToolFileWorkspace(item);
     return {
       id: crypto.randomUUID(), title: value.title.trim().slice(0, 60),
       description: typeof value.description === 'string' ? value.description.trim().slice(0, 120) : '',
-      prompt: value.prompt.trim().slice(0, 10000), skills: list(value.skills), mcps: list(value.mcps),
+      prompt: value.prompt.trim().slice(0, 10000), skills: list(value.skills).map(normalizeSkillName), mcps: list(value.mcps),
       expert: typeof value.expert === 'string' ? value.expert.trim().slice(0, 60) : '',
       resources: list(value.resources),
     };
   }
   const exampleTemplates = [
-    { title: '每周经营复盘', description: '汇总指标变化，形成可执行的周度复盘', prompt: '汇总本周经营指标，对比上周和目标，找出关键变化与异常，分析可能原因，并按优先级列出下周行动。', skills: ['数据分析', '文档写作'], mcps: [], expert: '数据分析师', resources: [], example: true },
-    { title: '项目资料整理', description: '把零散材料整理成目录和摘要', prompt: '按照项目、日期和文件类型整理资料，识别重复及缺失项，输出清晰的目录与重点内容摘要。', skills: ['文档总结'], mcps: ['文件系统连接器'], expert: '', resources: [], example: true },
-    { title: '产品方案评审', description: '用固定检查项快速审阅新方案', prompt: '审阅产品方案，梳理用户场景、关键流程、异常分支、依赖与风险，并列出待确认问题和改进建议。', skills: ['产品分析'], mcps: [], expert: '产品顾问', resources: [], example: true },
+    { title: '每周经营复盘', description: '汇总指标变化，形成可执行的周度复盘', prompt: '汇总本周经营指标，对比上周和目标，找出关键变化与异常，分析可能原因，并按优先级列出下周行动。', skills: ['data-analysis', 'docx'], mcps: [], expert: '数据分析师', resources: [], example: true },
+    { title: '项目资料整理', description: '把零散材料整理成目录和摘要', prompt: '按照项目、日期和文件类型整理资料，识别重复及缺失项，输出清晰的目录与重点内容摘要。', skills: ['document-summary'], mcps: ['文件系统连接器'], expert: '', resources: [], example: true },
+    { title: '产品方案评审', description: '用固定检查项快速审阅新方案', prompt: '审阅产品方案，梳理用户场景、关键流程、异常分支、依赖与风险，并列出待确认问题和改进建议。', skills: ['product-analysis'], mcps: [], expert: '产品顾问', resources: [], example: true },
   ];
   try {
     const saved = localStorage.getItem(templateStorageKey);
@@ -4759,7 +5162,7 @@ renderToolFileWorkspace(item);
   }
   function renderTemplates() {
     templateList.innerHTML = templates.length ? templates.map(item => {
-      const tags = [...item.skills.map(name => `Skill · ${name}`), ...item.mcps.map(name => `MCP · ${name}`),
+      const tags = [...item.skills.map(name => `skill:${name}`), ...item.mcps.map(name => `MCP · ${name}`),
         ...(item.expert ? [`专家 · ${item.expert}`] : []), ...(item.resources.length ? [`资料 · ${item.resources.length} 项（仅本机）`] : [])];
       return `<article class="template-item" data-template-id="${esc(item.id)}"><div class="template-item-main"><span class="template-item-mark" aria-hidden="true">✳</span><div><h3>${esc(item.title)}${item.example ? '<span class="template-example-tag">示例</span>' : ''}</h3><p>${esc(item.description || item.prompt)}</p><div class="template-tags">${tags.map(tag => `<span>${esc(tag)}</span>`).join('')}</div></div></div><div class="template-item-actions"><button type="button" data-template-action="use">使用</button><button type="button" data-template-action="edit">编辑</button><button type="button" data-template-action="duplicate">复制</button><button type="button" data-template-action="share">分享</button><button type="button" class="template-danger" data-template-action="delete">删除</button></div></article>`;
     }).join('') : '<div class="template-empty"><span aria-hidden="true">✳</span><h3>把常用流程变成自己的模版</h3><p>组合 Prompt、Skill、MCP、专家和资料；使用时仍可在输入框里调整。</p><button type="button" class="template-create" data-template-action="new">创建第一个模版</button></div>';
@@ -4833,10 +5236,12 @@ renderToolFileWorkspace(item);
       templates = templates.filter(value => value.id !== item.id);
       saveTemplates(); renderTemplates(); templateMessage('模版已删除。');
     } else if (item && action === 'use') {
-      const references = [...item.skills.map(name => `@技能:${name}`), ...item.mcps.map(name => `@MCP:${name}`),
+      const references = [...item.mcps.map(name => `@MCP:${name}`),
         ...(item.expert ? [`@专家:${item.expert}`] : []), ...item.resources.map(name => `@${name}`)];
       prompt.value = `${item.prompt}${references.length ? `\n\n${references.join(' ')}` : ''}`;
       setPromptGuide('');
+      clearSkillTags(prompt);
+      item.skills.forEach(name => addSkillTag(prompt, name));
       autoResize(); refreshSendState();
       templateDialog.close();
       requestAnimationFrame(() => { prompt.focus(); prompt.setSelectionRange(prompt.value.length, prompt.value.length); });

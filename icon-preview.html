@@ -25,7 +25,23 @@
     .keyline-toggle { padding: 7px 11px; border: 1px solid #e8e8ed; border-radius: 8px; background: #fff; color: #55555b; font-size: 12px; cursor: pointer; }
     .keyline-toggle:hover { border-color: #d2d2d7; color: #1d1d1f; }
     .keyline-toggle:focus-visible { outline: 2px solid #555; outline-offset: 3px; }
+    .category-tabs { display: flex; gap: 8px; margin: 0 0 18px; padding-bottom: 4px; overflow-x: auto; scrollbar-width: thin; }
+    .category-tab { flex: none; padding: 9px 14px; border: 1px solid #e8e8ed; border-radius: 999px; background: #fff; color: #626268; font-size: 13px; cursor: pointer; white-space: nowrap; }
+    .category-tab:hover { border-color: #bdbdc4; color: #1d1d1f; }
+    .category-tab[aria-selected="true"] { border-color: #383838; background: #383838; color: #fff; }
+    .category-tab:focus-visible { outline: 2px solid #555; outline-offset: 3px; }
     .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .gallery .card[hidden], .gallery[hidden], .comparison[hidden] { display: none; }
+    .comparison { display: grid; gap: 24px; }
+    .comparison-group { padding: 22px; border: 1px solid #e8e8ed; border-radius: 20px; background: #fff; }
+    .comparison-group h3 { margin: 0 0 5px; font-size: 16px; }
+    .comparison-group .note { margin-bottom: 16px; }
+    .comparison-scroll { overflow-x: auto; }
+    .comparison-track { position: relative; display: grid; grid-template-columns: repeat(var(--comparison-count), minmax(120px, 1fr)); min-width: max-content; gap: 8px; padding: 16px 10px 0; }
+    .comparison-track::after { position: absolute; z-index: 2; top: 16px; left: 10px; right: 10px; height: 100px; pointer-events: none; content: ''; background: linear-gradient(to bottom, transparent 20px, #e4aa8f 20px 21px, transparent 21px 50px, #db9e84 50px 51px, transparent 51px 80px, #e4aa8f 80px 81px, transparent 81px); opacity: .85; }
+    .comparison-item { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 120px; color: #55555b; font-size: 12px; text-align: center; }
+    .comparison-item .icon-well { margin: 0; background: #f8f8fa; }
+    .scale-picker { align-self: flex-start; max-width: 100%; padding: 7px 10px; border: 1px solid #e8e8ed; border-radius: 8px; background: #fff; color: #424245; font: inherit; font-size: 12px; }
     .card { display: flex; flex-direction: column; min-height: 246px; padding: 22px; border: 1px solid #e8e8ed; border-radius: 20px; background: #fff; }
     .icon-well { position: relative; display: grid; place-items: center; width: 100px; height: 100px; margin-bottom: 19px; border-radius: 17px; background: #f5f5f7; color: #37373b; }
     .icon-well svg { grid-area: 1 / 1; width: 80px; height: 80px; }
@@ -34,16 +50,16 @@
     .keyline .grid { fill: none; stroke: #c8c8ce; stroke-width: .18; }
     .keyline .shape { fill: none; stroke: #ef7eaa; stroke-width: .25; }
     .keyline .axis { fill: none; stroke: #b6b6bd; stroke-width: .16; stroke-dasharray: .5 .5; }
-    .gallery:not(.show-keylines) .keyline { display: none; }
+    .gallery:not(.show-keylines) .keyline, .comparison:not(.show-keylines) .keyline, .comparison:not(.show-keylines) .comparison-track::after { display: none; }
     .card h3 { margin: 0; font-size: 15px; font-weight: 650; }
     .card .caption { margin: 5px 0 14px; color: #86868b; font-size: 12px; }
     .download { align-self: flex-start; margin-top: auto; padding: 0; border: 0; background: none; color: #55555b; font-size: 12px; font-weight: 600; cursor: pointer; }
     .download:hover { color: #111; text-decoration: underline; text-underline-offset: 3px; }
     .download:focus-visible { outline: 2px solid #555; outline-offset: 4px; border-radius: 2px; }
-    .preview { display: grid; grid-template-columns: minmax(260px, 350px) minmax(0, 1fr); gap: 18px; margin-top: 48px; }
-    .sidebar-sample { padding: 23px 16px; border-radius: 20px; background: #383838; color: #ededed; }
-    .sidebar-sample h2 { margin: 0 14px 18px; color: #aaa; font-size: 11px; font-weight: 650; letter-spacing: .13em; text-transform: uppercase; }
-    .sample-row { display: flex; align-items: center; gap: 13px; min-height: 48px; padding: 0 13px; border-radius: 11px; font-size: 14px; letter-spacing: .01em; }
+    .preview { display: grid; grid-template-columns: minmax(0, 1fr) 270px; align-items: start; gap: 18px; margin-top: 48px; }
+    .sidebar-sample { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 8px; padding: 23px 16px; border-radius: 20px; background: #383838; color: #ededed; }
+    .sidebar-sample h2 { grid-column: 1 / -1; margin: 0 14px 14px; color: #aaa; font-size: 11px; font-weight: 650; letter-spacing: .13em; text-transform: uppercase; }
+    .sample-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 48px; padding: 0 10px; border-radius: 11px; font-size: 13px; letter-spacing: .01em; }
     .sample-row:first-of-type { background: #4a4a4a; color: #fff; }
     .sample-row svg { width: 22px; height: 22px; flex: none; }
     .scale-sample { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 30px; border: 1px solid #e8e8ed; border-radius: 20px; background: #fff; }
@@ -57,14 +73,16 @@
     .scale-item:nth-child(4) svg { width: 48px; height: 48px; }
     .note { margin: 0; color: #86868b; font-size: 12px; line-height: 1.7; }
     .icon { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    @media (max-width: 720px) { body { padding: 32px 16px 60px; } .preview { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .preview { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) { body { padding: 32px 16px 60px; } .sidebar-sample { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 430px) { .sidebar-sample { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <main class="page">
     <p class="eyebrow">CatPaw / Icon study 01</p>
     <h1>基础图标</h1>
-    <p class="intro">参考侧边栏的五个入口，以 24 × 24 网格、圆润转角和简洁线条绘制。粉色轮廓与灰色网格是检查用 keyline，不属于图标本身。</p>
+    <p class="intro">以 24 × 24 网格、圆润转角和简洁线条绘制。粉色轮廓与灰色网格是检查用 Keyline，不属于图标本身。下方补齐了主页面尚未定制的线性图标；二维码与彩色产物图标不在此体系内。</p>
 
     <template id="keyline-template">
       <svg class="keyline" viewBox="0 0 24 24" aria-hidden="true">
@@ -86,15 +104,16 @@
         <h2 id="gallery-title">图标一览 · Keyline 检查</h2>
         <button class="keyline-toggle" id="keyline-toggle" type="button" aria-pressed="true">隐藏 Keyline</button>
       </div>
-      <div class="gallery show-keylines" id="icon-gallery">
+      <div class="category-tabs" id="category-tabs" role="tablist" aria-label="图标类别"></div>
+      <div class="gallery show-keylines" id="icon-gallery" role="tabpanel" tabindex="0">
         <article class="card" data-filename="new-task.svg">
           <div class="icon-well">
-            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="新任务图标">
-              <path d="M13.7 4H6.8A3.8 3.8 0 0 0 3 7.8v9.4A3.8 3.8 0 0 0 6.8 21h9.4a3.8 3.8 0 0 0 3.8-3.8v-6" />
-              <path d="m7.3 14.2 9.5-9.5a2.1 2.1 0 0 1 3 3l-9.5 9.5-4 1z" />
+            <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="新建对话图标">
+              <path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z" />
+              <path d="M12 8.5v6M9 11.5h6" />
             </svg>
           </div>
-          <h3>新任务</h3><p class="caption">留一笔空白，等待新的开始</p>
+          <h3>新任务</h3><p class="caption">对话气泡 · 居中加号</p>
           <button class="download" type="button">下载 SVG ↗</button>
         </article>
         <article class="card" data-filename="scheduled-task.svg">
@@ -110,8 +129,8 @@
         <article class="card" data-filename="experts-skills-connectors.svg">
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="专家技能连接器图标">
-              <rect x="3" y="3.5" width="18" height="17" rx="4" />
-              <path d="M8 8v8M12 8v8M16 8l2 8" />
+              <rect x="3" y="3.5" width="18" height="17" rx="5.5" />
+              <path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8" />
             </svg>
           </div>
           <h3>专家·技能·连接器</h3><p class="caption">三本并排的小工具书</p>
@@ -121,7 +140,7 @@
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="资料库图标">
               <path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z" />
-              <path d="M12 6.3v14.2M6.5 9.3c1-.1 2 0 2.9.3M6.5 12.6c1-.1 2 0 2.9.3" />
+              <path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2" />
             </svg>
           </div>
           <h3>资料库</h3><p class="caption">一本摊开的资料册</p>
@@ -130,9 +149,9 @@
         <article class="card" data-filename="design-resources.svg">
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="设计资源图标">
-              <rect x="4" y="5" width="16" height="14" rx="3" />
+              <rect x="3" y="4" width="18" height="16" rx="5" />
               <circle cx="8.5" cy="9" r=".8" />
-              <path d="m6.5 16 4-4 4.5 4.5 2-2" />
+              <path d="m6.5 16 3.5-3.5a.8.8 0 0 1 1.1 0l3.9 3.9 2-2" />
             </svg>
           </div>
           <h3>设计资源</h3><p class="caption">一张轻盈的素材画板</p>
@@ -141,7 +160,7 @@
         <article class="card" data-filename="folder.svg">
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="文件夹图标">
-              <path d="M3 8V6.5A2.5 2.5 0 0 1 5.5 4h4l2.3 2.3H18.5A2.5 2.5 0 0 1 21 8.8v8.7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" />
+              <path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z" />
               <path d="M3 10.5h18" />
             </svg>
           </div>
@@ -151,9 +170,9 @@
         <article class="card" data-filename="open-folder.svg">
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="打开文件夹图标">
-              <path d="M3 11V6.5A2.5 2.5 0 0 1 5.5 4h4l2.3 2.3H18.5A2.5 2.5 0 0 1 21 8.8V11" />
-              <path d="M5 10.5h13.8a2.4 2.4 0 0 1 2.4 2.9l-1 4.5a2.6 2.6 0 0 1-2.5 2.1H5.4a2.6 2.6 0 0 1-2.5-2.1l-1-4.5A2.4 2.4 0 0 1 4.3 10.5H5Z" />
-              <path d="M9 16h6" />
+              <path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4" />
+              <path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z" />
+              <path d="M9.5 16h5" />
             </svg>
           </div>
           <h3>打开文件夹</h3><p class="caption">展开的前盖露出内容</p>
@@ -162,25 +181,25 @@
         <article class="card" data-filename="new-folder.svg">
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="新建文件夹图标">
-              <path d="M3 10V7a2.5 2.5 0 0 1 2.5-2.5H9l2.5 2.5H15" />
-              <path d="M3 11h14a3 3 0 0 1 3 3v3.5a2.5 2.5 0 0 1-2.5 2.5h-12A2.5 2.5 0 0 1 3 17.5z" />
-              <path d="M19 2.5v5M16.5 5h5" />
+              <path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z" />
+              <path d="M12 10.5v6M9 13.5h6" />
             </svg>
           </div>
-          <h3>新建文件夹</h3><p class="caption">右上独立加号，缩小也清晰</p>
+          <h3>新建文件夹</h3><p class="caption">文件夹 · 居中加号</p>
           <button class="download" type="button">下载 SVG ↗</button>
         </article>
         <article class="card" data-filename="website-nocode.svg">
           <div class="icon-well">
             <svg class="icon" viewBox="0 0 24 24" role="img" aria-label="网站 NoCode 图标">
-              <path d="M4.2 20v-7.1c0-3.2 1.2-5.7 3.1-7.7l1.4 2.1a8.7 8.7 0 0 1 6.6 0l1.4-2.1c1.9 2 3.1 4.5 3.1 7.7v2.2c0 2.1-1 3.3-2.5 4.9" />
-              <path d="M8.1 12.9h.1M15.8 12.9h.1M10.2 16.2c1.2.8 2.4.8 3.6 0" />
+              <path d="M4.2 20v-7.7c0-3.4 1-6.5 2.8-8.9l2 3.4a8.5 8.5 0 0 1 6.4-.5l1.3-2.9c2 2.8 3.3 5.6 3.3 8.9 0 3.2-1.2 5.3-3.2 6.1-.5.2-.6.5-.6 1V20" />
+              <g fill="currentColor" stroke="none"><circle cx="10.6" cy="11.7" r="1.05"/><circle cx="15.8" cy="11.4" r="1.05"/></g>
             </svg>
           </div>
           <h3>网站·NoCode</h3><p class="caption">保留一点 CatPaw 的猫咪感</p>
           <button class="download" type="button">下载 SVG ↗</button>
         </article>
       </div>
+      <div class="comparison show-keylines" id="comparison-gallery" role="tabpanel" aria-label="按外形分类的图标对照" tabindex="0" hidden></div>
     </section>
 
     <section class="preview" aria-label="应用效果">
@@ -198,19 +217,191 @@
       </div>
       <div class="scale-sample">
         <h2>缩放预览</h2>
+        <label for="scale-icon-picker" class="note">选择图标检查 16–48 px</label>
+        <select class="scale-picker" id="scale-icon-picker" aria-label="选择缩放预览图标"></select>
         <div class="scale-row" id="scale-row"></div>
         <p class="note">统一描边，无填充。可在深浅背景下使用，也可以通过 CSS 的 color 属性换色。</p>
       </div>
     </section>
   </main>
   <script>
+    // 主页面的线性 UI 图标：同一语义只绘制一次，复用统一的 24 格轮廓与 1.8 描边。
+    const additions = [
+      ['导航与状态', [
+        ['应用', 'apps', '<rect x="3" y="3" width="7" height="7" rx="2.3"/><rect x="14" y="3" width="7" height="7" rx="2.3"/><rect x="3" y="14" width="7" height="7" rx="2.3"/><rect x="14" y="14" width="7" height="7" rx="2.3"/>', '四格间距更舒展的圆角应用入口'],
+        ['设计系统', 'design-system', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 10h18M10 10v11"/>', '简洁的页面分栏布局'],
+        ['设置', 'settings', '<path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/>', '齿端更宽、保留齿间留白的六齿齿轮'],
+        ['完成', 'check', '<path d="m5 12 4.5 4.5L19 7"/>', '状态勾选'],
+        ['目标', 'target', '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/>', '单圈准星、四向短刻度与空心圆点'],
+        ['任务清单', 'task-list', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="m7 9 1.5 1.5L11 8M14 9h3M7 16h10"/>', '勾选与任务行'],
+        ['子任务', 'subagent', '<rect x="9" y="3" width="6" height="6" rx="2"/><rect x="3.5" y="16.5" width="5" height="4.5" rx="1.8"/><rect x="15.5" y="16.5" width="5" height="4.5" rx="1.8"/><path d="M12 9v3.5M6 16.5v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>', '分支层级关系']
+      ]],
+      ['文件夹与排序', [
+        ['全部收起', 'collapse-all', '<path d="m7 5 5 5 5-5M7 19l5-5 5 5"/>', '双向折叠'],
+        ['全部展开', 'expand-all', '<path d="m7 10 5-5 5 5M7 14l5 5 5-5"/>', '双向展开'],
+        ['排序', 'sort', '<path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/>', '升降双列'],
+        ['项目视图', 'project-view', '<rect x="3" y="3" width="18" height="8" rx="2.5"/><rect x="3" y="14" width="18" height="7" rx="2.5"/><path d="M7 7h5M7 17.5h5"/>', '上下项目卡片'],
+        ['列表视图', 'list-view', '<path d="M10 6h11M10 12h11M10 18h11M4 6h2M4 12h2M4 18h2"/>', '三行列表'],
+        ['更新记录', 'updated', '<g transform="translate(0 -.5)"><path d="M3.5 9.5a9 9 0 1 1-.5 4M3.5 5V9.5H8"/><path d="M12 7.5v5l3 2"/></g>', '回环时钟，整体略上移以对齐圆形家族'],
+        ['所有任务', 'layers', '<path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/>', '圆角叠层归集']
+      ]],
+      ['对话与输入', [
+        ['添加', 'plus', '<path d="M12 5v14M5 12h14"/>', '独立加号'],
+        ['关闭', 'close', '<path d="M6.5 6.5 17.5 17.5m0-11-11 11"/>', '关闭或清除'],
+        ['发送', 'send', '<path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/>', '向上发送'],
+        ['展开右', 'chevron-right', '<path d="m9 6 6 6-6 6"/>', '展开与进入'],
+        ['展开下', 'chevron-down', '<path d="m6 9 6 6 6-6"/>', '下拉选择'],
+        ['更多', 'more', '<g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g>', '横向三个实心圆点'],
+        ['复制', 'copy', '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>', '前后两页均采用更饱满的圆角，保持叠放关系'],
+        ['附件', 'attachment', '<path d="m20.5 11.5-8.3 8.3a5.5 5.5 0 0 1-7.8-7.8l9-9a3.5 3.5 0 0 1 5 5l-9 9a1.6 1.6 0 0 1-2.3-2.3l7.6-7.6"/>', '斜向上回环的单线回形针，末端自然敞开'],
+        ['上传', 'upload', '<path d="M7.5 8 11.3 4.2a1 1 0 0 1 1.4 0L16.5 8M12 4.5v11"/><path d="M3 15.5v2.2a2.8 2.8 0 0 0 2.8 2.8h12.4a2.8 2.8 0 0 0 2.8-2.8v-2.2"/>', '箭头顶端微弧，敞口托盘下角更圆润'],
+        ['下载', 'download', '<path d="M12 3.5v10.8m-4.5-3.3 3.8 3.8a1 1 0 0 0 1.4 0l3.8-3.8"/><path d="M3 15.5v2.2a2.8 2.8 0 0 0 2.8 2.8h12.4a2.8 2.8 0 0 0 2.8-2.8v-2.2"/>', '箭头下端微弧，与上传共用圆润敞口托盘'],
+        ['点赞', 'thumbs-up', '<path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/>', '袖口与手掌连为一体的圆润拇指向上'],
+        ['点踩', 'thumbs-down', '<g transform="rotate(180 12 12)"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></g>', '与点赞同形、无断口的拇指向下'],
+        ['信息', 'info', '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', '访问权限说明'],
+        ['安全屋', 'safe-house', '<path d="M12 3c2.5 1.8 5.2 2.6 8 2.6V12c0 4.6-2.8 7.7-8 9-5.2-1.3-8-4.4-8-9V5.6C6.8 5.6 9.5 4.8 12 3Z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>', '盾牌与勾选'],
+        ['分支', 'branch', '<path d="M6 3v12M18 9a9 9 0 0 1-9 9"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/>', '仓库分支'],
+        ['智能体', 'avatar', '<rect x="4.5" y="2.8" width="15" height="18.4" rx="7.5"/><path d="M4.5 10.5c2.6-.6 4.4-2 5.8-4.1 2.1 2.4 5.2 3.8 9.2 4.1M2.2 10v5M21.8 10v5"/><g fill="currentColor" stroke="none"><circle cx="9.3" cy="13.5" r="1"/><circle cx="14.7" cy="13.5" r="1"/></g>', '加宽加高的圆润刘海与双眼，耳机略超 Keyline']
+      ]],
+      ['面板与工具', [
+        ['左侧栏', 'panel-left', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/>', '左侧分栏'],
+        ['右侧栏', 'panel-right', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18"/>', '右侧分栏'],
+        ['收起文件树', 'panel-close', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-5-8-2-2 2-2"/>', '右栏向左收起'],
+        ['展开文件树', 'panel-open', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-7-8 2-2-2-2"/>', '右栏向右展开'],
+        ['全屏', 'maximize', '<path d="m14 10 7-7m-7 0h7v7M10 14l-7 7m0-7v7h7"/>', '对角线向外展开'],
+        ['退出全屏', 'minimize', '<path d="M3 3l7 7M5 10h5V5M21 21l-7-7m5 0h-5v5"/>', '对角线向内收起'],
+        ['文件', 'file', '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>', '圆润折角文档'],
+        ['MCP', 'mcp', '<path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/>', '参考侧倒 m/c 结构：两个顶部弯头采用圆弧，中间斜线沿 Keyline 对角线；圆角短尾'],
+        ['链接', 'link', '<path d="M10.2 6H8.5a6 6 0 0 0 0 12h1.7M13.8 6h1.7a6 6 0 0 1 0 12h-1.7M8 12h8"/>', '两侧圆弧上下断开，中央水平连线'],
+        ['连接器', 'connector', '<path d="M10.5 3.8 20 13.3a1.4 1.4 0 0 1 0 2l-3.2 3.2a7.5 7.5 0 0 1-10.6-10.6l3.3-3.3q.5-.5 1-.8"/><path d="m14.3 7.6 3-3M17.4 10.7l3-3M5.6 17.8l-2.8 2.8"/>', '两根插针在斜边上居中均布，引线准确接到左下轮廓、不露尖头'],
+        ['专家', 'expert', '<path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/>', '俯视大脑：完整双脑轮廓与中央分叉脑沟，减少零碎短线'],
+        ['浏览器', 'browser', '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9c2.5-2.5 3.8-5.5 3.8-9S14.5 5.5 12 3Z"/>', '地球经纬线'],
+        ['终端', 'terminal', '<rect x="3" y="4" width="18" height="16" rx="5"/><path d="m7 9 3 3-3 3m6 0h4"/>', '命令行窗口'],
+        ['搜索', 'search', '<circle cx="10.5" cy="10.5" r="7.7"/><path d="m15.95 15.95 4.55 4.55"/>', '放大镜镜面更大、握柄更短'],
+        ['返回', 'back', '<path d="m11 5-7 7 7 7M4 12h16"/>', '向左返回'],
+        ['前进', 'forward', '<path d="m13 5 7 7-7 7M20 12H4"/>', '向右前进'],
+        ['刷新', 'refresh', '<g transform="translate(0 -.5)"><path d="M20.5 10a9 9 0 1 0 .5 4M20.5 5.5V10H16"/></g>', '更新记录外圈镜像，右上箭头与右下断口；整体略上移']
+      ]],
+      ['快捷入口与设备', [
+        ['网页开发', 'web-development', '<rect x="3" y="3" width="18" height="18" rx="5.5"/><path d="M3 9h18M7 13.5h10M7 16.5h6.5"/><g fill="currentColor" stroke="none"><circle cx="8" cy="6" r=".8"/><circle cx="11.2" cy="6" r=".8"/></g>', '圆角浏览器窗口、双圆点与两行页面内容'],
+        ['数据看板', 'dashboard', '<g transform="translate(1 0)"><path d="M2 5v12a3 3 0 0 0 3 3h15M8 16.4v-6M12 16.4v-10M16 16.4v-8"/></g>', '整体右移 1 格，左侧纵轴描边贴近 Keyline；柱线与横轴保持原有比例'],
+        ['整理文件', 'organize-files', '<path d="M3.5 8 6.5 4h11l3 4v9a3.5 3.5 0 0 1-3.5 3.5H7A3.5 3.5 0 0 1 3.5 17Z"/><path d="M3.5 8h17M9 13.5h6"/>', '线形档案盒：斜顶、圆润底角和居中短拉手'],
+        ['幻灯片', 'slides', '<rect x="3" y="3" width="18" height="14" rx="4"/><path d="M12 17v4m-5 0h10M7 8h10m-10 4h6"/>', '圆角演示屏'],
+        ['写作', 'write', '<path d="M5 21h14M6 14l9.5-9.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>', '笔尖与纸面留白的铅笔'],
+        ['手机端', 'phone', '<rect x="5" y="2" width="14" height="20" rx="4"/><path d="M11 18h2"/>', '圆角手机'],
+        ['浅色模式', 'sun', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/>', '太阳光芒'],
+        ['深色模式', 'moon', '<path d="M20.5 13a8.8 8.8 0 0 1-9.5-9.5A9 9 0 1 0 20.5 13Z"/>', '月牙'],
+        ['App Store', 'app-store', '<g fill="currentColor" stroke="none"><path d="M11.8 7.3c-1.6 0-2.3-.8-4.1-.8-3.3 0-5 2.7-5 6.3 0 3.7 2.4 7.8 4.9 8.5 1.5.4 2.7-.7 4.4-.7 1.6 0 2.7 1.1 4.2.7 1.8-.5 3.4-2.6 4.3-4.7-2.3-.5-3.3-2.2-3.3-3.8 0-1.6 1.1-3.3 3-4-1.2-1.5-3-2.3-4.7-2.3-1.8 0-2.4.8-3.7.8Z"/><path d="M12.1 5.4c.2-2.3 2-3.7 5.1-4-.1 2.2-1.7 3.7-5.1 4Z"/></g>', '参考图实心果身、右侧咬口与独立叶片'],
+        ['Android', 'android', '<g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M5.6 9.2a6.4 6.4 0 0 1 12.8 0Zm4.2-2a.55.55 0 1 0-1.1 0 .55.55 0 1 0 1.1 0Zm5.5 0a.55.55 0 1 0-1.1 0 .55.55 0 1 0 1.1 0Z"/><path d="M5.6 10.3h12.8v6.2a1.3 1.3 0 0 1-1.3 1.3h-.9v2.7a1.1 1.1 0 0 1-2.2 0v-2.7h-4v2.7a1.1 1.1 0 0 1-2.2 0v-2.7h-.9a1.3 1.3 0 0 1-1.3-1.3Z"/><rect x="2.7" y="10.4" width="2.1" height="6.2" rx="1.05"/><rect x="19.2" y="10.4" width="2.1" height="6.2" rx="1.05"/></g><path d="M8.2 4.9 6.7 2.5m9.1 2.4 1.5-2.4" stroke-width="1.3"/>', '参考图机器人：天线、半圆头、双眼、双臂与双腿']
+      ]]
+    ];
+    const gallery = document.getElementById('icon-gallery');
+    const sidebar = document.querySelector('.sidebar-sample');
+    const basicCards = [...gallery.querySelectorAll('.card')];
+    basicCards.forEach(card => { card.dataset.category = '基础图标'; });
+    for (const [group, entries] of additions) {
+      for (const [name, filename, drawing, caption] of entries) {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.dataset.filename = `${filename}.svg`;
+        card.dataset.category = group;
+        card.innerHTML = `<div class="icon-well"><svg class="icon" viewBox="0 0 24 24" role="img" aria-label="${name}图标">${drawing}</svg></div><h3>${name}</h3><p class="caption">${caption}</p><button class="download" type="button">下载 SVG ↗</button>`;
+        gallery.append(card);
+        const row = document.createElement('div');
+        row.className = 'sample-row';
+        row.textContent = name;
+        sidebar.append(row);
+      }
+    }
+    const tabs = document.getElementById('category-tabs');
+    const categories = [['基础图标', basicCards.length], ...additions.map(([name, entries]) => [name, entries.length]), ['同形对照', null]];
+    const cards = [...gallery.querySelectorAll('.card')];
+    const comparison = document.getElementById('comparison-gallery');
+    const comparisonGroups = [
+      ['圆形轮廓', '对照外圈直径、中心点和断口', ['scheduled-task.svg', 'updated.svg', 'refresh.svg', 'info.svg', 'browser.svg', 'target.svg']],
+      ['方形圆角框', '对照主体宽度、高度及圆角', ['experts-skills-connectors.svg', 'design-system.svg', 'task-list.svg', 'web-development.svg', 'panel-left.svg', 'panel-right.svg', 'panel-close.svg', 'panel-open.svg']],
+      ['横向长方形', '对照横向主体的宽高、四角与内边距', ['design-resources.svg', 'terminal.svg', 'project-view.svg', 'slides.svg']],
+      ['文件夹轮廓', '对照顶部标签、主体高度和底边', ['folder.svg', 'open-folder.svg', 'new-folder.svg', 'organize-files.svg']],
+      ['文件与纸张', '对照纸面边界、折角和叠放关系', ['file.svg', 'copy.svg', 'organize-files.svg']],
+      ['箭头与折线', '对照折角方向、线长和视觉重心', ['back.svg', 'forward.svg', 'chevron-right.svg', 'chevron-down.svg', 'maximize.svg', 'minimize.svg']]
+    ];
+    const cardByFilename = new Map(cards.map(card => [card.dataset.filename, card]));
+    for (const [title, hint, filenames] of comparisonGroups) {
+      const group = document.createElement('section');
+      group.className = 'comparison-group';
+      const heading = document.createElement('h3');
+      heading.textContent = title;
+      const description = document.createElement('p');
+      description.className = 'note';
+      description.textContent = `${hint} · 横线标示 24 格画布的 y=3、12、21`;
+      const scroll = document.createElement('div');
+      scroll.className = 'comparison-scroll';
+      const track = document.createElement('div');
+      track.className = 'comparison-track';
+      track.style.setProperty('--comparison-count', filenames.length);
+      for (const filename of filenames) {
+        const source = cardByFilename.get(filename);
+        if (!source) continue;
+        const item = document.createElement('div');
+        item.className = 'comparison-item';
+        const well = document.createElement('div');
+        well.className = 'icon-well';
+        const icon = source.querySelector('.icon').cloneNode(true);
+        icon.removeAttribute('role');
+        icon.setAttribute('aria-hidden', 'true');
+        well.append(document.getElementById('keyline-template').content.cloneNode(true), icon);
+        const label = document.createElement('span');
+        label.textContent = source.querySelector('h3').textContent;
+        item.append(well, label);
+        track.append(item);
+      }
+      scroll.append(track);
+      group.append(heading, description, scroll);
+      comparison.append(group);
+    }
+    const selectCategory = category => {
+      const comparing = category === '同形对照';
+      gallery.hidden = comparing;
+      comparison.hidden = !comparing;
+      for (const tab of tabs.children) {
+        const active = tab.dataset.category === category;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active) (comparing ? comparison : gallery).setAttribute('aria-labelledby', tab.id);
+      }
+      cards.forEach(card => { card.hidden = card.dataset.category !== category; });
+    };
+    for (const [category, count] of categories) {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'category-tab';
+      tab.id = `category-tab-${tabs.childElementCount}`;
+      tab.dataset.category = category;
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-controls', category === '同形对照' ? 'comparison-gallery' : 'icon-gallery');
+      tab.textContent = count === null ? category : `${category} · ${count}`;
+      tab.addEventListener('click', () => selectCategory(category));
+      tabs.append(tab);
+    }
+    tabs.addEventListener('keydown', event => {
+      const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      const items = [...tabs.children];
+      const current = items.indexOf(document.activeElement);
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+        : (current + (event.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length;
+      items[next].focus();
+      selectCategory(items[next].dataset.category);
+    });
+    selectCategory('基础图标');
     const icons = [...document.querySelectorAll('.card .icon')];
     const keyline = document.getElementById('keyline-template');
-    document.querySelectorAll('.icon-well').forEach(well => well.prepend(keyline.content.cloneNode(true)));
-    const gallery = document.getElementById('icon-gallery');
+    gallery.querySelectorAll('.icon-well').forEach(well => well.prepend(keyline.content.cloneNode(true)));
     const toggle = document.getElementById('keyline-toggle');
     toggle.addEventListener('click', () => {
       const visible = gallery.classList.toggle('show-keylines');
+      comparison.classList.toggle('show-keylines', visible);
       toggle.setAttribute('aria-pressed', String(visible));
       toggle.textContent = visible ? '隐藏 Keyline' : '显示 Keyline';
     });
@@ -220,17 +411,30 @@
       icon.setAttribute('aria-hidden', 'true');
       row.prepend(icon);
     });
-    [16, 24, 32, 48].forEach(size => {
-      const item = document.createElement('div');
-      item.className = 'scale-item';
-      const icon = icons[0].cloneNode(true);
-      icon.removeAttribute('role');
-      icon.setAttribute('aria-hidden', 'true');
-      const label = document.createElement('span');
-      label.textContent = `${size} px`;
-      item.append(icon, label);
-      document.getElementById('scale-row').append(item);
+    const scalePicker = document.getElementById('scale-icon-picker');
+    const scaleRow = document.getElementById('scale-row');
+    document.querySelectorAll('.card').forEach((card, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = card.querySelector('h3').textContent;
+      scalePicker.append(option);
     });
+    const renderScale = () => {
+      scaleRow.replaceChildren();
+      [16, 24, 32, 48].forEach(size => {
+        const item = document.createElement('div');
+        item.className = 'scale-item';
+        const icon = icons[Number(scalePicker.value)].cloneNode(true);
+        icon.removeAttribute('role');
+        icon.setAttribute('aria-hidden', 'true');
+        const label = document.createElement('span');
+        label.textContent = `${size} px`;
+        item.append(icon, label);
+        scaleRow.append(item);
+      });
+    };
+    scalePicker.addEventListener('change', renderScale);
+    renderScale();
     document.querySelectorAll('.download').forEach(button => {
       button.addEventListener('click', () => {
         const card = button.closest('.card');
