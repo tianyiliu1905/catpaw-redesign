@@ -1271,16 +1271,18 @@ pointer-events:none;
 /* 同轮问答靠近，不同轮次仍留出清晰的段落边界。 */
 .conversation-message.assistant-message:not(:last-child){ margin-bottom:var(--space-4); }
 .conversation-message{ display:flex; width:100%; }
-.conversation-message.user-message{ margin-bottom:10px; }
-.conversation-message.assistant-message:has(.conversation-message-meta){ margin-bottom:10px; }
+.conversation-message.user-message{ margin-bottom:12px; }
 .conversation-message-body{ position:relative; max-width:min(520px,82%); }
+.user-message .message-bubble{ max-width:100%; }
+.assistant-content:has(> .conversation-message-meta){ position:relative; }
 .conversation-message-meta{
   position:absolute;
-  top:calc(100% + 2px);
+  top:100%;
   display:flex;
   align-items:center;
   gap:2px;
-  height:24px;
+  height:26px;
+  padding-top:2px;
   opacity:0;
   pointer-events:none;
   transition:opacity .15s ease;
@@ -1332,6 +1334,7 @@ background:var(--success-bg);
   line-height:1.72;
 }
 .assistant-content p{ margin:0 0 16px; }
+.assistant-content > p:has(+ .conversation-message-meta){ margin-bottom:0; }
 /* 对话正文沿用文档的标题、列表与引用语义，但不继承文件预览的外层留白。 */
 .assistant-content .conversation-reply{
   padding:0;
@@ -1476,10 +1479,31 @@ box-shadow:0 5px 18px rgba(0,0,0,.06);
 .conversation-artifact-arrow{ width:16px; height:16px; color:var(--text-4); }
 .conversation-composer-wrap{
   position:relative;
+  z-index:3;
+  isolation:isolate;
   grid-row:3;
   width:min(732px,calc(100% - 48px));
   margin:0 auto;
   padding:8px 0 16px;
+}
+/* 仅模糊输入区背后的对话内容；范围随上方状态区和输入区一起伸缩。 */
+.conversation-composer-wrap::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  top:calc(-1 * var(--conversation-status-height, 0px) - 48px);
+  right:-32px;
+  bottom:-8px;
+  left:-32px;
+  border-radius:32px;
+  background:color-mix(in srgb, var(--main-bg) 8%, transparent);
+  -webkit-backdrop-filter:blur(5px);
+  backdrop-filter:blur(5px);
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 48px, #000 calc(100% - 20px), transparent), linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image:linear-gradient(to bottom, transparent, #000 48px, #000 calc(100% - 20px), transparent), linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+  pointer-events:none;
 }
 .conversation-composer{
 min-height:94px;
@@ -3990,13 +4014,14 @@ overflow-wrap:inherit;
   min-width:0;
   min-height:0;
   height:max-content;
-  max-height:calc(100% - 58px);
+  max-height:min(560px, calc(100% - 58px));
   align-self:start;
   margin:46px 44px 0 0;
   display:flex;
   flex-direction:column;
   padding:8px;
   overflow-y:auto;
+  scrollbar-width:none;
   border:.5px solid rgba(0,0,0,.1);
   border-radius:var(--radius-panel);
   background:var(--floating-bg);
@@ -4004,6 +4029,7 @@ overflow-wrap:inherit;
   backdrop-filter:blur(20px);
   -webkit-app-region:no-drag;
 }
+.summary-popover::-webkit-scrollbar{ display:none; }
 /* 首页卡片立即显示最终宽度，只让左侧主区随网格列变化过渡。 */
 .content.summary-open:not(.wb-open) .summary-popover{
   position:absolute;

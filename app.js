@@ -2451,7 +2451,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
 
   function syncWorkbenchWidth() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
-    content.classList.toggle('wb-file-workspace', rightPanel === 'tools' && item?.kind === 'file');
+    content.classList.toggle('wb-file-workspace', rightPanel === 'tools' && ['file', 'browser', 'terminal'].includes(item?.kind));
     requestAnimationFrame(syncResizeLayout);
   }
 
@@ -3958,7 +3958,9 @@ renderToolFileWorkspace(item);
   const conversationStatusStack = conversationPage.querySelector('.conversation-status-stack');
   // 状态条浮在滚动区之上；用它的可见高度为消息末尾预留可滚动空间。
   const conversationStatusObserver = new ResizeObserver(() => {
-    conversationScroll.style.setProperty('--conversation-status-clearance', `${conversationStatusStack.getBoundingClientRect().height}px`);
+    const statusHeight = conversationStatusStack.hidden ? 0 : conversationStatusStack.getBoundingClientRect().height;
+    conversationScroll.style.setProperty('--conversation-status-clearance', `${statusHeight}px`);
+    conversationStatusStack.parentElement.style.setProperty('--conversation-status-height', `${statusHeight}px`);
   });
   conversationStatusObserver.observe(conversationStatusStack);
   const aiTasks = Array.from(conversationAiTaskItems.querySelectorAll('.conversation-status-item'));
@@ -4174,6 +4176,40 @@ renderToolFileWorkspace(item);
   });
 
   const conversationGoalLabel = '<span class="conversation-message-goal-label"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg>目标</span>';
+  const messageCopyIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/></svg>';
+  const messageLikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></svg>';
+  const messageDislikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g transform="rotate(180 12 12)"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></g></svg>';
+
+  function renderMessageMeta(role, date = new Date()) {
+    const time = new Date(date);
+    const buttons = `<button type="button" data-message-action="copy" title="复制" aria-label="复制${role === 'user' ? '消息' : '回复'}">${messageCopyIcon}</button>` +
+      (role === 'assistant' ? `<button type="button" data-message-action="like" title="赞" aria-label="赞" aria-pressed="false">${messageLikeIcon}</button>` +
+      `<button type="button" data-message-action="dislike" title="踩" aria-label="踩" aria-pressed="false">${messageDislikeIcon}</button>` : '');
+    return `<div class="conversation-message-meta">${buttons}<time class="conversation-message-time" datetime="${time.toISOString()}" title="${role === 'user' ? '发送时间' : '回复时间'}：${time.toLocaleString('zh-CN')}">${time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</time></div>`;
+  }
+
+  conversationThread.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-message-action]');
+    if (!button || !conversationThread.contains(button)) return;
+    const message = button.closest('.conversation-message');
+    if (button.dataset.messageAction === 'copy') {
+      const content = message.matches('.user-message') ? message.querySelector('.message-bubble') : message.querySelector('.assistant-content');
+      const text = message.matches('.user-message')
+        ? Array.from(content.childNodes).filter(node => !node.classList?.contains('conversation-message-goal-label')).map(node => node.textContent).join('').trim()
+        : Array.from(content.children).filter(node => !node.matches('.conversation-message-meta, .conversation-artifacts, .conversation-activity')).map(node => node.innerText.trim()).filter(Boolean).join('\n\n');
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        showConversationFeedback('已复制');
+      } catch (error) {
+        showConversationFeedback('复制失败，请检查剪贴板权限');
+      }
+      return;
+    }
+    const wasPressed = button.getAttribute('aria-pressed') === 'true';
+    message.querySelectorAll('[data-message-action="like"], [data-message-action="dislike"]').forEach(action => action.setAttribute('aria-pressed', 'false'));
+    button.setAttribute('aria-pressed', String(!wasPressed));
+  });
 
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
     closeAccessMenus();
@@ -4189,10 +4225,11 @@ renderToolFileWorkspace(item);
       } else {
         const turns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
         conversationThread.innerHTML = turns.map(({ prompt, reply, isGoal }, index) =>
-          `<div class="conversation-message user-message"><div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(prompt)}</div></div>` +
+          `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(prompt)}</div>${renderMessageMeta('user')}</div></div>` +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
           (index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><div class="conversation-activity-file"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span>已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></div><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div>` : '') +
+          (reply ? renderMessageMeta('assistant') : '') +
           '</div></div>'
         ).join('');
       }
@@ -4243,7 +4280,7 @@ function renderConversationQueue() {
 
 function beginConversationTurn(text) {
   conversationThread.insertAdjacentHTML('beforeend',
-    `<div class="conversation-message user-message"><div class="message-bubble">${esc(text)}</div></div>` +
+    `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${esc(text)}</div>${renderMessageMeta('user')}</div></div>` +
     '<div class="conversation-message assistant-message"><div class="assistant-content"><div class="conversation-activity conversation-queue-thinking" role="status"><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div></div></div>');
   queueState(activeConversationTask).running = true;
   renderConversationTurnNav();
@@ -4259,8 +4296,8 @@ function beginConversationTurn(text) {
     if (!text) return;
     updateGoal(conversationPrompt, text);
     conversationThread.insertAdjacentHTML('beforeend',
-      `<div class="conversation-message user-message"><div class="message-bubble">${conversationGoalLabel}${esc(text)}</div></div>` +
-      '<div class="conversation-message assistant-message"><div class="assistant-content"><p>目标已设置，后续对话将以此为约束。</p></div></div>');
+      `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${conversationGoalLabel}${esc(text)}</div>${renderMessageMeta('user')}</div></div>` +
+      `<div class="conversation-message assistant-message"><div class="assistant-content"><p>目标已设置，后续对话将以此为约束。</p>${renderMessageMeta('assistant')}</div></div>`);
     setGoalMode(conversationPrompt, false);
     renderConversationTurnNav();
     requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
@@ -4333,7 +4370,7 @@ conversationQueueItems.addEventListener('click', (event) => {
       if (activity) {
         const content = activity.closest('.assistant-content');
         activity.remove();
-        if (!content.children.length) content.innerHTML = '<p class="conversation-queue-done">本轮已被新消息中断。</p>';
+        if (!content.children.length) content.innerHTML = `<p class="conversation-queue-done">本轮已被新消息中断。</p>${renderMessageMeta('assistant')}`;
       }
     }
     beginConversationTurn(text);
