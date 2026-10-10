@@ -4126,7 +4126,11 @@ renderToolFileWorkspace(item);
     updateConversationTurnNav();
   }
 
+  let conversationScrollTimer;
   conversationScroll.addEventListener('scroll', () => {
+    conversationScroll.classList.add('is-scrolling');
+    clearTimeout(conversationScrollTimer);
+    conversationScrollTimer = setTimeout(() => conversationScroll.classList.remove('is-scrolling'), 650);
     const hovered = conversationTurnNav.querySelector('.conversation-turn:hover, .conversation-turn:focus-visible');
     updateConversationTurnNav(hovered ? Number(hovered.dataset.turnIndex) : -1);
   }, { passive:true });
