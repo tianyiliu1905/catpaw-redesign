@@ -128,7 +128,6 @@
   --workbench-w: 460px;
   --workbench-folder-w: 720px;
   --workbench-tree-w: min(calc(var(--workbench-folder-w) * .40), 24.8%);
-  --summary-panel-w: 340px;
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
           "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
@@ -634,8 +633,8 @@ color:var(--text-1); font:inherit; font-size:var(--type-sm); text-align:left; cu
 .group-head:focus-within .group-head-main{ padding-right:56px; }
 
 /* 隐藏而非撤位：状态区的盒子留在原处，任务名的可用宽度全程恒定 */
-.task:not(.subagent-task):hover .task-state,
-.task:not(.subagent-task):focus-within .task-state{ visibility:hidden; }
+.task:hover .task-state,
+.task:focus-within .task-state{ visibility:hidden; }
 
 /* hover 显形；focus-within 保证键盘走到这里时按钮同样可见，
    否则 Tab 会停在一个看不见的目标上。
@@ -776,92 +775,6 @@ color:var(--text-1); font:inherit; font-size:var(--type-sm); text-align:left; cu
 /* 不在文件夹里的任务没有上级归属，左边与分区标题齐平顶头，
    不再为状态图形预留缩进 */
 .task.flush{ padding-left: 8px; }
-
-/* -- 带 SubAgent 的任务 --
-   父任务仍处于顶层任务流中；展开箭头只在确实存在下挂任务时出现。
-   子任务使用更轻的字号和树状连接线，说明它们是并行执行单元，而不是
-   与父任务同级的普通会话。 */
-.task-with-agents{
-  position:relative;
-}
-.task-parent{
-  gap:var(--space-1);
-  font-weight:450;
-  color:var(--text-2);
-}
-.agent-disclosure{
-  width:18px;
-  height:24px;
-  flex:none;
-  display:grid;
-  place-items:center;
-  margin-left:-3px;
-  border-radius:var(--radius-sm);
-  color:var(--text-4);
-  cursor:pointer;
-  transition:background .13s ease, color .13s ease;
-}
-.agent-disclosure:hover{
-  color:var(--text-2);
-  background:var(--active);
-}
-.agent-disclosure .ic{
-  width:13px;
-  height:13px;
-  transition:transform .2s cubic-bezier(.32,.72,0,1);
-}
-.task-with-agents.is-expanded .agent-disclosure .ic{
-  transform:rotate(90deg);
-}
-.subagent-list{
-  position:relative;
-  max-height:108px;
-  overflow:hidden;
-  opacity:1;
-  transition:max-height .24s cubic-bezier(.32,.72,0,1), opacity .16s ease;
-}
-.task-with-agents:not(.is-expanded) .subagent-list{
-  max-height:0;
-  opacity:0;
-  pointer-events:none;
-}
-.subagent-list::before{
-  content:"";
-  position:absolute;
-  z-index:0;
-  left:16px;
-  top:0;
-  bottom:16px;
-  width:1px;
-  background:var(--gray-5);
-}
-.subagent-task{
-  position:relative;
-  z-index:1;
-  height:30px;
-  padding-left:32px;
-  color:var(--text-3);
-  font-size:var(--type-md);
-}
-.subagent-task::before{
-  content:"";
-  position:absolute;
-  left:16px;
-  top:0;
-  width:11px;
-  height:15px;
-  border-bottom:1px solid var(--gray-5);
-  border-bottom-left-radius:var(--radius-sm);
-}
-.subagent-done{
-  width:14px;
-  height:14px;
-  fill:none;
-  stroke:var(--brand-green);
-  stroke-width:2;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
 
 /* 状态区统一贴右；固定最小宽度让各行的状态列对齐 */
 .task-state{
@@ -1044,11 +957,8 @@ pointer-events:none;
 .content.wb-open.wb-auto-collapsed{ grid-template-columns:100% 0px; }
 /* 文件工具区主动打开时直接到达目标宽度，避免底板和目录树等待列宽动画。 */
 .content.wb-opening{ transition:none; }
-/* 未打开工具区时，摘要是独立工作区列：仅横向让出空间，主区高度和垂直位置保持不变。 */
-.content.summary-open:not(.wb-open){
-  grid-template-columns:minmax(0,1fr) var(--summary-panel-w);
-}
-/* 工具区打开后仍沿用工具区的两列布局；摘要改回叠在内容上方的浮层。 */
+/* 摘要始终浮在内容上方，不参与主区或工具区的列宽计算。 */
+/* 工具区打开后仍沿用工具区的两列布局。 */
 .content.summary-open.wb-open{ grid-template-columns:calc(100% - var(--user-panel-w, var(--workbench-w))) var(--user-panel-w, var(--workbench-w)); }
 .content.summary-open.wb-open.wb-file-workspace{ grid-template-columns:calc(100% - var(--user-panel-w, min(var(--workbench-folder-w), 62%))) var(--user-panel-w, min(var(--workbench-folder-w), 62%)); }
 .content.summary-open.wb-open.wb-expanded{ grid-template-columns:0px 100%; }
@@ -1160,6 +1070,7 @@ pointer-events:none;
 }
 .conversation-task-feedback:empty{ display:none; }
 .conversation-page[hidden]{ display:none; }
+.conversation-page.subagent-open{ grid-template-rows:52px minmax(0,1fr); }
 .main.conversation-open{
   padding:0;
   overflow:hidden;
@@ -1268,6 +1179,7 @@ pointer-events:none;
   flex-direction:column;
   gap:var(--space-4);
 }
+.conversation-thread[hidden]{ display:none; }
 /* 同轮问答靠近，不同轮次仍留出清晰的段落边界。 */
 .conversation-message.assistant-message:not(:last-child){ margin-bottom:var(--space-4); }
 .conversation-message{ display:flex; width:100%; }
@@ -1347,9 +1259,36 @@ background:var(--success-bg);
 .assistant-content .conversation-reply + .conversation-artifacts{ margin-top:var(--space-4); }
 .conversation-activity{ display:grid; gap:15px; margin-top:8px; padding:4px 0 32px; font-size:var(--type-md); }
 .conversation-activity-file,.conversation-activity-thinking{ display:flex; align-items:center; gap:10px; min-height:24px; }
-.conversation-activity-file{ color:var(--text-4); }
 .conversation-activity-file .ic,.conversation-activity-thinking .ic{ width:19px; height:19px; flex:none; }
-.conversation-activity-filename{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* 子 Agent 与已读取文件共用轻量操作行，悬停和按下时才显示背景。 */
+.conversation-activity-link{
+  display:flex;
+  align-items:center;
+  justify-self:start;
+  gap:10px;
+  min-width:0;
+  max-width:100%;
+  min-height:30px;
+  margin-left:-8px;
+  padding:3px 8px;
+  border:0;
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-4);
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+.conversation-activity-link:hover{ background:var(--hover); color:var(--text-2); }
+.conversation-activity-link:active{ background:var(--active); color:var(--text-1); }
+.conversation-activity-link:focus-visible{ outline:2px solid var(--brand-green); outline-offset:1px; }
+.conversation-activity-label{ flex:none; white-space:nowrap; }
+.conversation-activity-detail,.conversation-activity-filename{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.conversation-activity-icon{ display:grid; place-items:center; width:19px; height:19px; flex:none; }
+.conversation-activity-icon .ic{ width:17px; height:17px; }
+.conversation-activity-icon.is-done{ color:var(--brand-green); }
+.conversation-activity-icon .spinner{ width:15px; height:15px; border-width:1.5px; }
 .conversation-activity-thinking{ width:max-content; max-width:100%; font-weight:550; }
 .conversation-activity-thinking .ic{ color:var(--text-3); }
 .conversation-activity-thinking span{ background:linear-gradient(105deg,var(--text-3) 20%,var(--text-3) 37%,var(--text-1) 48%,var(--text-3) 59%,var(--text-3) 80%); background-size:240% 100%; background-clip:text; -webkit-background-clip:text; color:transparent; animation:conversationThinkingSweep 2.2s ease-in-out infinite; }
@@ -1371,9 +1310,8 @@ background:var(--success-bg);
 }
 /* 标题行锚定输入框，详情在各自标题上方展开；保持原有的标题显示顺序。 */
 .conversation-status-group{ display:flex; flex-direction:column-reverse; flex:none; }
-.conversation-status-group:nth-child(1){ order:3; }
-.conversation-status-group:nth-child(2){ order:2; }
-.conversation-status-group:nth-child(3){ order:1; }
+.conversation-status-group:nth-child(1){ order:2; }
+.conversation-status-group:nth-child(2){ order:1; }
 .conversation-status-group{
   border:.5px solid var(--gray-5);
   border-radius:0;
@@ -1410,19 +1348,45 @@ background:var(--success-bg);
 .conversation-status-trigger[aria-expanded="true"] .conversation-status-chevron{ transform:rotate(-90deg); }
 .conversation-status-heading{ font-weight:600; color:var(--text-1); white-space:nowrap; }
 .conversation-status-summary{ min-width:0; overflow:hidden; color:var(--text-3); text-overflow:ellipsis; white-space:nowrap; }
-.conversation-status-items{ padding:3px 6px 6px; }
-.conversation-status-items[hidden]{ display:none; }
+.conversation-status-items{
+  display:grid;
+  grid-template-rows:0fr;
+  opacity:0;
+  visibility:hidden;
+  transition:grid-template-rows .3s cubic-bezier(.22,.68,0,1), opacity .2s ease, visibility .3s;
+}
+.conversation-status-trigger[aria-expanded="true"] + .conversation-status-items{
+  grid-template-rows:1fr;
+  opacity:1;
+  visibility:visible;
+  transition:grid-template-rows .3s cubic-bezier(.22,.68,0,1), opacity .2s ease, visibility 0s;
+}
+.conversation-status-items-content{ min-height:0; overflow:hidden; padding-inline:6px; }
+.conversation-status-items-content > :first-child{ margin-top:3px; }
+.conversation-status-items-content > :last-child{ margin-bottom:6px; }
+@media (prefers-reduced-motion:reduce){
+  .conversation-status-items,
+  .conversation-status-trigger[aria-expanded="true"] + .conversation-status-items{ transition:none; }
+  .conversation-status-chevron{ transition:none; }
+}
 .conversation-status-item{ min-height:34px; padding:6px 8px; border-radius:var(--radius-sm); }
 .conversation-status-item[aria-pressed="true"]{ background:var(--active); color:var(--text-1); }
-.conversation-task-number{ flex:none; width:20px; color:var(--text-4); font-size:var(--type-sm); font-variant-numeric:tabular-nums; text-align:center; }
+.conversation-task-icon{ flex:none; display:grid; place-items:center; width:20px; color:var(--text-3); }
+.conversation-task-icon .ic{ width:16px; height:16px; }
+.conversation-status-item[data-task-state="done"] .conversation-task-icon{ color:var(--success-text); }
+.conversation-status-item[data-task-state="running"] .conversation-task-icon{ color:var(--text-2); }
 .conversation-status-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.conversation-status-item[data-task-state="done"] .conversation-status-name{ color:var(--text-4); text-decoration:line-through; text-decoration-color:currentColor; }
+.conversation-status-item[data-task-state="done"]:hover .conversation-status-name{ color:var(--text-3); }
 .conversation-status-state{ display:inline-flex; align-items:center; gap:5px; flex:none; color:var(--text-3); white-space:nowrap; }
 .conversation-status-state.is-running{ color:#916923; }
 .conversation-status-state.is-done{ color:var(--success-text); }
 .conversation-status-state .spinner{ width:12px; height:12px; border-width:1.5px; }
 .conversation-status-state .ic{ width:13px; height:13px; }
 .conversation-queue-group[hidden]{ display:none; }
-.conversation-queue-group .conversation-status-items{ padding:0 12px 3px; }
+.conversation-queue-group .conversation-status-items-content{ padding-inline:12px; }
+.conversation-queue-group .conversation-status-items-content > :first-child{ margin-top:0; }
+.conversation-queue-group .conversation-status-items-content > :last-child{ margin-bottom:0; }
 .conversation-queue-item{ display:flex; align-items:center; gap:10px; min-width:0; padding:8px 0; border-top:.5px solid var(--gray-4); color:var(--text-2); font-size:var(--type-sm); }
 .conversation-queue-text{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .conversation-queue-input{ flex:1; min-width:0; height:28px; padding:3px 7px; border:1px solid var(--gray-5); border-radius:var(--radius-sm); background:var(--surface-bg); color:var(--text-1); font:inherit; }
@@ -1477,6 +1441,48 @@ box-shadow:0 5px 18px rgba(0,0,0,.06);
 .conversation-artifact strong{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--type-md); font-weight:600; }
 .conversation-artifact small{ color:var(--text-4); font-size:var(--type-sm); }
 .conversation-artifact-arrow{ width:16px; height:16px; color:var(--text-4); }
+/* 子 Agent 是与已读取文件一致的轻量操作行；详情默认收起。 */
+.conversation-subagents{ display:grid; width:min(370px,100%); margin:var(--space-4) 0 4px; }
+.conversation-subagent-toggle{ width:100%; gap:10px; }
+.conversation-subagent-toggle .conversation-activity-label{ flex:1; }
+.conversation-subagent{ width:100%; }
+.conversation-subagent .conversation-activity-detail{ flex:1; }
+.conversation-subagent-toggle > .ic:first-child{ width:19px; height:19px; flex:none; }
+.conversation-subagent-chevron{ width:14px; height:14px; flex:none; margin-left:4px; transition:transform .18s ease; }
+.conversation-subagent-toggle[aria-expanded="true"] .conversation-subagent-chevron{ transform:rotate(180deg); }
+.conversation-subagent-items{
+  display:grid;
+  grid-template-rows:0fr;
+  opacity:0;
+  visibility:hidden;
+  transition:grid-template-rows .3s cubic-bezier(.22,.68,0,1), opacity .2s ease, visibility .3s;
+}
+.conversation-subagent-toggle[aria-expanded="true"] + .conversation-subagent-items{
+  grid-template-rows:1fr;
+  opacity:1;
+  visibility:visible;
+  transition:grid-template-rows .3s cubic-bezier(.22,.68,0,1), opacity .2s ease, visibility 0s;
+}
+.conversation-subagent-items-content{ display:grid; justify-items:start; gap:4px; min-height:0; overflow:hidden; padding-left:20px; }
+.conversation-subagent-items-content > :first-child{ margin-top:4px; }
+.conversation-subagent-items-content > :last-child{ margin-bottom:4px; }
+.conversation-subagent-state{ flex:none; color:var(--text-4); white-space:nowrap; }
+@media (prefers-reduced-motion:reduce){
+  .conversation-subagent-items,
+  .conversation-subagent-toggle[aria-expanded="true"] + .conversation-subagent-items,
+  .conversation-subagent-chevron{ transition:none; }
+}
+.conversation-subagent-back{ display:grid; place-items:center; flex:none; width:28px; height:28px; margin-right:var(--space-2); padding:0; border:0; border-radius:var(--radius-sm); background:transparent; color:var(--text-2); cursor:pointer; }
+.conversation-subagent-back[hidden]{ display:none; }
+.conversation-subagent-back:hover{ background:var(--hover); }
+.conversation-subagent-back:focus-visible{ outline:2px solid var(--brand-green); outline-offset:2px; }
+.conversation-subagent-back .ic{ width:18px; height:18px; }
+.conversation-page.subagent-open .conversation-composer-wrap{ display:none; }
+.conversation-subagent-detail{ display:grid; align-content:start; gap:var(--space-3); width:min(700px,100%); margin:0 auto; }
+.conversation-subagent-detail[hidden]{ display:none; }
+.conversation-subagent-detail h2{ margin:0; font-size:var(--type-lg); }
+.conversation-subagent-detail p{ margin:0; color:var(--text-2); }
+.conversation-subagent-detail .conversation-status-state{ justify-self:start; }
 .conversation-composer-wrap{
   position:relative;
   z-index:3;
@@ -4004,11 +4010,11 @@ overflow-wrap:inherit;
 }
 
 
-/* 摘要保留既有卡片视觉；未打开工具区时仅作为内容区第二列参与布局。 */
+/* 摘要保留既有卡片视觉；首页和对话页均覆盖在内容区上方。 */
 .summary-popover{
   position:relative;
   z-index:10;
-  grid-column:2;
+  grid-column:1 / -1;
   grid-row:1;
   width:auto;
   min-width:0;
@@ -4030,13 +4036,17 @@ overflow-wrap:inherit;
   -webkit-app-region:no-drag;
 }
 .summary-popover::-webkit-scrollbar{ display:none; }
-/* 首页卡片立即显示最终宽度，只让左侧主区随网格列变化过渡。 */
+/* 未打开工具区时，摘要锚定右上角悬浮，不改变首页的布局宽度。 */
 .content.summary-open:not(.wb-open) .summary-popover{
   position:absolute;
+  z-index:71;
   top:46px;
   right:44px;
-  width:calc(var(--summary-panel-w) - 44px);
+  width:min(326px,calc(100% - 60px));
+  max-height:min(560px,calc(100% - 62px));
   margin:0;
+  transform-origin:top right;
+  animation:summaryPanelIn .16s cubic-bezier(.22,.68,0,1) both;
 }
 /* 右侧工具区已展开时，摘要回归轻量浮层，不再占用第三列或压缩工具区。 */
 .content.summary-open.wb-open .summary-popover{

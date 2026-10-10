@@ -175,10 +175,7 @@
 
   const looseTasksEl  = document.getElementById('looseTasks');
   const expandTasksBtn = looseTasksEl.querySelector('[data-expand-tasks]');
-  // 父任务即使下挂 SubAgent，也只占任务列表中的一个名额；
-  // 子任务由父任务负责显隐，不参与顶层「展示 6 条」的计数。
-  const looseTasks = Array.from(looseTasksEl.children)
-    .filter((item) => item.matches('.task, [data-agent-task]'));
+  const looseTasks = Array.from(looseTasksEl.children).filter((item) => item.matches('.task'));
   const looseTasksInner = document.createElement('div');
   looseTasksInner.className = 'loose-tasks-inner';
   while (looseTasksEl.firstChild) looseTasksInner.appendChild(looseTasksEl.firstChild);
@@ -218,7 +215,7 @@
 const shown = looseTasks.length;
 const overflow = Math.max(0, shown - TASK_LIMIT);
 expandTasksBtn.hidden = overflow === 0;
-// 标题展示顶层任务总数；SubAgent 归属于父任务，不重复计数。
+// 标题展示任务总数，子 Agent 只在对应对话中展示。
 labelTasks.textContent = `任务 (${shown})`;
 // 按钮只表达展开状态；剩余数量不在操作文案中重复展示。
 expandTasksBtn.textContent = tasksExpanded ? '收起' : '展开';
@@ -231,34 +228,6 @@ toggleTasksSection.parentElement.hidden = shown === 0;
     tasksExpanded = !tasksExpanded;
     renderTasks();
     refreshClipped();
-  });
-
-  /* 父任务可以编排多个 SubAgent。展开按钮位于任务链接内部，因此同时拦住
-     默认跳转和冒泡，只切换子任务区域，不误触父任务本身。 */
-  function toggleAgentTasks(control) {
-    const taskGroup = control.closest('[data-agent-task]');
-    if (!taskGroup) return;
-    const expanded = taskGroup.classList.toggle('is-expanded');
-    control.setAttribute('aria-expanded', String(expanded));
-    control.setAttribute('aria-label', `${expanded ? '收起' : '展开'} SubAgent 任务`);
-    requestAnimationFrame(refreshClipped);
-  }
-
-  looseTasksEl.addEventListener('click', (e) => {
-    const control = e.target.closest('[data-toggle-agents]');
-    if (!control) return;
-    e.preventDefault();
-    e.stopPropagation();
-    toggleAgentTasks(control);
-  });
-
-  looseTasksEl.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const control = e.target.closest('[data-toggle-agents]');
-    if (!control) return;
-    e.preventDefault();
-    e.stopPropagation();
-    toggleAgentTasks(control);
   });
 
 /* 原场景文件夹全部进入同一列表，并沿用各自的折叠交互。 */
@@ -1431,8 +1400,7 @@ renderRecentFiles();
     );
   }
 
-  /* 普通任务保留「更多」操作，SubAgent 只显示执行状态。 */
-  document.querySelectorAll('.task:not(.subagent-task)').forEach((task) => {
+  document.querySelectorAll('.task').forEach((task) => {
     const acts = document.createElement('span');
     acts.className = 'row-acts';
     acts.innerHTML = makeAct('task-more', '更多', DOTS_SVG);
@@ -1473,8 +1441,7 @@ renderRecentFiles();
   const taskIds = new WeakMap();
   let nextTaskId = 1;
   document.querySelectorAll('.task').forEach((task) => {
-    const container = task.matches('.task-parent') ? task.closest('[data-agent-task]') : task;
-    if (!taskHomes.has(container)) taskHomes.set(container, { parent: container.parentElement, next: container.nextSibling });
+    if (!taskHomes.has(task)) taskHomes.set(task, { parent: task.parentElement, next: task.nextSibling });
     taskIds.set(task, task.id === 'demoConversationTask' ? 'demo-conversation-store-fulfillment' : `demo-conversation-${nextTaskId++}`);
   });
 
@@ -1511,7 +1478,7 @@ renderRecentFiles();
     menuRow = row;
     row.classList.add('menu-open');
 
-    rowMenu.querySelector('[data-menu-act="pin"] span').textContent = (row.matches('.task-parent') ? row.closest('[data-agent-task]') : row).dataset.pinned === 'true' ? '取消置顶' : '置顶';
+    rowMenu.querySelector('[data-menu-act="pin"] span').textContent = row.dataset.pinned === 'true' ? '取消置顶' : '置顶';
     rowMenu.hidden = false;
     rowMenu.style.visibility = 'hidden';
     rowMenu.style.left = '0px';
@@ -3865,6 +3832,11 @@ renderToolFileWorkspace(item);
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
   const retailConversationTask = document.getElementById('retailFirstConversationTask');
+  const conversationSubagents = [
+    { work: '合并各门店履约明细', state: 'done' },
+    { work: '定位异常订单的集中时段', state: 'running' },
+    { work: '复核履约指标统计口径', state: 'running' },
+  ];
   const conversationExamples = new Map([
     [conversationTask, {
       folderId: 'default',
@@ -3949,10 +3921,10 @@ renderToolFileWorkspace(item);
     return conversationQueueStates.get(task);
   }
   const conversationTaskTitle = document.getElementById('conversationTaskTitle');
+  const conversationSubagentBack = document.getElementById('conversationSubagentBack');
+  const conversationSubagentDetail = document.getElementById('conversationSubagentDetail');
   const conversationTaskMore = document.getElementById('conversationTaskMore');
   const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
-  const conversationAgentItems = document.getElementById('conversationAgentItems');
-  const conversationAgentSummary = document.getElementById('conversationAgentSummary');
   const conversationAiTaskItems = document.getElementById('conversationAiTaskItems');
   const conversationAiTaskSummary = document.getElementById('conversationAiTaskSummary');
   const conversationStatusStack = conversationPage.querySelector('.conversation-status-stack');
@@ -3964,37 +3936,31 @@ renderToolFileWorkspace(item);
   });
   conversationStatusObserver.observe(conversationStatusStack);
   const aiTasks = Array.from(conversationAiTaskItems.querySelectorAll('.conversation-status-item'));
-  const runningAiTasks = aiTasks.filter((item) => item.querySelector('.is-running')).length;
-  conversationAiTaskSummary.textContent = `共 ${aiTasks.length} 项 · ${runningAiTasks} 项进行中`;
-  const statusSpinner = '<span class="spinner" aria-hidden="true"></span>';
-  const statusCheck = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
-
-  function renderConversationAgents() {
-    const agents = Array.from(activeConversationTask?.closest('[data-agent-task]')?.querySelectorAll('.subagent-task') || []);
-    conversationAgentSummary.textContent = `使用了 ${agents.length} 个子 Agent`;
-    conversationAgentItems.innerHTML = agents.map((agent) => {
-      const running = agent.dataset.state === 'running';
-      const name = agent.querySelector('.task-name').textContent.trim();
-      return `<button class="conversation-status-item" type="button" aria-pressed="false">` +
-        `<span class="conversation-status-name">${esc(name)}</span>` +
-        `<span class="conversation-status-state ${running ? 'is-running' : 'is-done'}">` +
-        `${running ? statusSpinner : statusCheck}${running ? '进行中' : '已完成'}</span></button>`;
-    }).join('');
-  }
-
+  const taskStatusIcons = {
+    done: '<circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/>',
+    pending: '<circle cx="12" cy="12" r="9"/>',
+  };
+  aiTasks.forEach((item, index) => {
+    const state = item.dataset.taskState;
+    const progressId = `conversation-task-progress-${index}`;
+    const runningIcon = `<defs><linearGradient id="${progressId}-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="12" x2="4.2" y2="7.5"><stop stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient><mask id="${progressId}-mask" maskUnits="userSpaceOnUse" mask-type="luminance" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="white" stroke="none"/><rect x="0" y="0" width="8" height="12" fill="url(#${progressId}-gradient)" stroke="none"/></mask></defs><path d="M14.8 3.5A9 9 0 1 1 4.2 7.5" mask="url(#${progressId}-mask)"/>`;
+    item.querySelector('.conversation-task-icon').innerHTML = `<svg viewBox="0 0 24 24" class="ic">${state === 'running' ? runningIcon : taskStatusIcons[state] || taskStatusIcons.pending}</svg>`;
+    item.setAttribute('aria-label', `${item.querySelector('.conversation-status-name').textContent.trim()}，${{ done: '已完成', running: '进行中', pending: '未完成' }[state] || '未完成'}`);
+  });
+  conversationAiTaskSummary.textContent = `进度 ${aiTasks.filter((item) => item.dataset.taskState === 'done').length}/${aiTasks.length}`;
   conversationStatusStack.addEventListener('click', (event) => {
     const trigger = event.target.closest('.conversation-status-trigger');
     if (trigger) {
       const expanded = trigger.getAttribute('aria-expanded') !== 'true';
       trigger.setAttribute('aria-expanded', String(expanded));
-      document.getElementById(trigger.getAttribute('aria-controls')).hidden = !expanded;
+      const items = document.getElementById(trigger.getAttribute('aria-controls'));
+      items.inert = !expanded;
+      items.setAttribute('aria-hidden', String(!expanded));
       return;
     }
     const item = event.target.closest('.conversation-status-item');
     if (item) item.setAttribute('aria-pressed', String(item.getAttribute('aria-pressed') !== 'true'));
   });
-  renderConversationAgents();
-
   const conversationTaskMenu = document.createElement('div');
   conversationTaskMenu.id = 'conversationTaskMenu';
   conversationTaskMenu.className = 'row-menu';
@@ -4022,8 +3988,7 @@ renderToolFileWorkspace(item);
     event.stopPropagation();
     if (!conversationTaskMenu.hidden) { closeConversationTaskMenu(); return; }
     closeRowMenu();
-    const container = activeConversationTask.matches('.task-parent') ? activeConversationTask.closest('[data-agent-task]') : activeConversationTask;
-    conversationTaskMenu.querySelector('[data-conversation-act="pin"] span').textContent = container.dataset.pinned === 'true' ? '取消置顶' : '置顶';
+    conversationTaskMenu.querySelector('[data-conversation-act="pin"] span').textContent = activeConversationTask.dataset.pinned === 'true' ? '取消置顶' : '置顶';
     conversationTaskMenu.hidden = false;
     conversationTaskMenu.classList.add('open');
     conversationTaskMore.setAttribute('aria-expanded', 'true');
@@ -4033,7 +3998,7 @@ renderToolFileWorkspace(item);
   });
 
   async function runTaskMenuAction(action, task) {
-    const container = task.matches('.task-parent') ? task.closest('[data-agent-task]') : task;
+    const container = task;
     const nameEl = task.querySelector('.task-name');
     const isCurrentConversation = task === activeConversationTask;
     if (action === 'pin') {
@@ -4092,6 +4057,25 @@ renderToolFileWorkspace(item);
     html: 'html', htm: 'html', png: 'image', jpg: 'image', jpeg: 'image',
     gif: 'image', webp: 'image', md: 'markdown', pdf: 'pdf', ppt: 'ppt', pptx: 'ppt',
   };
+
+  function renderConversationSubagents() {
+    return `<div class="conversation-subagents" aria-label="子 Agent 调取">` +
+      `<button class="conversation-activity-link conversation-subagent-toggle" type="button" aria-expanded="false" aria-controls="conversationSubagentItems">` +
+      `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="9" y="3" width="6" height="6" rx="2"/><rect x="3.5" y="16.5" width="5" height="4.5" rx="1.8"/><rect x="15.5" y="16.5" width="5" height="4.5" rx="1.8"/><path d="M12 9v3.5M6 16.5v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg>` +
+      `<span class="conversation-activity-label">正在调取子agent</span>` +
+      `<svg viewBox="0 0 24 24" class="ic conversation-subagent-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` +
+      `<div class="conversation-subagent-items" id="conversationSubagentItems" aria-hidden="true" inert><div class="conversation-subagent-items-content">` +
+      conversationSubagents.map((agent, index) => {
+        const done = agent.state === 'done';
+        const icon = done
+          ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/></svg>'
+          : '<span class="spinner" aria-hidden="true"></span>';
+        const state = done ? '已完成' : '进行中';
+        return `<button class="conversation-activity-link conversation-subagent" type="button" data-subagent-index="${index}" aria-label="${esc(agent.work)}，${state}，进入子 Agent 详情">` +
+          `<span class="conversation-activity-icon${done ? ' is-done' : ''}">${icon}</span>` +
+          `<span class="conversation-activity-detail">${esc(agent.work)}</span><span class="conversation-subagent-state">${state}</span></button>`;
+      }).join('') + `</div></div></div>`;
+  }
 
   function renderConversationArtifacts(task) {
     const example = conversationExamples.get(task);
@@ -4176,6 +4160,26 @@ renderToolFileWorkspace(item);
   });
 
   const conversationGoalLabel = '<span class="conversation-message-goal-label"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg>目标</span>';
+  let conversationBeforeSubagentScroll = 0;
+  let activeConversationSubagentIndex = null;
+  function closeConversationSubagent(restoreScroll = true) {
+    if (!conversationPage.classList.contains('subagent-open')) return;
+    conversationPage.classList.remove('subagent-open');
+    conversationThread.hidden = false;
+    conversationSubagentDetail.hidden = true;
+    conversationSubagentBack.hidden = true;
+    conversationTaskTitle.textContent = activeConversationTask?.querySelector('.task-name')?.textContent.trim() || '当前任务';
+    renderConversationTurnNav();
+    if (restoreScroll) conversationScroll.scrollTop = conversationBeforeSubagentScroll;
+  }
+
+  conversationSubagentBack.addEventListener('click', () => {
+    const index = activeConversationSubagentIndex;
+    closeConversationSubagent();
+    conversationThread.querySelectorAll('.conversation-subagent')[index]?.focus();
+    activeConversationSubagentIndex = null;
+  });
+
   const messageCopyIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/></svg>';
   const messageLikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></svg>';
   const messageDislikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g transform="rotate(180 12 12)"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></g></svg>';
@@ -4196,7 +4200,7 @@ renderToolFileWorkspace(item);
       const content = message.matches('.user-message') ? message.querySelector('.message-bubble') : message.querySelector('.assistant-content');
       const text = message.matches('.user-message')
         ? Array.from(content.childNodes).filter(node => !node.classList?.contains('conversation-message-goal-label')).map(node => node.textContent).join('').trim()
-        : Array.from(content.children).filter(node => !node.matches('.conversation-message-meta, .conversation-artifacts, .conversation-activity')).map(node => node.innerText.trim()).filter(Boolean).join('\n\n');
+        : Array.from(content.children).filter(node => !node.matches('.conversation-message-meta, .conversation-artifacts, .conversation-subagents, .conversation-activity')).map(node => node.innerText.trim()).filter(Boolean).join('\n\n');
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
@@ -4213,6 +4217,7 @@ renderToolFileWorkspace(item);
 
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
     closeAccessMenus();
+    if (!open || activeConversationTask !== task) closeConversationSubagent(false);
     if (!open) closeConversationTaskMenu();
     if (open && activeConversationTask !== task) {
       if (activeConversationTask) setGoalMode(conversationPrompt, false);
@@ -4228,7 +4233,8 @@ renderToolFileWorkspace(item);
           `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(prompt)}</div>${renderMessageMeta('user')}</div></div>` +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
           (index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
-          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><div class="conversation-activity-file"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span>已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></div><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div>` : '') +
+          (task === conversationTask && index === turns.length - 1 ? renderConversationSubagents() : '') +
+          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><button class="conversation-activity-file conversation-activity-link" type="button" data-read-file="门店履约异常明细.xlsx" aria-label="预览已读取文件：门店履约异常明细.xlsx"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span class="conversation-activity-label">已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></button><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div>` : '') +
           (reply ? renderMessageMeta('assistant') : '') +
           '</div></div>'
         ).join('');
@@ -4238,7 +4244,6 @@ renderToolFileWorkspace(item);
       if (folder) selectFolder(folder.id);
       renderConversationQueue();
     }
-    if (open) renderConversationAgents();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
     activeConversationTask?.setAttribute('aria-current', open ? 'page' : 'false');
@@ -4273,7 +4278,7 @@ function renderConversationQueue() {
   conversationStatusStack.hidden = activeConversationTask !== conversationTask && !running && !prompts.length;
   conversationQueueGroup.hidden = !running && !prompts.length;
   conversationQueueSummary.textContent = prompts.length ? `${prompts.length} 条待发送` : '本轮进行中';
-  conversationQueueItems.innerHTML = prompts.map((text, index) =>
+  conversationQueueItems.querySelector('.conversation-status-items-content').innerHTML = prompts.map((text, index) =>
     `<div class="conversation-queue-item"><span class="conversation-queue-text" title="${esc(text)}">${esc(text)}</span><div class="conversation-queue-actions"><button class="conversation-queue-send" type="button" data-queue-send="${index}" aria-label="直接发送队列中的第 ${index + 1} 条" title="直接发送">${queueSendIcon}</button><button class="conversation-queue-remove" type="button" data-queue-remove="${index}" aria-label="删除队列中的第 ${index + 1} 条" title="删除">${queueRemoveIcon}</button><button class="conversation-queue-edit" type="button" data-queue-edit="${index}" aria-label="编辑队列中的第 ${index + 1} 条" title="编辑">${queueEditIcon}</button></div></div>`
   ).join('');
 }
@@ -4392,7 +4397,7 @@ conversationQueueItems.addEventListener('keydown', (event) => {
 
   conversationExamples.forEach((example, task) => {
     task.addEventListener('click', (e) => {
-      if (e.target.closest('[data-toggle-agents], .row-acts, .row-act')) return;
+      if (e.target.closest('.row-acts, .row-act')) return;
       e.preventDefault();
       setConversationOpen(true, task);
     });
@@ -4445,6 +4450,45 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     stopArtifactScrollAnchor = stop;
     frame = requestAnimationFrame(keepPosition);
   }
+  conversationThread.addEventListener('click', (event) => {
+    const trigger = event.target.closest('.conversation-subagent-toggle');
+    if (!trigger || !conversationThread.contains(trigger)) return;
+    const expanded = trigger.getAttribute('aria-expanded') !== 'true';
+    trigger.setAttribute('aria-expanded', String(expanded));
+    const items = trigger.nextElementSibling;
+    items.inert = !expanded;
+    items.setAttribute('aria-hidden', String(!expanded));
+  });
+  conversationThread.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-subagent-index]');
+    if (!button || activeConversationTask !== conversationTask) return;
+    const agent = conversationSubagents[Number(button.dataset.subagentIndex)];
+    if (!agent) return;
+    conversationBeforeSubagentScroll = conversationScroll.scrollTop;
+    activeConversationSubagentIndex = Number(button.dataset.subagentIndex);
+    conversationTaskTitle.textContent = agent.work;
+    conversationSubagentDetail.innerHTML = `<span class="conversation-status-state ${agent.state === 'done' ? 'is-done' : 'is-running'}">` +
+      (agent.state === 'done' ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成' : '<span class="spinner" aria-hidden="true"></span>正在调取子agent') +
+      `</span><h2>${esc(agent.work)}</h2><p>${agent.state === 'done' ? '已完成处理，结果将在主对话中汇总。' : '正在处理，完成后将在主对话中汇总。'}</p>`;
+    conversationThread.hidden = true;
+    conversationSubagentDetail.hidden = false;
+    conversationSubagentBack.hidden = false;
+    conversationPage.classList.add('subagent-open');
+    conversationTurnNav.hidden = true;
+    conversationScroll.scrollTop = 0;
+    conversationSubagentBack.focus();
+  });
+  conversationThread.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-read-file]');
+    if (!button || activeConversationTask !== conversationTask) return;
+    const example = conversationExamples.get(activeConversationTask);
+    const folder = FOLDERS.find((entry) => entry.id === example.folderId);
+    const node = folder?.files.find((file) => file.name === button.dataset.readFile);
+    if (node) {
+      anchorConversationToArtifact(button);
+      openArtifactPreview(node, [folder, node]);
+    }
+  });
   conversationThread.addEventListener('click', (event) => {
     const button = event.target.closest('[data-artifact-index]');
     if (!button || !activeConversationTask) return;

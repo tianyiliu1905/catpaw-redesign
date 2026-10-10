@@ -232,6 +232,9 @@
         ['设计系统', 'design-system', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 10h18M10 10v11"/>', '简洁的页面分栏布局'],
         ['设置', 'settings', '<path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/>', '齿端更宽、保留齿间留白的六齿齿轮'],
         ['完成', 'check', '<path d="m5 12 4.5 4.5L19 7"/>', '状态勾选'],
+        ['已完成', 'status-complete', '<circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/>', '圆形轮廓内的简洁勾选'],
+        ['未完成', 'status-incomplete', '<circle cx="12" cy="12" r="9"/>', '与已完成相同尺寸的空心圆'],
+        ['进行中', 'status-in-progress', '<defs><linearGradient id="status-progress-tail-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="12" x2="4.2" y2="7.5"><stop stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient><mask id="status-progress-tail-mask" maskUnits="userSpaceOnUse" mask-type="luminance" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="white" stroke="none"/><rect x="0" y="0" width="8" height="12" fill="url(#status-progress-tail-gradient)" stroke="none"/></mask></defs><path d="M14.8 3.5A9 9 0 1 1 4.2 7.5" mask="url(#status-progress-tail-mask)"/>', '左上尾端渐隐的圆形进度弧'],
         ['目标', 'target', '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/>', '单圈准星、四向短刻度与空心圆点'],
         ['任务清单', 'task-list', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="m7 9 1.5 1.5L11 8M14 9h3M7 16h10"/>', '勾选与任务行'],
         ['子任务', 'subagent', '<rect x="9" y="3" width="6" height="6" rx="2"/><rect x="3.5" y="16.5" width="5" height="4.5" rx="1.8"/><rect x="15.5" y="16.5" width="5" height="4.5" rx="1.8"/><path d="M12 9v3.5M6 16.5v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>', '分支层级关系']
@@ -269,6 +272,11 @@
       ['面板与工具', [
         ['左侧栏', 'panel-left', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/>', '左侧分栏'],
         ['右侧栏', 'panel-right', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18"/>', '右侧分栏'],
+        ['打开页面 1', 'open-pages-1', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="m10 9.5 2-1.7v8.7m-2 0h4"/>', '右侧栏外框 · 1 个页面'],
+        ['打开页面 2', 'open-pages-2', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 10a3 3 0 0 1 6 0c0 2-1.5 3.1-6 6.5h6"/>', '右侧栏外框 · 2 个页面'],
+        ['打开页面 3', 'open-pages-3', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9.2 8.8a3.2 3.2 0 0 1 5.5 1.7c0 1.3-1 2-2.5 2 1.6 0 2.7.8 2.7 2.1a3.2 3.2 0 0 1-5.7 1.5"/>', '右侧栏外框 · 3 个页面'],
+        ['打开页面 4', 'open-pages-4', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M14.5 16.5v-9L9 13.7h7"/>', '右侧栏外框 · 4 个页面'],
+        ['打开页面 5', 'open-pages-5', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 8H10l-.6 4a3.3 3.3 0 1 1 .3 3.7"/>', '右侧栏外框 · 5 个页面'],
         ['收起文件树', 'panel-close', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-5-8-2-2 2-2"/>', '右栏向左收起'],
         ['展开文件树', 'panel-open', '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-7-8 2-2-2-2"/>', '右栏向右展开'],
         ['全屏', 'maximize', '<path d="m14 10 7-7m-7 0h7v7M10 14l-7 7m0-7v7h7"/>', '对角线向外展开'],
@@ -323,6 +331,7 @@
     const comparisonGroups = [
       ['圆形轮廓', '对照外圈直径、中心点和断口', ['scheduled-task.svg', 'updated.svg', 'refresh.svg', 'info.svg', 'browser.svg', 'target.svg']],
       ['方形圆角框', '对照主体宽度、高度及圆角', ['experts-skills-connectors.svg', 'design-system.svg', 'task-list.svg', 'web-development.svg', 'panel-left.svg', 'panel-right.svg', 'panel-close.svg', 'panel-open.svg']],
+      ['打开页面数量', '沿用右侧栏外框，对照 1–5 的数字重心与留白', ['panel-right.svg', 'open-pages-1.svg', 'open-pages-2.svg', 'open-pages-3.svg', 'open-pages-4.svg', 'open-pages-5.svg']],
       ['横向长方形', '对照横向主体的宽高、四角与内边距', ['design-resources.svg', 'terminal.svg', 'project-view.svg', 'slides.svg']],
       ['文件夹轮廓', '对照顶部标签、主体高度和底边', ['folder.svg', 'open-folder.svg', 'new-folder.svg', 'organize-files.svg']],
       ['文件与纸张', '对照纸面边界、折角和叠放关系', ['file.svg', 'copy.svg', 'organize-files.svg']],

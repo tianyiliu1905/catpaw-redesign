@@ -89,30 +89,10 @@
              running=转圈（不显示时间） / new=绿点 / await=待确认 / 其余=时间 -->
         <div class="loose-tasks" id="looseTasks">
           <!-- 办公 -->
-          <div class="task-with-agents" data-agent-task>
-            <a class="task flush task-parent" id="demoConversationTask" href="#" data-scope="office" data-state="running" data-open-conversation>
-              <span class="agent-disclosure" role="button" tabindex="0" data-toggle-agents
-                    aria-label="展开 SubAgent 任务" aria-expanded="false">
-                <svg viewBox="0 0 24 24" class="ic"><path d="m9 6 6 6-6 6"/></svg>
-              </span>
-              <span class="task-name">整理本周门店履约异常明细</span>
-              <span class="task-state"><span class="spinner"></span></span>
-            </a>
-            <div class="subagent-list">
-              <a class="task subagent-task" href="#" data-state="running" title="SubAgent：定位异常订单的集中时段">
-                <span class="task-name">数据分析 · 定位异常时段</span>
-                <span class="task-state"><span class="spinner"></span></span>
-              </a>
-              <a class="task subagent-task" href="#" data-state="done" title="SubAgent：合并各门店履约明细">
-                <span class="task-name">表格处理 · 合并门店明细</span>
-                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4.5 4.5L19 7"/></svg></span>
-              </a>
-              <a class="task subagent-task" href="#" data-state="done" title="SubAgent：复核履约指标统计口径">
-                <span class="task-name">指标校验 · 复核统计口径</span>
-                <span class="task-state"><svg viewBox="0 0 24 24" class="subagent-done"><path d="m5 12 4.5 4.5L19 7"/></svg></span>
-              </a>
-            </div>
-          </div>
+          <a class="task flush" id="demoConversationTask" href="#" data-scope="office" data-state="running" data-open-conversation>
+            <span class="task-name">整理本周门店履约异常明细</span>
+            <span class="task-state"><span class="spinner"></span></span>
+          </a>
           <a class="task flush" href="#" data-scope="office" data-state="await">
             <span class="task-name">把季度复盘要点汇总成幻灯片</span>
             <span class="task-state"><em class="tag-await">待确认</em></span>
@@ -487,6 +467,7 @@
           <button class="icon-btn conversation-task-expand" id="expandSidebarFromConversation" type="button" title="展开侧边栏" aria-label="展开侧边栏" aria-expanded="true">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/></svg>
           </button>
+          <button class="conversation-subagent-back" id="conversationSubagentBack" type="button" title="返回主对话" aria-label="返回主对话" hidden><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
           <span id="conversationTaskTitle">整理本周门店履约异常明细</span>
           <button class="conversation-task-more" id="conversationTaskMore" type="button" aria-label="任务操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationTaskMenu">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg>
@@ -507,28 +488,22 @@
                 </div>
               </div>
             </div>
+            <div class="conversation-subagent-detail" id="conversationSubagentDetail" hidden></div>
           </div>
         </div>
         <div class="conversation-composer-wrap">
           <div class="conversation-status-stack" aria-label="任务执行状态">
             <section class="conversation-status-group" data-status-group>
-              <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAgentItems">
-                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-                <span class="conversation-status-heading">子 Agent</span>
-                <span class="conversation-status-summary" id="conversationAgentSummary">使用了 3 个子 Agent</span>
-              </button>
-              <div class="conversation-status-items" id="conversationAgentItems" hidden></div>
-            </section>
-            <section class="conversation-status-group" data-status-group>
               <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAiTaskItems">
                 <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-                <span class="conversation-status-heading">任务</span>
-                <span class="conversation-status-summary" id="conversationAiTaskSummary">共 3 项 · 1 项进行中</span>
+                <span class="conversation-status-heading" id="conversationAiTaskSummary">进度 2/3</span>
               </button>
-              <div class="conversation-status-items" id="conversationAiTaskItems" hidden>
-                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-task-number">01</span><span class="conversation-status-name">持续监测新增异常订单</span><span class="conversation-status-state is-running"><span class="spinner" aria-hidden="true"></span>进行中</span></button>
-                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-task-number">02</span><span class="conversation-status-name">汇总本周门店履约明细</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成</span></button>
-                <button class="conversation-status-item" type="button" aria-pressed="false"><span class="conversation-task-number">03</span><span class="conversation-status-name">生成履约异常看板</span><span class="conversation-status-state is-done"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成</span></button>
+              <div class="conversation-status-items" id="conversationAiTaskItems" aria-hidden="true" inert>
+                <div class="conversation-status-items-content">
+                  <button class="conversation-status-item" type="button" data-task-state="running" aria-pressed="false"><span class="conversation-task-icon" aria-hidden="true"></span><span class="conversation-status-name">持续监测新增异常订单</span></button>
+                  <button class="conversation-status-item" type="button" data-task-state="done" aria-pressed="false"><span class="conversation-task-icon" aria-hidden="true"></span><span class="conversation-status-name">汇总本周门店履约明细</span></button>
+                  <button class="conversation-status-item" type="button" data-task-state="done" aria-pressed="false"><span class="conversation-task-icon" aria-hidden="true"></span><span class="conversation-status-name">生成履约异常看板</span></button>
+                </div>
               </div>
             </section>
             <section class="conversation-status-group conversation-queue-group" id="conversationQueueGroup" aria-label="待发送队列" hidden>
@@ -537,7 +512,7 @@
                 <span class="conversation-status-heading">队列</span>
                 <span class="conversation-status-summary" id="conversationQueueSummary"></span>
               </button>
-              <div class="conversation-status-items" id="conversationQueueItems" hidden></div>
+              <div class="conversation-status-items" id="conversationQueueItems" aria-hidden="true" inert><div class="conversation-status-items-content"></div></div>
             </section>
           </div>
           <div class="conversation-composer" id="conversationComposer">
@@ -730,7 +705,7 @@
       </div>
     </main>
 
-    <!-- 摘要作为内容区的独立列，打开时会挤压左侧对话区，而不是覆盖内容。 -->
+    <!-- 摘要悬浮于内容区之上，不改变首页或对话区的宽度。 -->
 <section class="summary-popover" id="summaryPopover" role="dialog" aria-label="摘要" hidden>
 <div class="summary-section summary-goal-section" id="summaryGoalSection" hidden>
 <header class="summary-section-head">
