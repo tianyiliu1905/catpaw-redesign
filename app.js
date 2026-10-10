@@ -3938,13 +3938,12 @@ renderToolFileWorkspace(item);
   const aiTasks = Array.from(conversationAiTaskItems.querySelectorAll('.conversation-status-item'));
   const taskStatusIcons = {
     done: '<circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/>',
-    pending: '<circle cx="12" cy="12" r="9"/>',
   };
   aiTasks.forEach((item, index) => {
     const state = item.dataset.taskState;
     const progressId = `conversation-task-progress-${index}`;
     const runningIcon = `<defs><linearGradient id="${progressId}-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="12" x2="4.2" y2="7.5"><stop stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient><mask id="${progressId}-mask" maskUnits="userSpaceOnUse" mask-type="luminance" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="white" stroke="none"/><rect x="0" y="0" width="8" height="12" fill="url(#${progressId}-gradient)" stroke="none"/></mask></defs><path d="M14.8 3.5A9 9 0 1 1 4.2 7.5" mask="url(#${progressId}-mask)"/>`;
-    item.querySelector('.conversation-task-icon').innerHTML = `<svg viewBox="0 0 24 24" class="ic">${state === 'running' ? runningIcon : taskStatusIcons[state] || taskStatusIcons.pending}</svg>`;
+    item.querySelector('.conversation-task-icon').innerHTML = `<svg viewBox="0 0 24 24" class="ic">${state === 'done' ? taskStatusIcons.done : runningIcon}</svg>`;
     item.setAttribute('aria-label', `${item.querySelector('.conversation-status-name').textContent.trim()}，${{ done: '已完成', running: '进行中', pending: '未完成' }[state] || '未完成'}`);
   });
   conversationAiTaskSummary.textContent = `进度 ${aiTasks.filter((item) => item.dataset.taskState === 'done').length}/${aiTasks.length}`;
@@ -4063,7 +4062,7 @@ renderToolFileWorkspace(item);
       `<button class="conversation-activity-link conversation-subagent-toggle" type="button" aria-expanded="false" aria-controls="conversationSubagentItems">` +
       `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="9" y="3" width="6" height="6" rx="2"/><rect x="3.5" y="16.5" width="5" height="4.5" rx="1.8"/><rect x="15.5" y="16.5" width="5" height="4.5" rx="1.8"/><path d="M12 9v3.5M6 16.5v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg>` +
       `<span class="conversation-activity-label">正在调取子agent</span>` +
-      `<svg viewBox="0 0 24 24" class="ic conversation-subagent-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` +
+      `<svg viewBox="0 0 24 24" class="ic conversation-subagent-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>` +
       `<div class="conversation-subagent-items" id="conversationSubagentItems" aria-hidden="true" inert><div class="conversation-subagent-items-content">` +
       conversationSubagents.map((agent, index) => {
         const done = agent.state === 'done';
@@ -4073,7 +4072,7 @@ renderToolFileWorkspace(item);
         const state = done ? '已完成' : '进行中';
         return `<button class="conversation-activity-link conversation-subagent" type="button" data-subagent-index="${index}" aria-label="${esc(agent.work)}，${state}，进入子 Agent 详情">` +
           `<span class="conversation-activity-icon${done ? ' is-done' : ''}">${icon}</span>` +
-          `<span class="conversation-activity-detail">${esc(agent.work)}</span><span class="conversation-subagent-state">${state}</span></button>`;
+          `<span class="conversation-activity-detail">${esc(agent.work)}</span></button>`;
       }).join('') + `</div></div></div>`;
   }
 

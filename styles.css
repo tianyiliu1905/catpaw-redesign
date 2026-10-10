@@ -1373,8 +1373,12 @@ background:var(--success-bg);
 .conversation-status-item[aria-pressed="true"]{ background:var(--active); color:var(--text-1); }
 .conversation-task-icon{ flex:none; display:grid; place-items:center; width:20px; color:var(--text-3); }
 .conversation-task-icon .ic{ width:16px; height:16px; }
-.conversation-status-item[data-task-state="done"] .conversation-task-icon{ color:var(--success-text); }
-.conversation-status-item[data-task-state="running"] .conversation-task-icon{ color:var(--text-2); }
+.conversation-status-item[data-task-state="done"] .conversation-task-icon{ color:var(--text-4); }
+.conversation-status-item:not([data-task-state="done"]) .conversation-task-icon{ color:var(--text-2); }
+.conversation-status-item:not([data-task-state="done"]) .conversation-task-icon .ic{ animation:spin .85s linear infinite; }
+@media (prefers-reduced-motion:reduce){
+  .conversation-status-item:not([data-task-state="done"]) .conversation-task-icon .ic{ animation:none; }
+}
 .conversation-status-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .conversation-status-item[data-task-state="done"] .conversation-status-name{ color:var(--text-4); text-decoration:line-through; text-decoration-color:currentColor; }
 .conversation-status-item[data-task-state="done"]:hover .conversation-status-name{ color:var(--text-3); }
@@ -1443,13 +1447,13 @@ box-shadow:0 5px 18px rgba(0,0,0,.06);
 .conversation-artifact-arrow{ width:16px; height:16px; color:var(--text-4); }
 /* 子 Agent 是与已读取文件一致的轻量操作行；详情默认收起。 */
 .conversation-subagents{ display:grid; width:min(370px,100%); margin:var(--space-4) 0 4px; }
-.conversation-subagent-toggle{ width:100%; gap:10px; }
-.conversation-subagent-toggle .conversation-activity-label{ flex:1; }
+.conversation-subagent-toggle{ width:max-content; gap:6px; }
+.conversation-subagent-toggle .conversation-activity-label{ flex:none; }
 .conversation-subagent{ width:100%; }
 .conversation-subagent .conversation-activity-detail{ flex:1; }
 .conversation-subagent-toggle > .ic:first-child{ width:19px; height:19px; flex:none; }
-.conversation-subagent-chevron{ width:14px; height:14px; flex:none; margin-left:4px; transition:transform .18s ease; }
-.conversation-subagent-toggle[aria-expanded="true"] .conversation-subagent-chevron{ transform:rotate(180deg); }
+.conversation-subagent-chevron{ width:14px; height:14px; flex:none; transition:transform .18s ease; }
+.conversation-subagent-toggle[aria-expanded="true"] .conversation-subagent-chevron{ transform:rotate(90deg); }
 .conversation-subagent-items{
   display:grid;
   grid-template-rows:0fr;
@@ -1466,7 +1470,6 @@ box-shadow:0 5px 18px rgba(0,0,0,.06);
 .conversation-subagent-items-content{ display:grid; justify-items:start; gap:4px; min-height:0; overflow:hidden; padding-left:20px; }
 .conversation-subagent-items-content > :first-child{ margin-top:4px; }
 .conversation-subagent-items-content > :last-child{ margin-bottom:4px; }
-.conversation-subagent-state{ flex:none; color:var(--text-4); white-space:nowrap; }
 @media (prefers-reduced-motion:reduce){
   .conversation-subagent-items,
   .conversation-subagent-toggle[aria-expanded="true"] + .conversation-subagent-items,
