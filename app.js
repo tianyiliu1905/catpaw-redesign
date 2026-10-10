@@ -773,9 +773,9 @@ let recentFilesExpanded = false;
     }
     const visibleCount = recentFilesExpanded ? MAX_RECENT_FILES : RECENT_VISIBLE_COUNT;
     const visibleFiles = recentOpenedFiles.slice(0, visibleCount);
-    recentFiles.innerHTML = GRADIENT_DEFS + visibleFiles.map((entry, index) => {
-      const type = artifactType(entry.node);
-      const thumb = (THUMBS[type] || THUMBS.doc)();
+recentFiles.innerHTML = visibleFiles.map((entry, index) => {
+const type = artifactType(entry.node);
+const thumb = summaryArtifactIcon(type);
       return `<div class="summary-file-row" data-recent-index="${index}">` +
         `<button class="fitem recent-file" type="button" data-file-type="${type || 'file'}" title="${esc(entry.node.name)}">` +
         `<span class="fthumb">${thumb}</span><span class="fname">${esc(entry.node.name)}</span></button>` +
@@ -797,9 +797,14 @@ let recentFilesExpanded = false;
     return null;
   }
 
-  function isArtifactNode(node) {
-    return Boolean(artifactType(node));
-  }
+function isArtifactNode(node) {
+return Boolean(artifactType(node));
+}
+
+function summaryArtifactIcon(type) {
+const icon = { word: 'doc', png: 'image' }[type] || type || 'doc';
+return `<img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true">`;
+}
 
   function renderFileGrid(folder) {
     const files = (folder.files || [])
@@ -811,10 +816,10 @@ let recentFilesExpanded = false;
     }
 
     // 保留文件夹中的原顺序，同时携带原下标供摘要操作回查同一节点。
-    fileGrid.innerHTML = GRADIENT_DEFS + files
-      .map(({ f, i }) => {
-        const type = artifactType(f);
-        const thumb = (THUMBS[type] || THUMBS.doc)();
+fileGrid.innerHTML = files
+.map(({ f, i }) => {
+const type = artifactType(f);
+const thumb = summaryArtifactIcon(type);
         return (
           `<div class="summary-file-row" data-file-index="${i}">` +
           `<button class="fitem" type="button" data-file-type="${type}" title="${esc(f.name)}">` +
@@ -1035,11 +1040,22 @@ let recentFilesExpanded = false;
 
 function renderSummaryContents() {
 const hasActiveTask = document.querySelector('.main')?.classList.contains('conversation-open');
-const goal = hasActiveTask ? conversationGoals.get(activeConversationTask) || conversationExamples.get(activeConversationTask)?.goal || '' : '';
+const goal = hasActiveTask ? (conversationGoals.has(activeConversationTask)
+  ? conversationGoals.get(activeConversationTask) : conversationExamples.get(activeConversationTask)?.goal || '') : '';
 const goalSection = document.getElementById('summaryGoalSection');
 goalSection.hidden = !goal;
 document.getElementById('summaryGoalDivider').hidden = !goal;
-document.getElementById('summaryGoalText').textContent = goal;
+document.getElementById('summaryGoalText').textContent = goal || '';
+document.getElementById('summaryGoalEdit').hidden = true;
+document.getElementById('summaryGoalText').hidden = false;
+const paused = Boolean(goal && pausedConversationGoals.has(activeConversationTask));
+document.getElementById('summaryGoalPaused').hidden = !paused;
+const pauseButton = document.getElementById('summaryGoalPause');
+pauseButton.title = paused ? '继续目标' : '暂停目标';
+pauseButton.setAttribute('aria-label', pauseButton.title);
+pauseButton.innerHTML = paused
+  ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 5.5a1 1 0 0 1 1.5-.85l10.4 6.4a1.1 1.1 0 0 1 0 1.9l-10.4 6.4A1 1 0 0 1 7 18.5Z"/></svg>'
+  : '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="4.5" y="5" width="5.5" height="14" rx="1.4"/><rect x="14" y="5" width="5.5" height="14" rx="1.4"/></svg>';
 const folder = currentNode();
 if (!hasActiveTask) fileGrid.innerHTML = '<p class="summary-empty">无</p>';
 else if (folder) renderFileGrid(folder);
@@ -3919,6 +3935,7 @@ renderToolFileWorkspace(item);
   ]);
   const conversationThreads = new Map();
   const conversationGoals = new Map();
+  const pausedConversationGoals = new Set();
   const conversationQueueStates = new Map();
   let activeConversationTask = null;
   function queueState(task) {
@@ -4210,7 +4227,7 @@ const conversationQueueGroup = document.getElementById('conversationQueueGroup')
 const conversationQueueSummary = document.getElementById('conversationQueueSummary');
 const conversationQueueItems = document.getElementById('conversationQueueItems');
 const queueSendIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>';
-const queueRemoveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+const queueRemoveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 7.5h16M9 7.5V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2.5M5.5 7.5l.8 11.3A2.4 2.4 0 0 0 8.7 21h6.6a2.4 2.4 0 0 0 2.4-2.2l.8-11.3M10 11.5v6M14 11.5v6"/></svg>';
 const queueEditIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m4 20 4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20ZM14.5 7.5l3 3"/></svg>';
 const queueSaveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
 
@@ -5102,8 +5119,8 @@ conversationQueueItems.addEventListener('keydown', (event) => {
   }));
   function updateGoal(input, value) {
     if (input === conversationPrompt && activeConversationTask) {
-      if (value) conversationGoals.set(activeConversationTask, value);
-      else conversationGoals.delete(activeConversationTask);
+      conversationGoals.set(activeConversationTask, value || null);
+      if (!value) pausedConversationGoals.delete(activeConversationTask);
     } else if (value) conversationGoals.set(input, value);
     else conversationGoals.delete(input);
     if (input === conversationPrompt) {
@@ -5116,6 +5133,48 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     summary.setAttribute('aria-label', `设置新目标：${value}`);
     summary.hidden = !value;
   }
+
+  const summaryGoalSection = document.getElementById('summaryGoalSection');
+  const summaryGoalEdit = document.getElementById('summaryGoalEdit');
+  const summaryGoalInput = document.getElementById('summaryGoalInput');
+  summaryGoalSection.addEventListener('click', event => {
+    const action = event.target.closest('[data-summary-goal-action]')?.dataset.summaryGoalAction;
+    if (!action) return;
+    if (action === 'edit') {
+      summaryGoalInput.value = document.getElementById('summaryGoalText').textContent;
+      document.getElementById('summaryGoalText').hidden = true;
+      summaryGoalEdit.hidden = false;
+      summaryGoalInput.focus();
+    } else if (action === 'cancel') {
+      summaryGoalEdit.hidden = true;
+      document.getElementById('summaryGoalText').hidden = false;
+      summaryGoalSection.querySelector('[data-summary-goal-action="edit"]').focus();
+    } else if (action === 'pause') {
+      if (pausedConversationGoals.has(activeConversationTask)) pausedConversationGoals.delete(activeConversationTask);
+      else pausedConversationGoals.add(activeConversationTask);
+      renderSummaryContents();
+      document.getElementById('summaryGoalPause').focus();
+    } else if (action === 'delete') {
+      updateGoal(conversationPrompt, '');
+      setGoalMode(conversationPrompt, false);
+      outputToggle.focus();
+    }
+  });
+  summaryGoalEdit.addEventListener('submit', event => {
+    event.preventDefault();
+    const value = summaryGoalInput.value.trim();
+    if (!value) { summaryGoalInput.focus(); return; }
+    updateGoal(conversationPrompt, value);
+    summaryGoalSection.querySelector('[data-summary-goal-action="edit"]').focus();
+  });
+  summaryGoalEdit.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    summaryGoalEdit.hidden = true;
+    document.getElementById('summaryGoalText').hidden = false;
+    summaryGoalSection.querySelector('[data-summary-goal-action="edit"]').focus();
+  });
 
   /* ---------- 5.8 自定义模版：本机配置与可移植分享 ---------- */
   const templateDialog = document.getElementById('templateDialog');
