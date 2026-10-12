@@ -4802,6 +4802,7 @@ conversationQueueItems.addEventListener('keydown', (event) => {
   });
   window.addEventListener('resize', placeExpertMenu);
   const addDialog = document.createElement('dialog');
+  let slashDialogTarget = null;
   addDialog.className = 'composer-add-dialog';
   addDialog.setAttribute('aria-label', '选择要添加的信息');
   document.body.appendChild(addDialog);
@@ -4994,6 +4995,13 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     addDialog.querySelector('.composer-dialog-search')?.focus();
   }
   function returnFromAddDialog() {
+    if (slashDialogTarget) {
+      const input = slashDialogTarget;
+      slashDialogTarget = null;
+      closeAddMenu();
+      input.focus();
+      return;
+    }
     if (!activeAddTrigger) return;
     addMenu.hidden = false;
     renderAddMenu();
@@ -5168,6 +5176,195 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !addMenu.hidden) closeAddMenu(true);
   });
   window.addEventListener('resize', placeAddMenu);
+
+  /* 首页与对话输入框共用的 / 快捷菜单；原型未接入的功能不伪装成已执行。 */
+  const slashMenu = document.createElement('div');
+  slashMenu.id = 'composerSlashMenu';
+  slashMenu.className = 'composer-slash-menu';
+  slashMenu.setAttribute('role', 'menu');
+  slashMenu.setAttribute('aria-label', '快捷功能');
+  slashMenu.hidden = true;
+  document.body.appendChild(slashMenu);
+  const slashInputs = [prompt, conversationPrompt];
+  const slashCommands = [
+    { id: 'goal', label: 'Goal', description: '设置为任务持续努力实现的目标', icon: 'goal' },
+    { id: 'new-chat', label: '新对话', description: '开始一个新的对话', icon: 'new-chat' },
+    { id: 'settings', label: '打开设置', description: '查看应用设置', icon: 'settings' },
+    { id: 'skills-gallery', label: 'Skills 广场', description: '浏览并添加 Skills', icon: 'skill' },
+    { id: 'create-command', label: '创建快捷指令', description: '管理自定义快捷指令', icon: 'write' },
+    { id: 'update', label: '更新妙手', description: '检查并安装最新版本', icon: 'refresh' },
+    { id: 'pet', label: '宠物', description: '唤起桌面宠物', icon: 'pet' },
+  ];
+  const slashIcons = {
+    'new-chat': '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>',
+    settings: '<path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/>',
+    write: '<path d="M5 21h14M6 14l9.5-9.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',
+    refresh: '<g transform="translate(0 -.5)"><path d="M20.5 10a9 9 0 1 0 .5 4M20.5 5.5V10H16"/></g>',
+    pet: '<path d="M5 9.2V5.5l3.2 2.1a9.3 9.3 0 0 1 7.6 0L19 5.5v3.7a7.5 7.5 0 0 1 1.5 4.6c0 4.1-3.5 7-8.5 7s-8.5-2.9-8.5-7A7.5 7.5 0 0 1 5 9.2Z"/><path d="M9 14h.01M15 14h.01M12 16.6v.1"/>',
+    shortcuts: '<rect x="3" y="4" width="18" height="16" rx="5"/><path d="m7 9 3 3-3 3m6 0h4"/>',
+  };
+  const slashIcon = kind => `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${addIcons[kind] || slashIcons[kind]}</svg>`;
+  let slashInput = null;
+  let slashMatch = null;
+  let slashPage = 'root';
+  let slashActive = 0;
+  let slashDismissed = null;
+  function slashToken(input) {
+    if (input.selectionStart !== input.selectionEnd) return null;
+    const before = input.value.slice(0, input.selectionStart);
+    const match = /(^|\s)\/([^\s/]*)$/u.exec(before);
+    return match ? { start: before.length - match[2].length - 1, end: before.length, query: match[2] } : null;
+  }
+  function closeSlashMenu(dismiss = false) {
+    if (dismiss && slashInput && slashMatch) slashDismissed = { input: slashInput, start: slashMatch.start, text: slashInput.value };
+    slashMenu.hidden = true;
+    slashInput?.setAttribute('aria-expanded', 'false');
+    slashInput?.removeAttribute('aria-activedescendant');
+    slashInput = null;
+    slashMatch = null;
+    slashPage = 'root';
+  }
+  function placeSlashMenu() {
+    if (!slashInput || slashMenu.hidden) return;
+    const anchor = slashInput.closest('.composer-card, .conversation-composer').getBoundingClientRect();
+    const bounds = win.getBoundingClientRect();
+    slashMenu.style.width = `${Math.min(500, anchor.width, bounds.width - 16)}px`;
+    const width = slashMenu.offsetWidth;
+    const height = slashMenu.offsetHeight;
+    slashMenu.style.left = `${Math.max(bounds.left + 8, Math.min(anchor.left, bounds.right - width - 8))}px`;
+    slashMenu.style.top = `${anchor.top - height - 6 >= bounds.top + 8 ? anchor.top - height - 6 : Math.max(bounds.top + 8, Math.min(anchor.bottom + 6, bounds.bottom - height - 8))}px`;
+  }
+  function setSlashActive(index) {
+    const options = [...slashMenu.querySelectorAll('[data-slash-action]')];
+    if (!options.length) { slashInput?.removeAttribute('aria-activedescendant'); return; }
+    slashActive = (index + options.length) % options.length;
+    options.forEach((option, i) => option.classList.toggle('is-active', i === slashActive));
+    slashInput?.setAttribute('aria-activedescendant', options[slashActive].id);
+    options[slashActive].scrollIntoView({ block: 'nearest' });
+  }
+  function slashRow(id, label, description, icon, next = false) {
+    return `<button id="slash-option-${id}" class="composer-slash-item" type="button" role="menuitem" tabindex="-1" data-slash-action="${id}"${next ? ' aria-haspopup="menu"' : ''}>${slashIcon(icon)}<span class="composer-slash-copy"><strong>${esc(label)}</strong><small>${esc(description)}</small></span>${next ? addIcon('chevron', 'composer-slash-chevron') : ''}</button>`;
+  }
+  function renderSlashMenu() {
+    if (!slashInput) return;
+    const query = slashPage === 'root' ? slashMatch.query.toLocaleLowerCase() : '';
+    const matches = ({ label, description }) => `${label} ${description}`.toLocaleLowerCase().includes(query);
+    let rows;
+    if (slashPage === 'shortcuts') {
+      rows = slashCommands.filter(matches).map(({ id, label, description, icon }) => slashRow(id, label, description, icon)).join('');
+    } else if (slashPage === 'skills') {
+      slashMenu._skills = installedAddItems.skill;
+      rows = slashMenu._skills.map((name, index) => slashRow(`skill-${index}`, name, '添加到当前对话', 'skill')).join('');
+      rows += slashRow('manage-skills', '管理技能', '浏览并添加 Skills', 'skill');
+    } else {
+      rows = [
+        { id: 'skills', label: '技能', description: '选择已添加的 Skills', icon: 'skill' },
+        { id: 'shortcuts', label: '快捷功能', description: '打开常用操作', icon: 'shortcuts' },
+      ].filter(matches).map(({ id, label, description, icon }) => slashRow(id, label, description, icon, true)).join('');
+      if (query && !rows) rows = slashCommands.filter(matches).map(({ id, label, description, icon }) => slashRow(id, label, description, icon)).join('');
+    }
+    slashMenu.innerHTML = (slashPage === 'root' ? '' : `<div class="composer-slash-heading"><button class="composer-slash-back" type="button" data-slash-back aria-label="返回上一级">${addIcon('back')}</button><span>${slashPage === 'skills' ? '技能' : '快捷功能'}</span></div>`)
+      + (rows || '<p class="composer-add-empty">没有匹配的功能</p>')
+      + '<p class="composer-slash-notice" role="status" aria-live="polite" hidden></p>';
+    slashActive = 0;
+    setSlashActive(0);
+    placeSlashMenu();
+  }
+  function updateSlashMenu(input) {
+    if (document.activeElement !== input || input.closest('.conversation-page')?.hidden) { if (slashInput === input) closeSlashMenu(); return; }
+    const token = slashToken(input);
+    if (!token || (slashDismissed?.input === input && slashDismissed.start === token.start && slashDismissed.text === input.value)) {
+      if (slashInput === input) closeSlashMenu();
+      return;
+    }
+    slashDismissed = null;
+    if (slashInput !== input || slashMatch?.start !== token.start) {
+      closeSlashMenu();
+      closeAddMenu();
+      slashInput = input;
+      slashPage = 'root';
+    }
+    slashMatch = token;
+    input.setAttribute('aria-expanded', 'true');
+    slashMenu.hidden = false;
+    renderSlashMenu();
+  }
+  function consumeSlashToken() {
+    const input = slashInput;
+    const { start, end } = slashMatch;
+    closeSlashMenu();
+    input.setRangeText('', start, end, 'start');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    return input;
+  }
+  function activateSlashAction(action) {
+    if (action === 'skills' || action === 'shortcuts') { slashPage = action; renderSlashMenu(); return; }
+    if (action === 'manage-skills' || action === 'skills-gallery') {
+      const input = consumeSlashToken();
+      slashDialogTarget = input;
+      activeAddTrigger = input.closest('.composer-card, .conversation-composer').querySelector('.composer-add-trigger');
+      addMenuPage = 'skill';
+      openAddDialog('skill');
+      return;
+    }
+    if (action.startsWith('skill-')) {
+      const name = slashMenu._skills[Number(action.slice(6))];
+      if (name) { const input = consumeSlashToken(); addSkillTag(input, name); input.dispatchEvent(new Event('input', { bubbles: true })); }
+      return;
+    }
+    if (action === 'goal') {
+      const input = consumeSlashToken();
+      setGoalMode(input, true);
+    } else if (action === 'new-chat') {
+      consumeSlashToken();
+      newTaskNav.click();
+    } else {
+      const notice = slashMenu.querySelector('.composer-slash-notice');
+      notice.hidden = false;
+      notice.textContent = '此功能暂未接入原型';
+      placeSlashMenu();
+    }
+  }
+  slashInputs.forEach(input => {
+    input.setAttribute('aria-haspopup', 'menu');
+    input.setAttribute('aria-controls', slashMenu.id);
+    input.setAttribute('aria-expanded', 'false');
+    input.addEventListener('input', event => { if (!event.isComposing) updateSlashMenu(input); });
+    input.addEventListener('compositionend', () => updateSlashMenu(input));
+    input.addEventListener('click', () => updateSlashMenu(input));
+    input.addEventListener('keyup', event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) updateSlashMenu(input); });
+    input.addEventListener('keydown', event => {
+      if (slashMenu.hidden || slashInput !== input || event.isComposing) return;
+      if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); closeSlashMenu(true); }
+      else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setSlashActive(slashActive + (event.key === 'ArrowDown' ? 1 : -1)); }
+      else if (event.key === 'ArrowLeft' && slashPage !== 'root') { event.preventDefault(); slashPage = 'root'; renderSlashMenu(); }
+      else if ((event.key === 'Enter' && !event.shiftKey) || (event.key === 'ArrowRight' && slashMenu.querySelectorAll('[data-slash-action]')[slashActive]?.hasAttribute('aria-haspopup'))) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const action = slashMenu.querySelectorAll('[data-slash-action]')[slashActive]?.dataset.slashAction;
+        if (action) activateSlashAction(action);
+      }
+    }, true);
+  });
+  slashMenu.addEventListener('pointerdown', event => { if (event.target.closest('button')) event.preventDefault(); });
+  slashMenu.addEventListener('pointermove', event => {
+    const item = event.target.closest('[data-slash-action]');
+    if (item && !item.classList.contains('is-active')) setSlashActive([...slashMenu.querySelectorAll('[data-slash-action]')].indexOf(item));
+  });
+  slashMenu.addEventListener('click', event => {
+    const item = event.target.closest('[data-slash-action]');
+    if (item) activateSlashAction(item.dataset.slashAction);
+    else if (event.target.closest('[data-slash-back]')) { slashPage = 'root'; renderSlashMenu(); slashInput.focus(); }
+  });
+  document.addEventListener('pointerdown', event => {
+    if (!slashMenu.hidden && !slashMenu.contains(event.target) && event.target !== slashInput) closeSlashMenu(true);
+  });
+  slashInputs.forEach(input => input.addEventListener('blur', () => {
+    requestAnimationFrame(() => { if (slashInput === input && document.activeElement !== input && !slashMenu.contains(document.activeElement)) closeSlashMenu(); });
+  }));
+  window.addEventListener('resize', placeSlashMenu);
+  window.addEventListener('scroll', event => { if (!slashMenu.contains(event.target)) placeSlashMenu(); }, true);
 
   // 目标使用输入框内的单次输入模式；发送时记录为当前任务目标，而非普通提问。
   function setGoalMode(input, enabled) {
