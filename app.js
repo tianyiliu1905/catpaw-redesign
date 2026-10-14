@@ -91,6 +91,8 @@
   function setCollapsed(collapsed) {
     win.classList.toggle('collapsed', collapsed);
     collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+    collapseBtn.title = collapsed ? '展开侧边栏' : '折叠侧边栏';
+    collapseBtn.setAttribute('aria-label', collapseBtn.title);
     expandBtn.setAttribute('aria-expanded', String(!collapsed));
     conversationExpandBtn.setAttribute('aria-expanded', String(!collapsed));
     if (adaptiveLayoutReady) syncAdaptiveLayout();
@@ -156,7 +158,7 @@
   });
   sidebarLayoutObserver.observe(win);
 
-  collapseBtn.addEventListener('click', () => setCollapsed(true));
+  collapseBtn.addEventListener('click', () => setCollapsed(!win.classList.contains('collapsed')));
   expandBtn.addEventListener('click', () => setCollapsed(false));
   conversationExpandBtn.addEventListener('click', () => setCollapsed(false));
 
@@ -186,6 +188,51 @@
   const toggleTasksSection = document.getElementById('toggleTasksSection');
   const toggleFoldersSection = document.getElementById('toggleFoldersSection');
   const folderGroupsEl = document.getElementById('folderGroups');
+  const folderStorageEmpty = document.getElementById('folderStorageEmpty');
+const folderStoragePicker = document.getElementById('folderStoragePicker');
+const folderStorageBtn = document.getElementById('folderStorageBtn');
+const folderStorageLabel = document.getElementById('folderStorageLabel');
+const folderStorageMenu = document.getElementById('folderStorageMenu');
+const folderStorageOptions = Array.from(folderStorageMenu.querySelectorAll('[data-folder-storage]'));
+let folderStorage = 'cloud';
+
+function setFolderStorageOpen(open) {
+folderStorageMenu.hidden = !open;
+folderStorageBtn.setAttribute('aria-expanded', String(open));
+}
+
+function syncFolderStorage() {
+folderStorageLabel.textContent = folderStorage === 'local' ? '本地' : '云端';
+folderStorageBtn.setAttribute('aria-label', `文件夹位置：${folderStorageLabel.textContent}`);
+folderStorageOptions.forEach((button) => button.setAttribute('aria-checked', String(button.dataset.folderStorage === folderStorage)));
+folderGroupsEl.classList.toggle('storage-hidden', folderStorage === 'local');
+folderStorageEmpty.hidden = folderStorage !== 'local' || toggleFoldersSection.getAttribute('aria-expanded') !== 'true';
+requestAnimationFrame(refreshClipped);
+}
+folderStorageBtn.addEventListener('click', (event) => {
+event.stopPropagation();
+const opening = folderStorageMenu.hidden;
+setFolderOpen(false);
+setBranchOpen(false);
+closeAccessMenus();
+setFolderStorageOpen(opening);
+});
+folderStorageMenu.addEventListener('click', (event) => {
+const option = event.target.closest('[data-folder-storage]');
+if (!option) return;
+folderStorage = option.dataset.folderStorage;
+syncFolderStorage();
+setFolderStorageOpen(false);
+folderStorageBtn.focus();
+});
+document.addEventListener('click', (event) => {
+if (!folderStoragePicker.contains(event.target)) setFolderStorageOpen(false);
+});
+document.addEventListener('keydown', (event) => {
+if (event.key !== 'Escape' || folderStorageMenu.hidden) return;
+setFolderStorageOpen(false);
+folderStorageBtn.focus();
+});
 
   function setSectionExpanded(button, content, expanded) {
     button.setAttribute('aria-expanded', String(expanded));
@@ -202,7 +249,9 @@
   });
   toggleFoldersSection.addEventListener('click', () => {
     setSectionExpanded(toggleFoldersSection, folderGroupsEl, folderGroupsEl.hidden);
+    syncFolderStorage();
   });
+  syncFolderStorage();
 
   let tasksExpanded = false;   // 任务区是否已展开全部
 
@@ -596,6 +645,7 @@ toggleFoldersSection.parentElement.hidden = groups.length === 0;
      「我把任务存到哪」与「摘要里看到什么」因此指向同一个对象。 */
   const fileGrid = document.getElementById('fileGrid');
   const recentFiles = document.getElementById('recentFiles');
+  const workbenchLandingRecentList = document.getElementById('workbenchLandingRecentList');
 const summaryExpandRecent = document.getElementById('summaryExpandRecent');
 const MAX_RECENT_FILES = 12;
 const RECENT_VISIBLE_COUNT = 6;
@@ -730,8 +780,9 @@ let recentFilesExpanded = false;
     if (!node || node.type === 'folder') return;
     recentOpenedFiles = recentOpenedFiles.filter((entry) => entry.node !== node);
     recentOpenedFiles.unshift({ node, chain: chain.slice(), opened: '刚刚' });
-    recentOpenedFiles = recentOpenedFiles.slice(0, MAX_RECENT_FILES);
-    renderRecentFiles();
+recentOpenedFiles = recentOpenedFiles.slice(0, MAX_RECENT_FILES);
+renderRecentFiles();
+renderWorkbenchLandingRecents();
   }
 
   function renderRecentFiles() {
@@ -754,6 +805,15 @@ const thumb = summaryArtifactIcon(type);
     summaryExpandRecent.hidden = recentOpenedFiles.length <= RECENT_VISIBLE_COUNT;
     summaryExpandRecent.textContent = recentFilesExpanded ? '收起' : '展开更多';
     summaryExpandRecent.setAttribute('aria-expanded', String(recentFilesExpanded));
+  }
+
+  function renderWorkbenchLandingRecents() {
+    const entries = recentOpenedFiles.slice(0, 8);
+    workbenchLandingRecentList.innerHTML = entries.length ? entries.map((entry, index) =>
+      `<button class="workbench-landing-file" type="button" data-landing-recent="${index}" title="${esc(entry.node.name)}">` +
+      `<span class="workbench-landing-file-icon">${summaryArtifactIcon(artifactType(entry.node))}</span>` +
+      `<span class="workbench-landing-file-name">${esc(entry.node.name)}</span></button>`
+    ).join('') : '<p class="workbench-landing-empty">还没有打开过文件</p>';
   }
 
   function artifactType(node) {
@@ -1119,6 +1179,7 @@ renderRecentFiles();
   folderBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     setBranchOpen(false);
+    setFolderStorageOpen(false);
     setFolderOpen(!folderPicker.classList.contains('open'));
   });
 
@@ -1206,6 +1267,7 @@ renderRecentFiles();
   branchBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     setFolderOpen(false);
+    setFolderStorageOpen(false);
     setBranchOpen(!branchPicker.classList.contains('open'));
   });
 
@@ -1597,6 +1659,7 @@ renderRecentFiles();
       if (opening) {
         setFolderOpen(false);
         setBranchOpen(false);
+        setFolderStorageOpen(false);
         menu.hidden = false;
         trigger.setAttribute('aria-expanded', 'true');
       }
@@ -2288,14 +2351,21 @@ promptGuide = text;
   /* ---------- 5.5 右上角摘要浮窗与工具抽屉 ---------- */
   const content = document.getElementById('content');
   const workbench = document.getElementById('workbench');
+  const conversationPage = document.getElementById('conversationPage');
   const outputToggle = document.getElementById('toggleOutputs');
+  const summaryArtifactBadge = document.getElementById('summaryArtifactBadge');
   const summaryToggleSlot = document.querySelector('.summary-toggle-slot');
   const summaryPopover = document.getElementById('summaryPopover');
   const summaryArtifactsSection = document.getElementById('summaryArtifactsSection');
   const summaryArtifactsDivider = document.getElementById('summaryArtifactsDivider');
   const wbToggle = document.getElementById('toggleWorkbench');
   const wbExpandToggle = document.getElementById('toggleWorkbenchExpand');
+  const fileTreeToggle = document.getElementById('toggleFileTree');
   const wbPanes = Array.from(workbench.querySelectorAll('.wb-pane'));
+  const workbenchLanding = document.getElementById('workbenchLanding');
+  const workbenchLandingRecentToggle = document.getElementById('workbenchLandingRecentToggle');
+  const conversationPageHome = conversationPage.parentNode;
+  const conversationPageNextSibling = conversationPage.nextSibling;
   const workspaceTabs = document.getElementById('workspaceTabs');
   const workspaceCreate = document.getElementById('workspaceCreate');
   const workspaceAdd = document.getElementById('workspaceAdd');
@@ -2304,8 +2374,6 @@ promptGuide = text;
   const toolFileTree = document.getElementById('toolFileTree');
   const toolTreeSearch = document.getElementById('toolTreeSearch');
   const toolTreeSearchClear = document.getElementById('toolTreeSearchClear');
-  const toolTreeClose = document.getElementById('toolTreeClose');
-  const toolTreeReopen = document.getElementById('toolTreeReopen');
   const toolFileModeToggle = document.getElementById('toolFileModeToggle');
 const toolFileEditSave = document.getElementById('toolFileEditSave');
 const toolFileEditDiscard = document.getElementById('toolFileEditDiscard');
@@ -2324,12 +2392,19 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   const fullscreenChat = document.getElementById('fullscreenChat');
   const fullscreenChatInput = document.getElementById('fullscreenChatInput');
   const fullscreenChatSend = document.getElementById('fullscreenChatSend');
+  const fullscreenChatAttach = document.getElementById('fullscreenChatAttach');
+  const artifactShareDialog = document.getElementById('artifactShareDialog');
   const toolFolderPicker = document.getElementById('toolFolderPicker');
   const toolFolderBtn = document.getElementById('toolFolderBtn');
   const toolFolderName = document.getElementById('toolFolderName');
   const toolFolderMenu = document.getElementById('toolFolderMenu');
 
+  const CONVERSATION_TAB_ID = 'conversation';
   const WORKSPACE_META = {
+    conversation: {
+      title: '对话',
+      icon: '<path d="M20 11.5a8 8 0 0 1-8 8 9 9 0 0 1-4-.9L3.5 20l1.3-4A8 8 0 1 1 20 11.5Z"/>',
+    },
     files: {
       title: '文件夹',
       icon: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>',
@@ -2359,8 +2434,18 @@ const fileCloseSave = document.getElementById('fileCloseSave');
     previewMode: 'source',
   }];
   let activeWorkspace = 'file-default';
-  // 文件目录树是右侧工作区的共享布局状态，不随文件页签切换恢复旧值。
-  let fileTreeVisible = true;
+  // 文件目录树由独立入口打开；工具面板默认只显示当前工作区。
+  let fileTreeVisible = false;
+
+  function syncFileTreeToggle() {
+    const active = content.classList.contains('wb-open') &&
+      !content.classList.contains('wb-auto-collapsed') &&
+      (rightPanel === 'tree' || ((rightPanel === 'tools' || rightPanel === 'landing') && fileTreeVisible));
+    const label = active ? '收起文件目录树' : '显示文件目录树';
+    fileTreeToggle.setAttribute('aria-pressed', String(active));
+    fileTreeToggle.title = label;
+    fileTreeToggle.setAttribute('aria-label', label);
+  }
 
   function saveActiveWorkspaceState() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
@@ -2371,18 +2456,18 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   }
 
   let rightPanel = null;
-  let workbenchExpanded = false;
-  let compactPanelRequested = false;
+let workbenchExpanded = false;
+let fullscreenConversationActive = false;
 
   function syncFullscreenChat() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
-    const visible = workbenchExpanded && rightPanel === 'tools' && item?.kind === 'file' && Boolean(item.node);
+    const visible = content.classList.contains('wb-expanded') && !fullscreenConversationActive && rightPanel === 'tools' && item?.kind === 'file' && Boolean(item.node);
     fullscreenChat.hidden = !visible;
   }
 
   let summaryRestoreFrame = 0;
   function waitForMainRestored() {
-    if (workbenchExpanded || rightPanel !== 'tools') return;
+    if (content.classList.contains('wb-expanded') || rightPanel !== 'tools') return;
     const mainRight = document.querySelector('.main').getBoundingClientRect().right;
     const triggerRight = summaryToggleSlot.getBoundingClientRect().right;
     if (mainRight >= triggerRight + 15) {
@@ -2394,53 +2479,43 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   }
 
   function setWorkbenchExpanded(expanded) {
-    const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
-    const canExpandFile = rightPanel === 'tools' && item?.kind === 'file';
+    const canExpand = rightPanel === 'tools' && (openWorkspaces.length > 0 || !conversationPage.hidden);
     const wasExpanded = workbenchExpanded;
-    workbenchExpanded = Boolean(expanded && canExpandFile);
-    cancelAnimationFrame(summaryRestoreFrame);
-    if (wasExpanded && !workbenchExpanded && rightPanel === 'tools') {
-      content.classList.add('wb-restoring');
-      summaryRestoreFrame = requestAnimationFrame(waitForMainRestored);
-    } else {
-      content.classList.remove('wb-restoring');
-    }
-    content.classList.toggle('wb-file-active', canExpandFile);
+    workbenchExpanded = Boolean(expanded && canExpand);
+    content.classList.toggle('wb-file-active', canExpand);
     syncAdaptiveLayout();
-    wbExpandToggle.disabled = !canExpandFile;
-    wbExpandToggle.setAttribute('aria-pressed', String(workbenchExpanded));
-    wbExpandToggle.title = workbenchExpanded ? '退出文件全屏' : '全屏显示文件';
-    wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
-    syncFullscreenChat();
+    if (wasExpanded && !workbenchExpanded && !openWorkspaces.length) setRightPanel('landing');
     requestAnimationFrame(syncSummaryTriggerPosition);
     requestAnimationFrame(syncResizeLayout);
   }
 
   function syncWorkbenchWidth() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
-    content.classList.toggle('wb-file-workspace', rightPanel === 'tools' && ['file', 'browser', 'terminal'].includes(item?.kind));
+    content.classList.toggle('wb-file-workspace', rightPanel === 'tools' && ['file', 'browser', 'terminal'].includes(item?.kind) || rightPanel === 'landing' && fileTreeVisible);
     requestAnimationFrame(syncResizeLayout);
   }
 
   /* 两级分栏只记录用户设置的像素宽度；布局变化时夹紧，不覆盖原始偏好。 */
   const panelResizer = document.getElementById('panelResizer');
   const treeResizer = document.getElementById('treeResizer');
-  let preferredPanelWidths = { file: null, compact: null };
+  let preferredPanelWidths = { file: null, compact: null, landing: null, tree: null };
   let preferredTreeWidth = null;
   let activeResize = null;
   const PANEL_EXPAND_OVERDRAG = 32;
 
-  function panelWidthKey() { return content.classList.contains('wb-file-workspace') ? 'file' : 'compact'; }
+  function panelWidthKey() { return rightPanel === 'tree' ? 'tree' : content.classList.contains('wb-file-workspace') ? 'file' : rightPanel === 'landing' ? 'landing' : 'compact'; }
   function desiredPanelWidth(width, sidebarWidth) {
     const root = getComputedStyle(document.documentElement);
-    return preferredPanelWidths[panelWidthKey()] ?? (panelWidthKey() === 'file'
-      ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), (width - sidebarWidth) * .62)
+    const key = panelWidthKey();
+    return preferredPanelWidths[key] ?? (key === 'tree' ? parseFloat(root.getPropertyValue('--workbench-tree-only-w'))
+      : key === 'landing' ? parseFloat(root.getPropertyValue('--workbench-landing-w'))
+      : key === 'file' ? Math.min(parseFloat(root.getPropertyValue('--workbench-folder-w')), (width - sidebarWidth) * .62)
       : parseFloat(root.getPropertyValue('--workbench-w')));
   }
   function panelBounds() {
     const available = content.clientWidth;
     const mainMin = Math.min(320, available);
-    const panelMin = Math.min(panelWidthKey() === 'file' ? 360 : 300, available - mainMin);
+    const panelMin = Math.min(panelWidthKey() === 'tree' ? 180 : panelWidthKey() === 'file' ? 360 : 300, available - mainMin);
     return { min: panelMin, max: Math.max(panelMin, available - mainMin) };
   }
   function treeBounds(available = workbench.clientWidth) {
@@ -2450,31 +2525,51 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   }
   function clampWidth(value, bounds) { return Math.round(Math.min(bounds.max, Math.max(bounds.min, value))); }
 
-  // 窗口收窄时依次让出右侧工具区、左侧边栏，最后才压缩对话区。
-  // 不改写用户的开关与拖拽偏好，窗口重新变宽时可以自然恢复。
+  // 右面板已打开时优先保留它；双栏放不下就临时以全屏工作区呈现。
+  // 窗口变宽后恢复分栏，不改写用户手动放大和拖拽的偏好。
   function syncAdaptiveLayout() {
     if (!adaptiveLayoutReady) return;
     const width = win.clientWidth;
     const mainMin = Math.min(320, width);
     const root = getComputedStyle(document.documentElement);
-    const sidebarDesired = win.classList.contains('collapsed') ? 0
+    const sidebarRailWidth = parseFloat(root.getPropertyValue('--sidebar-rail-w'));
+    const sidebarDesired = win.classList.contains('collapsed') ? sidebarRailWidth
       : Math.min(480, preferredSidebarWidth ?? parseFloat(root.getPropertyValue('--sidebar-w')));
     const panelOpen = content.classList.contains('wb-open');
     const panelDesired = panelOpen ? desiredPanelWidth(width, sidebarDesired) : 0;
-    // 窄窗口中主动打开工具区时，空间不足以保留完整双栏就让它替代对话区；
-    // 被动缩窄仍按右栏优先自动收起，且手动文件全屏状态保持独立。
-    const compactFull = panelOpen && compactPanelRequested && width - sidebarDesired - panelDesired < 320;
-    if (compactPanelRequested && !compactFull) compactPanelRequested = false;
-    const fullPanel = panelOpen && (workbenchExpanded || compactFull);
+    const wasFullPanel = content.classList.contains('wb-expanded');
+    const fullPanel = panelOpen && (workbenchExpanded || width - sidebarDesired - panelDesired < mainMin);
+    if (fullPanel !== wasFullPanel && workbench.classList.contains('file-split')) keepWorkbenchVisibleDuringTransition();
     content.classList.toggle('wb-expanded', fullPanel);
+    if (!fullPanel || rightPanel !== 'tools') fullscreenConversationActive = false;
+    content.classList.toggle('wb-conversation-active', fullPanel && fullscreenConversationActive);
+    if (fullPanel && rightPanel === 'tools' && !conversationPage.hidden) {
+      if (conversationPage.parentNode !== workbench) workbench.append(conversationPage);
+    } else if (conversationPage.parentNode !== conversationPageHome) {
+      conversationPageHome.insertBefore(conversationPage, conversationPageNextSibling);
+    }
+    if (fullPanel !== wasFullPanel) {
+      requestAnimationFrame(syncSummaryTriggerPosition);
+      cancelAnimationFrame(summaryRestoreFrame);
+      if (wasFullPanel && !fullPanel && rightPanel === 'tools') {
+        content.classList.add('wb-restoring');
+        summaryRestoreFrame = requestAnimationFrame(waitForMainRestored);
+      } else content.classList.remove('wb-restoring');
+      renderWorkspaceTabs();
+      syncFullscreenChat();
+    }
+    const canExpand = rightPanel === 'tools' && (openWorkspaces.length > 0 || !conversationPage.hidden);
+    wbExpandToggle.disabled = !canExpand;
+    wbExpandToggle.setAttribute('aria-pressed', String(fullPanel));
+    wbExpandToggle.title = workbenchExpanded ? '退出全屏工作区' : fullPanel ? '固定全屏工作区' : '放大工作区';
+    wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
     const availableRight = Math.max(0, width - sidebarDesired - mainMin);
     const rightCandidate = Math.min(panelDesired, availableRight);
     const leftCandidate = Math.min(sidebarDesired, Math.max(0, width - rightCandidate - mainMin));
     const leftWidth = fullPanel
       ? width - sidebarDesired >= (panelWidthKey() === 'file' ? 360 : 300) ? sidebarDesired : 0
       : leftCandidate >= 188 ? leftCandidate : 0;
-    const rightWidth = fullPanel ? Math.max(0, width - leftWidth)
-      : rightCandidate >= (panelWidthKey() === 'file' ? 360 : 300) ? rightCandidate : 0;
+    const rightWidth = fullPanel ? Math.max(0, width - leftWidth) : rightCandidate;
     if (sidebarResizePointer === null && !win.classList.contains('collapsed')) {
       win.style.setProperty('--user-sidebar-w', `${Math.round(leftWidth)}px`);
       sidebarResizer.setAttribute('aria-valuenow', String(Math.round(leftWidth)));
@@ -2483,11 +2578,11 @@ const fileCloseSave = document.getElementById('fileCloseSave');
       const previewWidth = activeResize?.kind === 'panel' ? activeResize.previewWidth : null;
       content.style.setProperty('--user-panel-w', `${Math.round(previewWidth ?? rightWidth)}px`);
     } else if (!panelOpen) content.style.removeProperty('--user-panel-w');
-    const rightHidden = panelOpen && !fullPanel && rightWidth === 0;
     const leftHidden = sidebarResizePointer === null && !win.classList.contains('collapsed') && leftWidth === 0;
-    content.classList.toggle('wb-auto-collapsed', rightHidden);
+    content.classList.remove('wb-auto-collapsed');
     win.classList.toggle('sidebar-auto-collapsed', leftHidden);
-    workbench.setAttribute('aria-hidden', String(!panelOpen || rightHidden));
+    workbench.setAttribute('aria-hidden', String(!panelOpen));
+    syncFileTreeToggle();
   }
 
   function syncResizeLayout() {
@@ -2495,7 +2590,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
     const mobile = window.matchMedia('(max-width: 860px)').matches;
     const panelActive = content.classList.contains('wb-open') && !content.classList.contains('wb-expanded') && !content.classList.contains('wb-auto-collapsed');
     const bounds = panelBounds();
-    const treeActive = content.classList.contains('wb-open') && workbench.classList.contains('file-split') && rightPanel === 'tools';
+    const treeActive = content.classList.contains('wb-open') && workbench.classList.contains('file-split') && (rightPanel === 'tools' || rightPanel === 'landing');
     if (treeActive) {
       // 面板打开时用目标宽度计算目录树，不让它随网格过渡从 0 宽逐帧长出来。
       const targetWidth = content.classList.contains('wb-expanded') ? content.clientWidth
@@ -2594,55 +2689,82 @@ const fileCloseSave = document.getElementById('fileCloseSave');
 
   function syncSummaryTriggerPosition() {
     const main = document.querySelector('.main');
-    if (rightPanel !== 'tools' || content.classList.contains('wb-expanded') || !main || !summaryToggleSlot) {
-      content.style.removeProperty('--summary-float-left');
-      content.style.removeProperty('--summary-float-top');
+    if (rightPanel && content.classList.contains('wb-expanded') && !conversationPage.hidden &&
+        !content.classList.contains('wb-auto-collapsed')) {
+      const triggerRect = outputToggle.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+      const floatWidth = Math.min(326, Math.max(0, contentRect.width - 32));
+      const left = Math.max(contentRect.left + 16,
+        Math.min(triggerRect.right - floatWidth, contentRect.right - floatWidth - 16));
+      summaryPopover.style.setProperty('position', 'fixed', 'important');
+      summaryPopover.style.setProperty('left', `${left}px`, 'important');
+      summaryPopover.style.setProperty('top', `${triggerRect.bottom + 8}px`, 'important');
+      summaryPopover.style.setProperty('right', 'auto', 'important');
+      summaryPopover.style.setProperty('width', `${floatWidth}px`, 'important');
+      return;
+    }
+    if (!rightPanel || !content.classList.contains('wb-open') ||
+        content.classList.contains('wb-expanded') || content.classList.contains('wb-auto-collapsed') ||
+        !main || !summaryToggleSlot) {
       summaryPopover.style.removeProperty('position');
       summaryPopover.style.removeProperty('left');
       summaryPopover.style.removeProperty('top');
       summaryPopover.style.removeProperty('right');
+      summaryPopover.style.removeProperty('width');
       return;
     }
 
     const mainRect = main.getBoundingClientRect();
     const triggerRect = outputToggle.getBoundingClientRect();
-    const floatWidth = summaryPopover.hidden ? 344 : summaryPopover.getBoundingClientRect().width;
+    const floatWidth = Math.min(326, Math.max(0, mainRect.width - 32));
     const minLeft = mainRect.left + 16;
     const maxLeft = Math.max(minLeft, mainRect.right - floatWidth - 16);
     const left = Math.min(maxLeft, Math.max(minLeft, triggerRect.right - floatWidth));
     const top = triggerRect.bottom + 8;
 
-    // 浮窗使用视口坐标直接跟随摘要按钮的右下角，并严格夹紧在左侧主区。
+    // 所有右侧面板共用视口坐标，摘要跟随入口并保持在对话主区内。
     summaryPopover.style.setProperty('position', 'fixed', 'important');
     summaryPopover.style.setProperty('left', `${left}px`, 'important');
     summaryPopover.style.setProperty('top', `${top}px`, 'important');
     summaryPopover.style.setProperty('right', 'auto', 'important');
+    summaryPopover.style.setProperty('width', `${floatWidth}px`, 'important');
   }
+
+  let panelSwitchTimer;
+  function keepWorkbenchVisibleDuringTransition() {
+    content.classList.add('wb-panel-switch');
+    clearTimeout(panelSwitchTimer);
+    // 过渡结束后恢复首次打开时的防抖显示规则；无动画或减弱动态效果时也能清理。
+    panelSwitchTimer = setTimeout(() => content.classList.remove('wb-panel-switch'), 500);
+  }
+  content.addEventListener('transitionend', (event) => {
+    if (event.target !== content || event.propertyName !== 'grid-template-columns') return;
+    clearTimeout(panelSwitchTimer);
+    content.classList.remove('wb-panel-switch');
+  });
 
   function setRightPanel(panel) {
     const next = panel || null;
     const opening = Boolean(next) && (!content.classList.contains('wb-open') || content.classList.contains('wb-auto-collapsed'));
-    if (next === 'tools' && openWorkspaces.length === 0) ensureDefaultFileWorkspace();
+    if (next && rightPanel && next !== rightPanel && !opening) keepWorkbenchVisibleDuringTransition();
+    if (!next) {
+      clearTimeout(panelSwitchTimer);
+      content.classList.remove('wb-panel-switch');
+    }
+    if (next === 'tools' && openWorkspaces.length === 0 && !workbenchExpanded) ensureDefaultFileWorkspace();
     rightPanel = next;
     syncWorkbenchWidth();
     const instantFileOpen = opening && content.classList.contains('wb-file-workspace');
     if (instantFileOpen) content.classList.add('wb-opening');
     const open = Boolean(next);
     content.classList.toggle('wb-open', open);
-    if (opening) {
-      const width = win.clientWidth;
-      const root = getComputedStyle(document.documentElement);
-      const sidebarWidth = win.classList.contains('collapsed') ? 0
-        : Math.min(480, preferredSidebarWidth ?? parseFloat(root.getPropertyValue('--sidebar-w')));
-      compactPanelRequested = width - sidebarWidth - desiredPanelWidth(width, sidebarWidth) < 320;
-    }
-    if (!next) compactPanelRequested = false;
     workbench.dataset.panel = next || '';
     syncAdaptiveLayout();
     setWorkbenchExpanded(workbenchExpanded);
     workbench.setAttribute('aria-hidden', String(!open || content.classList.contains('wb-auto-collapsed')));
-    wbToggle.setAttribute('aria-expanded', String(next === 'tools'));
-    wbToggle.title = next === 'tools' ? '收起工具' : '工具';
+    wbToggle.setAttribute('aria-expanded', String(next === 'tools' || next === 'landing'));
+    wbToggle.title = next === 'tools' || next === 'landing' ? '收起工具' : '工具';
+    syncFileTreeToggle();
     if (instantFileOpen) {
       syncResizeLayout();
       requestAnimationFrame(() => content.classList.remove('wb-opening'));
@@ -2661,20 +2783,25 @@ const fileCloseSave = document.getElementById('fileCloseSave');
 
   function setWorkbench(open) {
     if (!open) {
+      clearTimeout(panelSwitchTimer);
       rightPanel = null;
-      content.classList.remove('wb-open', 'wb-file-workspace', 'wb-expanded', 'wb-file-active');
+      content.classList.remove('wb-open', 'wb-file-workspace', 'wb-expanded', 'wb-file-active', 'wb-conversation-active', 'wb-panel-switch');
+      if (conversationPage.parentNode !== conversationPageHome) conversationPageHome.insertBefore(conversationPage, conversationPageNextSibling);
       workbenchExpanded = false;
-      compactPanelRequested = false;
+      fullscreenConversationActive = false;
+      renderWorkspaceTabs();
       syncAdaptiveLayout();
       wbExpandToggle.disabled = true;
       wbExpandToggle.setAttribute('aria-pressed', 'false');
-      wbExpandToggle.title = '全屏显示文件';
+      wbExpandToggle.title = '放大工作区';
       wbExpandToggle.setAttribute('aria-label', wbExpandToggle.title);
       workbench.dataset.panel = '';
       workbench.setAttribute('aria-hidden', 'true');
       wbToggle.setAttribute('aria-expanded', 'false');
       wbToggle.title = '工具';
+      syncFileTreeToggle();
       fullscreenChat.hidden = true;
+      syncSummaryTriggerPosition();
       requestAnimationFrame(syncResizeLayout);
       return;
     }
@@ -2682,34 +2809,57 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   }
 
   function renderWorkspaceTabs() {
-    workspaceTabs.innerHTML = openWorkspaces.map((item) => {
+    const conversationAvailable = rightPanel === 'tools' && content.classList.contains('wb-expanded') && !conversationPage.hidden;
+    const tabs = conversationAvailable
+      ? [{ id: CONVERSATION_TAB_ID, kind: 'conversation', title: '对话' }, ...openWorkspaces]
+      : openWorkspaces;
+    workspaceTabs.innerHTML = tabs.map((item) => {
       const meta = WORKSPACE_META[item.kind];
-      return `<div class="workspace-tab${item.id === activeWorkspace ? ' active' : ''}" role="tab" tabindex="0"` +
+      const isConversation = item.id === CONVERSATION_TAB_ID;
+      const selected = isConversation ? fullscreenConversationActive : !fullscreenConversationActive && item.id === activeWorkspace;
+      return `<div class="workspace-tab${selected ? ' active' : ''}" role="tab" tabindex="0"` +
         ` data-workspace-tab="${item.id}" data-workspace-kind="${item.kind}"` +
         ` data-workspace-empty="${item.kind === 'file' && !item.node}"` +
-        ` aria-selected="${item.id === activeWorkspace}" title="${esc(item.title)}">` +
-        `<svg viewBox="0 0 24 24" class="ic">${meta.icon}</svg>` +
+        ` aria-selected="${selected}" title="${esc(item.title)}">` +
+        (item.kind === 'file' && item.node && fileExtension(item.node.name) === 'pdf'
+          ? `<span class="workspace-tab-pdf-icon" aria-hidden="true">PDF</span>`
+          : `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${meta.icon}</svg>`) +
         `<span class="workspace-tab-title">${esc(item.title)}${item.sourceDraft !== undefined && item.sourceDraft !== sourceForNode(item.node) ? ' •' : ''}</span>` +
-        `<button class="workspace-tab-close" type="button" title="关闭" aria-label="关闭 ${esc(item.title)}">${WORKSPACE_CLOSE}</button>` +
+        (isConversation ? '' : `<button class="workspace-tab-close" type="button" title="关闭" aria-label="关闭 ${esc(item.title)}">${WORKSPACE_CLOSE}</button>`) +
         `</div>`;
     }).join('');
   }
 
   function activateWorkspace(id, saveCurrent = true) {
+    if (id === CONVERSATION_TAB_ID) {
+      if (rightPanel !== 'tools' || !content.classList.contains('wb-expanded') || conversationPage.hidden) return;
+      saveActiveWorkspaceState();
+      fullscreenConversationActive = true;
+      content.classList.add('wb-conversation-active');
+      renderWorkspaceTabs();
+      syncFullscreenChat();
+      return;
+    }
     const item = openWorkspaces.find((workspace) => workspace.id === id);
     if (!item) return;
     if (saveCurrent) saveActiveWorkspaceState();
+    fullscreenConversationActive = false;
+    content.classList.remove('wb-conversation-active');
     activeWorkspace = id;
     renderWorkspaceTabs();
-    workbench.classList.remove('file-split', 'file-preview-only');
+    workbench.classList.toggle('file-split', fileTreeVisible);
+    workbench.classList.toggle('file-preview-only', !fileTreeVisible);
     syncWorkbenchWidth();
     setWorkbenchExpanded(workbenchExpanded);
     wbPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === item.kind));
     if (item.kind === 'browser') {
       urlInput.value = item.url || '';
-      requestAnimationFrame(() => urlInput.focus());
+      if (!saveCurrent || document.activeElement === workspaceAdd || document.activeElement?.closest('.workspace-create-menu')) {
+        requestAnimationFrame(() => urlInput.focus());
+      }
     }
     if (item.kind === 'file') renderToolFileWorkspace(item);
+    syncFileTreeToggle();
     syncFullscreenChat();
   }
 
@@ -2770,6 +2920,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   }
 
   function closeWorkspace(id, confirmed = false) {
+    if (id === CONVERSATION_TAB_ID) return;
     const index = openWorkspaces.findIndex((item) => item.id === id);
     if (index === -1) return;
     const item = openWorkspaces[index];
@@ -2785,13 +2936,13 @@ const fileCloseSave = document.getElementById('fileCloseSave');
     const closingActiveWorkspace = activeWorkspace === id;
     openWorkspaces.splice(index, 1);
 
-    // 关闭按钮始终真正移除对应页签；最后一张被移除时同时收起面板。
-    // 下次主动打开工具面板时再提供新的空白文件页签，不恢复已关闭内容。
+    // 关闭最后一张工具页签时退出工作区，回到原本的对话页（或首页）。
     if (openWorkspaces.length === 0) {
       activeWorkspace = null;
-      renderWorkspaceTabs();
+      fileTreeVisible = false;
+      workbench.classList.remove('file-split', 'tree-revealed');
+      workbench.classList.add('file-preview-only');
       setWorkbench(false);
-      if (confirmed) wbToggle.focus();
       return;
     }
 
@@ -2802,7 +2953,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
     } else {
       renderWorkspaceTabs();
     }
-    if (confirmed) workspaceTabs.querySelector(`[data-workspace-tab="${activeWorkspace}"]`)?.focus();
+    if (confirmed) workspaceTabs.querySelector(`[data-workspace-tab="${fullscreenConversationActive ? CONVERSATION_TAB_ID : activeWorkspace}"]`)?.focus();
   }
 
   fileCloseCancel.addEventListener('click', () => dismissFileCloseDialog());
@@ -2854,16 +3005,16 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   fullscreenChatInput.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
     e.preventDefault();
-    if (!fullscreenChatInput.value.trim()) return;
-    fullscreenChatInput.value = '';
-    fullscreenChatInput.style.height = 'auto';
-    fullscreenChatSend.disabled = true;
+    sendFullscreenFileRequest();
   });
-  fullscreenChatSend.addEventListener('click', () => {
-    if (!fullscreenChatInput.value.trim()) return;
-    fullscreenChatInput.value = '';
-    fullscreenChatInput.style.height = 'auto';
-    fullscreenChatSend.disabled = true;
+  fullscreenChatSend.addEventListener('click', sendFullscreenFileRequest);
+  fullscreenChatAttach.addEventListener('click', () => {
+    const node = currentFileWorkspace()?.node;
+    if (node) {
+      fullscreenChatInput.value = `${fullscreenChatInput.value.trimEnd()}${fullscreenChatInput.value ? ' ' : ''}@${node.name} `;
+      fullscreenChatInput.dispatchEvent(new Event('input', { bubbles: true }));
+      fullscreenChatInput.focus();
+    }
   });
 function setSummaryOpen(open) {
   // 工具区已打开时先用当前左侧主区边界定位，再显示摘要浮窗，避免沿用旧的静态位置。
@@ -2888,10 +3039,52 @@ function setSummaryOpen(open) {
     outputToggle.focus();
   });
 
+  function toggleToolsPanel() {
+    const panelVisible = content.classList.contains('wb-open') && !content.classList.contains('wb-auto-collapsed');
+    if (panelVisible && (rightPanel === 'tools' || rightPanel === 'landing')) {
+      // 只关闭工具内容；已打开的目录树仍以独立右栏保留。
+      setRightPanel(fileTreeVisible ? 'tree' : null);
+      return;
+    }
+    fileTreeVisible = panelVisible && rightPanel === 'tree';
+    workbench.classList.toggle('file-split', fileTreeVisible);
+    workbench.classList.toggle('file-preview-only', !fileTreeVisible);
+    renderWorkbenchLandingRecents();
+    setRightPanel('landing');
+  }
+
   wbToggle.addEventListener('click', (event) => {
     event.stopPropagation();
-    const toolsOpen = content.classList.contains('wb-open') && !content.classList.contains('wb-auto-collapsed') && workbench.dataset.panel === 'tools';
-    setRightPanel(toolsOpen ? null : 'tools');
+    toggleToolsPanel();
+  });
+  workbenchLanding.addEventListener('click', (event) => {
+    const create = event.target.closest('[data-landing-create]');
+    if (create) {
+      if (create.dataset.landingCreate === 'file') {
+        let emptyFile = openWorkspaces.find((item) => item.kind === 'file' && !item.node);
+        fileTreeVisible = true;
+        if (!emptyFile) {
+          createWorkspace('file');
+          emptyFile = currentFileWorkspace();
+        }
+        setRightPanel('tools');
+        activateWorkspace(emptyFile.id);
+      } else {
+        setRightPanel('tools');
+        createWorkspace(create.dataset.landingCreate);
+      }
+      return;
+    }
+    const recent = event.target.closest('[data-landing-recent]');
+    if (recent) {
+      const entry = recentOpenedFiles[Number(recent.dataset.landingRecent)];
+      if (entry) openArtifactPreview(entry.node, entry.chain);
+    }
+  });
+  workbenchLandingRecentToggle.addEventListener('click', () => {
+    const expanded = workbenchLandingRecentToggle.getAttribute('aria-expanded') !== 'true';
+    workbenchLandingRecentToggle.setAttribute('aria-expanded', String(expanded));
+    workbenchLandingRecentList.hidden = !expanded;
   });
   workspaceAdd.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -2922,8 +3115,7 @@ function setSummaryOpen(open) {
     if (e.key === 'Escape') setWorkspaceCreate(false);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
       e.preventDefault();
-      const toolsOpen = content.classList.contains('wb-open') && !content.classList.contains('wb-auto-collapsed') && workbench.dataset.panel === 'tools';
-      setRightPanel(toolsOpen ? null : 'tools');
+      toggleToolsPanel();
     }
   });
   /* 工具文件夹只展示当前任务所在的根目录，顶部切换器与输入框下方的
@@ -3046,6 +3238,9 @@ renderToolFolderPicker();
 
 /* 文件树右键菜单挂到 body，避免被目录面板的 overflow 裁切。 */
 const TREE_CONTEXT_ITEMS = [
+{ act: 'modify', label: '对话修改', svg: '<path d="M4 18.5V21h2.5L18.9 8.6a2.1 2.1 0 0 0-3-3L3.5 18Z"/><path d="m13.8 7.7 3 3"/>' },
+{ act: 'share', label: '分享产物', svg: '<path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/>' },
+{ act: 'template', label: '存为模版', svg: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8m-8 4h8"/>' },
 { act: 'chat', label: '添加到对话', svg: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>' },
 { act: 'copy-path', label: '复制路径', divider: true, svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
 { act: 'copy-relative-path', label: '复制相对路径', svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
@@ -3082,6 +3277,9 @@ treeContextTarget = { ...target, path };
 treeContextRow = row;
 row.classList.add('context-open');
 
+treeContextMenu.querySelectorAll('[data-tree-context-act="modify"], [data-tree-context-act="share"], [data-tree-context-act="template"]').forEach(button => {
+  button.hidden = !isArtifactNode(target.node);
+});
 treeContextMenu.hidden = false;
 treeContextMenu.style.visibility = 'hidden';
 treeContextMenu.style.left = '0px';
@@ -3204,8 +3402,7 @@ const preview = node.preview;
     workbench.classList.toggle('file-preview-only', !treeVisible);
     syncWorkbenchWidth();
     requestAnimationFrame(syncResizeLayout);
-toolTreeReopen.hidden = treeVisible;
-toolTreeReopen.setAttribute('aria-pressed', String(treeVisible));
+    syncFileTreeToggle();
     const editing = canToggleMode && item.previewMode === 'source';
     toolFileModeToggle.hidden = !canToggleMode || editing;
     toolFileModeToggle.textContent = '编辑代码';
@@ -3272,6 +3469,68 @@ toolTreeReopen.setAttribute('aria-pressed', String(treeVisible));
     });
   }
 
+  function taskForArtifact(chain) {
+    const name = chain?.at(-1)?.name;
+    return [...conversationExamples].find(([, example]) => example.folderId === chain?.[0]?.id && example.files.includes(name))?.[0] || null;
+  }
+
+  function sendFullscreenFileRequest() {
+    const text = fullscreenChatInput.value.trim();
+    const item = currentFileWorkspace();
+    if (!text || !item?.node) return;
+    const task = taskForArtifact(item.chain);
+    if (!task) {
+      window.alert('此文件尚未关联到示例任务，无法发送到任务对话。输入内容已保留。');
+      return;
+    }
+    const scrollPosition = toolFilePreviewBody.scrollTop;
+    if (activeConversationTask !== task || conversationPage.hidden) {
+      setConversationOpen(true, task);
+      openArtifactPreview(item.node, item.chain);
+      setWorkbenchExpanded(true);
+      toolFilePreviewBody.scrollTop = scrollPosition;
+    }
+    const reference = `@${item.node.name}`;
+    const message = { text: text.startsWith(reference) ? text.slice(reference.length).trim() : text,
+      attachments: [{ node: item.node, chain: item.chain }] };
+    const state = queueState(task);
+    if (state.running) state.prompts.push(message);
+    else beginConversationTurn(message);
+    renderConversationQueue();
+    fullscreenChatInput.value = '';
+    fullscreenChatInput.dispatchEvent(new Event('input', { bubbles: true }));
+    fullscreenChatInput.focus();
+  }
+
+  function modifyArtifact(node, chain) {
+    const task = taskForArtifact(chain);
+    if (!task) {
+      window.alert('此文件尚未关联到示例任务，当前原型无法将修改要求发往对话。');
+      return;
+    }
+    setSummaryOpen(false);
+    setConversationOpen(true, task);
+    openArtifactPreview(node, chain);
+    if (content.classList.contains('wb-expanded')) {
+      // 主动全屏阅读时保留原预览；先收起工具区，让对话输入可见。
+      setWorkbench(false);
+    } else {
+      setWorkbenchExpanded(false);
+    }
+    conversationPrompt.value = `${conversationPrompt.value.trimEnd()}${conversationPrompt.value ? '\n' : ''}@${node.name} 请修改：`;
+    resizeConversationPrompt();
+    conversationPrompt.focus();
+    conversationPrompt.setSelectionRange(conversationPrompt.value.length, conversationPrompt.value.length);
+  }
+
+  function shareArtifact(node) {
+    document.getElementById('artifactShareFile').textContent = `当前产物：${node.name}`;
+    artifactShareDialog.showModal();
+  }
+  document.getElementById('artifactShareClose').addEventListener('click', () => artifactShareDialog.close());
+  artifactShareDialog.addEventListener('click', (event) => {
+    if (event.target === artifactShareDialog) artifactShareDialog.close();
+  });
   let toolTreeScrollTimer;
   toolFileTree.addEventListener('scroll', () => {
     toolFileTree.classList.add('is-scrolling');
@@ -3515,6 +3774,15 @@ const absolutePath = `${target.chain[0].path.replace(/\/$/, '')}/${relativePath}
 closeTreeContextMenu();
 
 switch (item.dataset.treeContextAct) {
+case 'modify':
+modifyArtifact(node, target.chain);
+break;
+case 'share':
+shareArtifact(node);
+break;
+case 'template':
+createTemplateFromArtifact(node, target.chain);
+break;
 case 'chat':
 appendFileToConversation(node);
 break;
@@ -3592,23 +3860,40 @@ window.addEventListener('resize', closeTreeContextMenu);
     if (!toolFolderPicker.contains(e.target)) setToolFolderOpen(false);
   });
 
-toolTreeClose.addEventListener('click', () => {
-const item = currentFileWorkspace();
-if (!item) return;
-  fileTreeVisible = false;
-  renderToolFileWorkspace(item);
-});
-
-toolTreeReopen.addEventListener('click', () => {
-const item = currentFileWorkspace();
-if (!item) return;
-  fileTreeVisible = true;
-  // 展开目录只改变布局，不改变当前文件的渲染方式。
-renderToolFileWorkspace(item);
-});
+  fileTreeToggle.addEventListener('click', () => {
+    const panelVisible = content.classList.contains('wb-open') && !content.classList.contains('wb-auto-collapsed');
+    if (rightPanel === 'tree' && panelVisible) {
+      setRightPanel(null);
+      return;
+    }
+    if (rightPanel === 'landing' && panelVisible) {
+      fileTreeVisible = !fileTreeVisible;
+      if (fileTreeVisible) keepWorkbenchVisibleDuringTransition();
+      workbench.classList.toggle('file-split', fileTreeVisible);
+      workbench.classList.toggle('file-preview-only', !fileTreeVisible);
+      syncWorkbenchWidth();
+      syncResizeLayout();
+      return;
+    }
+    if (rightPanel === 'tools' && panelVisible) {
+      fileTreeVisible = !fileTreeVisible;
+      if (fileTreeVisible) keepWorkbenchVisibleDuringTransition();
+      if (currentFileWorkspace()) renderToolFileWorkspace(currentFileWorkspace());
+      else {
+        workbench.classList.toggle('file-split', fileTreeVisible);
+        workbench.classList.toggle('file-preview-only', !fileTreeVisible);
+        syncResizeLayout();
+      }
+      return;
+    }
+    // 未打开工具工作区时只呈现文件树，不附带页签或预览。
+    renderToolTree();
+    setRightPanel('tree');
+  });
 
   renderToolTree();
   activateWorkspace('file-default', false);
+  renderWorkbenchLandingRecents();
 
   /* ---------- 5.6 案例详情弹窗 ----------
      所有卡片共用一个 dialog：卡片只保存当前场景内的索引，打开时再从
@@ -3821,8 +4106,7 @@ renderToolFileWorkspace(item);
   /* ---------- 5.6 示例对话 ----------
      选中左侧指定任务后，首页让位给对应对话；对话和产物面板打开的文件
      统一进入右侧页签，并在本次对话中保留到用户手动关闭。 */
-  const mainView = document.querySelector('.main');
-  const conversationPage = document.getElementById('conversationPage');
+const mainView = document.querySelector('.main');
   const conversationThread = document.getElementById('conversationThread');
   const conversationScroll = document.getElementById('conversationScroll');
   const conversationTurnNav = document.getElementById('conversationTurnNav');
@@ -3832,10 +4116,11 @@ renderToolFileWorkspace(item);
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
   const retailConversationTask = document.getElementById('retailFirstConversationTask');
+  const membershipResearchTask = document.getElementById('membershipResearchTask');
   const conversationSubagents = [
-    { work: '合并各门店履约明细', state: 'done' },
-    { work: '定位异常订单的集中时段', state: 'running' },
-    { work: '复核履约指标统计口径', state: 'running' },
+    { work: '合并各门店履约明细', state: 'done', detail: '已按订单与门店归并明细，统一事件时间字段，供后续异常识别和核验使用。' },
+    { work: '定位异常订单的集中时段', state: 'running', detail: '正在对照订单事件日志，定位超时与出餐延迟的集中时段；未核实的原因暂不写成结论。' },
+    { work: '复核履约指标统计口径', state: 'running', detail: '正在核对订单去重、时间戳对齐及分时段阈值，确保看板与异常明细的统计口径一致。' },
   ];
   const conversationExamples = new Map([
     [conversationTask, {
@@ -3884,6 +4169,16 @@ renderToolFileWorkspace(item);
           reply: '可以。配送类问题中，2 条发生在骑手接单后到店阶段，1 条是门店交接等待过长；出餐类问题集中在高峰时段备餐排队。明细里会保留异常时间、门店、影响订单和待核实责任方，避免把尚未确认的原因写成定论。',
         },
         {
+          prompt: '这是异常趋势截图，帮我核对晚高峰的变化。',
+          attachments: ['履约异常趋势.png'],
+          reply: '从截图看，17:00–19:00 的超时单量明显抬升。我会对照订单事件日志确认峰值和实际超时单量，不把截图中的视觉趋势直接当作统计结论。',
+        },
+        {
+          prompt: '明细表和分析文档也发你了，结合两份材料给出处理建议。',
+          attachments: ['门店履约异常明细.xlsx', '门店履约分析.docx'],
+          reply: '收到两份文件。我会先核对明细表中的订单和时间戳，再对照分析文档中的结论；存在缺失记录的订单单独标记，不直接归责。',
+        },
+        {
           prompt: '给我一个门店侧能直接执行的处理顺序。',
           reply: '建议先联系涉及重复超时的门店核对交接记录，再与配送侧复盘晚高峰到店时间；随后排查两家出餐延迟门店的备餐排班。每项问题都可以在明细表中补充负责人和跟进状态。',
         },
@@ -3892,11 +4187,26 @@ renderToolFileWorkspace(item);
           reply: '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。看板展示整体分布，明细表列出优先级与跟进信息，分析文档汇总原因及处理建议。',
         },
         {
-          prompt: '再看一下异常明细文件，确认哪些门店需要优先跟进。',
+          prompt: '结合这张趋势图和异常明细文件，确认哪些门店需要优先跟进。',
+          attachments: ['履约异常趋势.png', '门店履约异常明细.xlsx'],
           reply: '',
         },
       ],
       files: ['门店履约异常看板.html', '门店履约异常明细.xlsx', '门店履约分析.docx'],
+    }],
+    [membershipResearchTask, {
+      folderId: 'default',
+      turns: [
+        { prompt: '调研竞品在会员权益上的差异，看看我们还缺什么。',
+          reply: '我先按价格、折扣、积分和专属服务整理了竞品会员权益。初稿中有些权益属于限时活动，且各品牌会员等级不同，目前只能作为线索，不能直接判断谁更有优势。' },
+        { prompt: '别只列权益。把入会门槛、权益使用条件和限制也放到一起比；过期活动不要算常驻权益。',
+          reply: '已把一次性活动单列，并按会员等级、入会成本、使用门槛、有效期和适用渠道统一口径。原先“竞品折扣力度更大”的判断缺少同等级、同渠道证据，已改为待核实。' },
+        { prompt: '这样好一些。结论别笼统说我们落后，要指出哪个用户场景缺权益、依据是什么。',
+          reply: '已按新客入会、老客复购和高频用户三个场景重写差异：每条判断都附上对比口径和证据状态；缺少公开规则的权益保留“待核实”，不推断实际可用性。' },
+        { prompt: '这一版可以，口径和结论都比之前清楚多了。',
+          reply: '好的，这版会保留可比口径、用户场景和待核实项，方便后续查看。' },
+      ],
+      files: [],
     }],
     [retailConversationTask, {
       folderId: 'retail',
@@ -3905,11 +4215,20 @@ renderToolFileWorkspace(item);
       files: ['AI 工具约束配置报告.docx'],
     }],
   ]);
+  // 示例轮次跨越数天；真实发送的时间在进入对话时记录，而不是入队时记录。
+  const demoTurnMinutesAgo = [4320, 4260, 2880, 2820, 1440, 1380, 360, 180, 40, 4];
   const conversationThreads = new Map();
+  const conversationComposerDrafts = new Map();
   const conversationGoals = new Map();
   const pausedConversationGoals = new Set();
   const conversationQueueStates = new Map();
   let activeConversationTask = null;
+  function updateSummaryArtifactBadge() {
+    const count = conversationPage.hidden ? 0 : (conversationExamples.get(activeConversationTask)?.files.length || 0);
+    summaryArtifactBadge.hidden = count === 0;
+    summaryArtifactBadge.textContent = count ? String(count) : '';
+    outputToggle.setAttribute('aria-label', count ? `摘要，${count} 个产物` : '摘要');
+  }
   function queueState(task) {
     if (!conversationQueueStates.has(task)) conversationQueueStates.set(task, {
       running: task === conversationTask,
@@ -3921,44 +4240,57 @@ renderToolFileWorkspace(item);
     return conversationQueueStates.get(task);
   }
   const conversationTaskTitle = document.getElementById('conversationTaskTitle');
-  const conversationSubagentBack = document.getElementById('conversationSubagentBack');
-  const conversationSubagentDetail = document.getElementById('conversationSubagentDetail');
   const conversationTaskMore = document.getElementById('conversationTaskMore');
   const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
-  const conversationAiTaskItems = document.getElementById('conversationAiTaskItems');
-  const conversationAiTaskSummary = document.getElementById('conversationAiTaskSummary');
   const conversationStatusStack = conversationPage.querySelector('.conversation-status-stack');
-  // 状态条浮在滚动区之上；用它的可见高度为消息末尾预留可滚动空间。
+  // 仅队列悬浮于输入区上方；进度在对话中正常参与滚动。
   const conversationStatusObserver = new ResizeObserver(() => {
     const statusHeight = conversationStatusStack.hidden ? 0 : conversationStatusStack.getBoundingClientRect().height;
     conversationScroll.style.setProperty('--conversation-status-clearance', `${statusHeight}px`);
     conversationStatusStack.parentElement.style.setProperty('--conversation-status-height', `${statusHeight}px`);
   });
   conversationStatusObserver.observe(conversationStatusStack);
-  const aiTasks = Array.from(conversationAiTaskItems.querySelectorAll('.conversation-status-item'));
-  const taskStatusIcons = {
-    done: '<circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/>',
-  };
-  aiTasks.forEach((item, index) => {
-    const state = item.dataset.taskState;
-    const progressId = `conversation-task-progress-${index}`;
-    const runningIcon = `<defs><linearGradient id="${progressId}-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="12" x2="4.2" y2="7.5"><stop stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient><mask id="${progressId}-mask" maskUnits="userSpaceOnUse" mask-type="luminance" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="white" stroke="none"/><rect x="0" y="0" width="8" height="12" fill="url(#${progressId}-gradient)" stroke="none"/></mask></defs><path d="M14.8 3.5A9 9 0 1 1 4.2 7.5" mask="url(#${progressId}-mask)"/>`;
-    item.querySelector('.conversation-task-icon').innerHTML = `<svg viewBox="0 0 24 24" class="ic">${state === 'done' ? taskStatusIcons.done : runningIcon}</svg>`;
-    item.setAttribute('aria-label', `${item.querySelector('.conversation-status-name').textContent.trim()}，${{ done: '已完成', running: '进行中', pending: '未完成' }[state] || '未完成'}`);
+  const conversationProgressTasks = [
+    { name: '汇总本周门店履约明细', state: 'done' },
+    { name: '生成履约异常看板', state: 'done' },
+    { name: '持续监测新增异常订单', state: 'running' },
+  ];
+  function renderConversationProgress() {
+    const done = conversationProgressTasks.filter((item) => item.state === 'done').length;
+    const items = conversationProgressTasks.map(({ name, state }) => {
+      const icon = state === 'done'
+        ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/></svg>'
+        : '<span class="spinner" aria-hidden="true"></span>';
+      return `<div class="conversation-activity-link conversation-progress-item" data-task-state="${state}" aria-label="${esc(name)}，${state === 'done' ? '已完成' : '进行中'}"><span class="conversation-activity-icon">${icon}</span><span class="conversation-status-name">${esc(name)}</span></div>`;
+    }).join('');
+    return `<section class="conversation-progress" aria-label="任务进度"><button class="conversation-activity-link conversation-progress-toggle" type="button" aria-expanded="false" aria-controls="conversationProgressItems"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 6h2m3 0h11M4 12h2m3 0h11M4 18h2m3 0h11"/></svg><span>进度 ${done}/${conversationProgressTasks.length}</span><svg viewBox="0 0 24 24" class="ic conversation-progress-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><div class="conversation-progress-items" id="conversationProgressItems" aria-hidden="true" inert><div class="conversation-progress-items-content">${items}</div></div></section>`;
+  }
+  function moveConversationProgressToLatestTurn() {
+    const progress = conversationThread.querySelector('.conversation-progress');
+    const content = conversationThread.querySelector('.assistant-message:last-child .assistant-content');
+    if (progress && content) {
+      const next = content.querySelector('.conversation-message-meta, .conversation-activity');
+      if (next) next.before(progress);
+      else content.append(progress);
+    }
+  }
+  conversationThread.addEventListener('click', (event) => {
+    const trigger = event.target.closest('.conversation-progress-toggle');
+    if (!trigger || !conversationThread.contains(trigger)) return;
+    const expanded = trigger.getAttribute('aria-expanded') !== 'true';
+    trigger.setAttribute('aria-expanded', String(expanded));
+    const items = trigger.nextElementSibling;
+    items.inert = !expanded;
+    items.setAttribute('aria-hidden', String(!expanded));
   });
-  conversationAiTaskSummary.textContent = `进度 ${aiTasks.filter((item) => item.dataset.taskState === 'done').length}/${aiTasks.length}`;
   conversationStatusStack.addEventListener('click', (event) => {
     const trigger = event.target.closest('.conversation-status-trigger');
-    if (trigger) {
-      const expanded = trigger.getAttribute('aria-expanded') !== 'true';
-      trigger.setAttribute('aria-expanded', String(expanded));
-      const items = document.getElementById(trigger.getAttribute('aria-controls'));
-      items.inert = !expanded;
-      items.setAttribute('aria-hidden', String(!expanded));
-      return;
-    }
-    const item = event.target.closest('.conversation-status-item');
-    if (item) item.setAttribute('aria-pressed', String(item.getAttribute('aria-pressed') !== 'true'));
+    if (!trigger) return;
+    const expanded = trigger.getAttribute('aria-expanded') !== 'true';
+    trigger.setAttribute('aria-expanded', String(expanded));
+    const items = document.getElementById(trigger.getAttribute('aria-controls'));
+    items.inert = !expanded;
+    items.setAttribute('aria-hidden', String(!expanded));
   });
   const conversationTaskMenu = document.createElement('div');
   conversationTaskMenu.id = 'conversationTaskMenu';
@@ -4070,15 +4402,21 @@ renderToolFileWorkspace(item);
           ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.2 12 2.6 2.6 5-5"/></svg>'
           : '<span class="spinner" aria-hidden="true"></span>';
         const state = done ? '已完成' : '进行中';
-        return `<button class="conversation-activity-link conversation-subagent" type="button" data-subagent-index="${index}" aria-label="${esc(agent.work)}，${state}，进入子 Agent 详情">` +
-          `<span class="conversation-activity-icon${done ? ' is-done' : ''}">${icon}</span>` +
-          `<span class="conversation-activity-detail">${esc(agent.work)}</span></button>`;
+        return `<button class="conversation-activity-link conversation-subagent" type="button" data-subagent-index="${index}" aria-expanded="false" aria-controls="conversationSubagentDetail-${index}" aria-label="${esc(agent.work)}，${state}，展开详情">` +
+          `<span class="conversation-activity-icon${done ? ' is-done' : ''}" aria-hidden="true">${icon}</span>` +
+          `<span class="conversation-activity-detail">${esc(agent.work)}</span>` +
+          `<svg viewBox="0 0 24 24" class="ic conversation-subagent-detail-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` +
+          `<div class="conversation-subagent-detail" id="conversationSubagentDetail-${index}" aria-hidden="true" inert hidden>` +
+          `<span class="conversation-status-state ${done ? 'is-done' : 'is-running'}">` +
+          (done ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成' : '<span class="spinner" aria-hidden="true"></span>正在调取子 Agent') +
+          `</span><p>${esc(agent.detail)}</p></div>`;
       }).join('') + `</div></div></div>`;
   }
 
   function renderConversationArtifacts(task) {
     const example = conversationExamples.get(task);
     const conversationArtifacts = conversationThread.querySelector('#conversationArtifacts');
+    if (!conversationArtifacts) return;
     conversationArtifacts.classList.toggle('is-single', example.files.length === 1);
     conversationArtifacts.innerHTML = example.files.map((name, index) => {
       const extension = name.split('.').pop().toLowerCase();
@@ -4089,6 +4427,63 @@ renderToolFileWorkspace(item);
         `<svg viewBox="0 0 24 24" class="ic conversation-artifact-arrow" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
     }).join('');
   }
+
+  const messageAttachments = new Map();
+  let nextMessageAttachmentId = 0;
+  const localAttachmentUrls = new Set();
+  window.addEventListener('pagehide', () => localAttachmentUrls.forEach(url => URL.revokeObjectURL(url)));
+
+  function prepareLocalImage(entry) {
+    const { node, localFile } = entry;
+    if (!localFile || node.preview || !(localFile.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(node.name))) return;
+    const url = URL.createObjectURL(localFile);
+    localAttachmentUrls.add(url);
+    node.preview = { kind: 'image', art: `<img src="${esc(url)}" alt="">` };
+  }
+
+  function renderSentAttachment(entry) {
+    const { node } = entry;
+    prepareLocalImage(entry);
+    const id = String(++nextMessageAttachmentId);
+    messageAttachments.set(id, entry);
+    const image = node.preview?.kind === 'image';
+    const name = esc(node.name);
+    const nameAttr = name.replace(/"/g, '&quot;');
+    if (image) return `<button class="conversation-sent-image" type="button" data-message-attachment="${id}" aria-label="预览图片：${nameAttr}" title="预览图片：${nameAttr}"><span class="conversation-sent-image-art" aria-hidden="true">${node.preview.art}</span><span class="conversation-sent-image-name">${name}</span></button>`;
+    const extension = node.name.split('.').pop().toLowerCase();
+    const icon = artifactIconByExtension[extension] || 'doc';
+    return `<button class="conversation-sent-file" type="button" data-message-attachment="${id}" aria-label="预览文件：${nameAttr}" title="预览文件：${nameAttr}"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"><span class="conversation-sent-file-copy"><strong>${name}</strong><small>${entry.localFile ? '本地文件' : '资料库文件'} · 点击预览</small></span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
+  }
+
+  function renderUserMessage(text, attachments = [], isGoal = false, suggestSop = false) {
+    const bubble = text ? `<div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(text)}</div>` : '';
+    const cards = attachments.length ? `<div class="conversation-sent-attachments">${attachments.map(renderSentAttachment).join('')}</div>` : '';
+    const suggestion = suggestSop ? '<div class="conversation-sop-suggestion"><span>是否沉淀 SOP？</span><button type="button" data-sop-accept aria-label="确认沉淀 SOP" title="确认沉淀 SOP"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button></div>' : '';
+    return `<div class="conversation-message user-message"><div class="conversation-message-body">${bubble}${cards}${suggestion}${renderMessageMeta('user')}</div></div>`;
+  }
+
+  function formatConversationTurnTime(date, now = new Date()) {
+    const day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const daysAgo = Math.round((today - day) / 86400000);
+    const clock = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    if (daysAgo === 0) return clock;
+    if (daysAgo > 0 && daysAgo < 7) return `${new Intl.DateTimeFormat('zh-CN', { weekday: 'long' }).format(date)} ${clock}`;
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${clock}`;
+  }
+
+  function renderConversationTurnTime(date) {
+    return `<time class="conversation-turn-time" datetime="${date.toISOString()}" title="${date.toLocaleString('zh-CN')}">${formatConversationTurnTime(date)}</time>`;
+  }
+
+  function refreshConversationTurnTimes() {
+    conversationThread.querySelectorAll('.conversation-turn-time').forEach(time => {
+      time.textContent = formatConversationTurnTime(new Date(time.dateTime));
+    });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshConversationTurnTimes();
+  });
 
   function conversationTurns() {
     return Array.from(conversationThread.querySelectorAll('.user-message'));
@@ -4120,7 +4515,7 @@ renderToolFileWorkspace(item);
     const turns = conversationTurns();
     conversationTurnNav.hidden = turns.length < 2;
     conversationTurnNav.innerHTML = turns.length < 2 ? '' : turns.map((turn, index) => {
-      const question = turn.querySelector('.message-bubble')?.textContent.trim() || '对话';
+      const question = turn.querySelector('.message-bubble')?.textContent.trim() || turn.querySelector('[data-message-attachment]')?.getAttribute('aria-label') || '对话';
       const answer = turn.nextElementSibling?.querySelector('.assistant-content')?.textContent.trim() || '';
       return `<button class="conversation-turn" type="button" data-turn-index="${index}" aria-label="跳转到第 ${index + 1} 轮：${esc(question)}">` +
         `<span class="conversation-turn-preview" aria-hidden="true"><strong>${esc(question)}</strong>${answer ? `<br>${esc(answer.slice(0, 90))}${answer.length > 90 ? '…' : ''}` : ''}</span></button>`;
@@ -4153,43 +4548,29 @@ renderToolFileWorkspace(item);
     if (!button) return;
     const turn = conversationTurns()[Number(button.dataset.turnIndex)];
     if (turn) conversationScroll.scrollTo({
-      top:conversationScroll.scrollTop + turn.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 16,
+      top:conversationScroll.scrollTop + (turn.previousElementSibling?.matches('.conversation-turn-time') ? turn.previousElementSibling : turn).getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 16,
       behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
     });
   });
 
   const conversationGoalLabel = '<span class="conversation-message-goal-label"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg>目标</span>';
-  let conversationBeforeSubagentScroll = 0;
-  let activeConversationSubagentIndex = null;
-  function closeConversationSubagent(restoreScroll = true) {
-    if (!conversationPage.classList.contains('subagent-open')) return;
-    conversationPage.classList.remove('subagent-open');
-    conversationThread.hidden = false;
-    conversationSubagentDetail.hidden = true;
-    conversationSubagentBack.hidden = true;
-    conversationTaskTitle.textContent = activeConversationTask?.querySelector('.task-name')?.textContent.trim() || '当前任务';
-    renderConversationTurnNav();
-    if (restoreScroll) conversationScroll.scrollTop = conversationBeforeSubagentScroll;
-  }
-
-  conversationSubagentBack.addEventListener('click', () => {
-    const index = activeConversationSubagentIndex;
-    closeConversationSubagent();
-    conversationThread.querySelectorAll('.conversation-subagent')[index]?.focus();
-    activeConversationSubagentIndex = null;
-  });
-
   const messageCopyIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/></svg>';
   const messageLikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></svg>';
   const messageDislikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g transform="rotate(180 12 12)"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></g></svg>';
 
-  function renderMessageMeta(role, date = new Date()) {
-    const time = new Date(date);
+  function renderMessageMeta(role) {
     const buttons = `<button type="button" data-message-action="copy" title="复制" aria-label="复制${role === 'user' ? '消息' : '回复'}">${messageCopyIcon}</button>` +
       (role === 'assistant' ? `<button type="button" data-message-action="like" title="赞" aria-label="赞" aria-pressed="false">${messageLikeIcon}</button>` +
       `<button type="button" data-message-action="dislike" title="踩" aria-label="踩" aria-pressed="false">${messageDislikeIcon}</button>` : '');
-    return `<div class="conversation-message-meta">${buttons}<time class="conversation-message-time" datetime="${time.toISOString()}" title="${role === 'user' ? '发送时间' : '回复时间'}：${time.toLocaleString('zh-CN')}">${time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</time></div>`;
+    return `<div class="conversation-message-meta">${buttons}</div>`;
   }
+
+  conversationThread.addEventListener('click', event => {
+    const button = event.target.closest('[data-message-attachment]');
+    if (!button) return;
+    const entry = messageAttachments.get(button.dataset.messageAttachment);
+    if (entry) openArtifactPreview(entry.node, entry.chain);
+  });
 
   conversationThread.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-message-action]');
@@ -4198,8 +4579,9 @@ renderToolFileWorkspace(item);
     if (button.dataset.messageAction === 'copy') {
       const content = message.matches('.user-message') ? message.querySelector('.message-bubble') : message.querySelector('.assistant-content');
       const text = message.matches('.user-message')
-        ? Array.from(content.childNodes).filter(node => !node.classList?.contains('conversation-message-goal-label')).map(node => node.textContent).join('').trim()
-        : Array.from(content.children).filter(node => !node.matches('.conversation-message-meta, .conversation-artifacts, .conversation-subagents, .conversation-activity')).map(node => node.innerText.trim()).filter(Boolean).join('\n\n');
+        ? [content ? Array.from(content.childNodes).filter(node => !node.classList?.contains('conversation-message-goal-label')).map(node => node.textContent).join('').trim() : '',
+          ...Array.from(message.querySelectorAll('[data-message-attachment]'), card => messageAttachments.get(card.dataset.messageAttachment)?.node.name).filter(Boolean)].filter(Boolean).join('\n')
+        : Array.from(content.children).filter(node => !node.matches('.conversation-message-meta, .conversation-artifacts, .conversation-subagents, .conversation-progress, .conversation-activity')).map(node => node.innerText.trim()).filter(Boolean).join('\n\n');
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
@@ -4216,28 +4598,39 @@ renderToolFileWorkspace(item);
 
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
     closeAccessMenus();
-    if (!open || activeConversationTask !== task) closeConversationSubagent(false);
     if (!open) closeConversationTaskMenu();
     if (open && activeConversationTask !== task) {
       if (activeConversationTask) setGoalMode(conversationPrompt, false);
-      if (activeConversationTask) conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+      if (activeConversationTask) {
+        conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+        conversationComposerDrafts.set(activeConversationTask, conversationPrompt.value);
+      }
       activeConversationTask?.setAttribute('aria-current', 'false');
       activeConversationTask = task;
+      conversationPrompt.value = conversationComposerDrafts.get(task) || '';
+      resizeConversationPrompt();
       const example = conversationExamples.get(task);
       if (conversationThreads.has(task)) {
         conversationThread.innerHTML = conversationThreads.get(task);
       } else {
         const turns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
-        conversationThread.innerHTML = turns.map(({ prompt, reply, isGoal }, index) =>
-          `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(prompt)}</div>${renderMessageMeta('user')}</div></div>` +
+        const openedAt = new Date();
+        conversationThread.innerHTML = turns.map(({ prompt, reply, isGoal, attachments = [], sentAt }, index) =>
+          renderConversationTurnTime(sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45) * 60000)) +
+          renderUserMessage(prompt, attachments.map(name => {
+            const folder = FOLDERS.find(entry => entry.id === example.folderId);
+            const node = folder?.files.find(file => file.name === name);
+            return node ? { node, chain: [folder, node] } : null;
+          }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
-          (index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
-          (task === conversationTask && index === turns.length - 1 ? renderConversationSubagents() : '') +
+          (example.files.length && index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
+          (task === conversationTask && index === turns.length - 1 ? renderConversationSubagents() + renderConversationProgress() : '') +
           (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><button class="conversation-activity-file conversation-activity-link" type="button" data-read-file="门店履约异常明细.xlsx" aria-label="预览已读取文件：门店履约异常明细.xlsx"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span class="conversation-activity-label">已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></button><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div>` : '') +
           (reply ? renderMessageMeta('assistant') : '') +
           '</div></div>'
         ).join('');
       }
+      refreshConversationTurnTimes();
       renderConversationArtifacts(task);
       const folder = FOLDERS.find((entry) => entry.id === example.folderId);
       if (folder) selectFolder(folder.id);
@@ -4245,14 +4638,18 @@ renderToolFileWorkspace(item);
     }
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
+    if (!open && workbenchExpanded) setWorkbenchExpanded(false);
+    if (!open && !summaryPopover.hidden) setSummaryOpen(false);
+    updateSummaryArtifactBadge();
     activeConversationTask?.setAttribute('aria-current', open ? 'page' : 'false');
     if (open) conversationTaskTitle.textContent = task.querySelector('.task-name')?.textContent.trim() || '当前任务';
+    if (content.classList.contains('wb-expanded')) renderWorkspaceTabs();
     if (!summaryPopover.hidden) renderSummaryContents();
     if (open) {
       setWorkbench(false);
       renderConversationTurnNav();
       requestAnimationFrame(() => {
-        conversationScroll.scrollTop = task === conversationTask ? conversationScroll.scrollHeight : 0;
+        conversationScroll.scrollTop = task === conversationTask || task === membershipResearchTask ? conversationScroll.scrollHeight : 0;
         updateConversationTurnNav();
       });
     }
@@ -4274,22 +4671,41 @@ const queueSaveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><p
 
 function renderConversationQueue() {
   const { running, prompts } = queueState(activeConversationTask);
-  conversationStatusStack.hidden = activeConversationTask !== conversationTask && !running && !prompts.length;
+  conversationStatusStack.hidden = !running && !prompts.length;
   conversationQueueGroup.hidden = !running && !prompts.length;
-  conversationQueueSummary.textContent = prompts.length ? `${prompts.length} 条待发送` : '本轮进行中';
-  conversationQueueItems.querySelector('.conversation-status-items-content').innerHTML = prompts.map((text, index) =>
-    `<div class="conversation-queue-item"><span class="conversation-queue-text" title="${esc(text)}">${esc(text)}</span><div class="conversation-queue-actions"><button class="conversation-queue-send" type="button" data-queue-send="${index}" aria-label="直接发送队列中的第 ${index + 1} 条" title="直接发送">${queueSendIcon}</button><button class="conversation-queue-remove" type="button" data-queue-remove="${index}" aria-label="删除队列中的第 ${index + 1} 条" title="删除">${queueRemoveIcon}</button><button class="conversation-queue-edit" type="button" data-queue-edit="${index}" aria-label="编辑队列中的第 ${index + 1} 条" title="编辑">${queueEditIcon}</button></div></div>`
-  ).join('');
+  conversationQueueSummary.textContent = prompts.length ? `${prompts.length} 条待发送${running ? ' · 本轮演示中' : ''}` : '本轮演示中';
+  conversationQueueItems.querySelector('.conversation-status-items-content').innerHTML = prompts.map((message, index) => {
+    const text = typeof message === 'string' ? message : message.text;
+    const names = typeof message === 'string' ? [] : (message.attachments || []).map(entry => entry.node.name);
+    const label = [text, ...names.map(name => `@${name}`)].filter(Boolean).join(' ');
+    return `<div class="conversation-queue-item"><span class="conversation-queue-text" title="${esc(label).replace(/"/g, '&quot;')}">${esc(label)}</span><div class="conversation-queue-actions"><button class="conversation-queue-send" type="button" data-queue-send="${index}" aria-label="直接发送队列中的第 ${index + 1} 条" title="直接发送">${queueSendIcon}</button><button class="conversation-queue-remove" type="button" data-queue-remove="${index}" aria-label="删除队列中的第 ${index + 1} 条" title="删除">${queueRemoveIcon}</button><button class="conversation-queue-edit" type="button" data-queue-edit="${index}" aria-label="编辑队列中的第 ${index + 1} 条" title="编辑">${queueEditIcon}</button></div></div>`;
+  }).join('');
 }
 
-function beginConversationTurn(text) {
+function beginConversationTurn(message) {
+  const text = typeof message === 'string' ? message : message.text;
+  const attachments = typeof message === 'string' ? [] : message.attachments || [];
   conversationThread.insertAdjacentHTML('beforeend',
-    `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${esc(text)}</div>${renderMessageMeta('user')}</div></div>` +
-    '<div class="conversation-message assistant-message"><div class="assistant-content"><div class="conversation-activity conversation-queue-thinking" role="status"><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div></div></div>');
-  queueState(activeConversationTask).running = true;
+    renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments) +
+    `<div class="conversation-message assistant-message"><div class="assistant-content"><p class="conversation-queue-done">已记录消息。当前原型未连接生成服务，文件内容没有更新；可继续查看原产物或补充要求。</p>${renderMessageMeta('assistant')}</div></div>`);
+  moveConversationProgressToLatestTurn();
   renderConversationTurnNav();
   renderConversationQueue();
   requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+}
+
+function finishDemoConversationTurn(nextMessage = null) {
+  const state = queueState(activeConversationTask);
+  if (!state.running) return;
+  state.running = false;
+  const activity = conversationThread.querySelector('.assistant-message:last-child .conversation-activity');
+  if (activity) {
+    activity.outerHTML = `<p class="conversation-queue-done">本轮演示已结束；没有连接真实生成服务，也未修改产物。</p>${renderMessageMeta('assistant')}`;
+  }
+  if (nextMessage) beginConversationTurn(nextMessage);
+  while (state.prompts.length) beginConversationTurn(state.prompts.shift());
+  conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+  renderConversationQueue();
 }
 
   function sendConversationMessage() {
@@ -4300,8 +4716,9 @@ function beginConversationTurn(text) {
     if (!text) return;
     updateGoal(conversationPrompt, text);
     conversationThread.insertAdjacentHTML('beforeend',
-      `<div class="conversation-message user-message"><div class="conversation-message-body"><div class="message-bubble">${conversationGoalLabel}${esc(text)}</div>${renderMessageMeta('user')}</div></div>` +
+      renderConversationTurnTime(new Date()) + renderUserMessage(text, [], true) +
       `<div class="conversation-message assistant-message"><div class="assistant-content"><p>目标已设置，后续对话将以此为约束。</p>${renderMessageMeta('assistant')}</div></div>`);
+    moveConversationProgressToLatestTurn();
     setGoalMode(conversationPrompt, false);
     renderConversationTurnNav();
     requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
@@ -4309,7 +4726,10 @@ function beginConversationTurn(text) {
     resizeConversationPrompt();
     return;
   }
-    const message = [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`), ...files.map(entry => `@${entry.node.name}`)].filter(Boolean).join(' ');
+    const message = {
+      text: [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`)].filter(Boolean).join(' '),
+      attachments: [...files],
+    };
   const state = queueState(activeConversationTask);
   if (state.running) {
     state.prompts.push(message);
@@ -4326,12 +4746,13 @@ function beginConversationTurn(text) {
 function finishQueueEdit(input, save) {
   const index = Number(input.dataset.queue-input);
   const text = input.value.trim();
-  if (save && !text) {
+  const message = queueState(activeConversationTask).prompts[index];
+  if (save && !text && (typeof message === 'string' || !message.attachments?.length)) {
     input.setAttribute('aria-invalid', 'true');
     input.focus();
     return;
   }
-  if (save) queueState(activeConversationTask).prompts[index] = text;
+  if (save) queueState(activeConversationTask).prompts[index] = typeof message === 'string' ? text : { ...message, text };
   renderConversationQueue();
   conversationQueueItems.querySelector(`[data-queue-edit="${index}"]`)?.focus();
 }
@@ -4348,7 +4769,8 @@ conversationQueueItems.addEventListener('click', (event) => {
     input.type = 'text';
     input.dataset.queueInput = String(index);
     input.setAttribute('aria-label', `编辑队列中的第 ${index + 1} 条，按回车保存，Escape 取消`);
-    input.value = queueState(activeConversationTask).prompts[index];
+    const message = queueState(activeConversationTask).prompts[index];
+    input.value = typeof message === 'string' ? message : message.text;
     row.querySelector('.conversation-queue-text').replaceWith(input);
     row.querySelectorAll('.conversation-queue-send, .conversation-queue-remove').forEach(button => { button.disabled = true; });
     edit.innerHTML = queueSaveIcon;
@@ -4367,17 +4789,10 @@ conversationQueueItems.addEventListener('click', (event) => {
   const send = event.target.closest('[data-queue-send]');
   if (send) {
     const state = queueState(activeConversationTask);
-    const [text] = state.prompts.splice(Number(send.dataset.queueSend), 1);
-    if (!text) return;
-    if (state.running) {
-      const activity = conversationThread.querySelector('.assistant-message:last-child .conversation-activity');
-      if (activity) {
-        const content = activity.closest('.assistant-content');
-        activity.remove();
-        if (!content.children.length) content.innerHTML = `<p class="conversation-queue-done">本轮已被新消息中断。</p>${renderMessageMeta('assistant')}`;
-      }
-    }
-    beginConversationTurn(text);
+    const [message] = state.prompts.splice(Number(send.dataset.queueSend), 1);
+    if (!message) return;
+    if (state.running) finishDemoConversationTurn(message);
+    else beginConversationTurn(message);
     return;
   }
   const remove = event.target.closest('[data-queue-remove]');
@@ -4400,6 +4815,10 @@ conversationQueueItems.addEventListener('keydown', (event) => {
       e.preventDefault();
       setConversationOpen(true, task);
     });
+  });
+  document.getElementById('homeNav').addEventListener('click', (e) => {
+    e.preventDefault();
+    setConversationOpen(false);
   });
   newTaskNav.addEventListener('click', (e) => {
     e.preventDefault();
@@ -4463,19 +4882,13 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     if (!button || activeConversationTask !== conversationTask) return;
     const agent = conversationSubagents[Number(button.dataset.subagentIndex)];
     if (!agent) return;
-    conversationBeforeSubagentScroll = conversationScroll.scrollTop;
-    activeConversationSubagentIndex = Number(button.dataset.subagentIndex);
-    conversationTaskTitle.textContent = agent.work;
-    conversationSubagentDetail.innerHTML = `<span class="conversation-status-state ${agent.state === 'done' ? 'is-done' : 'is-running'}">` +
-      (agent.state === 'done' ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>已完成' : '<span class="spinner" aria-hidden="true"></span>正在调取子agent') +
-      `</span><h2>${esc(agent.work)}</h2><p>${agent.state === 'done' ? '已完成处理，结果将在主对话中汇总。' : '正在处理，完成后将在主对话中汇总。'}</p>`;
-    conversationThread.hidden = true;
-    conversationSubagentDetail.hidden = false;
-    conversationSubagentBack.hidden = false;
-    conversationPage.classList.add('subagent-open');
-    conversationTurnNav.hidden = true;
-    conversationScroll.scrollTop = 0;
-    conversationSubagentBack.focus();
+    const expanded = button.getAttribute('aria-expanded') !== 'true';
+    const detail = button.nextElementSibling;
+    button.setAttribute('aria-expanded', String(expanded));
+    button.setAttribute('aria-label', `${agent.work}，${agent.state === 'done' ? '已完成' : '进行中'}，${expanded ? '收起' : '展开'}详情`);
+    detail.hidden = !expanded;
+    detail.inert = !expanded;
+    detail.setAttribute('aria-hidden', String(!expanded));
   });
   conversationThread.addEventListener('click', (event) => {
     const button = event.target.closest('[data-read-file]');
@@ -4857,12 +5270,13 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     const entries = selectedLibraryFiles.get(input);
     container.hidden = entries.length === 0;
     container.innerHTML = entries.map((entry, index) => {
-      const { node } = entry;
-      const type = artifactType(node) || node.type;
-      const image = /\.(?:png|jpe?g|gif|webp|svg)$/i.test(node.name) || ['image', 'png'].includes(node.type);
-      const art = image && node.preview?.kind === 'image' ? node.preview.art : null;
-      const preview = art ? `<img src="data:image/svg+xml,${encodeURIComponent(art)}" alt="">` : (THUMBS[type] || THUMBS[image ? 'image' : 'doc'])();
-      return `<div class="composer-file-card" title="${esc(node.name)}"><span class="composer-file-preview" aria-hidden="true">${preview}</span><span class="composer-file-name">${esc(node.name)}</span><button class="composer-file-remove" type="button" data-library-file-remove="${index}" aria-label="移除文件：${esc(node.name)}" title="移除文件"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button></div>`;
+const { node } = entry;
+prepareLocalImage(entry);
+const type = artifactType(node) || node.type;
+const image = /\.(?:png|jpe?g|gif|webp|svg)$/i.test(node.name) || ['image', 'png'].includes(node.type);
+const art = image && node.preview?.kind === 'image' ? node.preview.art : null;
+const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${encodeURIComponent(art)}" alt="">`) : (THUMBS[type] || THUMBS[image ? 'image' : 'doc'])();
+      return `<div class="composer-file-card" title="${esc(node.name).replace(/"/g, '&quot;')}"><span class="composer-file-preview" aria-hidden="true">${preview}</span><span class="composer-file-name">${esc(node.name)}</span><button class="composer-file-remove" type="button" data-library-file-remove="${index}" aria-label="移除文件：${esc(node.name).replace(/"/g, '&quot;')}" title="移除文件"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button></div>`;
     }).join('');
   }
   libraryFileCards.forEach((container, input) => container.addEventListener('click', event => {
@@ -5129,9 +5543,17 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     if (files.length && activeAddTrigger) {
       const input = addTarget();
       attachedLocalFiles.set(input, [...(attachedLocalFiles.get(input) || []), ...files]);
-      files.forEach(file => {
-        input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${file.name} `;
-      });
+      if (input === conversationPrompt) {
+        files.forEach(file => {
+          const node = { name: file.name, type: file.type };
+          selectedLibraryFiles.get(input).push({ node, chain: [node], localFile: file });
+        });
+        renderLibraryFileCards(input);
+      } else {
+        files.forEach(file => {
+          input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${file.name} `;
+        });
+      }
       input.dispatchEvent(new Event('input', { bubbles: true }));
       closeAddMenu();
       input.focus();
@@ -5463,6 +5885,7 @@ conversationQueueItems.addEventListener('keydown', (event) => {
   const templateStorageKey = 'catpaw-custom-templates-v1';
   let templates = [];
   let editingTemplateId = null;
+  let templateDraftSource = null;
   let templateReturnFocus = null;
 
   function normalizeTemplate(value) {
@@ -5475,6 +5898,13 @@ conversationQueueItems.addEventListener('keydown', (event) => {
       prompt: value.prompt.trim().slice(0, 10000), skills: list(value.skills).map(normalizeSkillName), mcps: list(value.mcps),
       expert: typeof value.expert === 'string' ? value.expert.trim().slice(0, 60) : '',
       resources: list(value.resources),
+      sop: value.sop && ['whole', 'revision'].includes(value.sop.scope)
+        ? { scope: value.sop.scope, when: String(value.sop.when || '').slice(0, 1000),
+          inputs: String(value.sop.inputs || '').slice(0, 1000), steps: String(value.sop.steps || '').slice(0, 3000),
+          checks: String(value.sop.checks || '').slice(0, 1000) } : null,
+      source: value.source && typeof value.source === 'object' && typeof value.source.file === 'string'
+        ? { file: value.source.file.slice(0, 180), type: String(value.source.type || '').slice(0, 30), task: String(value.source.task || '').slice(0, 80) }
+        : null,
     };
   }
   const exampleTemplates = [
@@ -5502,22 +5932,29 @@ conversationQueueItems.addEventListener('keydown', (event) => {
   }
   function renderTemplates() {
     templateList.innerHTML = templates.length ? templates.map(item => {
-      const tags = [...item.skills.map(name => `skill:${name}`), ...item.mcps.map(name => `MCP · ${name}`),
+      const tags = [...(item.source ? [`来源 · ${item.source.file} · ${item.source.type || '文件'}`] : []),
+        ...item.skills.map(name => `skill:${name}`), ...item.mcps.map(name => `MCP · ${name}`),
         ...(item.expert ? [`专家 · ${item.expert}`] : []), ...(item.resources.length ? [`资料 · ${item.resources.length} 项（仅本机）`] : [])];
-      return `<article class="template-item" data-template-id="${esc(item.id)}"><div class="template-item-main"><span class="template-item-mark" aria-hidden="true">✳</span><div><h3>${esc(item.title)}${item.example ? '<span class="template-example-tag">示例</span>' : ''}</h3><p>${esc(item.description || item.prompt)}</p><div class="template-tags">${tags.map(tag => `<span>${esc(tag)}</span>`).join('')}</div></div></div><div class="template-item-actions"><button type="button" data-template-action="use">使用</button><button type="button" data-template-action="edit">编辑</button><button type="button" data-template-action="duplicate">复制</button><button type="button" data-template-action="share">分享</button><button type="button" class="template-danger" data-template-action="delete">删除</button></div></article>`;
+      const sop = item.sop ? `<details class="template-sop-detail"><summary>${item.sop.scope === 'revision' ? '修改方法' : '任务方法'} · 查看步骤和验收标准</summary><p><strong>适用：</strong>${esc(item.sop.when)}</p><p><strong>需要：</strong>${esc(item.sop.inputs)}</p><p><strong>步骤：</strong>${esc(item.sop.steps)}</p><p><strong>验收：</strong>${esc(item.sop.checks)}</p></details>` : '';
+      return `<article class="template-item" data-template-id="${esc(item.id)}"><div class="template-item-main"><span class="template-item-mark" aria-hidden="true">✳</span><div><h3>${esc(item.title)}${item.example ? '<span class="template-example-tag">示例</span>' : ''}</h3><p>${esc(item.description || item.prompt)}</p><div class="template-tags">${tags.map(tag => `<span>${esc(tag)}</span>`).join('')}</div></div>${sop}<div class="template-item-actions"><button type="button" data-template-action="use">使用</button><button type="button" data-template-action="edit">编辑</button><button type="button" data-template-action="duplicate">复制</button><button type="button" data-template-action="share">分享</button><button type="button" class="template-danger" data-template-action="delete">删除</button></div></article>`;
     }).join('') : '<div class="template-empty"><span aria-hidden="true">✳</span><h3>把常用流程变成自己的模版</h3><p>组合 Prompt、Skill、MCP、专家和资料；使用时仍可在输入框里调整。</p><button type="button" class="template-create" data-template-action="new">创建第一个模版</button></div>';
   }
   function showTemplateList() {
     templateForm.hidden = true;
+    document.getElementById('templateSourceField').hidden = true;
     templateToolbar.hidden = false;
     templateList.hidden = false;
     editingTemplateId = null;
+    templateDraftSource = null;
     renderTemplates();
   }
   function editTemplate(item = null) {
     templateMessage('');
     templateForm.reset();
     editingTemplateId = item?.id || null;
+    templateDraftSource = item?.source || null;
+    document.getElementById('templateSourceField').hidden = !templateDraftSource;
+    templateForm.elements.sourceFile.value = templateDraftSource?.file || '';
     document.getElementById('templateFormTitle').textContent = item ? '编辑模版' : '新建模版';
     if (item) for (const name of ['title', 'description', 'prompt', 'skills', 'mcps', 'expert', 'resources']) {
       templateForm.elements[name].value = Array.isArray(item[name]) ? item[name].join('，') : item[name];
@@ -5527,6 +5964,166 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     templateForm.hidden = false;
     templateForm.elements.title.focus();
   }
+  function createTemplateFromArtifact(node, chain) {
+    if (!isArtifactNode(node)) return;
+    const task = taskForArtifact(chain);
+    const example = task && conversationExamples.get(task);
+    const lastPrompt = example?.turns?.findLast(turn => turn.reply && /已完成|已整理/.test(turn.reply))?.prompt || example?.prompt || '';
+    const promptDraft = lastPrompt ? `${lastPrompt}\n\n请生成${node.name.split('.').pop()?.toUpperCase() || '同类型'}产物。` : `参考${node.name}生成同类型产物。`;
+    const source = { file: node.name, type: artifactType(node) || '文件', task: task?.querySelector('.task-name')?.textContent.trim() || '' };
+    templateReturnFocus = document.activeElement;
+    templateMessage('');
+    templateDialog.showModal();
+    editTemplate({ title: `${node.name.replace(/\.[^.]+$/, '')}生成流程`.slice(0, 60),
+      description: `基于${node.name}的可编辑生成流程`, prompt: promptDraft,
+      skills: [], mcps: [], expert: '', resources: [], source });
+    templateDraftSource = source;
+    document.getElementById('templateFormTitle').textContent = '从产物保存模版';
+    templateMessage('请检查并删改 Prompt 和引用；仅保存生成方法与来源，不保存产物内容或完整对话。');
+  }
+  const sopDialog = document.getElementById('sopDialog');
+  const sopForm = document.getElementById('sopForm');
+  const sopEvidence = document.getElementById('sopEvidence');
+  const sopFormStatus = document.getElementById('sopFormStatus');
+  let sopReturnFocus = null;
+  let sopScope = 'whole';
+  let sopDrafts = {};
+  let editingSopId = null;
+  // 演示数据：只针对会员权益调研这段已写明的示例对话，不推断任意真实任务。
+  const membershipSopDrafts = {
+    whole: {
+      title: '会员权益竞品调研',
+      when: '需要比较同类会员产品，找出具体用户场景中的权益差异时。',
+      inputs: '本方和竞品的会员等级、公开权益规则、使用条件及有效期；缺失项由用户补充或标为待核实。',
+      steps: '1. 按会员等级、入会成本、适用渠道、使用门槛和有效期统一口径。\n2. 区分常驻权益与限时活动，不把不可比项目直接排序。\n3. 按新客入会、老客复购和高频用户场景比较差异。\n4. 每条结论附上来源及证据状态，列出待核实项。',
+      checks: '对比条件一致；没有把过期活动当常驻权益；结论指向具体用户场景；不确定项明确标记。',
+      prompt: '请基于我提供的会员权益规则，比较本方与竞品在具体用户场景中的权益差异。先核对会员等级、入会成本、使用门槛、适用渠道和有效期；限时活动与常驻权益分开列出。结论逐条说明证据及待核实信息，不要在口径不同时直接判断谁更有优势。',
+      evidence: '参考了初稿中口径不齐的问题、后续对使用条件与活动有效期的修正，以及最终按用户场景表达差异的认可。',
+    },
+    revision: {
+      title: '修正会员权益对比的口径与结论',
+      when: '已有一份权益对比初稿，但结论过于笼统或把不同等级、限时活动混在一起比较时。',
+      inputs: '待修改的对比初稿及可核对的权益规则；没有目标初稿时不能直接套用。',
+      steps: '1. 找出初稿中混入的限时活动、等级不一致和缺少条件的判断。\n2. 补齐入会门槛、权益使用限制、渠道和有效期，无法核实的标为待核实。\n3. 保留有依据的内容，撤回无证据的强结论。\n4. 改写为“哪个用户场景缺什么权益、依据是什么”。',
+      checks: '未将过期活动作为常驻权益；修改前后判断可追溯；每条差异有适用场景、对比口径和证据状态。',
+      prompt: '请修改我提供的会员权益对比初稿，而不是重新从零生成。先核对各会员等级、使用门槛、适用渠道和有效期；将限时活动单列，撤回缺少同口径证据的结论。保留已有可靠内容，按用户场景说明权益差异及依据，并标出待核实项。',
+      evidence: '参考了“过期活动不要算常驻权益”和“指出哪个用户场景缺权益、依据是什么”两次修改及最后的认可；不是仅复制最后一句话。',
+    },
+  };
+  function captureSopDraft() {
+    const fields = sopForm.elements;
+    sopDrafts[sopScope] = Object.fromEntries(['title', 'when', 'inputs', 'steps', 'checks', 'prompt'].map(name => [name, fields[name].value]));
+  }
+  function showSopScope(scope) {
+    sopScope = scope;
+    const draft = sopDrafts[scope] || membershipSopDrafts[scope];
+    for (const name of ['title', 'when', 'inputs', 'steps', 'checks', 'prompt']) sopForm.elements[name].value = draft[name];
+    sopEvidence.innerHTML = `<strong>草稿依据 · 示例复盘</strong><p>${esc(membershipSopDrafts[scope].evidence)}</p>`;
+    sopFormStatus.hidden = true;
+  }
+  const sopRequest = '请回顾刚才这项任务的对话，把真正有效的做法沉淀成一份可复用的 SOP 草稿，先给我确认，不要直接保存。';
+  conversationThread.addEventListener('click', event => {
+    const button = event.target.closest('[data-sop-accept]');
+    if (!button || activeConversationTask !== membershipResearchTask) return;
+    button.closest('.conversation-sop-suggestion').remove();
+    const draft = membershipSopDrafts.revision;
+    const reply = [
+      '这是一份待你确认的 SOP 草稿。我回看了初稿、两次修改和最终认可，重点保留了对比口径与结论的修正方法。',
+      '',
+      `### ${draft.title}`,
+      '',
+      `**适用场景**：${draft.when}`,
+      '',
+      `**需要提供**：${draft.inputs}`,
+      '',
+      `**步骤**：\n${draft.steps}`,
+      '',
+      `**验收标准**：${draft.checks}`,
+      '',
+      '如果范围不对，可以继续告诉我希望保留哪种做法；确认前不会保存。',
+    ].join('\n');
+    conversationThread.insertAdjacentHTML('beforeend',
+      renderConversationTurnTime(new Date()) + renderUserMessage(sopRequest) +
+      `<div class="conversation-message assistant-message"><div class="assistant-content"><article class="md conversation-reply">${renderMarkdown(reply)}</article>` +
+      '<p class="conversation-sop-demo-note">原型示例回复：草稿预置，尚未连接模型，不代表已真实回溯对话。</p>' +
+      '<button class="conversation-sop-review" type="button" data-sop-review>审阅并保存草稿</button>' +
+      `${renderMessageMeta('assistant')}</div></div>`);
+    renderConversationTurnNav();
+    requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+  });
+  conversationThread.addEventListener('click', event => {
+    const button = event.target.closest('[data-sop-review]');
+    if (!button || activeConversationTask !== membershipResearchTask) return;
+    sopReturnFocus = button;
+    editingSopId = null;
+    sopDialog.querySelector('#sopDialogTitle').textContent = '审阅 SOP 草稿';
+    sopDialog.querySelector('.sop-scope').hidden = false;
+    sopDrafts = {};
+    sopForm.reset();
+    showSopScope('revision');
+    sopDialog.showModal();
+  });
+  sopForm.addEventListener('change', event => {
+    if (event.target.name !== 'scope') return;
+    captureSopDraft();
+    showSopScope(event.target.value);
+  });
+  function editSopTemplate(item) {
+    templateReturnFocus = null;
+    templateDialog.close();
+    sopReturnFocus = null;
+    editingSopId = item.id;
+    sopScope = item.sop.scope;
+    sopForm.reset();
+    sopDialog.querySelector('#sopDialogTitle').textContent = '编辑已保存的方法';
+    sopDialog.querySelector('.sop-scope').hidden = true;
+    sopDrafts = { [sopScope]: { title: item.title, when: item.sop.when, inputs: item.sop.inputs,
+      steps: item.sop.steps, checks: item.sop.checks, prompt: item.prompt } };
+    showSopScope(sopScope);
+    sopEvidence.innerHTML = '<strong>修改保存内容</strong><p>下次使用以这里确认后的版本为准；原对话和文件仍不会附带。</p>';
+    sopDialog.showModal();
+  }
+  document.getElementById('sopClose').addEventListener('click', () => sopDialog.close());
+  document.getElementById('sopCancel').addEventListener('click', () => sopDialog.close());
+  sopDialog.addEventListener('click', event => { if (event.target === sopDialog) sopDialog.close(); });
+  sopDialog.addEventListener('close', () => {
+    if (editingSopId) {
+      editingSopId = null;
+      showTemplateList();
+      templateDialog.showModal();
+      templateDialog.querySelector('.template-close').focus();
+    } else if (sopReturnFocus?.isConnected) sopReturnFocus.focus();
+    sopReturnFocus = null;
+  });
+  sopForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = sopForm.elements;
+    const values = Object.fromEntries(['title', 'when', 'inputs', 'steps', 'checks', 'prompt'].map(name => [name, fields[name].value.trim()]));
+    if (!values.prompt) {
+      sopForm.querySelector('.sop-prompt').open = true;
+      fields.prompt.focus();
+      sopFormStatus.textContent = '请填写下次使用的任务指令。';
+      sopFormStatus.hidden = false;
+      return;
+    }
+    const previous = editingSopId ? templates.find(value => value.id === editingSopId) : null;
+    const item = normalizeTemplate({
+      title: values.title, description: values.when, prompt: values.prompt,
+      skills: previous?.skills || [], mcps: previous?.mcps || [], expert: previous?.expert || '', resources: previous?.resources || [],
+      sop: { scope: sopScope, when: values.when, inputs: values.inputs, steps: values.steps, checks: values.checks },
+    });
+    if (!item) return;
+    if (previous) templates[templates.indexOf(previous)] = { ...item, id: previous.id };
+    else templates.unshift(item);
+    const persisted = saveTemplates();
+    editingSopId = null;
+    templateReturnFocus = sopReturnFocus;
+    sopReturnFocus = null;
+    sopDialog.close();
+    showTemplateList();
+    templateMessage(persisted ? '已保存任务方法；再次使用时会回填可编辑指令，文件与原对话不会附带。' : '仅在本次页面会话中可用；存储失败，请不要将其视为已持久保存。');
+    templateDialog.showModal();
+  });
   document.getElementById('cases').addEventListener('click', event => {
     if (!event.target.closest('#openTemplates')) return;
     templateReturnFocus = event.target.closest('#openTemplates');
@@ -5548,6 +6145,8 @@ conversationQueueItems.addEventListener('keydown', (event) => {
       title: fields.title.value, description: fields.description.value, prompt: fields.prompt.value,
       skills: splitTemplateField(fields.skills.value), mcps: splitTemplateField(fields.mcps.value),
       expert: fields.expert.value, resources: splitTemplateField(fields.resources.value),
+      source: templateDraftSource && fields.sourceFile.value.trim() ? { ...templateDraftSource, file: fields.sourceFile.value.trim() } : null,
+      sop: editingTemplateId ? templates.find(value => value.id === editingTemplateId)?.sop : null,
     });
     if (!item) return;
     if (editingTemplateId) {
@@ -5567,18 +6166,23 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     if (action === 'new') editTemplate();
     else if (action === 'back') showTemplateList();
     else if (action === 'import') templateImport.click();
-    else if (item && action === 'edit') editTemplate(item);
+    else if (item && action === 'edit') {
+      if (item.sop) editSopTemplate(item);
+      else editTemplate(item);
+    }
     else if (item && action === 'duplicate') {
-      templates.unshift({ ...item, id: crypto.randomUUID(), example: false, title: `${item.title}（副本）`.slice(0, 60), skills: [...item.skills], mcps: [...item.mcps], resources: [...item.resources] });
+      templates.unshift({ ...item, id: crypto.randomUUID(), example: false, title: `${item.title}（副本）`.slice(0, 60), skills: [...item.skills], mcps: [...item.mcps], resources: [...item.resources], sop: item.sop ? { ...item.sop } : null });
       saveTemplates(); renderTemplates(); templateMessage('已复制模版。');
     } else if (item && action === 'delete') {
       if (!window.confirm(`删除模版「${item.title}」？此操作不能撤销。`)) return;
       templates = templates.filter(value => value.id !== item.id);
       saveTemplates(); renderTemplates(); templateMessage('模版已删除。');
     } else if (item && action === 'use') {
+      if (item.sop && !conversationPage.hidden) setConversationOpen(false);
       const references = [...item.mcps.map(name => `@MCP:${name}`),
         ...(item.expert ? [`@专家:${item.expert}`] : []), ...item.resources.map(name => `@${name}`)];
-      prompt.value = `${item.prompt}${references.length ? `\n\n${references.join(' ')}` : ''}`;
+      const inputHint = item.sop ? (item.sop.scope === 'revision' ? '[请添加待修改的初稿和必要资料]' : '[请添加这次任务所需的资料]') : '';
+      prompt.value = `${inputHint ? `${inputHint}\n\n` : ''}${item.prompt}${references.length ? `\n\n${references.join(' ')}` : ''}`;
       setPromptGuide('');
       clearSkillTags(prompt);
       item.skills.forEach(name => addSkillTag(prompt, name));
@@ -5586,9 +6190,9 @@ conversationQueueItems.addEventListener('keydown', (event) => {
       templateDialog.close();
       requestAnimationFrame(() => { prompt.focus(); prompt.setSelectionRange(prompt.value.length, prompt.value.length); });
     } else if (item && action === 'share') {
-      if (!window.confirm('将导出 Prompt、Skill、MCP 和专家名称；资料引用不会导出。请确认 Prompt 本身不包含敏感内容。继续？')) return;
-      const { title, description, prompt: instruction, skills, mcps, expert } = item;
-      const payload = { format: 'catpaw-template', version: 1, template: { title, description, prompt: instruction, skills, mcps, expert } };
+      if (!window.confirm('将导出模版 JSON（不是在线分享），包含任务指令、SOP 步骤与验收标准（如有）、Skill、MCP、专家名称及来源产物信息；资料引用不会导出。请检查内容不包含敏感信息。继续？')) return;
+      const { title, description, prompt: instruction, skills, mcps, expert, source, sop } = item;
+      const payload = { format: 'catpaw-template', version: 1, template: { title, description, prompt: instruction, skills, mcps, expert, source, sop } };
       const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;

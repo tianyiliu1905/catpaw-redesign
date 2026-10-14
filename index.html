@@ -43,8 +43,20 @@
         </div>
       </header>
 
-      <!-- 固定入口：仅下方内容滚动 -->
+      <!-- 常用入口集中到左侧窄栏，任务与文件夹在右侧独立滚动。 -->
+      <nav class="sidebar-rail" id="nav" aria-label="主要入口">
+        <a class="nav-item home-nav" id="homeNav" href="#" title="首页" aria-label="首页" aria-current="page"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 10.5 10.8 4.4a1.8 1.8 0 0 1 2.4 0l6.8 6.1v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-8Z"/><rect x="9" y="13" width="6" height="5.5" rx="1.5"/></svg><span>首页</span></a>
+        <a class="nav-item" href="#" data-scope="all" title="定时任务" aria-label="定时任务"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6.7v5.7l3.8 2.3"/></svg><span>定时任务</span></a>
+        <a class="nav-item" href="#" data-scope="all" title="专家 · 技能" aria-label="专家 · 技能"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>专家 · 技能</span></a>
+        <a class="nav-item" href="#" data-scope="office" title="资料库" aria-label="资料库"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/></svg><span>资料库</span></a>
+        <a class="nav-item" href="#" data-scope="dev" title="应用" aria-label="应用"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2.3"/><rect x="14" y="3" width="7" height="7" rx="2.3"/><rect x="3" y="14" width="7" height="7" rx="2.3"/><rect x="14" y="14" width="7" height="7" rx="2.3"/></svg><span>应用</span></a>
+        <a class="nav-item" href="#" data-scope="design" title="设计系统" aria-label="设计系统"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 10h18M10 10v11"/></svg><span>设计系统</span></a>
+        <a class="nav-item settings-nav" href="#" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/></svg><span>设置</span></a>
+      </nav>
+
+      <!-- 固定入口：品牌名和新建任务位于任务列表上方。 -->
       <div class="sidebar-pinned">
+        <div class="sidebar-brand">妙手</div>
         <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
           <svg viewBox="0 0 24 24" class="ic"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/></svg>
           <span>新建任务</span>
@@ -53,34 +65,6 @@
 
       <!-- 滚动区 -->
       <div class="sidebar-scroll">
-
-        <nav class="nav" id="nav">
-          <!-- 通用 -->
-          <a class="nav-item" href="#" data-scope="all">
-            <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 6.7v5.7l3.8 2.3"/></svg>
-            <span>定时任务</span>
-          </a>
-          <a class="nav-item" href="#" data-scope="all">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg>
-            <span>专家 · 技能</span>
-          </a>
-
-          <!-- 原办公、开发、设计能力统一拍平展示，场景仅保留为数据归属 -->
-          <a class="nav-item" href="#" data-scope="office">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/></svg>
-            <span>资料库</span>
-          </a>
-
-          <a class="nav-item" href="#" data-scope="dev">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="7" height="7" rx="2.3"/><rect x="14" y="3" width="7" height="7" rx="2.3"/><rect x="3" y="14" width="7" height="7" rx="2.3"/><rect x="14" y="14" width="7" height="7" rx="2.3"/></svg>
-            <span>应用</span>
-          </a>
-
-          <a class="nav-item" href="#" data-scope="design">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 10h18M10 10v11"/></svg>
-            <span>设计系统</span>
-          </a>
-        </nav>
 
         <!-- 任务：不属于任何文件夹，跨原场景统一展示，超出上限折叠 -->
         <div class="section-label"><button class="section-toggle" id="toggleTasksSection" type="button" aria-controls="looseTasks" aria-expanded="true"><span id="labelTasks">任务</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
@@ -101,7 +85,7 @@
             <span class="task-name">对比三家供应商的报价与交期</span>
             <span class="task-state"><i class="dot-new"></i></span>
           </a>
-          <a class="task flush" href="#" data-scope="office">
+          <a class="task flush" id="membershipResearchTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">调研竞品在会员权益上的差异</span>
             <span class="task-state"><span class="task-time">5h</span></span>
           </a>
@@ -224,6 +208,7 @@
   <button class="folder-sort-option" type="button" role="menuitemcheckbox" data-folder-show-all aria-checked="true"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>所有任务</span><svg viewBox="0 0 24 24" class="ic folder-sort-check" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button>
 </div>
 
+        <p class="folder-storage-empty" id="folderStorageEmpty" role="status" hidden>本地文件夹暂未接入。切回云端查看示例文件夹。</p>
         <div id="folderGroups">
         <!-- 分组：服务零售 -->
         <section class="group" data-group data-scope="office" data-folder="retail">
@@ -377,12 +362,8 @@
 
       </div>
 
-      <!-- 底部 -->
+      <!-- 底部保留手机端下载入口 -->
       <footer class="sidebar-foot">
-        <a class="nav-item" href="#">
-          <svg viewBox="0 0 24 24" class="ic"><path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span>设置</span>
-        </a>
         <!-- 手机端下载 -->
         <div class="mobile-entry" id="mobileEntry">
           <button class="icon-btn" id="mobileBtn" title="下载手机端" aria-expanded="false">
@@ -435,13 +416,17 @@
       <button class="icon-btn" id="toggleWorkbench" title="工具" aria-label="工具" aria-expanded="false">
         <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18"/></svg>
       </button>
+      <button class="icon-btn" id="toggleFileTree" type="button" title="显示文件目录树" aria-label="显示文件目录树" aria-controls="toolFileTree" aria-pressed="false">
+        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-7-8 2-2-2-2"/></svg>
+      </button>
     </div>
 
     <!-- 摘要入口固定在内容区顶层，左侧区域变窄时也保持可见。 -->
     <div class="summary-toggle-slot">
-      <button class="icon-btn" id="toggleOutputs" title="摘要" aria-label="摘要" aria-haspopup="dialog" aria-controls="summaryPopover" aria-expanded="false">
-        <svg viewBox="0 0 24 24" class="ic"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg>
-      </button>
+<button class="icon-btn" id="toggleOutputs" title="摘要" aria-label="摘要" aria-haspopup="dialog" aria-controls="summaryPopover" aria-expanded="false">
+<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg>
+<span class="summary-artifact-badge" id="summaryArtifactBadge" aria-hidden="true" hidden></span>
+</button>
     </div>
 
     <main class="main">
@@ -467,7 +452,6 @@
           <button class="icon-btn conversation-task-expand" id="expandSidebarFromConversation" type="button" title="展开侧边栏" aria-label="展开侧边栏" aria-expanded="true">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/></svg>
           </button>
-          <button class="conversation-subagent-back" id="conversationSubagentBack" type="button" title="返回主对话" aria-label="返回主对话" hidden><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
           <span id="conversationTaskTitle">整理本周门店履约异常明细</span>
           <button class="conversation-task-more" id="conversationTaskMore" type="button" aria-label="任务操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationTaskMenu">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg>
@@ -488,31 +472,17 @@
                 </div>
               </div>
             </div>
-            <div class="conversation-subagent-detail" id="conversationSubagentDetail" hidden></div>
           </div>
         </div>
         <div class="conversation-composer-wrap">
-          <div class="conversation-status-stack" aria-label="任务执行状态">
-            <section class="conversation-status-group" data-status-group>
-              <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationAiTaskItems">
-                <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-                <span class="conversation-status-heading" id="conversationAiTaskSummary">进度 2/3</span>
-              </button>
-              <div class="conversation-status-items" id="conversationAiTaskItems" aria-hidden="true" inert>
-                <div class="conversation-status-items-content">
-                  <button class="conversation-status-item" type="button" data-task-state="done" aria-pressed="false"><span class="conversation-task-icon" aria-hidden="true"></span><span class="conversation-status-name">汇总本周门店履约明细</span></button>
-                  <button class="conversation-status-item" type="button" data-task-state="done" aria-pressed="false"><span class="conversation-task-icon" aria-hidden="true"></span><span class="conversation-status-name">生成履约异常看板</span></button>
-                  <button class="conversation-status-item" type="button" data-task-state="running" aria-pressed="false"><span class="conversation-task-icon" aria-hidden="true"></span><span class="conversation-status-name">持续监测新增异常订单</span></button>
-                </div>
-              </div>
-            </section>
+          <div class="conversation-status-stack" aria-label="待发送队列">
             <section class="conversation-status-group conversation-queue-group" id="conversationQueueGroup" aria-label="待发送队列" hidden>
-              <button class="conversation-status-trigger" type="button" aria-expanded="false" aria-controls="conversationQueueItems">
+              <button class="conversation-status-trigger" type="button" aria-expanded="true" aria-controls="conversationQueueItems">
                 <svg viewBox="0 0 24 24" class="ic conversation-status-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
                 <span class="conversation-status-heading">队列</span>
                 <span class="conversation-status-summary" id="conversationQueueSummary"></span>
               </button>
-              <div class="conversation-status-items" id="conversationQueueItems" aria-hidden="true" inert><div class="conversation-status-items-content"></div></div>
+              <div class="conversation-status-items" id="conversationQueueItems" aria-hidden="false"><div class="conversation-status-items-content"></div></div>
             </section>
           </div>
           <div class="conversation-composer" id="conversationComposer">
@@ -629,6 +599,18 @@
                   <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 <div class="folder-menu" id="folderMenu" role="listbox" aria-label="选择归属文件夹"></div>
+              </div>
+
+              <!-- 文件夹位置：与左侧文件夹列表共用当前云端 / 本地状态 -->
+              <div class="folder-storage-picker" id="folderStoragePicker">
+                <button class="foot-item" id="folderStorageBtn" type="button" aria-label="文件夹位置：云端" aria-haspopup="menu" aria-controls="folderStorageMenu" aria-expanded="false">
+                  <span id="folderStorageLabel">云端</span>
+                  <svg viewBox="0 0 24 24" class="ic chev" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="folder-storage-menu" id="folderStorageMenu" role="menu" aria-label="选择文件夹位置" hidden>
+                  <button type="button" role="menuitemradio" data-folder-storage="cloud" aria-checked="true">云端</button>
+                  <button type="button" role="menuitemradio" data-folder-storage="local" aria-checked="false">本地</button>
+                </div>
               </div>
 
               <!-- 分支：仅当归属文件夹关联了代码仓库时出现 -->
@@ -776,6 +758,17 @@
           </div>
         </div>
       </header>
+      <section class="workbench-landing" id="workbenchLanding" aria-label="右侧面板快捷入口">
+        <div class="workbench-landing-actions">
+          <button type="button" data-landing-create="file"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span>打开文件</span></button>
+          <button type="button" data-landing-create="browser"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9c2.5-2.5 3.8-5.5 3.8-9S14.5 5.5 12 3Z"/></svg><span>打开浏览器</span></button>
+          <button type="button" data-landing-create="terminal"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="5"/><path d="m7 9 3 3-3 3m6 0h4"/></svg><span>打开终端</span></button>
+        </div>
+        <div class="workbench-landing-recents">
+          <button class="workbench-landing-recent-toggle" id="workbenchLandingRecentToggle" type="button" aria-expanded="true">最近打开 <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="workbench-landing-recent-list" id="workbenchLandingRecentList"></div>
+        </div>
+      </section>
       <div class="file-close-overlay" id="fileCloseOverlay" hidden>
         <div class="file-close-dialog" role="dialog" aria-modal="true" aria-labelledby="fileCloseTitle" aria-describedby="fileCloseDescription">
           <h2 id="fileCloseTitle">保存对文件的更改？</h2>
@@ -788,31 +781,29 @@
         </div>
       </div>
 
-      <!-- ===== 工具：当前任务文件夹 ===== -->
-      <section class="wb-pane active" data-pane="files">
-        <div class="tool-tree-head">
-          <div class="tool-folder-picker" id="toolFolderPicker">
+<!-- ===== 工具：当前任务文件夹 ===== -->
+<section class="wb-pane active" data-pane="files">
+<div class="tool-tree-spacer" aria-hidden="true"></div>
+<div class="tool-tree-head">
+<div class="tool-folder-picker" id="toolFolderPicker">
             <button class="tool-folder-trigger" id="toolFolderBtn" type="button"
                     aria-haspopup="listbox" aria-expanded="false">
               <svg viewBox="0 0 24 24" class="ic"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span id="toolFolderName">默认文件夹</span>
               <svg viewBox="0 0 24 24" class="ic tool-folder-chev"><path d="m6 9 6 6 6-6"/></svg>
             </button>
-            <div class="tool-folder-menu" id="toolFolderMenu" role="listbox" aria-label="切换任务文件夹" hidden></div>
-          </div>
-          <button class="icon-btn sm tool-tree-close" id="toolTreeClose" type="button" title="收起文件树" aria-label="收起文件树">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-5-8-2-2 2-2"/></svg>
-          </button>
-        </div>
-        <label class="tool-tree-search" for="toolTreeSearch">
-          <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.7"/><path d="m15.95 15.95 4.55 4.55"/></svg>
-          <input id="toolTreeSearch" type="search" placeholder="搜索当前文件夹" autocomplete="off" />
-          <button id="toolTreeSearchClear" type="button" title="清除搜索" aria-label="清除搜索" hidden>
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
-          </button>
-        </label>
-        <div class="tool-tree" id="toolFileTree" role="tree" aria-label="当前任务文件夹目录"></div>
-      </section>
+<div class="tool-folder-menu" id="toolFolderMenu" role="listbox" aria-label="切换任务文件夹" hidden></div>
+</div>
+</div>
+<label class="tool-tree-search" for="toolTreeSearch">
+<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.7"/><path d="m15.95 15.95 4.55 4.55"/></svg>
+<input id="toolTreeSearch" type="search" placeholder="搜索当前文件夹" autocomplete="off" />
+<button id="toolTreeSearchClear" type="button" title="清除搜索" aria-label="清除搜索" hidden>
+<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
+</button>
+</label>
+<div class="tool-tree" id="toolFileTree" role="tree" aria-label="当前任务文件夹目录"></div>
+</section>
 
       <!-- ===== 工具：浏览器 ===== -->
       <section class="wb-pane" data-pane="browser">
@@ -869,9 +860,6 @@
             </button>
             <div class="open-with-menu" id="openWithMenu" role="menu" aria-label="打开方式" hidden></div>
           </div>
-          <button class="tool-tree-reopen" id="toolTreeReopen" type="button" title="展开文件树" aria-label="展开文件树" aria-pressed="false" hidden>
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-7-8 2-2-2-2"/></svg>
-          </button>
         </header>
         <div class="tool-file-preview-body" id="toolFilePreviewBody"></div>
       </section>
@@ -902,10 +890,10 @@
 
     <!-- 面板全屏时浮在预览上方的快捷对话框，不占用文件内容布局。 -->
     <div class="fullscreen-chat" id="fullscreenChat" hidden>
-      <button class="fullscreen-chat-attach" type="button" title="添加附件" aria-label="添加附件">
+      <button class="fullscreen-chat-attach" id="fullscreenChatAttach" type="button" title="引用当前文件" aria-label="引用当前文件">
         <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
       </button>
-      <textarea id="fullscreenChatInput" rows="1" placeholder="询问或修改当前文件"></textarea>
+      <textarea id="fullscreenChatInput" rows="1" aria-label="针对当前文件提出修改要求" placeholder="针对当前文件提出修改要求"></textarea>
       <button class="fullscreen-chat-send" id="fullscreenChatSend" type="button" title="发送" aria-label="发送" disabled>
         <svg viewBox="0 0 24 24" class="ic"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>
       </button>
@@ -980,15 +968,52 @@
     <label>模版名称 <input name="title" required maxlength="60" placeholder="例如：每周经营复盘"></label>
     <label>用途说明 <input name="description" maxlength="120" placeholder="这套流程适合什么时候使用？"></label>
     <label>Prompt <textarea name="prompt" required rows="5" placeholder="写下每次复用的核心任务指令，可在使用时继续修改"></textarea></label>
+    <label id="templateSourceField" hidden>来源产物（可清空，分享模版时也会包含此信息）<input name="sourceFile" maxlength="180" placeholder="来源文件名"></label>
     <div class="template-form-grid">
       <label>Skill <input name="skills" placeholder="多个用逗号分隔，如 data-analysis, docx"></label>
       <label>MCP <input name="mcps" placeholder="多个用逗号分隔，如 文件系统连接器"></label>
       <label>专家 <select name="expert"><option value="">不指定专家</option><option>数据开发</option><option>产品顾问</option><option>数据分析师</option><option>前端工程师</option><option>设计顾问</option><option>内容策划</option><option>自动化工程师</option></select></label>
       <label>资料引用 <input name="resources" placeholder="多个用逗号分隔，仅保存在本机"></label>
     </div>
-    <p class="template-help">当前为交互原型：能力和资料以名称引用写入输入框，不会自动安装或绑定；专家单独记录，资料引用只在本机保存，分享时不会导出。</p>
+    <p class="template-help">当前为交互原型：能力和资料以名称引用写入输入框，不会自动安装或绑定；资料引用只在本机保存，分享时不会导出。请在保存及分享前核对 Prompt、来源文件名和引用内容。</p>
     <div class="template-form-actions"><button class="template-secondary" type="button" data-template-action="back">取消</button><button class="template-create" type="submit">保存模版</button></div>
   </form>
+</dialog>
+
+<!-- 对话沉淀演示：用户认可做法后，审阅可编辑草稿；不自动保存对话或文件。 -->
+<dialog class="sop-dialog" id="sopDialog" aria-labelledby="sopDialogTitle">
+  <form id="sopForm">
+    <div class="sop-dialog-head">
+      <div><span class="template-eyebrow">REUSE THIS APPROACH</span><h2 id="sopDialogTitle">沉淀这次做法</h2><p>你只需判断哪种做法值得留下，不用挑选对话。先审阅草稿，确认后才保存。</p></div>
+      <button class="template-close" type="button" id="sopClose" aria-label="关闭沉淀草稿">×</button>
+    </div>
+    <div class="sop-dialog-body">
+      <p class="sop-demo-note">交互演示 · 以下草稿基于本任务的示例对话预置，不代表已自动复盘真实会话。</p>
+      <fieldset class="sop-scope"><legend>这次想留下什么？</legend>
+        <label><input type="radio" name="scope" value="whole"><span><strong>整套调研方法</strong><small>下次调研其他竞品，也能按这套步骤开展</small></span></label>
+        <label><input type="radio" name="scope" value="revision" checked><span><strong>刚才的修改方法</strong><small>已有对比初稿时，按这次反馈修正口径和结论</small></span></label>
+      </fieldset>
+      <div class="sop-evidence" id="sopEvidence" aria-label="草稿依据"></div>
+      <label>方法名称 <input name="title" required maxlength="60"></label>
+      <label>适用场景 <textarea name="when" required rows="2"></textarea></label>
+      <label>需要提供 <textarea name="inputs" required rows="2"></textarea></label>
+      <label>怎么做 <textarea name="steps" required rows="4"></textarea></label>
+      <label>怎样算做好 <textarea name="checks" required rows="2"></textarea></label>
+      <details class="sop-prompt"><summary>查看下次使用时的任务指令</summary><label>可编辑指令 <textarea name="prompt" required rows="5"></textarea></label></details>
+      <p class="sop-caution">请检查推断、一次性信息及敏感内容。只保存上面的文字，不保存原对话、产物文件或资料；Skill 不会凭这次对话自动生成。</p>
+      <p class="sop-form-status" id="sopFormStatus" role="status" hidden></p>
+    </div>
+    <div class="sop-dialog-actions"><button class="template-secondary" type="button" id="sopCancel">暂不保存</button><button class="template-create" type="submit">确认并存入我的模版</button></div>
+  </form>
+</dialog>
+
+<dialog class="artifact-share-dialog" id="artifactShareDialog" aria-labelledby="artifactShareTitle">
+  <h2 id="artifactShareTitle">分享产物</h2>
+  <p id="artifactShareFile"></p>
+  <p>范围：仅当前文件，不包含任务对话、其他文件或本地资料。</p>
+  <p>接收方权限：预期可查看文件；编辑、转发及访问控制尚未接通。</p>
+  <p class="artifact-share-notice">当前是交互原型，尚无法邀请接收方或生成分享链接；此处不会实际完成分享。</p>
+  <button type="button" id="artifactShareClose">知道了</button>
 </dialog>
 
 <script src="./app.js"></script>
