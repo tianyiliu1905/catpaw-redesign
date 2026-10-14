@@ -184,6 +184,8 @@
 }
 
 *{ margin:0; padding:0; box-sizing:border-box; }
+/* 全局重置会覆盖原生 dialog 的居中边距，所有模态弹窗统一恢复视口居中。 */
+dialog:modal{ margin:auto; }
 button,
 input,
 textarea,
