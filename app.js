@@ -2375,6 +2375,7 @@ promptGuide = text;
   const toolTreeSearch = document.getElementById('toolTreeSearch');
   const toolTreeSearchClear = document.getElementById('toolTreeSearchClear');
   const toolFileModeToggle = document.getElementById('toolFileModeToggle');
+  const toolFileShare = document.getElementById('toolFileShare');
 const toolFileEditSave = document.getElementById('toolFileEditSave');
 const toolFileEditDiscard = document.getElementById('toolFileEditDiscard');
 const fileCloseOverlay = document.getElementById('fileCloseOverlay');
@@ -2384,11 +2385,12 @@ const fileCloseDiscard = document.getElementById('fileCloseDiscard');
 const fileCloseSave = document.getElementById('fileCloseSave');
   const toolFilePreviewTitle = document.getElementById('toolFilePreviewTitle');
   const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
-  const openWith = document.getElementById('openWith');
-  const openWithPrimary = document.getElementById('openWithPrimary');
-  const openWithPrimaryIcon = document.getElementById('openWithPrimaryIcon');
-  const openWithToggle = document.getElementById('openWithToggle');
-  const openWithMenu = document.getElementById('openWithMenu');
+const fileActions = document.getElementById('fileActions');
+const fileActionsTrigger = document.getElementById('fileActionsTrigger');
+const fileActionsMenu = document.getElementById('fileActionsMenu');
+const fileDetailsDialog = document.getElementById('fileDetailsDialog');
+const fileDetailsTitle = document.getElementById('fileDetailsTitle');
+const fileDetailsContent = document.getElementById('fileDetailsContent');
   const fullscreenChat = document.getElementById('fullscreenChat');
   const fullscreenChatInput = document.getElementById('fullscreenChatInput');
   const fullscreenChatSend = document.getElementById('fullscreenChatSend');
@@ -2843,6 +2845,7 @@ let fullscreenConversationActive = false;
     const item = openWorkspaces.find((workspace) => workspace.id === id);
     if (!item) return;
     if (saveCurrent) saveActiveWorkspaceState();
+    setFileActionsMenu(false);
     fullscreenConversationActive = false;
     content.classList.remove('wb-conversation-active');
     activeWorkspace = id;
@@ -3364,31 +3367,41 @@ const preview = node.preview;
     return { primary: 'ide', label: 'CatPaw IDE', apps: [['terminal', 'Terminal']] };
   }
 
-  function setOpenWithMenu(open) {
-    openWith.classList.toggle('open', open);
-    openWithMenu.hidden = !open;
-    openWithToggle.setAttribute('aria-expanded', String(open));
-  }
+  const FILE_ACTION_ICONS = {
+    chat: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>',
+    reveal: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>',
+    default: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
+    open: '<rect x="3" y="4" width="18" height="16" rx="4"/><path d="M3 9h18"/>',
+  };
 
-  function renderOpenWith(node) {
-    openWith.hidden = !node;
-    if (!node) {
-      setOpenWithMenu(false);
+  function renderFileActionsMenu(view = 'main') {
+    const node = currentFileWorkspace()?.node;
+    if (!node) return;
+    const config = openWithConfig(node);
+    if (view === 'apps') {
+      fileActionsMenu.setAttribute('aria-label', '打开方式');
+      fileActionsMenu.innerHTML = `<button class="file-actions-item" type="button" role="menuitem" data-file-action="back">` +
+        `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span class="file-actions-label">打开方式</span></button>` +
+        config.apps.map(([icon, label]) => `<button class="file-actions-item" type="button" role="menuitem" data-file-app="${esc(label)}">` +
+          `<span class="file-actions-app-icon">${OPEN_WITH_ICONS[icon]}</span><span class="file-actions-label">${esc(label)}</span></button>`).join('');
       return;
     }
-    const config = openWithConfig(node);
-    openWith.dataset.primaryApp = config.label;
-    openWithPrimaryIcon.innerHTML = OPEN_WITH_ICONS[config.primary];
-    openWithPrimary.title = `使用 ${config.label} 打开`;
-    openWithPrimary.setAttribute('aria-label', openWithPrimary.title);
-    openWithMenu.innerHTML = config.apps.map(([icon, label]) =>
-      `<button class="open-with-item" type="button" role="menuitem" data-open-with-app="${esc(label)}">` +
-      `<span class="open-with-app-icon">${OPEN_WITH_ICONS[icon]}</span>` +
-      `<span class="open-with-item-label">${esc(label)}</span></button>`
-    ).join('') +
-      `<button class="open-with-item" type="button" role="menuitem" data-open-with-action="reveal" data-divider>` +
-      `<span class="open-with-app-icon">${OPEN_WITH_ICONS.finder}</span>` +
-      `<span class="open-with-item-label">在文件夹中打开</span></button>`;
+    fileActionsMenu.setAttribute('aria-label', '文件操作');
+    fileActionsMenu.innerHTML = [
+      ['chat', '添加到对话'],
+      ['reveal', '在文件夹显示'],
+      ['default', '默认打开方式', config.label],
+      ['open', '打开方式', '›'],
+    ].map(([action, label, detail], index) => `<button class="file-actions-item" type="button" role="menuitem" data-file-action="${action}"${index === 2 ? ' data-divider' : ''}>` +
+      `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${FILE_ACTION_ICONS[action]}</svg>` +
+      `<span class="file-actions-label">${label}</span>${detail ? `<span class="file-actions-detail">${esc(detail)}</span>` : ''}</button>`).join('');
+  }
+
+  function setFileActionsMenu(open) {
+    fileActions.classList.toggle('open', open);
+    fileActionsMenu.hidden = !open;
+    fileActionsTrigger.setAttribute('aria-expanded', String(open));
+    if (open) renderFileActionsMenu();
   }
 
   function renderToolFileWorkspace(item) {
@@ -3409,11 +3422,11 @@ const preview = node.preview;
     toolFileEditSave.hidden = !editing;
     toolFileEditDiscard.hidden = !editing;
     toolFileEditSave.disabled = !editing;
-    if (editing) setOpenWithMenu(false);
+    toolFileShare.hidden = editing || !isArtifactNode(item.node);
+    setFileActionsMenu(false);
     activeFilePath = treeVisible ? item.path || null : null;
     toolFilePreviewTitle.textContent = item.node ? item.node.name : '选择文件';
-    renderOpenWith(item.node);
-    openWith.hidden = editing || !item.node;
+    fileActions.hidden = editing || !item.node;
     if (!item.node) toolFilePreviewBody.innerHTML = TOOL_FILE_EMPTY;
     else if (hasVisualPreview && item.previewMode !== 'source') {
       toolFilePreviewBody.innerHTML = PREVIEWS[item.node.preview.kind](item.node.preview, item);
@@ -3523,10 +3536,42 @@ const preview = node.preview;
     conversationPrompt.setSelectionRange(conversationPrompt.value.length, conversationPrompt.value.length);
   }
 
+  const artifactShareAccess = document.getElementById('artifactShareAccess');
+  const artifactShareAccessPanel = document.getElementById('artifactShareAccessPanel');
+  const artifactSharePermission = document.getElementById('artifactSharePermission');
+  const artifactShareFeedback = document.getElementById('artifactShareFeedback');
+
   function shareArtifact(node) {
-    document.getElementById('artifactShareFile').textContent = `当前产物：${node.name}`;
+    document.getElementById('artifactShareFile').textContent = node.name;
+    document.getElementById('artifactShareFileIcon').innerHTML = summaryArtifactIcon(artifactType(node));
+    artifactShareAccessPanel.hidden = true;
+    artifactShareAccess.setAttribute('aria-expanded', 'false');
+    artifactSharePermission.value = 'view';
+    artifactShareFeedback.hidden = true;
+    artifactShareFeedback.textContent = '';
     artifactShareDialog.showModal();
   }
+  toolFileShare.addEventListener('click', () => {
+    const node = currentFileWorkspace()?.node;
+    if (isArtifactNode(node)) shareArtifact(node);
+  });
+  artifactShareAccess.addEventListener('click', () => {
+    artifactShareAccessPanel.hidden = !artifactShareAccessPanel.hidden;
+    artifactShareAccess.setAttribute('aria-expanded', String(!artifactShareAccessPanel.hidden));
+  });
+  function showShareFeedback(message) {
+    artifactShareFeedback.textContent = message;
+    artifactShareFeedback.hidden = false;
+  }
+  artifactSharePermission.addEventListener('change', () => {
+    showShareFeedback(`已选择${artifactSharePermission.selectedOptions[0].textContent}（仅用于界面预览，实际权限未更改）。`);
+  });
+  artifactShareDialog.querySelectorAll('[data-share-channel]').forEach((button) => {
+    button.addEventListener('click', () => showShareFeedback(`当前原型尚未接入${button.dataset.shareChannel}分享，未发送文件。`));
+  });
+  document.getElementById('artifactShareCopy').addEventListener('click', () => {
+    showShareFeedback('当前原型尚未生成文件分享链接，未复制任何内容。');
+  });
   document.getElementById('artifactShareClose').addEventListener('click', () => artifactShareDialog.close());
   artifactShareDialog.addEventListener('click', (event) => {
     if (event.target === artifactShareDialog) artifactShareDialog.close();
@@ -3705,36 +3750,97 @@ const preview = node.preview;
     return `${folder.path.replace(/\/$/, '')}/${relativePath}`;
   }
 
+  function showFileDetails(title, body) {
+    fileDetailsTitle.textContent = title;
+    fileDetailsContent.innerHTML = body;
+    fileDetailsDialog.showModal();
+  }
+
+  function pathForFile(folder, node, parent = 'root') {
+    for (const [index, child] of (folder.files || []).entries()) {
+      const path = `${parent}.${index}`;
+      if (child === node) return path;
+      const nested = pathForFile(child, node, path);
+      if (nested) return nested;
+    }
+    return null;
+  }
+
+  function revealCurrentFile() {
+    const item = currentFileWorkspace();
+    if (!item?.node) return;
+    const folder = item.chain?.[0] || activeToolFolder();
+    const path = pathForFile(folder, item.node);
+    if (!path) {
+      showFileDetails('在文件夹显示', '<p>当前原型没有此文件对应的目录位置，暂时无法定位。</p>');
+      return;
+    }
+    if (folder.id !== activeToolFolder().id) selectFolder(folder.id);
+    // 展开文件所在的层级，并在右侧目录树中选中对应条目。
+    const parts = path.split('.');
+    for (let i = 1; i < parts.length; i += 1) toolTreeExpanded.add(parts.slice(0, i).join('.'));
+    item.path = `${folder.id}:${path}`;
+    fileTreeVisible = true;
+    keepWorkbenchVisibleDuringTransition();
+    renderToolFileWorkspace(item);
+    requestAnimationFrame(() => toolFileTree.querySelector('.tool-tree-row.selected')?.scrollIntoView({ block: 'nearest' }));
+  }
+
   function openCurrentFileWith(appName) {
     const item = currentFileWorkspace();
     if (!item?.node) return;
-    console.log(`[CatPaw] 使用 ${appName} 打开：`, currentFileAbsolutePath());
-    setOpenWithMenu(false);
+    showFileDetails('打开文件', `<p>将使用 ${esc(appName)} 打开「${esc(item.node.name)}」。</p><p>当前是交互原型，尚未连接本地应用，未实际打开文件。</p>`);
   }
 
-  openWithPrimary.addEventListener('click', () => openCurrentFileWith(openWith.dataset.primaryApp));
-  openWithToggle.addEventListener('click', (event) => {
+  fileActionsTrigger.addEventListener('click', (event) => {
     event.stopPropagation();
-    setOpenWithMenu(openWithMenu.hidden);
+    setFileActionsMenu(fileActionsMenu.hidden);
+    if (!fileActionsMenu.hidden) fileActionsMenu.querySelector('[role="menuitem"]')?.focus();
   });
-  openWithMenu.addEventListener('click', (event) => {
-    const target = event.target.closest('[data-open-with-app], [data-open-with-action]');
+  fileActionsMenu.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-file-app], [data-file-action]');
     if (!target) return;
     event.stopPropagation();
-    if (target.dataset.openWithAction === 'reveal') {
-      console.log('[CatPaw] 在 Finder 中显示：', currentFileAbsolutePath());
-      setOpenWithMenu(false);
+    const item = currentFileWorkspace();
+    if (!item?.node) return;
+    const action = target.dataset.fileAction;
+    if (action === 'open' || action === 'back') {
+      renderFileActionsMenu(action === 'open' ? 'apps' : 'main');
+      fileActionsMenu.querySelector('[role="menuitem"]')?.focus();
       return;
     }
-    openCurrentFileWith(target.dataset.openWithApp);
+    setFileActionsMenu(false);
+    if (target.dataset.fileApp) openCurrentFileWith(target.dataset.fileApp);
+    else if (action === 'chat') appendFileToConversation(item.node);
+    else if (action === 'reveal') revealCurrentFile();
+    else if (action === 'default') openCurrentFileWith(openWithConfig(item.node).label);
+  });
+  fileActionsMenu.addEventListener('keydown', (event) => {
+    const items = Array.from(fileActionsMenu.querySelectorAll('[role="menuitem"]'));
+    const index = items.indexOf(document.activeElement);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      items[(index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      items[event.key === 'Home' ? 0 : items.length - 1]?.focus();
+    } else if (event.key === 'ArrowLeft' && fileActionsMenu.getAttribute('aria-label') === '打开方式') {
+      event.preventDefault();
+      renderFileActionsMenu();
+      fileActionsMenu.querySelector('[data-file-action="open"]')?.focus();
+    }
   });
   document.addEventListener('click', (event) => {
-    if (!openWith.contains(event.target)) setOpenWithMenu(false);
+    if (!fileActions.contains(event.target)) setFileActionsMenu(false);
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || openWithMenu.hidden) return;
-    setOpenWithMenu(false);
-    openWithToggle.focus();
+    if (event.key !== 'Escape' || fileActionsMenu.hidden) return;
+    setFileActionsMenu(false);
+    fileActionsTrigger.focus();
+  });
+  document.getElementById('fileDetailsClose').addEventListener('click', () => fileDetailsDialog.close());
+  fileDetailsDialog.addEventListener('click', (event) => {
+    if (event.target === fileDetailsDialog) fileDetailsDialog.close();
   });
 
 toolFileTree.addEventListener('click', (e) => {
@@ -4625,7 +4731,7 @@ const mainView = document.querySelector('.main');
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
           (example.files.length && index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && index === turns.length - 1 ? renderConversationSubagents() + renderConversationProgress() : '') +
-          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><button class="conversation-activity-file conversation-activity-link" type="button" data-read-file="门店履约异常明细.xlsx" aria-label="预览已读取文件：门店履约异常明细.xlsx"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span class="conversation-activity-label">已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></button><div class="conversation-activity-thinking"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span>正在思考</span></div></div>` : '') +
+          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><button class="conversation-activity-file conversation-activity-link" type="button" data-read-file="门店履约异常明细.xlsx" aria-label="预览已读取文件：门店履约异常明细.xlsx"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span class="conversation-activity-label">已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></button><div class="conversation-thinking"><button class="conversation-activity-thinking conversation-activity-link" type="button" aria-expanded="false" aria-controls="conversationThinkingDetails"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span class="conversation-activity-thinking-label">正在思考</span><svg viewBox="0 0 24 24" class="ic conversation-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="conversation-thinking-details" id="conversationThinkingDetails" aria-hidden="true" inert><div class="conversation-thinking-details-content"><div class="conversation-thinking-card"><p>已读取「门店履约异常明细.xlsx」与趋势图，正在对照订单、门店和时间字段。</p><p>先按门店和时段核验异常集中情况，检查缺失时间戳及重复订单；再结合异常频次、影响订单量与待确认的责任方，整理优先跟进的门店和处理建议。</p></div></div></div></div></div>` : '') +
           (reply ? renderMessageMeta('assistant') : '') +
           '</div></div>'
         ).join('');
@@ -4889,6 +4995,15 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     detail.hidden = !expanded;
     detail.inert = !expanded;
     detail.setAttribute('aria-hidden', String(!expanded));
+  });
+  conversationThread.addEventListener('click', (event) => {
+    const trigger = event.target.closest('.conversation-activity-thinking');
+    if (!trigger || !conversationThread.contains(trigger)) return;
+    const expanded = trigger.getAttribute('aria-expanded') !== 'true';
+    trigger.setAttribute('aria-expanded', String(expanded));
+    const details = trigger.nextElementSibling;
+    details.inert = !expanded;
+    details.setAttribute('aria-hidden', String(!expanded));
   });
   conversationThread.addEventListener('click', (event) => {
     const button = event.target.closest('[data-read-file]');
