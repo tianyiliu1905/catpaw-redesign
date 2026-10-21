@@ -4847,10 +4847,11 @@ const mainView = document.querySelector('.main');
   const scheduledChannelExpandButtons = Array.from(scheduledEditDrawer.querySelectorAll('[data-scheduled-expand]'));
   const scheduledChannelSelectionFeedback = document.getElementById('scheduledChannelSelectionFeedback');
   const scheduledConnections = new Map();
-  const scheduledConnectionMethods = new Map([['wecom', 'qr'], ['dingtalk', 'qr']]);
+  const scheduledConnectionMethods = new Map([['feishu', 'qr'], ['wecom', 'qr'], ['dingtalk', 'qr']]);
   let selectedScheduledChannels = new Set(['feishu']);
   let expandedScheduledChannel = 'feishu';
   let selectedFeishuRecipients = new Set(['yibao']);
+  let feishuConnected = true;
   let scheduledDrawerMode = 'edit';
   let scheduledEditReturnFocus = null;
   const scheduledProjectSelect = scheduledEditForm.elements.namedItem('project');
@@ -4867,10 +4868,11 @@ const mainView = document.querySelector('.main');
     document.getElementById('scheduledIntervalUnit').textContent = cadence === '每周' ? '周' : cadence === '每月' ? '个月' : '天';
   }
   function setScheduledConnectionMethod(method) {
-    if (!['wecom', 'dingtalk'].includes(expandedScheduledChannel)) return;
+    if (!scheduledChannelNames[expandedScheduledChannel]) return;
     scheduledConnectionMethods.set(expandedScheduledChannel, method);
     scheduledChannelQr.hidden = method !== 'qr';
     scheduledChannelManual.hidden = method !== 'manual';
+    document.getElementById('scheduledQrFeedback').textContent = '';
     scheduledEditDrawer.querySelectorAll('[data-scheduled-method]').forEach(button =>
       button.setAttribute('aria-selected', String(button.dataset.scheduledMethod === method)));
   }
@@ -4892,41 +4894,44 @@ const mainView = document.querySelector('.main');
     if (!config.push) return '妙手内通知';
     const channels = (config.channels ?? [config.channel]).filter(channel => scheduledChannelNames[channel]);
     if (!channels.length) return '妙手内通知';
+    const connectedChannels = new Set(config.connectedChannels || []);
     const labels = channels.map(channel => channel === 'feishu'
       ? `飞书 ${config.feishuRecipients?.length ?? 1} 个接收方`
-      : `${scheduledChannelNames[channel]}待绑定`);
+      : `${scheduledChannelNames[channel]}${connectedChannels.has(channel) ? '已绑定' : '待绑定'}`);
     return `妙手内通知 · ${labels.join('、')}`;
   }
   function renderScheduledChannels() {
     scheduledChannelInputs.forEach(input => { input.checked = selectedScheduledChannels.has(input.dataset.scheduledChannel); });
     scheduledChannelExpandButtons.forEach(button => {
-      const expanded = expandedScheduledChannel === button.dataset.scheduledExpand;
-      button.setAttribute('aria-expanded', String(expanded));
-      button.setAttribute('aria-label', `${expanded ? '收起' : '展开'}${scheduledChannelNames[button.dataset.scheduledExpand]}设置`);
+      const active = expandedScheduledChannel === button.dataset.scheduledExpand;
+      button.setAttribute('aria-selected', String(active));
+      button.setAttribute('tabindex', active ? '0' : '-1');
+      button.setAttribute('aria-label', `查看${scheduledChannelNames[button.dataset.scheduledExpand]}设置`);
+      button.setAttribute('aria-controls', button.dataset.scheduledExpand === 'feishu' && feishuConnected ? 'scheduledChannelFeishu' : 'scheduledChannelBinding');
     });
-    scheduledFeishuPanel.hidden = expandedScheduledChannel !== 'feishu';
-    const bindingChannel = ['wecom', 'dingtalk'].includes(expandedScheduledChannel) ? expandedScheduledChannel : null;
+    scheduledFeishuPanel.hidden = expandedScheduledChannel !== 'feishu' || !feishuConnected;
+    const bindingChannel = expandedScheduledChannel === 'feishu' && feishuConnected ? null : expandedScheduledChannel;
     scheduledChannelBinding.hidden = !bindingChannel;
     scheduledChannelMethods.hidden = !bindingChannel;
     if (bindingChannel) {
       const channelName = scheduledChannelNames[bindingChannel];
-      scheduledEditDrawer.querySelector(`[data-scheduled-channel="${bindingChannel}"]`).closest('.scheduled-channel-item').append(scheduledChannelBinding);
       scheduledChannelBinding.setAttribute('aria-label', `${channelName}绑定`);
       scheduledChannelMethods.setAttribute('aria-label', `${channelName}绑定方式`);
-      scheduledChannelQr.querySelector('img').alt = `演示用${channelName}机器人绑定二维码`;
+      document.getElementById('scheduledQrActivate').setAttribute('aria-label', `演示扫码绑定${channelName}`);
       document.getElementById('scheduledBotIdHelp').textContent = bindingChannel === 'wecom'
         ? '企微机器人的 Bot ID，在企微客户端工作台 → 智能机器人模块中查看'
-        : '在钉钉机器人设置中查看 Bot ID';
+        : `在${channelName}机器人设置中查看 Bot ID`;
       document.getElementById('scheduledBotHelp').textContent = `如何获取${channelName} Bot ID 和 Bot Secret？`;
       const connection = scheduledConnections.get(bindingChannel) || {};
       for (const key of ['botId', 'botSecret']) scheduledEditForm.elements.namedItem(key).value = connection[key] || '';
       scheduledChannelFeedback.textContent = '';
+      document.getElementById('scheduledQrFeedback').textContent = '';
       setScheduledConnectionMethod(scheduledConnectionMethods.get(bindingChannel) || 'qr');
     }
   }
   function setScheduledChannels(channels) {
     selectedScheduledChannels = new Set(channels.filter(channel => scheduledChannelNames[channel]));
-    expandedScheduledChannel = scheduledChannelOrder.find(channel => selectedScheduledChannels.has(channel)) || null;
+    expandedScheduledChannel = scheduledChannelOrder.find(channel => selectedScheduledChannels.has(channel)) || 'feishu';
     renderScheduledChannels();
   }
   const scheduledPromptDisplay = document.getElementById('scheduledPromptDisplay');
@@ -5006,9 +5011,11 @@ const mainView = document.querySelector('.main');
       updateScheduledCustomRows();
       scheduledPushEnabled.checked = creating ? true : config?.push ?? legacyScheduledConfig.push;
       scheduledChannelSetup.hidden = !scheduledPushEnabled.checked;
+      scheduledConnectionMethods.set('feishu', 'qr');
       scheduledConnectionMethods.set('wecom', 'qr');
       scheduledConnectionMethods.set('dingtalk', 'qr');
-      selectedFeishuRecipients = new Set(creating ? ['yibao'] : config?.feishuRecipients ?? legacyScheduledConfig.feishuRecipients);
+      selectedFeishuRecipients = new Set(creating ? [] : config?.feishuRecipients ?? legacyScheduledConfig.feishuRecipients);
+      feishuConnected = !creating && (config?.feishuConnected ?? selectedFeishuRecipients.size > 0);
       scheduledFeishuSearch.value = '';
       scheduledFeishuSelectedOnly.checked = false;
       document.getElementById('scheduledFeishuFeedback').textContent = '';
@@ -5071,21 +5078,36 @@ const mainView = document.querySelector('.main');
       expandedScheduledChannel = channel;
     } else {
       selectedScheduledChannels.delete(channel);
-      if (expandedScheduledChannel === channel) expandedScheduledChannel = scheduledChannelOrder.find(key => selectedScheduledChannels.has(key)) || null;
     }
     scheduledChannelSelectionFeedback.textContent = '';
     renderScheduledChannels();
   }));
   scheduledChannelExpandButtons.forEach(button => button.addEventListener('click', () => {
-    const channel = button.dataset.scheduledExpand;
-    if (expandedScheduledChannel === channel) expandedScheduledChannel = null;
-    else {
-      selectedScheduledChannels.add(channel);
-      expandedScheduledChannel = channel;
-    }
+    expandedScheduledChannel = button.dataset.scheduledExpand;
     scheduledChannelSelectionFeedback.textContent = '';
     renderScheduledChannels();
   }));
+  scheduledChannelExpandButtons.forEach((button, index) => button.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    const next = scheduledChannelExpandButtons[(index + (event.key === 'ArrowRight' ? 1 : -1) + scheduledChannelExpandButtons.length) % scheduledChannelExpandButtons.length];
+    next.click();
+    next.focus();
+  }));
+  document.getElementById('scheduledQrActivate').addEventListener('click', () => {
+    if (!expandedScheduledChannel) return;
+    if (expandedScheduledChannel === 'feishu') {
+      feishuConnected = true;
+      selectedFeishuRecipients.add('yibao');
+      renderScheduledFeishuRecipients();
+      renderScheduledChannels();
+      document.getElementById('scheduledFeishuFeedback').textContent = '演示绑定成功，请选择接收方。';
+      return;
+    }
+    const connection = scheduledConnections.get(expandedScheduledChannel) || {};
+    scheduledConnections.set(expandedScheduledChannel, { ...connection, connected: true });
+    document.getElementById('scheduledQrFeedback').textContent = '演示绑定成功。';
+  });
   scheduledEditDrawer.querySelectorAll('[data-scheduled-method]').forEach(button =>
     button.addEventListener('click', () => setScheduledConnectionMethod(button.dataset.scheduledMethod)));
   scheduledFeishuSearch.addEventListener('input', renderScheduledFeishuRecipients);
@@ -5109,7 +5131,10 @@ const mainView = document.querySelector('.main');
     scheduledEditForm.elements.namedItem(key).addEventListener('input', () => {
       const draft = Object.fromEntries(['botId', 'botSecret'].map(field =>
         [field, scheduledEditForm.elements.namedItem(field).value]));
-      if (expandedScheduledChannel) scheduledConnections.set(expandedScheduledChannel, { ...draft });
+      if (expandedScheduledChannel) {
+        const connection = scheduledConnections.get(expandedScheduledChannel) || {};
+        scheduledConnections.set(expandedScheduledChannel, { ...connection, ...draft });
+      }
       scheduledChannelFeedback.textContent = '';
     });
   }
@@ -5128,6 +5153,26 @@ const mainView = document.querySelector('.main');
       scheduledChannelInputs[0].focus();
       return;
     }
+    if (scheduledPushEnabled.checked && selectedScheduledChannels.has('feishu') && !feishuConnected) {
+      const method = scheduledConnectionMethods.get('feishu');
+      const connection = scheduledConnections.get('feishu') || {};
+      if (method === 'qr') {
+        expandedScheduledChannel = 'feishu';
+        renderScheduledChannels();
+        document.getElementById('scheduledQrFeedback').textContent = '请先扫码绑定飞书。';
+        document.getElementById('scheduledQrActivate').focus();
+        return;
+      }
+      if (!connection.botId?.trim() || !connection.botSecret?.trim()) {
+        expandedScheduledChannel = 'feishu';
+        renderScheduledChannels();
+        scheduledChannelFeedback.textContent = '请填写 Bot ID 和 Bot Secret。';
+        scheduledEditForm.elements.namedItem(!connection.botId?.trim() ? 'botId' : 'botSecret').focus();
+        return;
+      }
+      feishuConnected = true;
+      selectedFeishuRecipients.add('yibao');
+    }
     if (scheduledPushEnabled.checked && selectedScheduledChannels.has('feishu') && !selectedFeishuRecipients.size) {
       expandedScheduledChannel = 'feishu';
       renderScheduledChannels();
@@ -5135,8 +5180,16 @@ const mainView = document.querySelector('.main');
       return;
     }
     for (const channel of ['wecom', 'dingtalk']) {
-      if (!scheduledPushEnabled.checked || !selectedScheduledChannels.has(channel) || scheduledConnectionMethods.get(channel) !== 'manual') continue;
+      if (!scheduledPushEnabled.checked || !selectedScheduledChannels.has(channel)) continue;
       const connection = scheduledConnections.get(channel) || {};
+      if (scheduledConnectionMethods.get(channel) === 'qr') {
+        if (connection.connected) continue;
+        expandedScheduledChannel = channel;
+        renderScheduledChannels();
+        document.getElementById('scheduledQrFeedback').textContent = `请先扫码绑定${scheduledChannelNames[channel]}。`;
+        document.getElementById('scheduledQrActivate').focus();
+        return;
+      }
       if (!connection.botId?.trim() || !connection.botSecret?.trim()) {
         expandedScheduledChannel = channel;
         renderScheduledChannels();
@@ -5149,6 +5202,11 @@ const mainView = document.querySelector('.main');
       push: scheduledPushEnabled.checked,
       channels: scheduledChannelOrder.filter(channel => selectedScheduledChannels.has(channel)),
       feishuRecipients: [...selectedFeishuRecipients],
+      feishuConnected,
+      connectedChannels: ['wecom', 'dingtalk'].filter(channel => {
+        const connection = scheduledConnections.get(channel) || {};
+        return selectedScheduledChannels.has(channel) && (connection.connected || (connection.botId?.trim() && connection.botSecret?.trim()));
+      }),
     };
     if (scheduledDrawerMode === 'create') {
       const task = document.createElement('a');
@@ -5643,7 +5701,6 @@ const mainView = document.querySelector('.main');
         conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
         conversationComposerDrafts.set(activeConversationTask, conversationPrompt.value);
       }
-      activeConversationTask?.setAttribute('aria-current', 'false');
       activeConversationTask = task;
       conversationPrompt.value = conversationComposerDrafts.get(task) || '';
       resizeConversationPrompt();
@@ -5684,8 +5741,12 @@ const mainView = document.querySelector('.main');
       syncScheduledPanelToggle();
     }
     updateSummaryArtifactBadge();
-    activeConversationTask?.setAttribute('aria-current', open ? 'page' : 'false');
-    scheduledReportTask.setAttribute('aria-current', String(open && scheduledRunTasks.has(activeConversationTask) && !createdScheduledTasks.has(activeConversationTask)));
+    document.querySelectorAll('.sidebar-scroll .task[aria-current]').forEach(item => item.removeAttribute('aria-current'));
+    const selectedSidebarTask = open && scheduledRunTasks.has(activeConversationTask) && !createdScheduledTasks.has(activeConversationTask)
+      ? scheduledReportTask : open ? activeConversationTask : null;
+    selectedSidebarTask?.setAttribute('aria-current', 'page');
+    if (open) document.getElementById('homeNav').removeAttribute('aria-current');
+    else document.getElementById('homeNav').setAttribute('aria-current', 'page');
     if (open) updateConversationTaskTitle(task);
     if (content.classList.contains('wb-expanded')) renderWorkspaceTabs();
     if (!summaryPopover.hidden || isScheduledPanelOpen()) renderSummaryContents();
