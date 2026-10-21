@@ -39,12 +39,14 @@
 
 ## 设计 Token 与图标复用
 
-- **新增或调整界面时必须优先使用 `styles.css` 中的语义 token**，不要在不同页面重复硬编码同一颜色、字号、间距、圆角和阴影。灰阶与文本使用 `--gray-*`、`--text-*`，主题表面用 `--surface-bg` 等语义变量，排版用 `--type-sm/md/lg`，间距用 `--space-1` 至 `--space-6`，圆角用 `--radius-*`，浮层用 `--menu-*`。确有新语义时先定义 token 并补齐浅色/暗色映射，再在组件中引用；例外值仅用于明确的光学修正或特殊产物内容。
+- **颜色以 [Figma 亮暗语义色表](https://www.figma.com/design/wojWSXcThx3qAUL2NX6VSa/Catpaw-Design-System?node-id=79-11345) 和 [色板](https://www.figma.com/design/wojWSXcThx3qAUL2NX6VSa/Catpaw-Design-System?node-id=81-11369) 为准。**`styles.css` 的 `--ds-background-*`、`--ds-fill-*`、`--ds-text-*`、`--ds-border-*`、`--ds-primary-*` 分别对应 Figma 的 Background、Fill、Text、Border、Primary 语义色，并提供亮暗两套值。旧组件使用的 `--gray-*`、`--text-*`、`--brand-green` 等别名已接入这套 token；新增界面应优先直接选择语义色，不要按视觉近似另造灰阶。仅特殊状态色和产物内容可保留自身色彩。
+- **字级以 [Figma 中英文字级](https://www.figma.com/design/wojWSXcThx3qAUL2NX6VSa/Catpaw-Design-System?node-id=79-11180) 为准。**中文标题 22/32、18/28（字号/行高，半粗）；正文 15/26、14/22、12/20、10/18，常规或中等字重。英文及数字沿用对应尺寸，macOS 采用 SF Pro 与苹方，Windows 采用 Segoe UI 与微软雅黑；代码采用 SF Mono / Consolas。`styles.css` 用 `--type-*` 与 `--line-*` 映射常用级别。
+- **新增或调整界面时优先使用上述语义 token**，不要在不同页面重复硬编码同一颜色、字号、间距、圆角和阴影。间距用 `--space-1` 至 `--space-6`，圆角用 `--radius-*`，浮层用 `--menu-*`。确有新语义时先定义 token 并补齐浅色/暗色映射，再在组件中引用；例外值仅用于明确的光学修正或特殊产物内容。
 - **线性 UI 图标以 `icon-preview.html` 为唯一视觉基准**：按语义复用 24 × 24 轮廓与圆润笔画，嵌入 `index.html` 或由 `app.js` 动态渲染时保持一致；不要把 Keyline 辅助线带进实际界面。二维码、品牌头像、彩色文件类型图标和产物缩略图不属于这套线性图标。新增语义应先补预览页再应用到主页面。
 
 ## 视觉与交互基线
 
-- **层级克制**：导航、任务、按钮和文件名采用正文层级；说明/时间更轻，页面主标题更显著。`styles.css` 以 `--type-sm`、`--type-md`、`--type-lg`，4 px 间距节奏和 `--radius-sm/md/lg/panel/window` 等 token 组织界面。明暗主题切换整页语义色，真实文件内容预览尽量保留文件自身外观。
+- **层级克制**：导航、任务、按钮和文件名采用正文层级；说明/时间更轻，页面主标题更显著。`styles.css` 以 Figma 字级、4 px 间距节奏和 `--radius-sm/md/lg/panel/window` 等 token 组织界面。明暗主题切换整页语义色，真实文件内容预览尽量保留文件自身外观。
 - **稳定的输入与阅读位置**：首页及对话输入至少预留两行，超过后再自动增高；任务行操作覆盖预留区域而不挤占状态；对话轮次刻度用于快速回看，滚到底时仍要看清最后一轮与产物。
 - **按需展开**：侧边栏、摘要、右侧工作区独立工作。窄窗口优先让右栏、再让左栏，保住中间读写空间；用户主动在窄窗口打开工具时可由工具替代主区。面板拖拽采用「先吸附边界、第二次越界再折叠/全屏」的二段手势，具体数值不要在这里另立一套，请以面板动画文档为准。
 - **原型与产品能力分开**：示例任务、AI 回复、文件路径、浏览器与终端等可能只是演示内容；新增设计时不要把视觉反馈误写成已经接通服务、磁盘或系统应用的能力。

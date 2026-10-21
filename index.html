@@ -36,41 +36,62 @@
           <button class="light minimize" aria-label="最小化"></button>
           <button class="light zoom"     aria-label="全屏"></button>
         </div>
+        <h2 class="project-title">我的项目</h2>
         <div class="titlebar-actions">
+          <button class="icon-btn" id="searchSidebar" type="button" title="搜索项目" aria-label="搜索项目" aria-expanded="false" aria-controls="sidebarSearchPanel">
+            <img src="assets/figma-task-search.svg" alt="" aria-hidden="true" width="18" height="18">
+          </button>
           <button class="icon-btn" id="toggleSidebar" title="折叠侧边栏">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 3v18"/></svg>
+            <img src="assets/figma-task-sidebar.svg" alt="" aria-hidden="true" width="18" height="18">
           </button>
         </div>
       </header>
+      <div class="sidebar-search-panel" id="sidebarSearchPanel" hidden>
+        <input id="sidebarSearchInput" type="search" aria-label="搜索任务和文件夹" placeholder="搜索任务和文件夹" autocomplete="off">
+        <div class="sidebar-search-results" id="sidebarSearchResults" role="status" aria-live="polite"></div>
+      </div>
 
       <!-- 常用入口集中到左侧窄栏，任务与文件夹在右侧独立滚动。 -->
       <nav class="sidebar-rail" id="nav" aria-label="主要入口">
-        <a class="nav-item home-nav" id="homeNav" href="#" title="首页" aria-label="首页" aria-current="page"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 10.5 10.8 4.4a1.8 1.8 0 0 1 2.4 0l6.8 6.1v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-8Z"/><rect x="9" y="13" width="6" height="5.5" rx="1.5"/></svg><span>首页</span></a>
-        <a class="nav-item" href="#" data-scope="all" title="定时任务" aria-label="定时任务"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6.7v5.7l3.8 2.3"/></svg><span>定时任务</span></a>
-        <a class="nav-item" href="#" data-scope="all" title="专家 · 技能" aria-label="专家 · 技能"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>专家 · 技能</span></a>
-        <a class="nav-item" href="#" data-scope="office" title="资料库" aria-label="资料库"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/></svg><span>资料库</span></a>
-        <a class="nav-item" href="#" data-scope="dev" title="应用" aria-label="应用"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2.3"/><rect x="14" y="3" width="7" height="7" rx="2.3"/><rect x="3" y="14" width="7" height="7" rx="2.3"/><rect x="14" y="14" width="7" height="7" rx="2.3"/></svg><span>应用</span></a>
-        <a class="nav-item" href="#" data-scope="design" title="设计系统" aria-label="设计系统"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 10h18M10 10v11"/></svg><span>设计系统</span></a>
-        <a class="nav-item settings-nav" href="#" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M10.1 3.5Q10.3 3 10.9 3h2.2q.6 0 .8.5l1 2.2q.9.3 1.6.9l1.8-.9q.6-.3 1 .3l1.7 2.9q.3.6-.3 1l-1.8 1q.2 1.1 0 2.2l1.8 1q.6.4.3 1l-1.7 2.9q-.4.6-1 .3l-1.8-.9q-.7.6-1.6.9l-1 2.2q-.2.5-.8.5h-2.2q-.6 0-.8-.5l-1-2.2q-.9-.3-1.6-.9l-1.8.9q-.6.3-1-.3L3 15q-.3-.6.3-1l1.8-1q-.2-1.1 0-2.2l-1.8-1q-.6-.4-.3-1l1.7-2.9q.4-.6 1-.3l1.8.9q.7-.6 1.6-.9Z"/><circle cx="12" cy="12" r="3"/></svg><span>设置</span></a>
+        <a class="rail-brand" id="railBrand" href="#" title="返回首页" aria-label="返回首页"><img src="assets/logo.png" alt="" aria-hidden="true"></a>
+        <div class="rail-primary">
+          <a class="nav-item home-nav" id="homeNav" href="#" title="首页" aria-label="首页" aria-current="page"><img class="rail-icon" src="assets/figma-rail-home.svg" alt="" aria-hidden="true"><span>首页</span></a>
+          <a class="nav-item" href="#" data-scope="all" title="定时任务" aria-label="定时任务"><img class="rail-icon" src="assets/figma-rail-clock.svg" alt="" aria-hidden="true"><span>定时任务</span></a>
+          <a class="nav-item" href="#" data-scope="all" title="专家 · 技能" aria-label="专家 · 技能"><img class="rail-icon" src="assets/figma-rail-chart.svg" alt="" aria-hidden="true"><span>专家 · 技能</span></a>
+          <a class="nav-item" href="#" data-scope="office" title="资料库" aria-label="资料库"><img class="rail-icon" src="assets/figma-rail-library.svg" alt="" aria-hidden="true"><span>资料库</span></a>
+          <a class="nav-item" href="#" data-scope="dev" title="应用" aria-label="应用"><img class="rail-icon" src="assets/figma-rail-nocode.svg" alt="" aria-hidden="true"><span>应用</span></a>
+        </div>
+        <div class="rail-bottom">
+          <a class="nav-item" id="railTasksNav" href="#" title="任务列表" aria-label="任务列表"><img class="rail-icon" src="assets/figma-rail-phone.svg" alt="" aria-hidden="true"><span>任务列表</span></a>
+          <a class="nav-item settings-nav" href="#" title="设置" aria-label="设置"><span class="rail-account" aria-hidden="true">我</span><span>设置</span></a>
+        </div>
       </nav>
 
-      <!-- 固定入口：品牌名和新建任务位于任务列表上方。 -->
+      <!-- 新建任务和从模版新建固定在任务列表上方。 -->
       <div class="sidebar-pinned">
-        <div class="sidebar-brand">妙手</div>
         <a class="nav-item" id="newTaskNav" href="#" data-scope="all">
-          <svg viewBox="0 0 24 24" class="ic"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/></svg>
-          <span>新建任务</span>
+          <img src="assets/figma-task-new.svg" alt="" aria-hidden="true" width="18" height="18">
+          <span>新任务</span>
         </a>
+        <button class="nav-item" id="newScheduledTask" type="button" aria-haspopup="dialog" aria-controls="scheduledEditDrawer">
+          <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5.5 5.5-2 2M18.5 5.5l2 2"/><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.8 2"/></svg>
+          <span>新建定时任务</span>
+        </button>
+        <button class="nav-item" id="openTemplates" type="button" aria-haspopup="dialog" aria-controls="templateDialog">
+          <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg>
+          <span>从模版新建</span>
+        </button>
       </div>
 
       <!-- 滚动区 -->
       <div class="sidebar-scroll">
 
         <!-- 任务：不属于任何文件夹，跨原场景统一展示，超出上限折叠 -->
-        <div class="section-label"><button class="section-toggle" id="toggleTasksSection" type="button" aria-controls="looseTasks" aria-expanded="true"><span id="labelTasks">任务</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+        <div class="section-label"><button class="section-toggle" id="toggleTasksSection" type="button" aria-controls="looseTasks" aria-expanded="true"><span id="labelTasks">置顶</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
 
         <!-- 不在文件夹里的任务左侧顶头，状态一律靠右：
-             running=转圈（不显示时间） / new=绿点 / await=待确认 / 其余=时间 -->
+             running=转圈（不显示时间） / new=绿点 / await=待确认 /
+             scheduled=时钟图标，可与 new 并排 / 其余=时间 -->
         <div class="loose-tasks" id="looseTasks">
           <!-- 办公 -->
           <a class="task flush" id="demoConversationTask" href="#" data-scope="office" data-state="running" data-open-conversation>
@@ -89,13 +110,13 @@
             <span class="task-name">调研竞品在会员权益上的差异</span>
             <span class="task-state"><span class="task-time">5h</span></span>
           </a>
-          <a class="task flush" href="#" data-scope="office" data-state="await">
-            <span class="task-name">核对上月推广费用的结算口径</span>
-            <span class="task-state"><em class="tag-await">待确认</em></span>
-          </a>
           <a class="task flush" href="#" data-scope="office">
-            <span class="task-name">汇总各区域月度人效对比表</span>
-            <span class="task-state"><span class="task-time">2d</span></span>
+            <span class="task-name">核对上月推广费用的结算口径</span>
+            <span class="task-state"><span class="task-time">1d</span></span>
+          </a>
+          <a class="task flush" id="scheduledReportTask" href="#" data-scope="office" data-task-type="scheduled" data-state="new" data-open-conversation>
+            <span class="task-name">每周工作周报</span>
+            <span class="task-state"><svg class="task-schedule-icon" viewBox="0 0 24 24" role="img" aria-label="定时任务" title="定时任务"><path d="m5.5 5.5-2 2M18.5 5.5l2 2"/><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.8 2"/></svg><i class="dot-new" role="img" aria-label="新消息" title="新消息"></i></span>
           </a>
           <a class="task flush" href="#" data-scope="office">
             <span class="task-name">梳理供应链风险预案清单</span>
@@ -112,78 +133,6 @@
           <a class="task flush" href="#" data-scope="office">
             <span class="task-name">整理年度预算调整说明材料</span>
             <span class="task-state"><span class="task-time">8d</span></span>
-          </a>
-
-          <!-- 开发 -->
-          <a class="task flush" href="#" data-scope="dev" data-state="running">
-            <span class="task-name">修复登录态过期后的静默刷新</span>
-            <span class="task-state"><span class="spinner"></span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev" data-state="new">
-            <span class="task-name">为订单服务补齐链路追踪埋点</span>
-            <span class="task-state"><i class="dot-new"></i></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev" data-state="await">
-            <span class="task-name">重构配置中心的热更新逻辑</span>
-            <span class="task-state"><em class="tag-await">待确认</em></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev">
-            <span class="task-name">排查灰度环境的内存泄漏</span>
-            <span class="task-state"><span class="task-time">4h</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev">
-            <span class="task-name">升级依赖并修复破坏性变更</span>
-            <span class="task-state"><span class="task-time">1d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev">
-            <span class="task-name">给构建流水线加上缓存复用</span>
-            <span class="task-state"><span class="task-time">2d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev">
-            <span class="task-name">补充核心模块的单元测试</span>
-            <span class="task-state"><span class="task-time">3d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev">
-            <span class="task-name">迁移旧接口到新网关协议</span>
-            <span class="task-state"><span class="task-time">5d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="dev">
-            <span class="task-name">优化首屏资源的分包策略</span>
-            <span class="task-state"><span class="task-time">7d</span></span>
-          </a>
-
-          <!-- 设计 -->
-          <a class="task flush" href="#" data-scope="design" data-state="running">
-            <span class="task-name">重绘空状态插画的三种尺寸</span>
-            <span class="task-state"><span class="spinner"></span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design" data-state="new">
-            <span class="task-name">统一弹窗与抽屉的动效曲线</span>
-            <span class="task-state"><i class="dot-new"></i></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design" data-state="await">
-            <span class="task-name">输出暗色模式的色板映射表</span>
-            <span class="task-state"><em class="tag-await">待确认</em></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design">
-            <span class="task-name">规范图标栅格与描边粗细</span>
-            <span class="task-state"><span class="task-time">1d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design">
-            <span class="task-name">走查落地页与设计稿的偏差</span>
-            <span class="task-state"><span class="task-time">2d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design">
-            <span class="task-name">补齐表单控件的交互态定义</span>
-            <span class="task-state"><span class="task-time">4d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design">
-            <span class="task-name">整理品牌字体的层级规范</span>
-            <span class="task-state"><span class="task-time">6d</span></span>
-          </a>
-          <a class="task flush" href="#" data-scope="design">
-            <span class="task-name">设计任务卡片的空数据样式</span>
-            <span class="task-state"><span class="task-time">9d</span></span>
           </a>
 
           <button class="expand" data-expand-tasks hidden>展开</button>
@@ -210,12 +159,12 @@
 
         <p class="folder-storage-empty" id="folderStorageEmpty" role="status" hidden>本地文件夹暂未接入。切回云端查看示例文件夹。</p>
         <div id="folderGroups">
-        <!-- 分组：服务零售 -->
+        <!-- 分组：默认文件夹 -->
         <section class="group" data-group data-scope="office" data-folder="retail">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg><svg viewBox="0 0 24 24" class="ic folder folder-open" aria-hidden="true"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>
-              <span class="group-name" data-folder-name>服务零售</span>
+              <img class="folder folder-open" src="assets/figma-task-default-project.svg" alt="" aria-hidden="true" width="18" height="18"><svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
+              <span class="group-name" data-folder-name>默认文件夹</span>
             </button>
           </div>
           <div class="group-body">
@@ -256,7 +205,7 @@
         <section class="group" data-group data-scope="office" data-folder="reports">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg><svg viewBox="0 0 24 24" class="ic folder folder-open" aria-hidden="true"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>
+              <img class="folder folder-open" src="assets/figma-task-project.svg" alt="" aria-hidden="true" width="18" height="18"><svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>经营月报</span>
             </button>
           </div>
@@ -276,7 +225,7 @@
         <section class="group" data-group data-scope="design" data-folder="mtd_skills">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg><svg viewBox="0 0 24 24" class="ic folder folder-open" aria-hidden="true"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>
+              <img class="folder folder-open" src="assets/figma-task-project-alt.svg" alt="" aria-hidden="true" width="18" height="18"><svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>mtd_skills</span>
             </button>
           </div>
@@ -292,7 +241,7 @@
         <section class="group" data-group data-scope="dev" data-folder="nocode_fe">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg><svg viewBox="0 0 24 24" class="ic folder folder-open" aria-hidden="true"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>
+              <img class="folder folder-open" src="assets/figma-task-project.svg" alt="" aria-hidden="true" width="18" height="18"><svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>nocode_fe</span>
             </button>
           </div>
@@ -323,7 +272,7 @@
         <section class="group" data-group data-scope="dev" data-folder="infra">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg><svg viewBox="0 0 24 24" class="ic folder folder-open" aria-hidden="true"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>
+              <img class="folder folder-open" src="assets/figma-task-project.svg" alt="" aria-hidden="true" width="18" height="18"><svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>基建与部署</span>
             </button>
           </div>
@@ -343,7 +292,7 @@
         <section class="group" data-group data-scope="design" data-folder="brand">
           <div class="group-head">
             <button class="group-head-main" data-toggle-group>
-              <svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg><svg viewBox="0 0 24 24" class="ic folder folder-open" aria-hidden="true"><path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/></svg>
+              <img class="folder folder-open" src="assets/figma-task-project.svg" alt="" aria-hidden="true" width="18" height="18"><svg viewBox="0 0 24 24" class="ic folder folder-closed" aria-hidden="true"><path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/></svg>
               <span class="group-name" data-folder-name>品牌视觉</span>
             </button>
           </div>
@@ -362,46 +311,6 @@
 
       </div>
 
-      <!-- 底部保留手机端下载入口 -->
-      <footer class="sidebar-foot">
-        <!-- 手机端下载 -->
-        <div class="mobile-entry" id="mobileEntry">
-          <button class="icon-btn" id="mobileBtn" title="下载手机端" aria-expanded="false">
-            <svg viewBox="0 0 24 24" class="ic"><rect x="5" y="2" width="14" height="20" rx="4"/><path d="M11 18h2"/></svg>
-          </button>
-
-          <div class="mobile-pop" id="mobilePop" role="dialog" aria-label="下载手机端">
-            <div class="mobile-pop-head">
-              <span class="mobile-pop-title">下载手机端</span>
-              <span class="mobile-pop-desc">扫码随时随地查看任务进度</span>
-            </div>
-
-            <div class="qr">
-              <svg viewBox="0 0 29 29" class="qr-img" aria-hidden="true">
-                <rect width="29" height="29" fill="#fff"/>
-                <g fill="#1d1d1f">
-                  <path d="M1 1h7v7H1zm1 1v5h5V2z"/><path d="M3 3h3v3H3z"/>
-                  <path d="M21 1h7v7h-7zm1 1v5h5V2z"/><path d="M23 3h3v3h-3z"/>
-                  <path d="M1 21h7v7H1zm1 1v5h5v-5z"/><path d="M3 23h3v3H3z"/>
-                  <path d="M10 1h1v1h-1zm2 0h1v2h-1zm2 0h2v1h-2zm3 0h1v3h-1zM10 3h2v1h-2zm3 1h2v1h-2zm3 0h1v1h-1zM10 5h1v2h-1zm2 1h2v1h-2zm3-1h2v2h-2zM1 10h2v1H1zm3 0h1v2H4zm2 0h2v1H6zm3 0h1v1H9zm2 0h1v2h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h1v2h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zM1 12h1v1H1zm2 0h2v1H3zm3 0h1v2H6zm2 0h2v1H8zm3 0h1v1h-1zm2 0h1v2h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h1v2h-1zm2 0h2v1h-2zM1 14h2v1H1zm3 0h2v1H4zm3 0h1v1H7zm2 0h2v1H9zm3 0h1v1h-1zm2 0h1v2h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zM1 16h1v2H1zm2 0h1v1H3zm2 0h2v1H5zm3 0h1v2H8zm2 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zm3 0h1v2h-1zm2 0h1v1h-1zm2 0h1v1h-1zM1 18h2v1H1zm3 0h1v1H4zm2 0h1v1H6zm2 0h2v1H8zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h2v1h-2z"/>
-                  <path d="M10 21h1v1h-1zm2 0h2v1h-2zm3 0h1v2h-1zm2 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zM10 23h2v1h-2zm3 0h1v1h-1zm3 0h2v1h-2zm3 0h1v2h-1zm2 0h1v1h-1zm2 0h2v1h-2zM10 25h1v2h-1zm2 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h1v1h-1zm3 0h1v2h-1zm2 0h2v1h-2zM12 27h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zm4 0h2v1h-2z"/>
-                </g>
-              </svg>
-            </div>
-
-            <div class="mobile-stores">
-              <button class="store-btn">
-                <svg viewBox="0 0 24 24" class="ic"><g fill="currentColor" stroke="none"><path d="M11.8 7.3c-1.6 0-2.3-.8-4.1-.8-3.3 0-5 2.7-5 6.3 0 3.7 2.4 7.8 4.9 8.5 1.5.4 2.7-.7 4.4-.7 1.6 0 2.7 1.1 4.2.7 1.8-.5 3.4-2.6 4.3-4.7-2.3-.5-3.3-2.2-3.3-3.8 0-1.6 1.1-3.3 3-4-1.2-1.5-3-2.3-4.7-2.3-1.8 0-2.4.8-3.7.8Z"/><path d="M12.1 5.4c.2-2.3 2-3.7 5.1-4-.1 2.2-1.7 3.7-5.1 4Z"/></g></svg>
-                <span>App Store</span>
-              </button>
-              <button class="store-btn">
-                <svg viewBox="0 0 24 24" class="ic"><g fill="currentColor" stroke="none"><path fill-rule="evenodd" d="M5.6 9.2a6.4 6.4 0 0 1 12.8 0Zm4.2-2a.55.55 0 1 0-1.1 0 .55.55 0 1 0 1.1 0Zm5.5 0a.55.55 0 1 0-1.1 0 .55.55 0 1 0 1.1 0Z"/><path d="M5.6 10.3h12.8v6.2a1.3 1.3 0 0 1-1.3 1.3h-.9v2.7a1.1 1.1 0 0 1-2.2 0v-2.7h-4v2.7a1.1 1.1 0 0 1-2.2 0v-2.7h-.9a1.3 1.3 0 0 1-1.3-1.3Z"/><rect x="2.7" y="10.4" width="2.1" height="6.2" rx="1.05"/><rect x="19.2" y="10.4" width="2.1" height="6.2" rx="1.05"/></g><path d="M8.2 4.9 6.7 2.5m9.1 2.4 1.5-2.4" stroke-width="1.3"/></svg>
-                <span>Android</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </footer>
     </aside>
     <div class="sidebar-resizer" id="sidebarResizer" role="separator" tabindex="0" aria-label="调整左侧面板宽度" aria-orientation="vertical" aria-controls="sidebar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
 
@@ -410,23 +319,31 @@
 
     <!-- 工具面板控制始终位于窗口右上角；全屏仅在文件面板激活时出现。 -->
     <div class="wb-toggle-slot" role="group" aria-label="文件工具面板">
+      <button class="icon-btn bottom-terminal-toggle" id="toggleBottomTerminal" type="button" title="打开终端" aria-label="打开终端" aria-controls="conversationTerminal" aria-pressed="false"><img src="assets/scheduled-panel-code.svg" alt="" width="18" height="18"></button>
       <button class="icon-btn wb-expand-toggle" id="toggleWorkbenchExpand" title="全屏显示文件" aria-label="全屏显示文件" aria-pressed="false" disabled>
         <svg viewBox="0 0 24 24" class="ic"><path d="m14 10 7-7m-7 0h7v7M10 14l-7 7m0-7v7h7"/></svg>
       </button>
       <button class="icon-btn" id="toggleWorkbench" title="工具" aria-label="工具" aria-expanded="false">
         <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18"/></svg>
+        <img class="scheduled-control-icon" src="assets/scheduled-panel-sidebar.svg" alt="" width="18" height="18">
       </button>
       <button class="icon-btn" id="toggleFileTree" type="button" title="显示文件目录树" aria-label="显示文件目录树" aria-controls="toolFileTree" aria-pressed="false">
         <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15 3v18m-7-8 2-2-2-2"/></svg>
+        <img class="scheduled-control-icon" src="assets/scheduled-panel-tree.svg" alt="">
       </button>
     </div>
 
     <!-- 摘要入口固定在内容区顶层，左侧区域变窄时也保持可见。 -->
     <div class="summary-toggle-slot">
-<button class="icon-btn" id="toggleOutputs" title="摘要" aria-label="摘要" aria-haspopup="dialog" aria-controls="summaryPopover" aria-expanded="false">
-<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg>
-<span class="summary-artifact-badge" id="summaryArtifactBadge" aria-hidden="true" hidden></span>
-</button>
+      <button class="icon-btn" id="toggleOutputs" title="摘要" aria-label="摘要" aria-haspopup="dialog" aria-controls="summaryPopover" aria-expanded="false">
+        <img id="summaryDefaultIcon" src="assets/summary-list.svg" alt="" width="18" height="18">
+        <span class="summary-artifact-badge" id="summaryArtifactBadge" aria-hidden="true" hidden></span>
+      </button>
+    </div>
+    <div class="scheduled-toggle-slot">
+      <button class="icon-btn" id="toggleScheduledPanel" type="button" title="定时任务" aria-label="定时任务" aria-controls="scheduledSummary" aria-expanded="false">
+        <img src="assets/scheduled-toolbar-clock.svg" alt="" width="18" height="18">
+      </button>
     </div>
 
     <main class="main">
@@ -529,11 +446,35 @@
         </div>
       </section>
 
+      <section class="conversation-terminal" id="conversationTerminal" role="region" aria-label="终端" aria-hidden="true" inert>
+        <header class="conversation-terminal-head"><strong>终端</strong><span class="conversation-terminal-path">⌑ &nbsp;.../Desktop/catpaw-desktop-ui</span><button id="closeBottomTerminal" type="button" aria-label="关闭终端" title="关闭终端"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+        <div class="conversation-terminal-body" id="conversationTerminalBody"><div class="conversation-terminal-line"><span class="conversation-terminal-prompt">catpaw-desktop-ui %</span><input id="conversationTerminalInput" type="text" aria-label="终端命令" autocomplete="off" spellcheck="false"></div></div>
+      </section>
+
       <div class="hero">
 
-        <!-- 问候语随本地时间自动更新，工作引导保持固定。 -->
-        <h1 class="greeting">
-          <span id="timeGreeting">下午好，</span><span>今天想完成什么？</span>
+        <h1 class="greeting" id="homeGreeting">
+          <span class="greeting-mascot" aria-hidden="true">
+            <img class="greeting-logo" src="assets/title-logo.png" alt="">
+            <svg class="greeting-shake" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+              <g transform="translate(-6 0)">
+                <g class="greeting-shake-frame greeting-shake-frame-a">
+                  <path d="M38 136l-5 15 11 5 3 14 6 4"/>
+                  <path d="M163 136l-3 14 12 4-1 12 9 5"/>
+                </g>
+                <g class="greeting-shake-frame greeting-shake-frame-b">
+                  <path d="M41 138q-5 7-5 12-1 4 5 6l5 2q4 2 4 7t5 7"/>
+                  <path d="M162 138q-4 7-4 12-1 4 5 6l6 2q4 2 4 7t7 6"/>
+                </g>
+                <g class="greeting-shake-frame greeting-shake-frame-c">
+                  <path d="M40 138l-6 12 10 6-1 12 7 5"/>
+                  <path d="M163 138l-4 12 10 5-1 11 9 5"/>
+                </g>
+              </g>
+            </svg>
+          </span>
+          <span class="greeting-title"><span>妙手，</span><span>让工作得心应手</span></span>
+          <span class="greeting-bubble" aria-live="polite" hidden></span>
         </h1>
 
         <!-- 输入组合区 -->
@@ -551,7 +492,8 @@
             </div>
             <span class="composer-skill-tags" id="homeSkillTags" aria-label="已选择的 Skill" hidden></span>
             </div>
-            <textarea id="prompt" class="prompt" rows="1" placeholder="描述你的需求，输出专业结果"></textarea>
+            <textarea id="prompt" class="prompt" rows="1" aria-label="描述你想完成的任务" placeholder="描述你的需求，输出专业结果"></textarea>
+            <span class="prompt-hint" id="promptHint" aria-hidden="true">帮我做一份报告…</span>
             </div>
             <div class="composer-file-cards" id="homeFileCards" aria-label="已添加的资料库文件" hidden></div>
 
@@ -587,7 +529,7 @@
             <svg class="safe-house-sweep" aria-hidden="true" focusable="false"><path /></svg>
           </div>
 
-          <!-- 工具条左右分工：左侧交代「任务放哪」，右侧交代「用什么权限」 -->
+          <!-- 文件夹与访问模式并排放在输入框下方。 -->
           <div class="composer-foot">
 
             <div class="foot-group">
@@ -601,8 +543,20 @@
                 <div class="folder-menu" id="folderMenu" role="listbox" aria-label="选择归属文件夹"></div>
               </div>
 
-              <!-- 文件夹位置：与左侧文件夹列表共用当前云端 / 本地状态 -->
-              <div class="folder-storage-picker" id="folderStoragePicker">
+              <div class="access-picker" data-access-picker>
+                <button class="foot-item" type="button" aria-label="主页访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                  <span data-access-label>完全访问</span>
+                  <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="access-menu" role="menu" aria-label="选择主页访问模式" hidden>
+                  <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
+                  <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
+                </div>
+              </div>
+
+              <!-- 保留文件夹位置状态供侧栏使用，不在首页输入框展示。 -->
+              <div class="folder-storage-picker" id="folderStoragePicker" hidden>
                 <button class="foot-item" id="folderStorageBtn" type="button" aria-label="文件夹位置：云端" aria-haspopup="menu" aria-controls="folderStorageMenu" aria-expanded="false">
                   <span id="folderStorageLabel">云端</span>
                   <svg viewBox="0 0 24 24" class="ic chev" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
@@ -624,18 +578,7 @@
               </div>
             </div>
 
-            <div class="foot-group right">
-              <div class="access-picker" data-access-picker>
-                <button class="foot-item" type="button" aria-label="主页访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
-                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
-                  <span data-access-label>完全访问</span>
-                  <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                <div class="access-menu" role="menu" aria-label="选择主页访问模式" hidden>
-                  <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
-                  <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
-                </div>
-              </div>
+            <div class="foot-group right" hidden>
               <button class="foot-item safe-house-toggle" id="safeHouseToggle" type="button" aria-pressed="false">
                 <svg viewBox="0 0 24 24" class="ic"><path d="M12 3c2.5 1.8 5.2 2.6 8 2.6V12c0 4.6-2.8 7.7-8 9-5.2-1.3-8-4.4-8-9V5.6C6.8 5.6 9.5 4.8 12 3Z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></svg>
                 <span>安全屋</span>
@@ -659,24 +602,28 @@
 
         <!-- 快捷入口 -->
         <div class="prompt-recommendations" id="promptRecommendations">
-          <div class="quick" id="primaryPrompts" aria-label="一级 Prompt 推荐">
-<button class="pill" data-prompt-category="slides" aria-pressed="false">
-<svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="14" rx="4"/><path d="M12 17v4m-5 0h10M7 8h10m-10 4h6"/></svg>
-<span>PPT 制作</span>
-</button>
-<button class="pill" data-prompt-category="websites" aria-pressed="false">
-<svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="5.5"/><path d="M3 9h18M7 13.5h10M7 16.5h6.5"/><g fill="currentColor" stroke="none"><circle cx="8" cy="6" r=".8"/><circle cx="11.2" cy="6" r=".8"/></g></svg>
-<span>网站开发</span>
-</button>
-<button class="pill" data-prompt-category="apps" aria-pressed="false">
-<svg viewBox="0 0 24 24" class="ic"><rect x="5" y="2" width="14" height="20" rx="4"/><path d="M11 18h2"/></svg>
-<span>App 设计与开发</span>
-</button>
-          <button class="pill prompt-more-trigger" id="promptMoreTrigger" type="button" aria-expanded="false" aria-controls="promptMoreMenu" aria-haspopup="menu">
-            <span>更多</span>
-          </button>
+          <div class="quick" id="primaryPrompts" aria-label="选择你想完成的任务">
+            <button class="pill" type="button" data-prompt-category="develop" aria-pressed="false">
+              <span class="pill-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="m9 9-3 3 3 3m6-6 3 3-3 3m-2-7-2 8"/></svg></span>
+              <span class="pill-copy"><strong>网站和应用</strong><small>建网站 · 做应用</small></span>
+              <img class="pill-art" src="assets/artifact-html.svg" alt="" aria-hidden="true">
+            </button>
+            <button class="pill" type="button" data-prompt-category="analyze" aria-pressed="false">
+              <span class="pill-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7 16v-3m5 3V8m5 8v-5"/></svg></span>
+              <span class="pill-copy"><strong>分析数据</strong><small>查指标 · 找原因</small></span>
+              <img class="pill-art" src="assets/artifact-excel.svg" alt="" aria-hidden="true">
+            </button>
+            <button class="pill" type="button" data-prompt-category="create" aria-pressed="false">
+              <span class="pill-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="9" cy="9" r="2"/><path d="m5 17 4-4 3 3 3-3 4 4"/></svg></span>
+              <span class="pill-copy"><strong>设计与创作</strong><small>海报 · PPT · 文案</small></span>
+              <img class="pill-art" src="assets/artifact-image.svg" alt="" aria-hidden="true">
+            </button>
+            <button class="pill" type="button" data-prompt-category="research" aria-pressed="false">
+              <span class="pill-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.4 15.4 5 5M8 10h5m-5 3h3"/></svg></span>
+              <span class="pill-copy"><strong>查找与解答</strong><small>找资料 · 解问题</small></span>
+              <img class="pill-art" src="assets/artifact-doc.svg" alt="" aria-hidden="true">
+            </button>
           </div>
-          <div class="prompt-more-menu" id="promptMoreMenu" role="menu" aria-label="更多任务" hidden></div>
           <div class="secondary-prompts" id="secondaryPrompts" aria-label="二级 Prompt 推荐" hidden></div>
         </div>
 
@@ -687,8 +634,9 @@
       </div>
     </main>
 
-    <!-- 摘要悬浮于内容区之上，不改变首页或对话区的宽度。 -->
+    <!-- 常规摘要悬浮于内容区；定时任务信息在右侧工作区展开。 -->
 <section class="summary-popover" id="summaryPopover" role="dialog" aria-label="摘要" hidden>
+<div class="standard-summary" id="standardSummary">
 <div class="summary-section summary-goal-section" id="summaryGoalSection" hidden>
 <header class="summary-section-head">
 <div class="summary-goal-heading"><span>目标</span><span class="summary-goal-paused" id="summaryGoalPaused" hidden>已暂停</span></div>
@@ -708,17 +656,10 @@
 <div class="summary-divider" id="summaryGoalDivider" aria-hidden="true" hidden></div>
 <div class="summary-section" id="summaryArtifactsSection">
         <header class="summary-section-head">
-          <span>当前任务产物</span>
+          <span id="summaryArtifactsTitle">当前任务产物</span>
         </header>
         <div class="summary-file-list" id="fileGrid"></div>
       </div>
-      <div class="summary-divider" id="summaryArtifactsDivider" aria-hidden="true"></div>
-      <div class="summary-section">
-        <header class="summary-section-head">
-          <span>最近打开</span>
-        </header>
-        <div class="summary-file-list recent-files" id="recentFiles"></div>
-        <button class="summary-expand-recent" id="summaryExpandRecent" type="button" aria-expanded="false" hidden>展开更多</button>
       </div>
     </section>
 
@@ -727,7 +668,7 @@
 
 <!-- ============ 工具抽屉 ============ -->
 <aside class="workbench" id="workbench" aria-hidden="true">
-      <!-- 工具顶栏：文件目录常驻，其余工作区由加号按需创建。 -->
+      <!-- 文件目录树和定时任务信息共用右侧分栏。 -->
       <header class="wb-head">
         <div class="workspace-tabs" id="workspaceTabs" role="tablist" aria-label="工作区标签">
           <div class="workspace-tab active" role="tab" tabindex="0" data-workspace-tab="file-default" aria-selected="true" title="打开文件">
@@ -866,13 +807,6 @@
 
       <!-- ===== 工具：终端 ===== -->
       <section class="wb-pane" data-pane="terminal">
-        <div class="wb-bar">
-          <span class="term-title">zsh — catpaw-desktop-ui</span>
-          <button class="icon-btn sm" title="新建终端">
-            <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
-        </div>
-
         <div class="wb-body term-body">
           <pre class="term"><span class="t-path">~/Desktop/catpaw-desktop-ui</span>
 <span class="t-prompt">❯</span> npm run dev
@@ -886,6 +820,37 @@
 <span class="t-prompt">❯</span> <span class="cursor"></span></pre>
         </div>
       </section>
+<section class="scheduled-summary wb-pane" data-pane="scheduled" id="scheduledSummary" aria-label="定时任务" hidden>
+  <div class="scheduled-summary-top">
+    <header class="scheduled-summary-head">
+      <div class="scheduled-task-title"><h3 id="scheduledName">每周工作周报</h3></div>
+      <div class="scheduled-summary-actions">
+        <button id="scheduledRunNow" type="button" title="立即运行" aria-label="立即运行"><img src="assets/scheduled-panel-play.svg" alt="" width="16" height="16"></button>
+        <button id="scheduledEdit" type="button" title="编辑定时任务" aria-label="编辑定时任务" aria-controls="scheduledEditDrawer" aria-expanded="false"><img src="assets/scheduled-panel-edit.svg" alt="" width="16" height="16"></button>
+        <button id="scheduledMore" type="button" title="更多操作" aria-label="更多操作" aria-haspopup="menu" aria-controls="scheduledMoreMenu" aria-expanded="false"><img src="assets/scheduled-panel-more.svg" alt="" width="16" height="16"></button>
+      </div>
+    </header>
+    <div class="scheduled-more-menu" id="scheduledMoreMenu" role="menu" hidden>
+      <button id="scheduledEnabled" type="button" role="menuitemcheckbox" aria-checked="true">停用定时任务</button>
+    </div>
+  </div>
+  <div class="scheduled-summary-scroll">
+  <div class="scheduled-summary-overview" id="scheduledDetails">
+    <div class="scheduled-prompt-display" id="scheduledPromptDisplay">
+      <p id="scheduledDescription">请以本周一至周日为统计周期，汇总与门店经营、履约、供应商协作相关的任务、对话和产物，生成工作周报。先按项目列出已完成事项、关键进展和结果，注明数据口径与来源；再整理未完成事项、异常订单、延期原因和责任人，区分已解决、待跟进与需要我确认的项目。对同比或环比变化给出解释，不要凭空补全缺失数据。提出下周三项优先行动，写明完成时间、依赖条件和风险应对。附上一页摘要，将明细整理为可查看的表格，保持表达简洁。</p>
+      <button class="scheduled-prompt-toggle" id="scheduledPromptToggle" type="button" aria-controls="scheduledDescription" aria-expanded="false" hidden>展开全部</button>
+    </div>
+    <div class="scheduled-summary-facts">
+      <div><span>重复时间</span><strong id="scheduledTime">每日 09:00</strong></div>
+      <div><span>运行模型</span><strong>LongCat-2.0</strong></div>
+    </div>
+    <span id="scheduledProjectSummary" hidden>默认文件夹</span>
+    <span id="scheduledDeliverySummary" hidden>妙手内告知</span>
+  </div>
+  <h4>运行记录</h4>
+  <div class="scheduled-run-list" id="scheduledRunList" aria-label="运行记录"></div>
+  </div>
+</section>
     </aside>
 
     <!-- 面板全屏时浮在预览上方的快捷对话框，不占用文件内容布局。 -->
@@ -901,6 +866,62 @@
 
     </div>
     <!-- /content -->
+
+    <div class="scheduled-edit-backdrop" id="scheduledEditBackdrop" hidden></div>
+    <aside class="scheduled-edit-drawer" id="scheduledEditDrawer" role="dialog" aria-modal="true" aria-labelledby="scheduledEditTitle" aria-hidden="true" inert>
+      <form class="scheduled-drawer-form" id="scheduledEditForm">
+        <div class="scheduled-drawer-top">
+          <header class="scheduled-drawer-head">
+            <div class="scheduled-drawer-title">
+              <button class="scheduled-drawer-close" id="scheduledEditClose" type="button" aria-label="关闭定时任务抽屉"><img src="assets/scheduled-edit-close.svg" alt="" width="20" height="20"></button>
+              <span class="scheduled-drawer-title-divider" aria-hidden="true"></span>
+              <h2 id="scheduledEditTitle">编辑定时任务</h2>
+            </div>
+            <button class="scheduled-template-button" id="scheduledTemplateButton" type="button">从模板创建</button>
+          </header>
+          <p class="scheduled-drawer-intro" id="scheduledDrawerIntro">设置自动执行的定时任务，任务会在后台运行。</p>
+          <div class="scheduled-drawer-notice"><img src="assets/scheduled-edit-info.svg" alt="" width="12" height="12"><p>定时任务将使用默认沙箱设置运行。<br>如果任务需要访问工作目录外的文件、网络或应用程序，可能会失败。</p></div>
+        </div>
+        <div class="scheduled-drawer-scroll">
+
+          <label class="scheduled-drawer-field" for="scheduledEditName"><span>名称</span><span class="scheduled-drawer-input-wrap"><input id="scheduledEditName" name="name" maxlength="100" placeholder="输入任务名称" required><small id="scheduledNameCount">0/100</small></span></label>
+          <label class="scheduled-drawer-field" for="scheduledEditProject"><span>工作项目</span><small class="scheduled-field-help">定时任务将在所选工作项目中运行</small><span class="scheduled-drawer-select-wrap"><select id="scheduledEditProject" name="project" required></select><img src="assets/scheduled-edit-chevron.svg" alt="" width="14" height="14"></span></label>
+          <div class="scheduled-drawer-field"><label for="scheduledEditPrompt">提示词</label><div class="scheduled-prompt-box"><textarea id="scheduledEditPrompt" name="prompt" maxlength="20000" placeholder="描述要自动完成的任务" required></textarea><div class="scheduled-prompt-footer"><div class="scheduled-prompt-chips"><span class="scheduled-prompt-chip"><img src="assets/scheduled-edit-clock.svg" alt="" width="14" height="14">Auto</span><button class="scheduled-prompt-chip" id="scheduledAddSkill" type="button"><img src="assets/scheduled-edit-folder.svg" alt="" width="14" height="14">添加技能</button><button class="scheduled-prompt-chip" id="scheduledChooseExpert" type="button"><img src="assets/scheduled-edit-folder.svg" alt="" width="14" height="14">选择专家</button></div><small id="scheduledPromptCount">0/20000</small></div></div></div>
+
+          <div class="scheduled-drawer-field"><span>定时设置</span><div class="scheduled-rule-box"><label class="scheduled-rule-row" for="scheduledEditRepeat"><span>重复</span><span><select id="scheduledEditRepeat" name="repeat"><option value="每日">每日</option><option value="工作日">工作日</option><option value="每周">每周</option><option value="每月">每月</option><option value="自定义">自定义</option></select><img src="assets/scheduled-edit-chevron.svg" alt="" width="14" height="14"></span></label><div class="scheduled-custom-rows" id="scheduledCustomRows" hidden><label class="scheduled-rule-row" for="scheduledEditCadence"><span>重复节奏</span><span><select id="scheduledEditCadence" name="cadence"><option value="每天">每天</option><option value="每周">每周</option><option value="每月">每月</option></select><img src="assets/scheduled-edit-chevron.svg" alt="" width="14" height="14"></span></label><label class="scheduled-rule-row" for="scheduledEditInterval"><span>每隔</span><span><input id="scheduledEditInterval" name="interval" type="number" min="1" max="365" value="1"><span id="scheduledIntervalUnit">天</span></span></label></div><label class="scheduled-rule-row" for="scheduledEditTime"><span>时间</span><span><input id="scheduledEditTime" name="time" type="time" required></span></label></div></div>
+
+          <section class="scheduled-delivery" aria-labelledby="scheduledDeliveryTitle">
+            <h3 id="scheduledDeliveryTitle">运行结果</h3>
+            <div class="scheduled-delivery-card"><div class="scheduled-delivery-option"><span><strong>在妙手中通知</strong><small>每次运行生成独立对话，可在运行记录中查看</small></span><em>始终开启</em></div>
+            <label class="scheduled-delivery-option scheduled-delivery-push"><span><strong>同时推送到外部频道</strong><small>连接外部工具后，将结果同步发送到指定频道</small></span><input id="scheduledPushEnabled" name="pushEnabled" type="checkbox" role="switch"></label>
+            <div class="scheduled-channel-setup" id="scheduledChannelSetup" hidden>
+              <p class="scheduled-channel-prompt">选择推送频道</p>
+              <div class="scheduled-channel-list" role="group" aria-label="推送频道">
+              <div class="scheduled-channel-item"><div class="scheduled-channel-choice"><label class="scheduled-channel-select"><input type="checkbox" name="scheduledChannels" value="feishu" data-scheduled-channel="feishu" checked><span class="scheduled-channel-check" aria-hidden="true"></span><strong>飞书</strong><small>已添加 2 个接收方</small></label><button class="scheduled-channel-expand" type="button" data-scheduled-expand="feishu" aria-controls="scheduledChannelFeishu" aria-expanded="true" aria-label="收起飞书设置"><span class="scheduled-channel-chevron" aria-hidden="true"></span></button></div>
+              <div class="scheduled-channel-feishu" id="scheduledChannelFeishu" role="region" aria-label="飞书接收方">
+                <div class="scheduled-feishu-top"><span>已选择 <strong id="scheduledFeishuSelectedCount">1</strong> 个</span><label class="scheduled-feishu-filter"><input id="scheduledFeishuSelectedOnly" type="checkbox">只看已选</label></div>
+                <label class="scheduled-feishu-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="scheduledFeishuSearch" type="search" placeholder="搜索接收方名称或ID" aria-label="搜索飞书接收方"></label>
+                <div class="scheduled-feishu-recipients" id="scheduledFeishuRecipients"><label class="scheduled-feishu-recipient" data-recipient-id="yibao"><input type="checkbox" value="yibao" checked><span class="scheduled-feishu-avatar" aria-hidden="true">宜</span><span class="scheduled-feishu-recipient-copy"><strong>宜宝的智能助手</strong><small>单聊</small></span></label><label class="scheduled-feishu-recipient" data-recipient-id="user26890"><input type="checkbox" value="user26890"><span class="scheduled-feishu-avatar scheduled-feishu-avatar-group" aria-hidden="true">用</span><span class="scheduled-feishu-recipient-copy"><strong>用户26890的智能助手</strong><small>群聊</small></span></label><p class="scheduled-feishu-empty" id="scheduledFeishuEmpty" hidden>没有符合条件的接收方</p></div>
+                <a href="#" id="scheduledFeishuHelp">如何添加飞书接收方</a><p class="scheduled-channel-feedback" id="scheduledFeishuFeedback" role="status"></p>
+              </div>
+              </div>
+              <div class="scheduled-channel-item"><div class="scheduled-channel-choice"><label class="scheduled-channel-select"><input type="checkbox" name="scheduledChannels" value="wecom" data-scheduled-channel="wecom"><span class="scheduled-channel-check" aria-hidden="true"></span><strong>企业微信</strong><small>未绑定</small></label><button class="scheduled-channel-expand" type="button" data-scheduled-expand="wecom" aria-controls="scheduledChannelBinding" aria-expanded="false" aria-label="展开企业微信设置"><span class="scheduled-channel-chevron" aria-hidden="true"></span></button></div>
+              <div class="scheduled-channel-binding" id="scheduledChannelBinding" role="region" aria-label="企业微信绑定" hidden>
+                <div class="scheduled-channel-method-row"><strong>绑定方式</strong><div class="scheduled-channel-methods" id="scheduledChannelMethods" role="tablist" aria-label="企业微信绑定方式" hidden><button type="button" role="tab" data-scheduled-method="qr" aria-selected="true">扫码绑定</button><button type="button" role="tab" data-scheduled-method="manual" aria-selected="false">手动绑定</button></div></div>
+                <div class="scheduled-channel-qr" id="scheduledChannelQr"><img src="assets/scheduled-channel-qr.png" alt="演示用企业微信机器人绑定二维码" width="210" height="210"></div>
+                <div class="scheduled-channel-manual" id="scheduledChannelManual" hidden><label for="scheduledBotId"><strong>Bot ID (机器人ID)</strong><small id="scheduledBotIdHelp">在企业微信机器人设置中查看 Bot ID</small><input id="scheduledBotId" name="botId" autocomplete="off" placeholder="bot_xxx"></label><label for="scheduledBotSecret"><strong>Bot Secret (机器人密钥)</strong><small>和 Bot ID 配对的密钥，请妥善保管，不要泄露给他人</small><input id="scheduledBotSecret" name="botSecret" type="password" autocomplete="off" placeholder="输入 Bot Secret"></label><a id="scheduledBotHelp" href="#">如何获取企业微信 Bot ID 和 Bot Secret？</a><p class="scheduled-channel-feedback" id="scheduledChannelFeedback" role="status"></p></div>
+              </div>
+              </div>
+              <div class="scheduled-channel-item"><div class="scheduled-channel-choice"><label class="scheduled-channel-select"><input type="checkbox" name="scheduledChannels" value="dingtalk" data-scheduled-channel="dingtalk"><span class="scheduled-channel-check" aria-hidden="true"></span><strong>钉钉</strong><small>未绑定</small></label><button class="scheduled-channel-expand" type="button" data-scheduled-expand="dingtalk" aria-controls="scheduledChannelBinding" aria-expanded="false" aria-label="展开钉钉设置"><span class="scheduled-channel-chevron" aria-hidden="true"></span></button></div></div>
+              </div>
+              <p class="scheduled-channel-feedback" id="scheduledChannelSelectionFeedback" role="status"></p>
+            </div>
+            </div>
+          </section>
+        </div>
+        <footer class="scheduled-drawer-footer"><button id="scheduledEditCancel" type="button">取消</button><button id="scheduledDrawerSubmit" type="submit">保存</button></footer>
+      </form>
+    </aside>
 
   </div>
 </div>
@@ -953,7 +974,7 @@
 <!-- 自定义模版：与成品案例独立，保存的是可反复使用的任务配置。 -->
 <dialog class="template-dialog" id="templateDialog" aria-labelledby="templateDialogTitle">
   <div class="template-dialog-head">
-    <div><span class="template-eyebrow">MY WORKFLOWS</span><h2 id="templateDialogTitle">我的模版</h2><p>把好用的 Prompt 和能力组合保存下来，下次直接开始。</p></div>
+    <div><span class="template-eyebrow">MY WORKFLOWS</span><h2 id="templateDialogTitle">从模版新建</h2><p>把好用的 Prompt 和能力组合保存下来，下次直接开始。</p></div>
     <button class="template-close" type="button" id="templateClose" aria-label="关闭模版">×</button>
   </div>
   <div class="template-toolbar" id="templateToolbar">
@@ -1015,17 +1036,16 @@
 
 <dialog class="artifact-share-dialog" id="artifactShareDialog" aria-labelledby="artifactShareTitle">
   <div class="share-header">
+    <button class="share-back" type="button" id="artifactShareBack" aria-label="返回分享" hidden><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
     <h2 id="artifactShareTitle">分享</h2>
     <button class="share-close" type="button" id="artifactShareClose" aria-label="关闭分享面板"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
   </div>
+  <div class="share-home" id="artifactShareHome">
   <div class="share-file"><span class="share-file-icon" id="artifactShareFileIcon" aria-hidden="true"></span><span id="artifactShareFile"></span></div>
   <div class="share-access-wrap">
-    <button class="share-access" type="button" id="artifactShareAccess" aria-expanded="false" aria-controls="artifactShareAccessPanel">
-      <span>访问权限</span><span class="share-access-people"><span class="share-avatar pink">柳</span><span class="share-avatar blue">王</span><span class="share-avatar extra">+1</span><span>柳宗元、王安石等人</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></span>
+    <button class="share-access" type="button" id="artifactShareAccess" aria-expanded="false" aria-controls="artifactShareMembers">
+      <span>访问权限</span><span class="share-access-people" id="artifactSharePeople"></span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
     </button>
-    <div class="share-access-panel" id="artifactShareAccessPanel" hidden>
-      <strong>有权限查看的成员</strong><p>柳宗元、王安石等人（示例）</p><p>当前原型暂不支持添加成员或更改实际访问权限。</p>
-    </div>
   </div>
   <div class="share-link-access"><span>互联网获得此链接的人</span><select id="artifactSharePermission" aria-label="链接访问权限"><option value="view">可查看</option><option value="edit">可编辑</option></select></div>
   <div class="share-channels">
@@ -1038,6 +1058,12 @@
     </div>
   </div>
   <p class="share-feedback" id="artifactShareFeedback" role="status" aria-live="polite" hidden></p>
+  </div>
+  <div class="share-members" id="artifactShareMembers" hidden>
+    <p class="share-member-count" id="artifactShareMemberCount"></p>
+    <ul class="share-member-list" id="artifactShareMemberList"></ul>
+    <p class="share-feedback" id="artifactShareMemberFeedback" role="status" aria-live="polite" hidden></p>
+  </div>
 </dialog>
 
 <script src="./app.js"></script>
