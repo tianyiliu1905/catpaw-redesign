@@ -1,0 +1,24 @@
+<!-- Static illustration from the matching primary prompt card in index.html. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art analysis-table-art" color="#171717" fill="none">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- A gently bowed sheet with a solid ink edge, rather than a UI window. -->
+    <path d="M31 34C55 32 87 33 112 35Q122 36 123 46L124 119Q124 131 113 132L34 132Q23 132 23 120L23 46Q23 36 31 34Z" fill="currentColor"/>
+    <path d="M29 29C52 27 88 29 106 30Q116 30 116 40L117 113Q117 124 106 124C81 126 51 123 29 124Q19 124 19 114L20 40Q20 30 29 29Z" fill="var(--analysis-paper, #fff)" stroke="currentColor" stroke-width="3.2"/>
+    <path d="M20 52Q67 50 116 52" stroke="currentColor" stroke-width="2"/>
+    <!-- Each cell is still 24 × 18; slight curves give the grid a drawn quality. -->
+    <path class="analysis-selection analysis-motion" d="M23 52Q44 51 65 52Q68 52 68 55L68 103Q68 106 65 106Q44 107 23 106Q20 106 20 103V55Q20 52 23 52Z" fill="var(--analysis-gray, #a8aaa8)" fill-opacity=".55"/>
+    <path d="M20 70Q65 68 116 70M20 88Q64 90 116 88M20 106Q65 104 117 106M44 53Q42 87 44 123M68 52Q70 87 68 124M92 52Q90 89 92 124" stroke="currentColor" stroke-width="1.92"/>
+    <path class="analysis-selection analysis-motion" d="M23 52Q44 51 65 52Q68 52 68 55L68 103Q68 106 65 106Q44 107 23 106Q20 106 20 103V55Q20 52 23 52Z" stroke="currentColor" stroke-width="2.8"/>
+    <g class="analysis-cursor analysis-motion">
+      <path d="M44 70Q43 69 43 72L45 90Q45 93 47 90L51 86 56 93Q57 95 59 93L61 91Q62 90 60 88L55 82 62 81Q65 81 62 79Z" fill="currentColor" stroke="var(--analysis-paper, #fff)" stroke-width="2"/>
+    </g>
+  </g>
+  <g class="analysis-pie analysis-motion" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Thick rounded pie, with a lifted quarter and a clean paper knockout. -->
+    <path d="M112 69C93 69 79 80 79 94V104C79 119 94 129 112 129S145 118 145 104V90C145 77 130 66 115 66Z" fill="var(--analysis-paper, #fff)" stroke="var(--analysis-paper, #fff)" stroke-width="9"/>
+    <path d="M80 94C80 80 94 70 112 70S144 80 144 94V104C144 118 130 128 112 128S80 118 80 104Z" fill="currentColor"/>
+    <path d="M112 94V70C94 70 80 80 80 94S94 118 112 118 144 108 144 94Z" fill="var(--analysis-paper, #fff)"/>
+    <path d="M112 94H144C144 107 130 118 112 118Q103 118 96 115Z" fill="var(--analysis-gray, #a8aaa8)"/>
+    <path d="M115 89V65C133 65 147 75 147 89Z" fill="currentColor"/>
+  </g>
+</svg>

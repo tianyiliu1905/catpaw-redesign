@@ -3,6 +3,9 @@
    ============================================================ */
 (function () {
   'use strict';
+  let artifactSelection;
+  const strategyScene = new URLSearchParams(window.location.search).get('strategyScene');
+  let strategyDemoActive = false;
 
   const themeButtons = document.querySelectorAll('[data-set-theme]');
   function setTheme(theme) {
@@ -457,7 +460,7 @@ function renderGroups() {
       id: 'default', name: '默认文件夹', scope: null, isDefault: true,
       path: '~/CatPaw/默认文件夹',
       files: [
-        { name: '季度经营复盘.pptx', type: 'ppt', artifact: true, preview: { kind: 'ppt' } },
+        ...window.ArtifactEditingDemo.files(),
         { name: '门店履约分析.docx', type: 'word', artifact: true, preview: {
           kind: 'word', title: '门店履约分析', sections: [
             { heading: '一、分析概览', paragraphs: ['本报告汇总门店履约异常情况，聚焦晚高峰时段的超时订单与运力匹配问题。以下为可编辑的演示数据。', '观察周期：2026 年 9 月 21 日；分析范围：上海虹桥店及周边商圈。'] },
@@ -932,13 +935,13 @@ const thumb = summaryArtifactIcon(type);
     const sections = preview.sections.map((section, sectionIndex) => `
       <section class="word-section" id="word-section-${sectionIndex}">
         <h2>${esc(section.heading)}</h2>
-        ${section.paragraphs.map((text, paragraphIndex) => `<p contenteditable="true" role="textbox" aria-multiline="true"
+        ${section.paragraphs.map((text, paragraphIndex) => `<p contenteditable="${preview.referenceDemo ? 'false' : 'true'}" ${preview.referenceDemo ? '' : 'role="textbox" aria-multiline="true"'}
           aria-label="${esc(section.heading)}第 ${paragraphIndex + 1} 段" data-word-section="${sectionIndex}" data-word-paragraph="${paragraphIndex}" spellcheck="false">${esc(text)}</p>`).join('')}
       </section>`).join('');
     return `<div class="pv-office pv-word" aria-label="文档演示预览">
-      <div class="office-toolbar"><span>开始</span><span>插入</span><span>布局</span><span>审阅</span><span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
+      <div class="office-toolbar">${preview.referenceDemo ? '<span>划选文字后，添加到对话提出修改要求</span>' : '<span>开始</span><span>插入</span><span>布局</span><span>审阅</span>'}<span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
       <div class="word-layout"><nav class="word-outline" aria-label="文档大纲"><strong>大纲</strong>${preview.sections.map((section, index) => `<button type="button" data-word-jump="${index}">${esc(section.heading)}</button>`).join('')}</nav>
-        <div class="word-canvas"><article class="word-page" style="--office-zoom:${zoom / 100}"><h1>${esc(preview.title)}</h1><div class="word-subtitle">上海虹桥店 · 2026 年 9 月 21 日</div><hr>${sections}<footer>由 CatPaw 生成 · 演示文档</footer></article></div></div>
+        <div class="word-canvas"><article class="word-page" style="--office-zoom:${zoom / 100}"><h1>${esc(preview.title)}</h1><div class="word-subtitle">${esc(preview.subtitle || '上海虹桥店 · 2026 年 9 月 21 日')}</div><hr>${sections}<footer>由 CatPaw 生成 · 演示文档</footer></article></div></div>
       <div class="office-footer"><span>第 1 页 · 共 1 页</span><div class="office-zoom"><button type="button" data-office-zoom="-10" aria-label="缩小文档">−</button><span>${zoom}%</span><button type="button" data-office-zoom="10" aria-label="放大文档">＋</button></div></div>
     </div>`;
   }
@@ -951,10 +954,10 @@ const thumb = summaryArtifactIcon(type);
       .filter(({ row, rowIndex }) => !query || sheet.columns.some((_, columnIndex) => spreadsheetCell(sheet, rowIndex, columnIndex).toLocaleLowerCase().includes(query)));
     const letters = sheet.columns.map((_, index) => String.fromCharCode(65 + index));
     return `<div class="pv-office pv-excel" aria-label="表格演示预览">
-      <div class="office-toolbar"><span>开始</span><span>插入</span><span>数据</span><span>公式</span><span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
-      <div class="excel-actions"><label>查找 <input type="search" data-excel-filter placeholder="筛选当前工作表" value="${esc(item.officeFilter || '').replace(/"/g, '&quot;')}"></label><button type="button" data-excel-add>＋ 添加一行</button><span>${rows.length} / ${sheet.rows.length} 行</span></div>
+      <div class="office-toolbar">${preview.referenceDemo ? '<span>拖动选择单元格区域，添加到对话</span>' : '<span>开始</span><span>插入</span><span>数据</span><span>公式</span>'}<span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
+      <div class="excel-actions"><label>查找 <input type="search" data-excel-filter placeholder="筛选当前工作表" value="${esc(item.officeFilter || '').replace(/"/g, '&quot;')}"></label>${preview.referenceDemo ? '' : '<button type="button" data-excel-add>＋ 添加一行</button>'}<span>${rows.length} / ${sheet.rows.length} 行</span></div>
       <div class="excel-formula"><span data-excel-address>选择单元格</span><span class="excel-fx">ƒx</span><output data-excel-value>选中单元格后显示内容</output></div>
-      <div class="excel-scroll"><table class="excel-grid"><thead><tr><th class="excel-corner"></th>${letters.map(letter => `<th>${letter}</th>`).join('')}</tr><tr><th class="excel-row-number">#</th>${sheet.columns.map(name => `<th class="excel-column-name">${esc(name)}</th>`).join('')}</tr></thead><tbody>${rows.map(({ row, rowIndex }) => `<tr><th class="excel-row-number">${rowIndex + 1}</th>${row.map((_, columnIndex) => `<td tabindex="0" data-excel-row="${rowIndex}" data-excel-column="${columnIndex}" data-excel-address="${letters[columnIndex]}${rowIndex + 1}" title="${columnIndex === 5 && sheet.name === '异常明细' ? '根据超时单 ÷ 订单量自动计算' : '双击编辑'}">${esc(spreadsheetCell(sheet, rowIndex, columnIndex))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="excel-scroll"><table class="excel-grid"><thead><tr><th class="excel-corner"></th>${letters.map(letter => `<th>${letter}</th>`).join('')}</tr><tr><th class="excel-row-number">${preview.referenceDemo ? '1' : '#'}</th>${sheet.columns.map(name => `<th class="excel-column-name">${esc(name)}</th>`).join('')}</tr></thead><tbody>${rows.map(({ row, rowIndex }) => `<tr><th class="excel-row-number">${rowIndex + (preview.referenceDemo ? 2 : 1)}</th>${row.map((_, columnIndex) => `<td tabindex="0" data-excel-row="${rowIndex}" data-excel-column="${columnIndex}" data-excel-address="${letters[columnIndex]}${rowIndex + (preview.referenceDemo ? 2 : 1)}" title="${preview.referenceDemo ? '选择后添加到对话' : columnIndex === 5 && sheet.name === '异常明细' ? '根据超时单 ÷ 订单量自动计算' : '双击编辑'}">${esc(spreadsheetCell(sheet, rowIndex, columnIndex))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
       <div class="excel-tabs" role="tablist" aria-label="工作表">${preview.sheets.map((entry, index) => `<button type="button" role="tab" data-excel-sheet="${index}" aria-selected="${index === sheetIndex}" class="${index === sheetIndex ? 'active' : ''}">${esc(entry.name)}</button>`).join('')}</div>
       <div class="office-footer"><span>工作表 ${sheetIndex + 1} / ${preview.sheets.length}</span><span>${sheet.name === '异常明细' ? '超时率按订单量自动计算 · ' : ''}更改仅保存在当前会话</span></div>
     </div>`;
@@ -964,7 +967,7 @@ const thumb = summaryArtifactIcon(type);
     word: (preview, item) => renderWordPreview(preview, item),
     excel: (preview, item) => renderExcelPreview(preview, item),
     /* PPT：参考桌面演示文稿编辑器，直接展示可辨认的编辑态，而不是文件占位。 */
-    ppt: () => `<div class="pv-ppt" aria-label="季度经营复盘演示文稿预览">
+    ppt: (preview,item) => preview.referenceDemo ? window.ArtifactEditingDemo.renderPpt(preview,item) : `<div class="pv-ppt" aria-label="季度经营复盘演示文稿预览">
       <nav class="ppt-ribbon" aria-label="演示文稿工具栏">
         <span>开始</span><span>插入</span><span>设计</span><span>切换</span><span>动画</span><span>放映</span><span>审阅</span><span>视图</span>
         <b>格式</b>
@@ -1035,22 +1038,6 @@ if (scheduled) {
   renderScheduledRunList();
 }
 document.getElementById('summaryArtifactsTitle').textContent = scheduled ? '本次运行产物' : '当前任务产物';
-const goal = hasActiveTask && !scheduled ? (conversationGoals.has(activeConversationTask)
-  ? conversationGoals.get(activeConversationTask) : conversationExamples.get(activeConversationTask)?.goal || '') : '';
-const goalSection = document.getElementById('summaryGoalSection');
-goalSection.hidden = !goal;
-document.getElementById('summaryGoalDivider').hidden = !goal;
-document.getElementById('summaryGoalText').textContent = goal || '';
-document.getElementById('summaryGoalEdit').hidden = true;
-document.getElementById('summaryGoalText').hidden = false;
-const paused = Boolean(goal && pausedConversationGoals.has(activeConversationTask));
-document.getElementById('summaryGoalPaused').hidden = !paused;
-const pauseButton = document.getElementById('summaryGoalPause');
-pauseButton.title = paused ? '继续目标' : '暂停目标';
-pauseButton.setAttribute('aria-label', pauseButton.title);
-pauseButton.innerHTML = paused
-  ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 5.5a1 1 0 0 1 1.5-.85l10.4 6.4a1.1 1.1 0 0 1 0 1.9l-10.4 6.4A1 1 0 0 1 7 18.5Z"/></svg>'
-  : '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="4.5" y="5" width="5.5" height="14" rx="1.4"/><rect x="14" y="5" width="5.5" height="14" rx="1.4"/></svg>';
 const folder = currentNode();
 if (!hasActiveTask) fileGrid.innerHTML = '<p class="summary-empty">无</p>';
 else if (scheduled) renderFileGrid({ files: conversationExamples.get(activeConversationTask)?.fileNodes || [] });
@@ -1854,46 +1841,71 @@ safeHouseToggle.addEventListener('click', toggleSafeHouse);
   const greetingTitle = greeting.querySelector('.greeting-title');
   const greetingBubble = greeting.querySelector('.greeting-bubble');
   const greetingMessages = {
-    develop: '网站还是应用？用途说清，我来搭。',
-    analyze: '数据给我。异常在哪，我会找出来。',
-    create: '想做什么？方向给我，我来补齐细节。',
-    research: '问题给我。我查资料，再给你答案。',
-    apps: '想做 App？场景和功能说清，我来搭。',
-    websites: '要做网站？目标给我，页面我来搭。',
-    slides: '做 PPT？主题给我，结构我来理顺。',
+    develop: ['想做网站还是应用？', '有什么想做出来的小想法？', '这个网站或应用，准备给谁用？', '先说说你想解决什么问题吧。'],
+    analyze: ['想从数据里发现什么？', '有哪个指标让你在意？', '把数据给我，说说你最关心什么。', '想先看整体，还是找找变化原因？'],
+    create: ['海报、PPT 还是文案？', '这次想做一份什么作品？', '有主题或参考吗？我们从这里开始。', '想把什么想法表达出来？'],
+    research: ['有什么想了解的？', '想查资料，还是一起理清问题？', '把问题告诉我，我们一起看看。', '有什么需要比较或弄明白的？'],
+    apps: ['想做什么样的 App？', '这个 App 想帮谁解决问题？', '先说一个你最想要的功能吧。', '有什么日常小事，想交给 App 来做？'],
+    websites: ['想拥有一个怎样的网站？', '这个网站准备展示什么？', '有喜欢的网站风格吗？', '先说说网站给谁看、用来做什么吧。'],
+    slides: ['这份 PPT 想讲些什么？', '这次汇报，最想让大家记住什么？', '材料准备好了吗？先说说主题也行。', '这份 PPT 准备讲给谁听？'],
   };
-  const defaultGreetingMessage = '说吧，今天想做什么？我坐好了。';
-  let greetingTypingTimer = null;
+  const defaultGreetingMessages = [
+    '今天想做点什么？',
+    '说说今天想完成的事吧。',
+    '有什么想法？我在听。',
+    '从一个小想法开始也可以。',
+    '有什么工作，想一起理一理？',
+    '还没想好怎么说？先说个方向吧。',
+    '想做什么，或者有什么卡住了？',
+    '把手头的事说给我听听吧。',
+  ];
+  const lastGreetingByContext = new Map();
+  let selectedPromptGreeting = null;
   let currentGreetingMessage = '';
+  let currentGreetingContext = '';
 
   function stopGreetingTyping() {
-    clearTimeout(greetingTypingTimer);
-    greetingTypingTimer = null;
+    greetingBubble.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
   }
 
   function showGreetingBubble(category = selectedPromptCategory) {
-    const message = greetingMessages[category] || defaultGreetingMessage;
+    const context = selectedPromptGreeting ? `prompt:${selectedPromptGreeting}` : greetingMessages[category] ? category : 'default';
+    // 同一次聚焦期间保持稳定；重新进入时再抽取，并避开上一次的问候。
+    if (!greetingBubble.hidden && currentGreetingMessage && context === currentGreetingContext) return;
+    const messages = selectedPromptGreeting ? [selectedPromptGreeting] : greetingMessages[category] || defaultGreetingMessages;
+    const alternatives = messages.filter(message => message !== lastGreetingByContext.get(context));
+    const candidates = alternatives.length ? alternatives : messages;
+    const message = candidates[Math.floor(Math.random() * candidates.length)];
+    lastGreetingByContext.set(context, message);
+    currentGreetingContext = context;
     hero.classList.add('is-engaged');
     greetingTitle.hidden = true;
     greetingBubble.hidden = false;
     if (message === currentGreetingMessage) return;
-    stopGreetingTyping();
     currentGreetingMessage = message;
     greetingBubble.setAttribute('aria-label', message);
     if (reducedMotion.matches) {
       greetingBubble.textContent = message;
       return;
     }
-    const characters = Array.from(message);
-    let index = 0;
-    greetingBubble.textContent = '';
-    function typeNextCharacter() {
-      if (greetingBubble.hidden) return;
-      greetingBubble.textContent += characters[index++];
-      if (index < characters.length) greetingTypingTimer = setTimeout(typeNextCharacter, 48);
-      else greetingTypingTimer = null;
-    }
-    typeNextCharacter();
+    const segmenter = typeof Intl.Segmenter === 'function'
+      ? new Intl.Segmenter('zh-CN', { granularity: 'grapheme' })
+      : null;
+    const characters = segmenter
+      ? Array.from(segmenter.segment(message), ({ segment }) => segment)
+      : Array.from(message);
+    // 长句也在接近同一时间内写完，避免逐字动画拖成明显的等待。
+    const characterInterval = Math.min(52, 560 / Math.max(1, characters.length - 1));
+    const fragment = document.createDocumentFragment();
+    characters.forEach((character, index) => {
+      const span = document.createElement('span');
+      span.className = 'greeting-ink-char';
+      span.textContent = character;
+      span.setAttribute('aria-hidden', 'true');
+      span.style.setProperty('--ink-delay', `${Math.round(index * characterInterval)}ms`);
+      fragment.appendChild(span);
+    });
+    greetingBubble.replaceChildren(fragment);
   }
 
   function stopPromptHint() {
@@ -1943,7 +1955,7 @@ safeHouseToggle.addEventListener('click', toggleSafeHouse);
   reducedMotion.addEventListener('change', () => {
     stopPromptHint();
     startPromptHint();
-    if (reducedMotion.matches && greetingTypingTimer !== null) {
+    if (reducedMotion.matches && !greetingBubble.hidden) {
       stopGreetingTyping();
       greetingBubble.textContent = currentGreetingMessage;
     }
@@ -2057,7 +2069,7 @@ promptGuide = text;
     heroChildAnimations.forEach(animation => animation.cancel());
     heroChildAnimations = [];
     update();
-    if (reducedMotion.matches) return;
+    if (reducedMotion.matches || strategyScene) return;
     const nextTop = hero.getBoundingClientRect().top;
     const nextChildOffsets = movingChildren.map(child => child.getBoundingClientRect().top - nextTop);
     const timing = { duration: 360, easing: 'cubic-bezier(.22,.68,0,1)' };
@@ -2082,32 +2094,32 @@ promptGuide = text;
 
   function promptCategoryData() {
     const pptScenarios = [
-      { label: '财报解读', title: '泡泡玛特业绩分析', theme: 'finance', prompt: '解读泡泡玛特财报，制作一份业绩分析 PPT，数据图表为主、克制专业风。' },
-      { label: '工作总结', title: '季度工作总结汇报', theme: 'summary', prompt: '季度工作总结汇报 PPT，简约商务风，含业绩回顾、亮点、不足、下季计划。' },
-      { label: '新品发布会', title: '新产品发布会演示', theme: 'launch', prompt: '新产品发布会演示 PPT，科技感暗调，含痛点、产品亮点、演示、发售信息。' },
-      { label: '培训课件', title: '新员工入职培训', theme: 'onboarding', prompt: '新员工入职培训课件 PPT，清爽分模块、多图示少文字，含文化、制度、流程。' },
+      { label: '财报解读', title: '泡泡玛特业绩分析', theme: 'finance', greeting: '财报里的信息有点多？', prompt: '解读泡泡玛特财报，制作一份业绩分析 PPT，数据图表为主、克制专业风。' },
+      { label: '工作总结', title: '季度工作总结汇报', theme: 'summary', greeting: '这个季度辛苦啦。', prompt: '季度工作总结汇报 PPT，简约商务风，含业绩回顾、亮点、不足、下季计划。' },
+      { label: '新品发布会', title: '新产品发布会演示', theme: 'launch', greeting: '新品有哪些亮点？', prompt: '新产品发布会演示 PPT，科技感暗调，含痛点、产品亮点、演示、发售信息。' },
+      { label: '培训课件', title: '新员工入职培训', theme: 'onboarding', greeting: '一起给新人准备份贴心指南吧。', prompt: '新员工入职培训课件 PPT，清爽分模块、多图示少文字，含文化、制度、流程。' },
     ];
     const websiteScenarios = [
-      { label: '企业网站首页', theme: 'corporate', prompt: '创建一个企业网站，风格要大气、商务、专业。设计一个完整的企业网站首页，包括导航栏、hero 区域、服务介绍、公司优势、客户评价等部分。' },
-      { label: '电商网页', theme: 'shop', prompt: '设计一个复古波普艺术风格的电商网页，背景使用鲜艳的橙色和粉色撞色，融入漫画风格的圆点图案和手绘插图。商品展示区以波普画框形式呈现，按钮带有手写字体和跳跃动画。整体风格活泼有趣，适合潮流服饰或艺术品销售。' },
-      { label: '电商运营后台', theme: 'commerce', prompt: '设计一个现代化电商运营后台，背景为纯白，顶部导航使用渐变主题色（#4F46E5 → #2563EB）。订单处理采用卡片流设计，商品管理支持拖拽排序。数据分析区使用动态仪表盘，支持多维度筛选。整体风格简洁高效。' },
-      { label: '话题社区', theme: 'community', prompt: '参考微博的能力和布局生成一个暗黑色调的话题社区。' },
+      { label: '企业网站首页', theme: 'corporate', greeting: '想展示企业的哪些优势？', prompt: '创建一个企业网站，风格要大气、商务、专业。设计一个完整的企业网站首页，包括导航栏、hero 区域、服务介绍、公司优势、客户评价等部分。' },
+      { label: '电商网页', theme: 'shop', greeting: '复古波普风很有趣呀。', prompt: '设计一个复古波普艺术风格的电商网页，背景使用鲜艳的橙色和粉色撞色，融入漫画风格的圆点图案和手绘插图。商品展示区以波普画框形式呈现，按钮带有手写字体和跳跃动画。整体风格活泼有趣，适合潮流服饰或艺术品销售。' },
+      { label: '电商运营后台', theme: 'commerce', greeting: '日常运营有哪些忙碌的事？', prompt: '设计一个现代化电商运营后台，背景为纯白，顶部导航使用渐变主题色（#4F46E5 → #2563EB）。订单处理采用卡片流设计，商品管理支持拖拽排序。数据分析区使用动态仪表盘，支持多维度筛选。整体风格简洁高效。' },
+      { label: '话题社区', theme: 'community', greeting: '想让大家在这里聊些什么？', prompt: '参考微博的能力和布局生成一个暗黑色调的话题社区。' },
     ];
     const appScenarios = [
-      { label: '健身打卡', theme: 'fitness', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
-      { label: '国风阅读', theme: 'reading', prompt: '设计并开发一个国风阅读 App，宣纸米底 + 水墨留白，含书架、翻页阅读器、书签笔记、书城推荐。' },
-      { label: '露营装备租赁', theme: 'camping', prompt: '设计并开发一个露营装备租赁 App，户外大地色系，含装备浏览、租赁下单、取还日期、订单管理。' },
-      { label: '宠物健康管理', theme: 'petcare', prompt: '设计并开发一款宠物健康管理 App，温馨圆润的暖橙色系，含宠物档案、疫苗/驱虫提醒、健康日记、附近宠物服务。' },
+      { label: '健身打卡', theme: 'fitness', greeting: '一起做个健身打卡 App 吧。', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
+      { label: '国风阅读', theme: 'reading', greeting: '国风阅读很有韵味呀。', prompt: '设计并开发一个国风阅读 App，宣纸米底 + 水墨留白，含书架、翻页阅读器、书签笔记、书城推荐。' },
+      { label: '露营装备租赁', theme: 'camping', greeting: '一起把露营的准备变轻松吧。', prompt: '设计并开发一个露营装备租赁 App，户外大地色系，含装备浏览、租赁下单、取还日期、订单管理。' },
+      { label: '宠物健康管理', theme: 'petcare', greeting: '毛孩子值得细心照顾呀。', prompt: '设计并开发一款宠物健康管理 App，温馨圆润的暖橙色系，含宠物档案、疫苗/驱虫提醒、健康日记、附近宠物服务。' },
     ];
     return {
       develop: {
         guide: '帮我做一个网站或应用：',
         tag: '网站和应用',
         secondary: [
-          { label: '搭建网站', prompt: '帮我搭建一个 [网站类型]，面向 [目标用户]，包含 [页面和核心功能]，风格为 [视觉风格]。' },
-          { label: '制作网页应用', prompt: '帮我做一个 [网页应用类型]，用于 [目标场景]，需要 [核心功能]。请先梳理方案，再完成可运行版本。' },
-          { label: '开发手机应用', prompt: '帮我设计并开发一个 [手机应用类型]，面向 [目标用户]，需要 [核心功能与页面]。' },
-          { label: '优化现有网站或应用', prompt: '检查 [网站或应用]，找出最影响体验或性能的问题，按优先级优化并验证。' },
+          { label: '搭建网站', greeting: '聊聊你想做的网站吧。', prompt: '帮我搭建一个 [网站类型]，面向 [目标用户]，包含 [页面和核心功能]，风格为 [视觉风格]。' },
+          { label: '制作网页应用', greeting: '有什么想变轻松的事？', prompt: '帮我做一个 [网页应用类型]，用于 [目标场景]，需要 [核心功能]。请先梳理方案，再完成可运行版本。' },
+          { label: '开发手机应用', greeting: '心里的 App 是什么样的？', prompt: '帮我设计并开发一个 [手机应用类型]，面向 [目标用户]，需要 [核心功能与页面]。' },
+          { label: '优化现有网站或应用', greeting: '哪里用着不太顺心？', prompt: '检查 [网站或应用]，找出最影响体验或性能的问题，按优先级优化并验证。' },
         ],
         cases: [
           { kind: 'web', type: '网站开发', title: websiteScenarios[0].label, theme: websiteScenarios[0].theme, prompt: websiteScenarios[0].prompt },
@@ -2120,10 +2132,10 @@ promptGuide = text;
         guide: '帮我分析数据：',
         tag: '分析数据',
         secondary: [
-          { label: '找出指标变化原因', prompt: '分析 [时间范围] 的 [核心指标] 为什么变化，对比相关维度，区分事实与推测，并给出可执行建议。' },
-          { label: '做经营日报或周报', prompt: '根据 [数据或报表] 生成一份 [日报或周报]，总结关键指标、异常变化、原因和下一步建议。' },
-          { label: '整理并分析表格', prompt: '整理我提供的表格，核对数据口径，分析 [关注的问题]，用清晰的表格和结论呈现。' },
-          { label: '分析市场和竞品', prompt: '调研 [行业或商圈] 的市场与竞品，标注信息来源，梳理趋势、机会和应对动作。' },
+          { label: '找出指标变化原因', greeting: '有哪个指标让你在意？', prompt: '分析 [时间范围] 的 [核心指标] 为什么变化，对比相关维度，区分事实与推测，并给出可执行建议。' },
+          { label: '做经营日报或周报', greeting: '日报还是周报？', prompt: '根据 [数据或报表] 生成一份 [日报或周报]，总结关键指标、异常变化、原因和下一步建议。' },
+          { label: '整理并分析表格', greeting: '表格再多也可以慢慢理。', prompt: '整理我提供的表格，核对数据口径，分析 [关注的问题]，用清晰的表格和结论呈现。' },
+          { label: '分析市场和竞品', greeting: '想了解哪个市场和竞品？', prompt: '调研 [行业或商圈] 的市场与竞品，标注信息来源，梳理趋势、机会和应对动作。' },
         ],
         cases: [caseData().office[0], caseData().office[1], caseData().office[3], caseData().dev[2]],
       },
@@ -2131,10 +2143,10 @@ promptGuide = text;
         guide: '帮我设计或创作：',
         tag: '设计与创作',
         secondary: [
-          { label: '设计海报与图片', prompt: '为 [产品或活动] 设计一张海报，突出 [核心信息]，面向 [目标人群]，风格为 [视觉风格]。' },
-          { label: '制作汇报 PPT', prompt: '根据 [主题或材料] 制作一份面向 [受众] 的 PPT，重点呈现 [关键信息]，做到结构清晰、图表易读。' },
-          { label: '写活动文案', prompt: '围绕 [活动或产品] 写 [渠道] 的推广文案，包含标题、卖点、正文和明确的行动引导。' },
-          { label: '设计品牌视觉', prompt: '为 [品牌或产品] 设计视觉方案，说明配色、字体、图形风格和适用场景。' },
+          { label: '设计海报与图片', greeting: '有什么喜欢的主题和风格？', prompt: '为 [产品或活动] 设计一张海报，突出 [核心信息]，面向 [目标人群]，风格为 [视觉风格]。' },
+          { label: '制作汇报 PPT', greeting: '一起把这次汇报准备好吧。', prompt: '根据 [主题或材料] 制作一份面向 [受众] 的 PPT，重点呈现 [关键信息]，做到结构清晰、图表易读。' },
+          { label: '写活动文案', greeting: '想让大家记住什么？', prompt: '围绕 [活动或产品] 写 [渠道] 的推广文案，包含标题、卖点、正文和明确的行动引导。' },
+          { label: '设计品牌视觉', greeting: '你希望品牌带给人什么感觉？', prompt: '为 [品牌或产品] 设计视觉方案，说明配色、字体、图形风格和适用场景。' },
         ],
         cases: [
           caseData().design[0],
@@ -2147,10 +2159,10 @@ promptGuide = text;
         guide: '帮我查找或解答：',
         tag: '查找与解答',
         secondary: [
-          { label: '查资料并标来源', prompt: '查找 [主题] 的可靠资料，优先使用官方或一手来源，整理关键结论并附上来源链接。' },
-          { label: '解答业务问题', prompt: '解释 [业务概念或问题]，结合我的场景给出易理解的说明和下一步建议。' },
-          { label: '对比不同方案', prompt: '对比 [方案 A] 和 [方案 B] 在成本、适用场景和风险上的差异，给出推荐及依据。' },
-          { label: '读文档提炼重点', prompt: '阅读我提供的 [文档或链接]，提炼要点、待确认事项和可执行的下一步。' },
+          { label: '查资料并标来源', greeting: '想查些什么资料？', prompt: '查找 [主题] 的可靠资料，优先使用官方或一手来源，整理关键结论并附上来源链接。' },
+          { label: '解答业务问题', greeting: '有什么还没想明白的？', prompt: '解释 [业务概念或问题]，结合我的场景给出易理解的说明和下一步建议。' },
+          { label: '对比不同方案', greeting: '几个方案有点难选？', prompt: '对比 [方案 A] 和 [方案 B] 在成本、适用场景和风险上的差异，给出推荐及依据。' },
+          { label: '读文档提炼重点', greeting: '文档太长没空细看？', prompt: '阅读我提供的 [文档或链接]，提炼要点、待确认事项和可执行的下一步。' },
         ],
         cases: [caseData().office[1], caseData().office[3], caseData().dev[3], caseData().design[1]],
       },
@@ -2201,11 +2213,12 @@ promptGuide = text;
     }, delay);
   }
 
-  function setPromptCategory(category) {
+  function setPromptCategory(category, focusPrompt = true) {
     clearTimeout(promptTransitionTimer);
     const isClearing = selectedPromptCategory === category;
     animateHeroReflow(() => {
       selectedPromptCategory = isClearing ? null : category;
+      selectedPromptGreeting = null;
 
       primaryPromptButtons.forEach((button) => {
         const selected = button.dataset.promptCategory === selectedPromptCategory;
@@ -2218,7 +2231,8 @@ promptGuide = text;
         secondaryPrompts.innerHTML = '';
         primaryPrompts.classList.remove('has-selection', 'is-transitioning');
         setPromptGuide('');
-        prompt.focus();
+        showGreetingBubble(null);
+        if (focusPrompt) prompt.focus();
       } else {
         stopPromptHint();
         showGreetingBubble(category);
@@ -2235,7 +2249,7 @@ promptGuide = text;
         const sourceButton = primaryPromptButtons.find((button) => button.dataset.promptCategory === category);
         const sourceIcon = sourceButton?.querySelector('.ic')?.outerHTML || '';
         setPromptGuide(data.guide, data.tag, sourceIcon);
-        prompt.focus();
+        if (focusPrompt) prompt.focus();
       }
       transitionCases();
     });
@@ -2252,6 +2266,8 @@ promptGuide = text;
     const item = promptCategoryData()[selectedPromptCategory].secondary[Number(button.dataset.secondaryIndex)];
     // 一级分类保留为简短 Tag；带完整提示词的二级推荐填入提示词，其余沿用按钮文案。
     animateHeroReflow(() => {
+      selectedPromptGreeting = typeof item === 'string' ? null : item.greeting || null;
+      showGreetingBubble(selectedPromptCategory);
       prompt.value = typeof item === 'string' ? item : item.prompt;
       autoResize();
       refreshSendState();
@@ -2524,9 +2540,6 @@ promptGuide = text;
     };
     const list = visibleCaseData(scope);
     casesEl.innerHTML =
-      `<div class="cases-head">` +
-      `<span class="cases-title">看看别人做出了什么</span>` +
-      `</div>` +
       `<div class="cases-row">` +
       list.map((c, i) =>
         `<button class="case" data-case-index="${i}" aria-label="查看案例：${c.title}"` +
@@ -2557,51 +2570,6 @@ promptGuide = text;
   const content = document.getElementById('content');
   const workbench = document.getElementById('workbench');
   const conversationPage = document.getElementById('conversationPage');
-  const bottomTerminalToggle = document.getElementById('toggleBottomTerminal');
-  const conversationTerminal = document.getElementById('conversationTerminal');
-  const conversationTerminalBody = document.getElementById('conversationTerminalBody');
-  const conversationTerminalInput = document.getElementById('conversationTerminalInput');
-  function setBottomTerminalOpen(open) {
-    const terminalHost = conversationTerminal.parentElement;
-    const next = Boolean(open && !conversationPage.hidden &&
-      (!content.classList.contains('wb-expanded') || terminalHost === workbench && workbench.dataset.panel === 'tools'));
-    terminalHost.classList.toggle('terminal-open', next);
-    conversationTerminal.inert = !next;
-    conversationTerminal.setAttribute('aria-hidden', String(!next));
-    bottomTerminalToggle.setAttribute('aria-pressed', String(next));
-    const label = next ? '关闭终端' : '打开终端';
-    bottomTerminalToggle.title = label;
-    bottomTerminalToggle.setAttribute('aria-label', label);
-    if (next) conversationTerminalInput.focus({ preventScroll: true });
-    requestAnimationFrame(syncSummaryTriggerPosition);
-  }
-  bottomTerminalToggle.addEventListener('click', () => setBottomTerminalOpen(!conversationTerminal.parentElement.classList.contains('terminal-open')));
-  document.getElementById('closeBottomTerminal').addEventListener('click', () => {
-    setBottomTerminalOpen(false);
-    bottomTerminalToggle.focus({ preventScroll: true });
-  });
-  conversationTerminalInput.addEventListener('keydown', event => {
-    if (event.key === 'Escape') { setBottomTerminalOpen(false); bottomTerminalToggle.focus({ preventScroll: true }); return; }
-    if (event.key !== 'Enter') return;
-    event.preventDefault();
-    const command = conversationTerminalInput.value.trim();
-    conversationTerminalInput.value = '';
-    if (!command) return;
-    if (command === 'clear') {
-      conversationTerminalBody.querySelectorAll('.conversation-terminal-output').forEach(line => line.remove());
-      return;
-    }
-    const output = document.createElement('div');
-    output.className = 'conversation-terminal-output';
-    const replies = {
-      help: '演示命令：help、pwd、ls、clear',
-      pwd: '~/Desktop/catpaw-desktop-ui',
-      ls: 'assets  app.js  index.html  styles.css  README.md',
-    };
-    output.textContent = `catpaw-desktop-ui % ${command}\n${replies[command] || '演示终端未连接系统 Shell。'}`;
-    conversationTerminalBody.insertBefore(output, conversationTerminalBody.lastElementChild);
-    conversationTerminalBody.scrollTop = conversationTerminalBody.scrollHeight;
-  });
   const outputToggle = document.getElementById('toggleOutputs');
   const scheduledPanelToggle = document.getElementById('toggleScheduledPanel');
   const summaryArtifactBadge = document.getElementById('summaryArtifactBadge');
@@ -2616,8 +2584,6 @@ promptGuide = text;
   const workbenchLandingRecentToggle = document.getElementById('workbenchLandingRecentToggle');
   const conversationPageHome = conversationPage.parentNode;
   const conversationPageNextSibling = conversationPage.nextSibling;
-  const conversationTerminalHome = conversationTerminal.parentNode;
-  const conversationTerminalNextSibling = conversationTerminal.nextSibling;
   const workspaceTabs = document.getElementById('workspaceTabs');
   const workspaceCreate = document.getElementById('workspaceCreate');
   const workspaceAdd = document.getElementById('workspaceAdd');
@@ -2734,7 +2700,6 @@ let fullscreenConversationActive = false;
   }
 
   function setWorkbenchExpanded(expanded) {
-    if (expanded) setBottomTerminalOpen(false);
     const canExpand = rightPanel === 'tools' && (openWorkspaces.length > 0 || !conversationPage.hidden);
     const wasExpanded = workbenchExpanded;
     workbenchExpanded = Boolean(expanded && canExpand);
@@ -2808,18 +2773,12 @@ let fullscreenConversationActive = false;
     }
     if (fullPanel !== wasFullPanel && workbench.classList.contains('file-split')) keepWorkbenchVisibleDuringTransition();
     content.classList.toggle('wb-expanded', fullPanel);
-    if (fullPanel !== wasFullPanel || fullPanel && rightPanel !== 'tools' && workbench.classList.contains('terminal-open')) setBottomTerminalOpen(false);
     if (!fullPanel || rightPanel !== 'tools') fullscreenConversationActive = false;
     content.classList.toggle('wb-conversation-active', fullPanel && fullscreenConversationActive);
     if (fullPanel && rightPanel === 'tools' && !conversationPage.hidden) {
       if (conversationPage.parentNode !== workbench) workbench.append(conversationPage);
     } else if (conversationPage.parentNode !== conversationPageHome) {
       conversationPageHome.insertBefore(conversationPage, conversationPageNextSibling);
-    }
-    if (fullPanel && rightPanel === 'tools') {
-      if (conversationTerminal.parentNode !== workbench) workbench.append(conversationTerminal);
-    } else if (conversationTerminal.parentNode !== conversationTerminalHome) {
-      conversationTerminalHome.insertBefore(conversationTerminal, conversationTerminalNextSibling);
     }
     if (fullPanel !== wasFullPanel) {
       requestAnimationFrame(syncSummaryTriggerPosition);
@@ -3058,7 +3017,6 @@ let fullscreenConversationActive = false;
 
   function setWorkbench(open) {
     if (!open) {
-      setBottomTerminalOpen(false);
       scheduledPanelToggle.setAttribute('aria-expanded', 'false');
       scheduledPanelToggle.classList.remove('active');
       clearTimeout(panelSwitchTimer);
@@ -3109,6 +3067,7 @@ let fullscreenConversationActive = false;
   }
 
   function activateWorkspace(id, saveCurrent = true) {
+    artifactSelection?.cancel();
     if (id === CONVERSATION_TAB_ID) {
       if (rightPanel !== 'tools' || !content.classList.contains('wb-expanded') || conversationPage.hidden) return;
       saveActiveWorkspaceState();
@@ -3291,7 +3250,7 @@ let fullscreenConversationActive = false;
   fullscreenChatInput.addEventListener('input', () => {
     fullscreenChatInput.style.height = 'auto';
     fullscreenChatInput.style.height = `${Math.min(fullscreenChatInput.scrollHeight, 112)}px`;
-    fullscreenChatSend.disabled = !fullscreenChatInput.value.trim();
+    fullscreenChatSend.disabled = !fullscreenChatInput.value.trim() && !artifactSelection?.entries().length;
   });
   fullscreenChatInput.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
@@ -3734,6 +3693,7 @@ const preview = node.preview;
 
   function renderToolFileWorkspace(item) {
     if (!item || item.kind !== 'file') return;
+    artifactSelection?.cancel();
     const treeVisible = fileTreeVisible;
     const canToggleMode = supportsRenderedPreview(item.node);
     const hasVisualPreview = Boolean(item.node?.preview && PREVIEWS[item.node.preview.kind]);
@@ -3818,7 +3778,8 @@ const preview = node.preview;
   function sendFullscreenFileRequest() {
     const text = fullscreenChatInput.value.trim();
     const item = currentFileWorkspace();
-    if (!text || !item?.node) return;
+    const references = artifactSelection?.entries().slice() || [];
+    if ((!text && !references.length) || !item?.node) return;
     const task = taskForArtifact(item.chain);
     if (!task) {
       window.alert('此文件尚未关联到示例任务，无法发送到任务对话。输入内容已保留。');
@@ -3833,11 +3794,9 @@ const preview = node.preview;
     }
     const reference = `@${item.node.name}`;
     const message = { text: text.startsWith(reference) ? text.slice(reference.length).trim() : text,
-      attachments: [{ node: item.node, chain: item.chain }] };
-    const state = queueState(task);
-    if (state.running) state.prompts.push(message);
-    else beginConversationTurn(message);
-    renderConversationQueue();
+      attachments: references.length ? [] : [{ node: item.node, chain: item.chain }], references };
+    beginConversationTurn(message);
+    artifactSelection?.clear();
     fullscreenChatInput.value = '';
     fullscreenChatInput.dispatchEvent(new Event('input', { bubbles: true }));
     fullscreenChatInput.focus();
@@ -4018,7 +3977,7 @@ const preview = node.preview;
       toolFilePreviewBody.querySelector(`[data-excel-row="${sheet.rows.length - 1}"][data-excel-column="0"]`)?.focus();
     }
     const cell = event.target.closest('.excel-grid td[data-excel-address]');
-    if (cell) selectExcelCell(cell);
+    if (cell && !item.node.preview.referenceDemo) selectExcelCell(cell);
   });
 
   function selectExcelCell(cell) {
@@ -4030,6 +3989,7 @@ const preview = node.preview;
 
   function editExcelCell(cell) {
     const item = currentFileWorkspace();
+    if (item?.node?.preview?.referenceDemo) return;
     if (!item || cell.dataset.excelColumn === '5' && (item.officeSheet || 0) === 0) return;
     if (cell.querySelector('input')) return;
     selectExcelCell(cell);
@@ -4610,7 +4570,14 @@ const mainView = document.querySelector('.main');
     { work: '定位异常订单的集中时段', state: 'running', detail: '正在对照订单事件日志，定位超时与出餐延迟的集中时段；未核实的原因暂不写成结论。' },
     { work: '复核履约指标统计口径', state: 'running', detail: '正在核对订单去重、时间戳对齐及分时段阈值，确保看板与异常明细的统计口径一致。' },
   ];
+  const artifactEditingTask = document.getElementById('artifactEditingTask');
   const conversationExamples = new Map([
+    [artifactEditingTask, {
+      folderId:'default',
+      turns:[{prompt:'把季度经营数据和复盘要点整理成汇报 PPT，附上经营数据表和复盘说明，方便我继续调整。',
+        reply:'已整理好季度复盘初稿，按经营概况、区域表现和行动计划组织，共 5 页。华东区域履约率偏低，具体原因仍需核对。\n\n打开产物后，可以选择 PPT 页面或框选局部、选中表格区域、划选文档文字，再点击「添加到对话」，围绕所选内容提出修改要求。'}],
+      files:['季度经营复盘.pptx','季度经营数据.xlsx','季度经营复盘说明.docx'],
+    }],
     [conversationTask, {
       folderId: 'default',
       goal: '基于订单履约事件日志建立可复算的异常识别流程：按订单 ID 去重，对齐接单、到店、出餐与交接时间戳；超时阈值按时段和门店配置，缺失时间戳单列待核验。输出异常明细时保留原始事件 ID、规则版本、优先级计算依据和责任方待确认标记，确保看板指标可追溯到明细。',
@@ -4675,8 +4642,7 @@ const mainView = document.querySelector('.main');
           reply: '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。看板展示整体分布，明细表列出优先级与跟进信息，分析文档汇总原因及处理建议。',
         },
         {
-          prompt: '结合这张趋势图和异常明细文件，确认哪些门店需要优先跟进。',
-          attachments: ['履约异常趋势.png', '门店履约异常明细.xlsx'],
+          prompt: '结合前面发的趋势图和异常明细文件，确认哪些门店需要优先跟进。',
           reply: '',
         },
       ],
@@ -4726,7 +4692,7 @@ const mainView = document.querySelector('.main');
     if (task !== scheduledReportTask) {
       const name = document.createElement('span');
       name.className = 'task-name';
-      name.textContent = '每周工作周报';
+      name.textContent = scheduledReportTask.querySelector('.task-name').textContent;
       task.append(name);
     }
     const time = `${run.date.slice(0, 10)}T${run.date.slice(11)}:00+08:00`;
@@ -4744,10 +4710,37 @@ const mainView = document.querySelector('.main');
   });
   const scheduledRunTasks = new Set(scheduledRuns.map(run => run.task));
   const createdScheduledTasks = new Map();
+  // 总览页的示例任务沿用现有定时任务数据结构，因此卡片、侧栏和对话指向同一任务。
+  const scheduledPageSeedSpecs = [
+    { name:'整理门店异常跟进日报', schedule:'工作日 19:00', description:'整理今天的工作日志、对话和产物，汇总已完成事项与明日待办，生成简洁的工作日报。', reply:'今天的工作日报已生成：已整理门店履约数据与异常跟进记录，明日继续核对晚高峰订单。', state:'running', runDate:'10月21日 19:00' },
+    { name:'提醒今日会议与待办', schedule:'每日 08:30', description:'每天早上汇总今日日程、临近截止的任务和需要提前准备的资料，给出一份简短提醒。', reply:'今日日程已整理：优先处理门店履约复盘、供应商报价确认与下午的项目沟通。', runDate:'10月22日 08:30' },
+    { name:'汇总供应链项目进展', schedule:'每周一 10:00', description:'每周汇总各项目的完成进度、阻塞问题与下一步行动，列出需要我确认的事项。', reply:'本周项目进展已整理：门店履约复盘进入核验阶段，供应链预案待评审。', state:'warning', runDate:'10月19日 10:00' },
+    { name:'提醒核对上月经营数据', schedule:'每月 1 日 09:00', description:'每月提醒我核对上月经营数据、待完成事项和本月关键节点。', reply:'月度经营提醒已准备，待启用后按月运行。', paused:true },
+  ];
+  scheduledPageSeedSpecs.forEach((spec) => {
+    const task = document.createElement('a');
+    task.className = 'task flush scheduled-page-seed';
+    task.href = '#';
+    task.dataset.taskType = 'scheduled';
+    task.dataset.openConversation = '';
+    task.innerHTML = '<span class="task-name"></span><span class="task-state"></span>';
+    task.querySelector('.task-name').textContent = spec.name;
+    looseTasksInner.append(task);
+    taskHomes.set(task, { parent:task.parentElement, next:task.nextSibling });
+    taskIds.set(task, `demo-scheduled-${nextTaskId++}`);
+    createdScheduledTasks.set(task, {
+      name:spec.name, description:spec.description, schedule:spec.schedule,
+      folderId:'default', push:false, channels:[], paused:Boolean(spec.paused), demoState:spec.state || '', demoRunDate:spec.runDate || '',
+    });
+    scheduledRunTasks.add(task);
+    conversationExamples.set(task, {
+      folderId:'default', turns:[{ prompt:spec.description, reply:spec.reply }], files:[],
+    });
+  });
   const weeklyReportPrompt = '请以本周一至周日为统计周期，汇总与门店经营、履约、供应商协作相关的任务、对话和产物，生成工作周报。先按项目列出已完成事项、关键进展和结果，注明数据口径与来源；再整理未完成事项、异常订单、延期原因和责任人，区分已解决、待跟进与需要我确认的项目。对同比或环比变化给出解释，不要凭空补全缺失数据。提出下周三项优先行动，写明完成时间、依赖条件和风险应对。附上一页摘要，将明细整理为可查看的表格，保持表达简洁。';
   const legacyScheduledConfig = {
     description: weeklyReportPrompt,
-    schedule: '每日 09:00', folderId: 'default', push: false, channels: ['feishu'], feishuRecipients: ['yibao'],
+    schedule: '每周一 09:00', folderId: 'default', push: false, channels: ['feishu'], feishuRecipients: ['yibao'],
   };
   let selectedScheduledTask = scheduledReportTask;
   renderToolTree();
@@ -4778,7 +4771,10 @@ const mainView = document.querySelector('.main');
     if (hasUnreadRun) scheduledReportTask.dataset.state = 'new';
     else delete scheduledReportTask.dataset.state;
     if (createdScheduledTasks.has(selectedScheduledTask)) {
-      document.getElementById('scheduledRunList').innerHTML = '<p class="scheduled-run-empty">尚无运行记录</p>';
+      const runDate = createdScheduledTasks.get(selectedScheduledTask)?.demoRunDate;
+      document.getElementById('scheduledRunList').innerHTML = runDate
+        ? `<div class="scheduled-run is-current"><button class="scheduled-run-open" type="button" data-scheduled-demo-run aria-current="page"><span>${esc(runDate)}</span></button></div>`
+        : '<p class="scheduled-run-empty">尚无运行记录</p>';
       return;
     }
     document.getElementById('scheduledRunList').innerHTML = scheduledRuns.map((run, index) =>
@@ -4792,6 +4788,10 @@ const mainView = document.querySelector('.main');
     ).join('');
   }
   document.getElementById('scheduledRunList').addEventListener('click', event => {
+    if (event.target.closest('[data-scheduled-demo-run]')) {
+      setConversationOpen(true, selectedScheduledTask);
+      return;
+    }
     const row = event.target.closest('[data-scheduled-run]');
     if (!row) return;
     const run = scheduledRuns[Number(row.dataset.scheduledRun)];
@@ -4806,20 +4806,28 @@ const mainView = document.querySelector('.main');
     scheduledMoreMenu.hidden = !open;
     scheduledMore.setAttribute('aria-expanded', String(open));
   }
-  document.getElementById('scheduledRunNow').addEventListener('click', () => {
-    if (scheduledEnabled.getAttribute('aria-checked') !== 'true') return;
-    const runNowButton = document.getElementById('scheduledRunNow');
-    runNowButton.disabled = true;
-    const run = scheduledRuns[0];
-    run.status = 'running';
+  function runScheduledTaskNow(task) {
+    const config = createdScheduledTasks.get(task) || legacyScheduledConfig;
+    if (config.paused || config.terminated || config.demoState === 'running') return;
+    const run = task === scheduledReportTask ? scheduledRuns[0] : null;
+    config.demoState = 'running';
+    if (run) run.status = 'running';
+    setConversationOpen(true, run ? run.task : task);
+    setScheduledPanelOpen(true);
     renderScheduledRunList();
+    renderScheduledOverview();
     setTimeout(() => {
-      run.status = 'new';
+      if (!task.isConnected) return;
+      config.demoState = '';
+      const now = new Date();
+      config.demoRunDate = `${now.getMonth() + 1}月${now.getDate()}日 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (run) run.status = activeConversationTask === run.task && !conversationPage.hidden ? '' : 'new';
+      if (selectedScheduledTask === task) showScheduledTaskDetails(task);
       renderScheduledRunList();
-      runNowButton.disabled = scheduledEnabled.getAttribute('aria-checked') !== 'true';
-      setConversationOpen(true, run.task);
+      renderScheduledOverview();
     }, 900);
-  });
+  }
+  document.getElementById('scheduledRunNow').addEventListener('click', () => runScheduledTaskNow(selectedScheduledTask));
   scheduledMore.addEventListener('click', event => {
     event.stopPropagation();
     setScheduledMoreOpen(scheduledMoreMenu.hidden);
@@ -4978,15 +4986,18 @@ const mainView = document.querySelector('.main');
       document.getElementById('scheduledTime').textContent = config.schedule;
       document.getElementById('scheduledProjectSummary').textContent = FOLDERS.find(folder => folder.id === config.folderId)?.name || '默认文件夹';
       document.getElementById('scheduledDeliverySummary').textContent = scheduledDeliverySummary(config);
-      document.getElementById('scheduledRunNow').disabled = true;
     } else {
       document.getElementById('scheduledName').textContent = scheduledReportTask.querySelector('.task-name').textContent;
       setScheduledPrompt(legacyScheduledConfig.description);
       document.getElementById('scheduledTime').textContent = legacyScheduledConfig.schedule;
       document.getElementById('scheduledProjectSummary').textContent = FOLDERS.find(folder => folder.id === legacyScheduledConfig.folderId)?.name || '默认文件夹';
       document.getElementById('scheduledDeliverySummary').textContent = scheduledDeliverySummary(legacyScheduledConfig);
-      document.getElementById('scheduledRunNow').disabled = scheduledEnabled.getAttribute('aria-checked') !== 'true';
     }
+    const state = config || legacyScheduledConfig;
+    scheduledEnabled.setAttribute('aria-checked', String(!state.paused && !state.terminated));
+    scheduledEnabled.textContent = state.paused ? '启用定时任务' : '停用定时任务';
+    scheduledEnabled.disabled = Boolean(state.terminated);
+    document.getElementById('scheduledRunNow').disabled = Boolean(state.paused || state.terminated || state.demoState === 'running');
     renderScheduledRunList();
   }
   function setScheduledEditing(editing, mode = 'edit') {
@@ -5046,7 +5057,6 @@ const mainView = document.querySelector('.main');
     setScheduledMoreOpen(false);
     setScheduledEditing(!scheduledEditDrawer.classList.contains('open'));
   });
-  document.getElementById('newScheduledTask').addEventListener('click', () => setScheduledEditing(true, 'create'));
   document.getElementById('scheduledEditClose').addEventListener('click', () => setScheduledEditing(false));
   document.getElementById('scheduledEditCancel').addEventListener('click', () => setScheduledEditing(false));
   scheduledEditBackdrop.addEventListener('click', () => setScheduledEditing(false));
@@ -5234,17 +5244,19 @@ const mainView = document.querySelector('.main');
       showScheduledTaskDetails(task);
       setConversationOpen(true, task);
       setScheduledPanelOpen(true);
+      renderScheduledOverview();
       refreshClipped();
       return;
     }
     if (createdScheduledTasks.has(selectedScheduledTask)) {
-      const config = { name, description, schedule, cadence, interval, folderId: scheduledProjectSelect.value, ...deliveryConfig };
+      const config = { ...createdScheduledTasks.get(selectedScheduledTask), name, description, schedule, cadence, interval, folderId: scheduledProjectSelect.value, ...deliveryConfig };
       createdScheduledTasks.set(selectedScheduledTask, config);
       selectedScheduledTask.querySelector('.task-name').textContent = name;
       conversationExamples.get(selectedScheduledTask).folderId = config.folderId;
       showScheduledTaskDetails(selectedScheduledTask);
       if (activeConversationTask === selectedScheduledTask) updateConversationTaskTitle(selectedScheduledTask);
       setScheduledEditing(false);
+      renderScheduledOverview();
       refreshClipped();
       return;
     }
@@ -5265,23 +5277,24 @@ const mainView = document.querySelector('.main');
     document.getElementById('scheduledDeliverySummary').textContent = scheduledDeliverySummary(legacyScheduledConfig);
     if (scheduledRunTasks.has(activeConversationTask)) updateConversationTaskTitle(activeConversationTask);
     setScheduledEditing(false);
+    renderScheduledOverview();
     refreshClipped();
   });
   scheduledEnabled.addEventListener('click', event => {
     const button = event.currentTarget;
     const enabled = button.getAttribute('aria-checked') !== 'true';
-    button.setAttribute('aria-checked', String(enabled));
-    button.textContent = enabled ? '停用定时任务' : '启用定时任务';
-    document.getElementById('scheduledRunNow').disabled = !enabled;
+    const config = createdScheduledTasks.get(selectedScheduledTask) || legacyScheduledConfig;
+    config.paused = !enabled;
+    showScheduledTaskDetails(selectedScheduledTask);
+    renderScheduledOverview();
     setScheduledMoreOpen(false);
   });
   // 示例轮次跨越数天；真实发送的时间在进入对话时记录，而不是入队时记录。
   const demoTurnMinutesAgo = [4320, 4260, 2880, 2820, 1440, 1380, 360, 180, 40, 4];
   const conversationThreads = new Map();
   const conversationComposerDrafts = new Map();
+  const startedConversationDemos = new Set();
   const conversationGoals = new Map();
-  const pausedConversationGoals = new Set();
-  const conversationQueueStates = new Map();
   let activeConversationTask = null;
   function updateSummaryArtifactBadge() {
     const scheduled = mainView.classList.contains('conversation-open') && scheduledRunTasks.has(activeConversationTask);
@@ -5293,16 +5306,6 @@ const mainView = document.querySelector('.main');
     outputToggle.setAttribute('aria-label', count ? `摘要，${count} 个产物` : '摘要');
     summaryPopover.setAttribute('aria-label', '摘要');
   }
-  function queueState(task) {
-    if (!conversationQueueStates.has(task)) conversationQueueStates.set(task, {
-      running: task === conversationTask,
-      prompts: task === conversationTask ? [
-        '把这 5 条高优先级异常按门店和责任方整理成待跟进清单。',
-        '核对异常明细里的缺失时间戳，并标注需要人工确认的订单。',
-      ] : [],
-    });
-    return conversationQueueStates.get(task);
-  }
   const conversationTaskTitle = document.getElementById('conversationTaskTitle');
   function updateConversationTaskTitle(task) {
     const name = task.querySelector('.task-name')?.textContent.trim() || '当前任务';
@@ -5311,14 +5314,275 @@ const mainView = document.querySelector('.main');
   }
   const conversationTaskMore = document.getElementById('conversationTaskMore');
   const conversationTaskFeedback = document.getElementById('conversationTaskFeedback');
-  const conversationStatusStack = conversationPage.querySelector('.conversation-status-stack');
-  // 仅队列悬浮于输入区上方；进度在对话中正常参与滚动。
-  const conversationStatusObserver = new ResizeObserver(() => {
-    const statusHeight = conversationStatusStack.hidden ? 0 : conversationStatusStack.getBoundingClientRect().height;
-    conversationScroll.style.setProperty('--conversation-status-clearance', `${statusHeight}px`);
-    conversationStatusStack.parentElement.style.setProperty('--conversation-status-height', `${statusHeight}px`);
+  // 预置进展只用于演示；阶段说明与执行状态分开，便于后续接入真实事件。
+  let disclosureMode = 'work';
+  try { disclosureMode = localStorage.getItem('catpaw-disclosure-mode') === 'development' ? 'development' : 'work'; } catch (_) { /* Preview may disallow storage. */ }
+  const disclosureSettings = document.getElementById('disclosureSettings');
+  const disclosureSettingsTrigger = document.querySelector('.settings-nav');
+  disclosureSettings.querySelector(`[name="disclosureMode"][value="${disclosureMode}"]`).checked = true;
+  disclosureSettingsTrigger.addEventListener('click', (event) => {
+    event.preventDefault();
+    disclosureSettings.showModal();
   });
-  conversationStatusObserver.observe(conversationStatusStack);
+  document.getElementById('disclosureSettingsClose').addEventListener('click', () => disclosureSettings.close());
+  disclosureSettings.addEventListener('change', (event) => {
+    if (event.target.name !== 'disclosureMode') return;
+    disclosureMode = event.target.value === 'development' ? 'development' : 'work';
+    try { localStorage.setItem('catpaw-disclosure-mode', disclosureMode); } catch (_) { /* Keep the current choice for this session. */ }
+    const panel = conversationThread.querySelector('.conversation-stage-demo');
+    if (panel) updateConversationStage(panel, Number(panel.dataset.stageFrame), panel.querySelector('.stage-plan-toggle')?.getAttribute('aria-expanded') === 'true');
+  });
+  disclosureSettings.addEventListener('close', () => disclosureSettingsTrigger.focus());
+  const conversationStageFrames = [
+    {
+      acknowledgement: '明白，你希望结合趋势图和异常明细，找出需要优先跟进的门店，并明确处理顺序。我会整理优先级依据和跟进建议，缺失记录及责任归属会保留为待确认项。',
+      stage: 'plan', planCompleted: 0,
+    },
+    {
+      stage: 'work', planCompleted: 0,
+      progress: '正在读取趋势图、异常明细和分析文档，确认文件与字段是否齐全。',
+      tool: '读取文件', toolIcon: 'file', technical: '打开趋势图、门店履约异常明细.xlsx 和门店履约分析.docx，检查订单 ID、门店及时间字段。',
+      detail: '正在读取三份资料并检查可用字段。',
+      call: { name: 'read_file', input: { files: ['趋势图.png', '门店履约异常明细.xlsx', '门店履约分析.docx'] } },
+      completed: '已读取趋势图、异常明细和分析文档',
+    },
+    {
+      stage: 'work', planCompleted: 0,
+      progress: '正在按订单去重并核对接单、到店、出餐和交接时间，单列缺失记录。',
+      tool: '表格分析', toolIcon: 'table', technical: '按订单 ID 去重，检查接单、到店、出餐和交接时间戳；缺失值不参与确定性归因。',
+      detail: '正在核对订单和时间字段，标出缺失记录。',
+      call: { name: 'python', input: { code: 'df = pd.read_excel("门店履约异常明细.xlsx")\ndf = df.drop_duplicates(subset=["订单 ID"])\ntime_fields = ["接单时间", "到店时间", "出餐时间", "交接时间"]\nmissing_records = df[df[time_fields].isna().any(axis=1)]' } },
+      completed: '已核对订单口径，并标出缺失时间戳',
+    },
+    {
+      stage: 'work', planCompleted: 1,
+      progress: '正在比较超时时长、影响订单数和重复发生情况，筛选需要优先跟进的异常。',
+      tool: '数据分析', toolIcon: 'chart', technical: '按超时时长、影响订单数和重复发生次数比较异常；缺失时间戳记录单独保留。',
+      detail: '正在比较异常持续时间、影响范围和重复发生情况。',
+      call: { name: 'python', input: { code: 'priority = df.sort_values(\n    ["超时时长", "影响订单数", "重复发生次数"],\n    ascending=False\n).head(5)' } },
+      completed: '已比较异常的影响范围和重复情况',
+    },
+    {
+      stage: 'work', planCompleted: 1,
+      progress: '正在对照筛选结果与分析文档的结论，检查优先级是否有遗漏或矛盾。',
+      tool: '读取文档', toolIcon: 'document', technical: '读取门店履约分析.docx 的结论段，逐项对照异常明细中的门店、时段与订单数量。',
+      detail: '正在把筛选结果与分析文档交叉核对。',
+      call: { name: 'read_file', input: { path: '门店履约分析.docx', section: '结论与建议' } },
+      completed: '已对照分析文档复核优先级',
+    },
+    {
+      stage: 'work', planCompleted: 2,
+      progress: '正在整理优先异常的跟进顺序，并标注仍需人工确认的事项。',
+      tool: '整理结果', toolIcon: 'list', technical: '汇总优先跟进的 5 条异常，列出门店侧处理顺序和待确认的责任归属。',
+      detail: '正在整理 5 条优先异常和处理建议。',
+      call: { name: 'python', input: { code: 'recommendations = priority.copy()\nrecommendations["责任归属"] = "待人工确认"\nrecommendations.to_excel("门店履约异常明细.xlsx", index=False)' } },
+      completed: '已整理 5 条优先异常和处理顺序',
+    },
+    {
+      stage: 'work', planCompleted: 2,
+      progress: '正在逐项复核建议与原始记录的对应关系，避免把推测写成结论。',
+      tool: '结果检查', toolIcon: 'check', technical: '检查每条建议与异常明细的对应关系；保留待确认责任方和缺失时间戳。',
+      detail: '正在复核建议与原始记录的对应关系。',
+      call: { name: 'python', input: { code: 'assert recommendations["订单 ID"].isin(df["订单 ID"]).all()\nassert recommendations["责任归属"].eq("待人工确认").all()\nassert len(recommendations) == 5' } },
+      completed: '已复核建议依据和待确认事项',
+    },
+    {
+      stage: 'done', planCompleted: 3,
+      summary: '已按统一口径核对资料，筛出需要优先跟进的 5 条异常，并整理了门店侧处理顺序。建议先核对重复超时和晚高峰异常集中的门店，再排查出餐延迟。',
+      caveat: '缺失时间戳与责任归属仍需结合原始记录和门店反馈人工确认。',
+    },
+  ];
+  const conversationStagePlan = [
+    { title: '核对资料与统计口径' },
+    { title: '比较门店跟进优先级' },
+    { title: '整理建议与待确认项' },
+  ];
+  const stageToolIcons = {
+    code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',
+    file: '<path d="M7 3h7l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/>',
+    table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M15 9v11M3 14h18"/>',
+    chart: '<path d="M4 19V5M4 19h17M8 15l4-4 3 2 5-7"/><path d="M17 6h3v3"/>',
+    document: '<path d="M7 3h7l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 12h8M8 16h8"/>',
+    list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="m4 6 1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2"/>',
+    check: '<circle cx="11" cy="11" r="7"/><path d="m8 11 2 2 4-4m2.3 7.3L21 21"/>',
+  };
+
+  function completedStageCount(frame) {
+    return frame.planCompleted;
+  }
+
+  function renderStageToolCall(frame, development) {
+    const icon = stageToolIcons[frame.call.name === 'python' ? 'code' : frame.toolIcon];
+    return `<details class="stage-tool-call" data-tool-state="running"${development ? ' open' : ''}><summary aria-label="${esc(frame.call.name)}，运行中，查看调用参数"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg><svg viewBox="0 0 24 24" class="ic stage-tool-shine">${icon}</svg></span><span class="stage-tool-copy"><strong>${esc(frame.call.name)}</strong><span class="stage-tool-description">${esc(frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details"><p>${esc(frame.technical)}</p><span class="stage-call-label">调用参数</span><pre><code>${esc(JSON.stringify(frame.call.input, null, 2))}</code></pre></div></details>`;
+  }
+
+  function renderStageAcknowledgement(text) {
+    const characters = Array.from(text);
+    const fragments = [];
+    for (let index = 0; index < characters.length; index += 6) fragments.push(characters.slice(index, index + 6).join(''));
+    const interval = 1100 / Math.max(1, fragments.length - 1);
+    return fragments.map((fragment, index) => `<span class="stage-ink-fragment" style="--ink-delay:${120 + Math.round(index * interval)}ms">${esc(fragment)}</span>`).join('');
+  }
+
+  function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false) {
+    const frame = conversationStageFrames[frameIndex];
+    const before = frame.stage === 'plan';
+    const done = frame.stage === 'done';
+    const development = disclosureMode === 'development';
+    const completedCount = completedStageCount(frame);
+    const check = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
+    const plan = conversationStagePlan.map((step, index) => {
+      const state = before ? 'pending' : index < completedCount ? 'done' : index === completedCount ? 'current' : 'pending';
+      const label = state === 'done' ? '已完成' : state === 'current' ? '进行中' : '待开始';
+      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${state === 'done' ? check : `<span class="stage-plan-digit">${index + 1}</span>`}</span><span class="stage-plan-title">${esc(step.title)}</span></li>`;
+    }).join('');
+    const planMarkup = `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="stagePlanBody"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${conversationStagePlan.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="stagePlanBody"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
+    const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex);
+    const completedItems = completedEvents.map((event, index) => `<li class="stage-completed-item${index === newCompletedIndex ? ' is-new' : ''}"><span class="stage-completed-check" aria-hidden="true">${check}</span><span class="stage-completed-text">${esc(event.completed)}</span><span class="stage-completed-tool">${esc(event.call.name)}</span></li>`).join('');
+    const completedMarkup = completedEvents.length
+      ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner"><section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
+      : '';
+    const currentMarkup = before || done ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${renderStageToolCall(frame, development)}</section>`;
+    const resultName = '门店履约异常明细.xlsx';
+    const resultMarkup = done ? `<section class="stage-summary" aria-label="工作总结"><p>${esc(frame.summary)}${esc(frame.caveat)}</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>` : '';
+    const thinkingStatus = `<strong>${done ? '思考完成' : '正在思考'}</strong><span class="stage-elapsed" aria-label="已用时间">0秒</span>`;
+    const thinkingMarkup = `<div class="stage-thinking">${completedEvents.length
+      ? `<button class="stage-thinking-status stage-thinking-toggle" type="button" aria-expanded="${thinkingOpen}" aria-controls="stageThinkingDetails">${thinkingStatus}<svg viewBox="0 0 24 24" class="ic stage-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>${completedMarkup}`
+      : `<div class="stage-thinking-status">${thinkingStatus}</div>`}</div>`;
+    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + planMarkup + currentMarkup + resultMarkup;
+  }
+
+  function renderConversationStage(entering = false) {
+    return `<section class="conversation-stage-demo${entering ? ' is-entering' : ''}" data-stage-frame="0" data-started-at="${Date.now()}" aria-label="对话进度演示">${renderConversationStageBody(0)}</section>`;
+  }
+
+  let stageAutoTimer = null;
+  let stageAdvanceTimer = null;
+  let stageClockTimer = null;
+  function formatStageElapsed(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    return minutes ? `${minutes}分${seconds % 60}秒` : `${seconds}秒`;
+  }
+  function updateStageClock(panel) {
+    const elapsed = panel.querySelector('.stage-elapsed');
+    if (!elapsed) return;
+    const startedAt = Number(panel.dataset.startedAt) || Date.now();
+    const endedAt = Number(panel.dataset.finishedAt) || Date.now();
+    const seconds = Math.max(0, Math.floor((endedAt - startedAt) / 1000));
+    elapsed.textContent = formatStageElapsed(seconds);
+  }
+  function syncStageClock() {
+    clearInterval(stageClockTimer);
+    stageClockTimer = null;
+    if (strategyScene && !strategyDemoActive) return;
+    const panel = conversationPage.hidden || activeConversationTask !== conversationTask
+      ? null : conversationThread.querySelector('.conversation-stage-demo');
+    if (!panel) return;
+    updateStageClock(panel);
+    if (conversationStageFrames[Number(panel.dataset.stageFrame)]?.stage === 'done') return;
+    stageClockTimer = setInterval(() => {
+      if (panel.isConnected && !conversationPage.hidden && activeConversationTask === conversationTask) updateStageClock(panel);
+      else syncStageClock();
+    }, 1000);
+  }
+  function scheduleStageAutoAdvance(panel) {
+    clearTimeout(stageAutoTimer);
+    if (strategyScene) return; // The active slide owns the presentation timeline.
+    if (!panel || panel.classList.contains('is-entering') || conversationPage.hidden || activeConversationTask !== conversationTask) return;
+    const frameIndex = Number(panel.dataset.stageFrame);
+    if (frameIndex >= conversationStageFrames.length - 1) return;
+    const duration = frameIndex === 0 ? 6000 : 5000;
+    stageAutoTimer = setTimeout(() => {
+      if (panel.isConnected && !conversationPage.hidden && activeConversationTask === conversationTask && Number(panel.dataset.stageFrame) === frameIndex) {
+        advanceConversationStage(panel, frameIndex + 1);
+      }
+    }, duration);
+  }
+
+  function updateConversationStage(panel, frameIndex, planOpen = frameIndex === 0, thinkingOpen = panel.querySelector('.stage-thinking-toggle')?.getAttribute('aria-expanded') === 'true') {
+    clearTimeout(stageAutoTimer);
+    const previousEvents = Math.max(0, Number(panel.dataset.stageFrame) - 1);
+    const nextEvents = Math.max(0, frameIndex - 1);
+    if (frameIndex === 0 && Number(panel.dataset.stageFrame) === conversationStageFrames.length - 1) {
+      panel.dataset.startedAt = String(Date.now());
+      delete panel.dataset.finishedAt;
+      thinkingOpen = false;
+      panel.classList.toggle('is-entering', !reducedMotion.matches);
+    }
+    if (conversationStageFrames[frameIndex].stage === 'done') panel.dataset.finishedAt = String(Date.now());
+    panel.dataset.stageFrame = String(frameIndex);
+    panel.innerHTML = renderConversationStageBody(frameIndex, planOpen, nextEvents > previousEvents ? nextEvents - 1 : -1, thinkingOpen);
+    syncStageDemoControls();
+    conversationThreads.set(conversationTask, conversationThread.innerHTML);
+    scheduleStageAutoAdvance(panel);
+  }
+
+  function advanceConversationStage(panel, next, immediate = false) {
+    clearTimeout(stageAutoTimer);
+    if (stageAdvanceTimer) return;
+    if (!immediate && Number(panel.dataset.stageFrame) === 0 && next === 1 && !reducedMotion.matches) {
+      const plan = panel.querySelector('.stage-plan');
+      plan.dataset.collapsed = 'true';
+      plan.querySelector('.stage-plan-toggle').setAttribute('aria-expanded', 'false');
+      plan.querySelector('.stage-plan-body').inert = true;
+      stageDemoAdvance.disabled = true;
+      stageAdvanceTimer = setTimeout(() => {
+        stageAdvanceTimer = null;
+        stageDemoAdvance.disabled = false;
+        if (panel.isConnected) updateConversationStage(panel, next);
+      }, 280);
+      return;
+    }
+    updateConversationStage(panel, next);
+  }
+
+  const stageDemoControls = document.getElementById('stageDemoControls');
+  const stageDemoAdvance = document.getElementById('stageDemoAdvance');
+  function syncStageDemoControls() {
+    syncStageClock();
+    const panel = conversationThread.querySelector('.conversation-stage-demo');
+    stageDemoControls.hidden = conversationPage.hidden || activeConversationTask !== conversationTask || !panel || panel.classList.contains('is-entering');
+    if (stageDemoControls.hidden) return;
+    const index = Number(panel.dataset.stageFrame);
+    const phase = index === 0 ? 1 : conversationStageFrames[index].stage === 'done' ? 3 : 2;
+    const action = index === 0 ? '开始工作 →' : phase === 3
+      ? '重播演示 ↺' : index === conversationStageFrames.length - 2 ? '查看结果 →' : '演示下一步 →';
+    stageDemoAdvance.textContent = `${phase}/3 · ${action}`;
+  }
+
+  stageDemoAdvance.addEventListener('click', () => {
+    const panel = conversationThread.querySelector('.conversation-stage-demo');
+    if (!panel || activeConversationTask !== conversationTask) return;
+    const next = (Number(panel.dataset.stageFrame) + 1) % conversationStageFrames.length;
+    advanceConversationStage(panel, next, true);
+  });
+  conversationThread.addEventListener('click', (event) => {
+    const toggle = event.target.closest('.stage-thinking-toggle');
+    if (!toggle) return;
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.nextElementSibling.inert = !open;
+    conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+  });
+  conversationThread.addEventListener('click', (event) => {
+    const toggle = event.target.closest('.stage-plan-toggle');
+    if (!toggle) return;
+    const plan = toggle.closest('.stage-plan');
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    plan.dataset.collapsed = String(!open);
+    plan.querySelector('.stage-plan-body').inert = !open;
+    conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+  });
+  conversationThread.addEventListener('animationend', (event) => {
+    if (!event.target.matches('.conversation-stage-demo.is-entering .stage-plan-step:last-child')) return;
+    const panel = event.target.closest('.conversation-stage-demo');
+    panel.classList.remove('is-entering');
+    syncStageDemoControls();
+    conversationThreads.set(conversationTask, conversationThread.innerHTML);
+    scheduleStageAutoAdvance(panel);
+  });
+
   const conversationProgressTasks = [
     { name: '汇总本周门店履约明细', state: 'done' },
     { name: '生成履约异常看板', state: 'done' },
@@ -5349,15 +5613,6 @@ const mainView = document.querySelector('.main');
     const expanded = trigger.getAttribute('aria-expanded') !== 'true';
     trigger.setAttribute('aria-expanded', String(expanded));
     const items = trigger.nextElementSibling;
-    items.inert = !expanded;
-    items.setAttribute('aria-hidden', String(!expanded));
-  });
-  conversationStatusStack.addEventListener('click', (event) => {
-    const trigger = event.target.closest('.conversation-status-trigger');
-    if (!trigger) return;
-    const expanded = trigger.getAttribute('aria-expanded') !== 'true';
-    trigger.setAttribute('aria-expanded', String(expanded));
-    const items = document.getElementById(trigger.getAttribute('aria-controls'));
     items.inert = !expanded;
     items.setAttribute('aria-hidden', String(!expanded));
   });
@@ -5504,12 +5759,7 @@ const mainView = document.querySelector('.main');
       }).join('') + `</div></div></div>`;
   }
 
-  function renderConversationArtifacts(task) {
-    const example = conversationExamples.get(task);
-    const conversationArtifacts = conversationThread.querySelector('#conversationArtifacts');
-    if (!conversationArtifacts) return;
-    conversationArtifacts.classList.toggle('is-single', example.files.length === 1);
-    conversationArtifacts.innerHTML = example.files.map((name, index) => {
+  function renderConversationArtifact(name, index) {
       const extension = name.split('.').pop().toLowerCase();
       const icon = artifactIconByExtension[extension] || 'doc';
       return `<div class="conversation-artifact" data-artifact-index="${index}">` +
@@ -5518,7 +5768,14 @@ const mainView = document.querySelector('.main');
         `<span class="conversation-artifact-info"><strong>${esc(name)}</strong><small>查看产物</small></span></button>` +
         `<button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu">` +
         `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
-    }).join('');
+  }
+
+  function renderConversationArtifacts(task) {
+    const example = conversationExamples.get(task);
+    const conversationArtifacts = conversationThread.querySelector('#conversationArtifacts');
+    if (!conversationArtifacts) return;
+    conversationArtifacts.classList.toggle('is-single', example.files.length === 1);
+    conversationArtifacts.innerHTML = example.files.map(renderConversationArtifact).join('');
   }
 
   const messageAttachments = new Map();
@@ -5548,11 +5805,11 @@ const mainView = document.querySelector('.main');
     return `<button class="conversation-sent-file" type="button" data-message-attachment="${id}" aria-label="预览文件：${nameAttr}" title="预览文件：${nameAttr}"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"><span class="conversation-sent-file-copy"><strong>${name}</strong><small>${entry.localFile ? '本地文件' : '资料库文件'} · 点击预览</small></span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
   }
 
-  function renderUserMessage(text, attachments = [], isGoal = false, suggestSop = false) {
+  function renderUserMessage(text, attachments = [], isGoal = false, suggestSop = false, references = []) {
     const bubble = text ? `<div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(text)}</div>` : '';
     const cards = attachments.length ? `<div class="conversation-sent-attachments">${attachments.map(renderSentAttachment).join('')}</div>` : '';
     const suggestion = suggestSop ? '<div class="conversation-sop-suggestion"><span>是否沉淀 SOP？</span><button type="button" data-sop-accept aria-label="确认沉淀 SOP" title="确认沉淀 SOP"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button></div>' : '';
-    return `<div class="conversation-message user-message"><div class="conversation-message-body">${bubble}${cards}${suggestion}${renderMessageMeta('user')}</div></div>`;
+    return `<div class="conversation-message user-message"><div class="conversation-message-body">${artifactSelection?.renderSent(references) || ''}${bubble}${cards}${suggestion}${renderMessageMeta('user')}</div></div>`;
   }
 
   function formatConversationTurnTime(date, now = new Date()) {
@@ -5608,7 +5865,7 @@ const mainView = document.querySelector('.main');
     const turns = conversationTurns();
     conversationTurnNav.hidden = turns.length < 2;
     conversationTurnNav.innerHTML = turns.length < 2 ? '' : turns.map((turn, index) => {
-      const question = turn.querySelector('.message-bubble')?.textContent.trim() || turn.querySelector('[data-message-attachment]')?.getAttribute('aria-label') || '对话';
+      const question = turn.querySelector('.message-bubble')?.textContent.trim() || turn.querySelector('.artifact-reference-comment')?.textContent.trim() || turn.querySelector('.artifact-reference-copy strong')?.textContent.trim() || turn.querySelector('[data-message-attachment]')?.getAttribute('aria-label') || '对话';
       const answer = turn.nextElementSibling?.querySelector('.assistant-content')?.textContent.trim() || '';
       return `<button class="conversation-turn" type="button" data-turn-index="${index}" aria-label="跳转到第 ${index + 1} 轮：${esc(question)}">` +
         `<span class="conversation-turn-preview" aria-hidden="true"><strong>${esc(question)}</strong>${answer ? `<br>${esc(answer.slice(0, 90))}${answer.length > 90 ? '…' : ''}` : ''}</span></button>`;
@@ -5673,7 +5930,8 @@ const mainView = document.querySelector('.main');
       const content = message.matches('.user-message') ? message.querySelector('.message-bubble') : message.querySelector('.assistant-content');
       const text = message.matches('.user-message')
         ? [content ? Array.from(content.childNodes).filter(node => !node.classList?.contains('conversation-message-goal-label')).map(node => node.textContent).join('').trim() : '',
-          ...Array.from(message.querySelectorAll('[data-message-attachment]'), card => messageAttachments.get(card.dataset.messageAttachment)?.node.name).filter(Boolean)].filter(Boolean).join('\n')
+          ...Array.from(message.querySelectorAll('[data-message-attachment]'), card => messageAttachments.get(card.dataset.messageAttachment)?.node.name).filter(Boolean),
+          ...Array.from(message.querySelectorAll('.artifact-sent-references .artifact-reference-copy'), card => card.innerText.trim())].filter(Boolean).join('\n')
         : Array.from(content.children).filter(node => !node.matches('.conversation-message-meta, .conversation-artifacts, .conversation-subagents, .conversation-progress, .conversation-activity')).map(node => node.innerText.trim()).filter(Boolean).join('\n\n');
       if (!text) return;
       try {
@@ -5689,8 +5947,8 @@ const mainView = document.querySelector('.main');
     button.setAttribute('aria-pressed', String(!wasPressed));
   });
 
+  let scheduledPageMode = false;
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
-    if (!open) setBottomTerminalOpen(false);
     if (open && scheduledRunTasks.has(task)) showScheduledTaskDetails(task);
     closeAccessMenus();
     closeConversationArtifactMenu();
@@ -5702,13 +5960,15 @@ const mainView = document.querySelector('.main');
         conversationComposerDrafts.set(activeConversationTask, conversationPrompt.value);
       }
       activeConversationTask = task;
-      conversationPrompt.value = conversationComposerDrafts.get(task) || '';
+      conversationPrompt.value = conversationComposerDrafts.has(task) ? conversationComposerDrafts.get(task) :
+        (task === conversationTask && !startedConversationDemos.has(task) ? conversationExamples.get(task).turns.at(-1).prompt : '');
       resizeConversationPrompt();
       const example = conversationExamples.get(task);
       if (conversationThreads.has(task)) {
         conversationThread.innerHTML = conversationThreads.get(task);
       } else {
-        const turns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
+        const allTurns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
+        const turns = task === conversationTask && !startedConversationDemos.has(task) ? allTurns.slice(0, -1) : allTurns;
         const openedAt = new Date();
         conversationThread.innerHTML = turns.map(({ prompt, reply, isGoal, attachments = [], sentAt }, index) =>
           renderConversationTurnTime(sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45) * 60000)) +
@@ -5718,21 +5978,32 @@ const mainView = document.querySelector('.main');
             return node ? { node, chain: [folder, node] } : null;
           }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
-          (example.files.length && index === (task === conversationTask ? turns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
-          (task === conversationTask && index === turns.length - 1 ? renderConversationSubagents() + renderConversationProgress() : '') +
-          (task === conversationTask && index === turns.length - 1 ? `<div class="conversation-activity" role="status" aria-label="已读取文件，正在思考"><button class="conversation-activity-file conversation-activity-link" type="button" data-read-file="门店履约异常明细.xlsx" aria-label="预览已读取文件：门店履约异常明细.xlsx"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg><span class="conversation-activity-label">已读取文件</span><span class="conversation-activity-filename">门店履约异常明细.xlsx</span></button><div class="conversation-thinking"><button class="conversation-activity-thinking conversation-activity-link" type="button" aria-expanded="false" aria-controls="conversationThinkingDetails"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/></svg><span class="conversation-activity-thinking-label">正在思考</span><svg viewBox="0 0 24 24" class="ic conversation-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="conversation-thinking-details" id="conversationThinkingDetails" aria-hidden="true" inert><div class="conversation-thinking-details-content"><div class="conversation-thinking-card"><p>已读取「门店履约异常明细.xlsx」与趋势图，正在对照订单、门店和时间字段。</p><p>先按门店和时段核验异常集中情况，检查缺失时间戳及重复订单；再结合异常频次、影响订单量与待确认的责任方，整理优先跟进的门店和处理建议。</p></div></div></div></div></div>` : '') +
+          (example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
+          (task === conversationTask && startedConversationDemos.has(task) && index === turns.length - 1 ? renderConversationStage() : '') +
           (reply ? renderMessageMeta('assistant') : '') +
           '</div></div>'
         ).join('');
+      }
+      if (task === conversationTask) {
+        const stage = conversationThread.querySelector('.conversation-stage-demo');
+        if (stage) {
+          stage.classList.remove('is-entering');
+          const frameIndex = Number(stage.dataset.stageFrame);
+          const planToggle = stage.querySelector('.stage-plan-toggle');
+          const planOpen = planToggle ? planToggle.getAttribute('aria-expanded') === 'true' : frameIndex === 0;
+          stage.innerHTML = renderConversationStageBody(frameIndex, planOpen);
+        }
       }
       refreshConversationTurnTimes();
       renderConversationArtifacts(task);
       const folder = FOLDERS.find((entry) => entry.id === example.folderId);
       if (folder) selectFolder(folder.id);
-      renderConversationQueue();
     }
+    artifactSelection?.taskChanged();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
+    if (!open || task !== conversationTask) clearTimeout(stageAutoTimer);
+    syncStageDemoControls();
     if (!open && workbenchExpanded) setWorkbenchExpanded(false);
     if (!open && !summaryPopover.hidden) setSummaryOpen(false);
     if (rightPanel === 'scheduled' && (!open || !scheduledRunTasks.has(task))) setRightPanel(null);
@@ -5745,12 +6016,23 @@ const mainView = document.querySelector('.main');
     const selectedSidebarTask = open && scheduledRunTasks.has(activeConversationTask) && !createdScheduledTasks.has(activeConversationTask)
       ? scheduledReportTask : open ? activeConversationTask : null;
     selectedSidebarTask?.setAttribute('aria-current', 'page');
-    if (open) document.getElementById('homeNav').removeAttribute('aria-current');
+    if (scheduledPageMode) document.getElementById('homeNav').removeAttribute('aria-current');
     else document.getElementById('homeNav').setAttribute('aria-current', 'page');
+    if (scheduledPageMode) document.getElementById('scheduledPageNav').setAttribute('aria-current', 'page');
+    else document.getElementById('scheduledPageNav').removeAttribute('aria-current');
+    document.getElementById('scheduledPage').hidden = !scheduledPageMode || open;
+    document.querySelectorAll('.scheduled-sidebar-row[aria-current]').forEach(row => row.removeAttribute('aria-current'));
+    if (scheduledPageMode && open && scheduledRunTasks.has(task)) {
+      const canonicalTask = createdScheduledTasks.has(task) ? task : scheduledReportTask;
+      document.querySelectorAll('.scheduled-sidebar-row').forEach(row => {
+        if (scheduledPageTasks[Number(row.dataset.scheduledPageIndex)] === canonicalTask) row.setAttribute('aria-current', 'page');
+      });
+    }
     if (open) updateConversationTaskTitle(task);
     if (content.classList.contains('wb-expanded')) renderWorkspaceTabs();
     if (!summaryPopover.hidden || isScheduledPanelOpen()) renderSummaryContents();
     if (open) {
+      if (task === conversationTask) scheduleStageAutoAdvance(conversationThread.querySelector('.conversation-stage-demo'));
       const keepScheduledPanel = scheduledRunTasks.has(task) &&
         (rightPanel === 'scheduled' && !content.classList.contains('wb-expanded') ||
           rightPanel === 'tools' && content.classList.contains('wb-scheduled-overlay'));
@@ -5763,63 +6045,178 @@ const mainView = document.querySelector('.main');
     }
   }
 
+  const scheduledPage = document.getElementById('scheduledPage');
+  const scheduledSidebarPinned = document.getElementById('scheduledSidebarPinned');
+  const scheduledSidebarScroll = document.getElementById('scheduledSidebarScroll');
+  const scheduledSidebarList = document.getElementById('scheduledSidebarList');
+  const scheduledTemplateGrid = document.getElementById('scheduledTemplateGrid');
+  let scheduledPageTasks = [];
+  const scheduledPageTemplates = [
+    { name:'每日工作日报', description:'整理今日的工作日志，生成日报摘要。', prompt:'整理今天的任务、对话和产物，生成一份简洁的工作日报，列出已完成事项、待处理问题和明日计划。', repeat:'工作日', time:'19:00' },
+    { name:'每周工作周报', description:'汇总本周进度、成果与下周计划。', prompt:weeklyReportPrompt, repeat:'每周', time:'09:00' },
+    { name:'每日日程提醒', description:'汇总今日日程与待办，准时提醒。', prompt:'每天早上汇总今日日程、临近截止的任务和需要提前准备的资料，给出一份简短提醒。', repeat:'每日', time:'08:30' },
+    { name:'每周项目进展', description:'回顾项目进度与待确认事项。', prompt:'每周汇总各项目的完成进度、阻塞问题与下一步行动，列出需要我确认的事项。', repeat:'每周', time:'10:00' },
+    { name:'月度经营提醒', description:'按月提醒关键经营节点。', prompt:'每月提醒我核对上月经营数据、待完成事项和本月关键节点。', repeat:'每月', time:'09:00' },
+    { name:'每周资料整理', description:'整理一周新增资料和产物。', prompt:'每周整理新增资料和工作产物，按项目归档并标出需要复核的内容。', repeat:'每周', time:'17:00' },
+  ];
+  const scheduledTemplateIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l4 4V21H6a2 2 0 0 1-2-2V4.5a2 2 0 0 1 2-2Z"/><path d="M14 2.5v4h4M8 12h8M8 16h6"/></svg>';
+  const scheduledPageMenu = document.createElement('div');
+  scheduledPageMenu.className = 'scheduled-page-action-menu';
+  scheduledPageMenu.setAttribute('role', 'menu');
+  scheduledPageMenu.hidden = true;
+  scheduledPageMenu.innerHTML = [
+    ['run', '立即运行'], ['edit', '编辑'], ['history', '查看运行记录'], ['pause', '暂停任务'], ['delete', '删除任务'],
+  ].map(([action, label]) => `<button type="button" role="menuitem" data-scheduled-page-action="${action}"><img src="assets/scheduled-menu-${action}.svg" alt="" width="16" height="16"><span>${label}</span></button>`).join('');
+  document.body.append(scheduledPageMenu);
+  let scheduledPageMenuTask = null;
+
+  function scheduledOverviewTasks() {
+    const all = [scheduledReportTask, ...document.querySelectorAll('.sidebar-scroll .task[data-task-type="scheduled"]')];
+    return [...new Set(all)].filter(task => task.isConnected).sort((a, b) => Number(b.dataset.pinned === 'true') - Number(a.dataset.pinned === 'true'));
+  }
+  function renderScheduledTemplates() {
+    scheduledTemplateGrid.innerHTML = scheduledPageTemplates.map((item, index) =>
+      `<button class="scheduled-template-card" type="button" data-scheduled-template="${index}"><span class="scheduled-template-icon">${scheduledTemplateIcon}</span><span class="scheduled-template-copy"><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small></span></button>`
+    ).join('');
+  }
+  function renderScheduledOverview() {
+    scheduledPageTasks = scheduledOverviewTasks();
+    const sidebarGroups = [
+      { label:'启用中', rows:[] },
+      { label:'已暂停', rows:[] },
+      { label:'已终止', rows:[] },
+    ];
+    scheduledPageTasks.forEach((task, index) => {
+      const name = task.querySelector('.task-name')?.textContent.trim() || '定时任务';
+      const config = createdScheduledTasks.get(task) || legacyScheduledConfig;
+      const groupIndex = config.terminated ? 2 : config.paused ? 1 : 0;
+      const current = !conversationPage.hidden && scheduledRunTasks.has(activeConversationTask) &&
+        (createdScheduledTasks.has(activeConversationTask) ? activeConversationTask : scheduledReportTask) === task;
+      const unread = task === scheduledReportTask && scheduledRuns.some(run => run.status === 'new');
+      sidebarGroups[groupIndex].rows.push(`<div class="scheduled-sidebar-row" data-scheduled-page-index="${index}"${current ? ' aria-current="page"' : ''}><button type="button" data-scheduled-page-open="${index}" title="${esc(name)}"><span class="scheduled-sidebar-title">${esc(name)}</span><span class="scheduled-sidebar-schedule">${esc(config.schedule || '每日 09:00')}</span></button>${unread ? '<span class="scheduled-sidebar-state"><i class="dot-new" role="img" aria-label="新消息"></i></span>' : ''}<button class="scheduled-sidebar-row-more" type="button" data-scheduled-page-more="${index}" aria-label="${esc(name)}的更多操作"><img src="assets/scheduled-panel-more.svg" alt=""></button></div>`);
+    });
+    scheduledSidebarList.innerHTML = sidebarGroups.map(group =>
+      `<section class="scheduled-sidebar-group" aria-label="${group.label}"><div class="section-label"><span>${group.label}</span></div>${group.rows.join('') || '<p class="scheduled-sidebar-empty">暂无任务</p>'}</section>`
+    ).join('');
+  }
+  function setScheduledPageMode(enabled) {
+    scheduledPageMode = enabled;
+    win.classList.toggle('scheduled-view', enabled);
+    document.querySelector('.project-title').textContent = enabled ? '定时任务' : '我的项目';
+    document.querySelector('.sidebar-pinned').hidden = enabled;
+    document.querySelector('.sidebar-scroll').hidden = enabled;
+    scheduledSidebarPinned.hidden = !enabled;
+    scheduledSidebarScroll.hidden = !enabled;
+    if (enabled) document.getElementById('scheduledPageNav').setAttribute('aria-current', 'page');
+    else document.getElementById('scheduledPageNav').removeAttribute('aria-current');
+    if (enabled) {
+      renderScheduledOverview();
+      if (win.classList.contains('collapsed')) setCollapsed(false);
+      setConversationOpen(false);
+      setRightPanel(null);
+      scheduledSidebarScroll.scrollTop = 0;
+    } else {
+      scheduledPage.hidden = true;
+      document.getElementById('homeNav').setAttribute('aria-current', 'page');
+    }
+  }
+  function openScheduledOverviewTask(index) {
+    const task = scheduledPageTasks[index];
+    if (!task) return;
+    setConversationOpen(true, task === scheduledReportTask ? scheduledRuns[0].task : task);
+    renderScheduledOverview();
+  }
+  function closeScheduledPageMenu() {
+    scheduledPageMenu.hidden = true;
+    scheduledPageMenuTask = null;
+  }
+  function openScheduledPageMenu(button, index) {
+    const task = scheduledPageTasks[index];
+    if (!task) return;
+    scheduledPageMenuTask = task;
+    const config = createdScheduledTasks.get(task) || legacyScheduledConfig;
+    const pauseButton = scheduledPageMenu.querySelector('[data-scheduled-page-action="pause"]');
+    pauseButton.querySelector('span').textContent = config.paused ? '启用任务' : '暂停任务';
+    pauseButton.querySelector('img').src = config.paused ? 'assets/scheduled-menu-run.svg' : 'assets/scheduled-menu-pause.svg';
+    pauseButton.disabled = Boolean(config.terminated);
+    scheduledPageMenu.querySelector('[data-scheduled-page-action="run"]').disabled = Boolean(config.paused || config.terminated || config.demoState === 'running');
+    scheduledPageMenu.hidden = false;
+    const rect = button.getBoundingClientRect();
+    placeWindowMenu(scheduledPageMenu, rect.right - scheduledPageMenu.offsetWidth, rect.bottom + 4, rect.top - 4);
+    scheduledPageMenu.querySelector('button:not(:disabled)')?.focus();
+  }
+  [scheduledPage, scheduledSidebarScroll].forEach(area => area.addEventListener('click', event => {
+    const more = event.target.closest('[data-scheduled-page-more]');
+    if (more) { event.stopPropagation(); openScheduledPageMenu(more, Number(more.dataset.scheduledPageMore)); return; }
+    const open = event.target.closest('[data-scheduled-page-open]');
+    if (open) openScheduledOverviewTask(Number(open.dataset.scheduledPageOpen));
+  }));
+  scheduledPageMenu.addEventListener('click', event => {
+    const action = event.target.closest('[data-scheduled-page-action]')?.dataset.scheduledPageAction;
+    const task = scheduledPageMenuTask;
+    if (!action || !task) return;
+    closeScheduledPageMenu();
+    if (action === 'run') {
+      runScheduledTaskNow(task);
+    } else if (action === 'history') {
+      openScheduledOverviewTask(scheduledPageTasks.indexOf(task));
+      setScheduledPanelOpen(true);
+      document.getElementById('scheduledRunList').scrollIntoView({ block:'nearest' });
+    } else if (action === 'pause') {
+      const config = createdScheduledTasks.get(task) || legacyScheduledConfig;
+      config.paused = !config.paused;
+      if (selectedScheduledTask === task) showScheduledTaskDetails(task);
+      renderScheduledOverview();
+    } else {
+      void runTaskMenuAction(action === 'edit' ? 'edit-scheduled' : action, task).then(renderScheduledOverview);
+    }
+  });
+  document.addEventListener('pointerdown', event => { if (!scheduledPageMenu.contains(event.target) && !event.target.closest('[data-scheduled-page-more]')) closeScheduledPageMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeScheduledPageMenu(); });
+  window.addEventListener('scroll', closeScheduledPageMenu, true);
+  document.getElementById('scheduledPageNav').addEventListener('click', event => { event.preventDefault(); setScheduledPageMode(true); });
+  document.getElementById('scheduledSidebarCreate').addEventListener('click', () => setScheduledEditing(true, 'create'));
+  scheduledTemplateGrid.addEventListener('click', event => {
+    const button = event.target.closest('[data-scheduled-template]');
+    if (!button) return;
+    const template = scheduledPageTemplates[Number(button.dataset.scheduledTemplate)];
+    setScheduledEditing(true, 'create');
+    scheduledEditForm.elements.namedItem('name').value = template.name;
+    scheduledEditForm.elements.namedItem('prompt').value = template.prompt;
+    scheduledEditForm.elements.namedItem('repeat').value = template.repeat;
+    scheduledEditForm.elements.namedItem('time').value = template.time;
+    updateScheduledCustomRows();
+    updateScheduledFieldCounts();
+  });
+  renderScheduledTemplates();
+  renderScheduledOverview();
+  new MutationObserver(() => { if (scheduledPageMode) renderScheduledOverview(); }).observe(looseTasksInner, { childList:true, subtree:true, characterData:true });
+
 function resizeConversationPrompt() {
 conversationPrompt.style.height = 'auto';
 conversationPrompt.style.height = `${Math.min(conversationPrompt.scrollHeight, 130)}px`;
     conversationSend.disabled = !conversationPrompt.value.trim() && ((!selectedLibraryFiles?.get(conversationPrompt)?.length && !selectedSkills?.get(conversationPrompt)?.length) || !conversationGoalTag.hidden);
 }
 
-const conversationQueueGroup = document.getElementById('conversationQueueGroup');
-const conversationQueueSummary = document.getElementById('conversationQueueSummary');
-const conversationQueueItems = document.getElementById('conversationQueueItems');
-const queueSendIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>';
-const queueRemoveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 7.5h16M9 7.5V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2.5M5.5 7.5l.8 11.3A2.4 2.4 0 0 0 8.7 21h6.6a2.4 2.4 0 0 0 2.4-2.2l.8-11.3M10 11.5v6M14 11.5v6"/></svg>';
-const queueEditIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m4 20 4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20ZM14.5 7.5l3 3"/></svg>';
-const queueSaveIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
-
-function renderConversationQueue() {
-  const { running, prompts } = queueState(activeConversationTask);
-  conversationStatusStack.hidden = !running && !prompts.length;
-  conversationQueueGroup.hidden = !running && !prompts.length;
-  conversationQueueSummary.textContent = prompts.length ? `${prompts.length} 条待发送${running ? ' · 本轮演示中' : ''}` : '本轮演示中';
-  conversationQueueItems.querySelector('.conversation-status-items-content').innerHTML = prompts.map((message, index) => {
-    const text = typeof message === 'string' ? message : message.text;
-    const names = typeof message === 'string' ? [] : (message.attachments || []).map(entry => entry.node.name);
-    const label = [text, ...names.map(name => `@${name}`)].filter(Boolean).join(' ');
-    return `<div class="conversation-queue-item"><span class="conversation-queue-text" title="${esc(label).replace(/"/g, '&quot;')}">${esc(label)}</span><div class="conversation-queue-actions"><button class="conversation-queue-send" type="button" data-queue-send="${index}" aria-label="直接发送队列中的第 ${index + 1} 条" title="直接发送">${queueSendIcon}</button><button class="conversation-queue-remove" type="button" data-queue-remove="${index}" aria-label="删除队列中的第 ${index + 1} 条" title="删除">${queueRemoveIcon}</button><button class="conversation-queue-edit" type="button" data-queue-edit="${index}" aria-label="编辑队列中的第 ${index + 1} 条" title="编辑">${queueEditIcon}</button></div></div>`;
-  }).join('');
-}
-
 function beginConversationTurn(message) {
   const text = typeof message === 'string' ? message : message.text;
   const attachments = typeof message === 'string' ? [] : message.attachments || [];
+  const references = typeof message === 'string' ? [] : message.references || [];
+  const receipt = references.length
+    ? `已收到针对「${references.map(ref => `${ref.fileName} · ${ref.label}`).join('」、「')}」的修改意见。当前为交互演示，尚未连接生成服务，产物内容没有改变。`
+    : '已记录消息。当前原型未连接生成服务，文件内容没有更新；可继续查看原产物或补充要求。';
   conversationThread.insertAdjacentHTML('beforeend',
-    renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments) +
-    `<div class="conversation-message assistant-message"><div class="assistant-content"><p class="conversation-queue-done">已记录消息。当前原型未连接生成服务，文件内容没有更新；可继续查看原产物或补充要求。</p>${renderMessageMeta('assistant')}</div></div>`);
+    renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments, false, false, references) +
+    `<div class="conversation-message assistant-message"><div class="assistant-content"><p class="conversation-prototype-receipt">${esc(receipt)}</p>${renderMessageMeta('assistant')}</div></div>`);
   moveConversationProgressToLatestTurn();
   renderConversationTurnNav();
-  renderConversationQueue();
   requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
-}
-
-function finishDemoConversationTurn(nextMessage = null) {
-  const state = queueState(activeConversationTask);
-  if (!state.running) return;
-  state.running = false;
-  const activity = conversationThread.querySelector('.assistant-message:last-child .conversation-activity');
-  if (activity) {
-    activity.outerHTML = `<p class="conversation-queue-done">本轮演示已结束；没有连接真实生成服务，也未修改产物。</p>${renderMessageMeta('assistant')}`;
-  }
-  if (nextMessage) beginConversationTurn(nextMessage);
-  while (state.prompts.length) beginConversationTurn(state.prompts.shift());
-  conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
-  renderConversationQueue();
 }
 
   function sendConversationMessage() {
   const text = conversationPrompt.value.trim();
   const files = selectedLibraryFiles.get(conversationPrompt);
-    if (!text && !files.length && !selectedSkills.get(conversationPrompt).length) return;
+    if (!text && !files.length && !selectedSkills.get(conversationPrompt).length && !artifactSelection?.entries().length) return;
   if (!conversationGoalTag.hidden) {
     if (!text) return;
     updateGoal(conversationPrompt, text);
@@ -5837,85 +6234,30 @@ function finishDemoConversationTurn(nextMessage = null) {
     const message = {
       text: [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`)].filter(Boolean).join(' '),
       attachments: [...files],
+      references: artifactSelection?.entries().slice() || [],
     };
-  const state = queueState(activeConversationTask);
-  if (state.running) {
-    state.prompts.push(message);
-    renderConversationQueue();
+  if (activeConversationTask === conversationTask && !startedConversationDemos.has(conversationTask)) {
+    startedConversationDemos.add(conversationTask);
+    conversationThread.insertAdjacentHTML('beforeend',
+      renderConversationTurnTime(new Date()) + renderUserMessage(message.text, message.attachments, false, false, message.references) +
+      `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)}</div></div>`);
+    renderConversationTurnNav();
+    syncStageDemoControls();
+    if (reducedMotion.matches) scheduleStageAutoAdvance(conversationThread.querySelector('.conversation-stage-demo'));
+    requestAnimationFrame(() => {
+      const sentMessage = Array.from(conversationThread.querySelectorAll('.user-message')).at(-1);
+      if (!sentMessage) return;
+      conversationScroll.scrollTop += sentMessage.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 12;
+    });
   } else {
     beginConversationTurn(message);
   }
     conversationPrompt.value = '';
+    artifactSelection?.clear();
     clearSkillTags(conversationPrompt);
     clearLibraryFileCards(conversationPrompt);
   resizeConversationPrompt();
 }
-
-function finishQueueEdit(input, save) {
-  const index = Number(input.dataset.queue-input);
-  const text = input.value.trim();
-  const message = queueState(activeConversationTask).prompts[index];
-  if (save && !text && (typeof message === 'string' || !message.attachments?.length)) {
-    input.setAttribute('aria-invalid', 'true');
-    input.focus();
-    return;
-  }
-  if (save) queueState(activeConversationTask).prompts[index] = typeof message === 'string' ? text : { ...message, text };
-  renderConversationQueue();
-  conversationQueueItems.querySelector(`[data-queue-edit="${index}"]`)?.focus();
-}
-
-conversationQueueItems.addEventListener('click', (event) => {
-  const edit = event.target.closest('[data-queue-edit]');
-  if (edit) {
-    const activeInput = conversationQueueItems.querySelector('.conversation-queue-input');
-    if (activeInput) { activeInput.focus(); return; }
-    const index = Number(edit.dataset.queueEdit);
-    const row = edit.closest('.conversation-queue-item');
-    const input = document.createElement('input');
-    input.className = 'conversation-queue-input';
-    input.type = 'text';
-    input.dataset.queueInput = String(index);
-    input.setAttribute('aria-label', `编辑队列中的第 ${index + 1} 条，按回车保存，Escape 取消`);
-    const message = queueState(activeConversationTask).prompts[index];
-    input.value = typeof message === 'string' ? message : message.text;
-    row.querySelector('.conversation-queue-text').replaceWith(input);
-    row.querySelectorAll('.conversation-queue-send, .conversation-queue-remove').forEach(button => { button.disabled = true; });
-    edit.innerHTML = queueSaveIcon;
-    edit.title = '保存';
-    edit.setAttribute('aria-label', `保存队列中的第 ${index + 1} 条`);
-    edit.dataset.queueSave = String(index);
-    delete edit.dataset.queueEdit;
-    input.focus();
-    return;
-  }
-  const save = event.target.closest('[data-queue-save]');
-  if (save) {
-    finishQueueEdit(save.closest('.conversation-queue-item').querySelector('.conversation-queue-input'), true);
-    return;
-  }
-  const send = event.target.closest('[data-queue-send]');
-  if (send) {
-    const state = queueState(activeConversationTask);
-    const [message] = state.prompts.splice(Number(send.dataset.queueSend), 1);
-    if (!message) return;
-    if (state.running) finishDemoConversationTurn(message);
-    else beginConversationTurn(message);
-    return;
-  }
-  const remove = event.target.closest('[data-queue-remove]');
-  if (remove) {
-    queueState(activeConversationTask).prompts.splice(Number(remove.dataset.queueRemove), 1);
-    renderConversationQueue();
-    return;
-  }
-});
-conversationQueueItems.addEventListener('keydown', (event) => {
-  if (!event.target.matches('.conversation-queue-input') || event.isComposing) return;
-  if (event.key !== 'Enter' && event.key !== 'Escape') return;
-  event.preventDefault();
-  finishQueueEdit(event.target, event.key === 'Enter');
-});
 
   conversationExamples.forEach((example, task) => {
     task.addEventListener('click', (e) => {
@@ -5926,17 +6268,23 @@ conversationQueueItems.addEventListener('keydown', (event) => {
   });
   function returnHome(event) {
     event.preventDefault();
+    setScheduledPageMode(false);
     setConversationOpen(false);
   }
   document.getElementById('homeNav').addEventListener('click', returnHome);
   document.getElementById('railBrand').addEventListener('click', returnHome);
   document.getElementById('railTasksNav').addEventListener('click', (event) => {
     event.preventDefault();
+    if (scheduledPageMode) {
+      setScheduledPageMode(false);
+      setConversationOpen(false);
+    }
     if (win.classList.contains('collapsed')) setCollapsed(false);
     document.querySelector('.sidebar-scroll').scrollTop = 0;
   });
   newTaskNav.addEventListener('click', (e) => {
     e.preventDefault();
+    setScheduledPageMode(false);
     setConversationOpen(false);
     requestAnimationFrame(() => prompt.focus());
   });
@@ -6364,7 +6712,7 @@ conversationQueueItems.addEventListener('keydown', (event) => {
     return `<svg class="connector-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="12" fill="${look[0]}"/>${look[1]}</svg>`;
   }
   const expertTriggers = [...document.querySelectorAll('.chip-agent')];
-  let selectedExpert = '数据开发';
+  let selectedExpert = '数据分析师';
   let activeExpertTrigger = null;
   const expertMenu = document.createElement('div');
   expertMenu.className = 'expert-switch-menu';
@@ -6453,6 +6801,7 @@ conversationQueueItems.addEventListener('keydown', (event) => {
   let dialogFolder = null;
   let dialogQuery = '';
   const addIcons = {
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',
     file: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
     local: '<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>',
     library: '<path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/>',
@@ -6570,7 +6919,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
         + `<div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="library">${addIcon('library')}<span>浏览全部资料库文件</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
     } else if (addLabels[addMenuPage]) {
       const kind = addMenuPage;
-      addSubmenu.innerHTML = `<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="搜索已添加的${addLabels[kind]}" placeholder="搜索已添加的${addLabels[kind]}" autocomplete="off"><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'skill' ? '管理技能' : `去广场添加更多${addLabels[kind]}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="搜索已添加的${addLabels[kind]}" placeholder="搜索已添加的${addLabels[kind]}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'skill' ? '管理技能' : `去广场添加更多${addLabels[kind]}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
       renderAddList();
     }
     addSubmenu.hidden = false;
@@ -6607,7 +6956,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     const isLibrary = dialogPage === 'library';
     const title = isLibrary ? '从资料库添加' : `添加${addLabels[dialogPage]}`;
     addDialog.innerHTML = `<div class="composer-dialog-head"><div><h2>${title}</h2><p>${isLibrary ? '选择文件，添加到当前对话' : '广场示例 · 添加后可在加号菜单中使用'}</p></div><button type="button" class="composer-dialog-close" data-dialog-close aria-label="关闭">×</button></div>`
-      + `<input class="composer-add-input composer-dialog-search" type="search" aria-label="搜索${isLibrary ? '资料库文件' : title}" placeholder="搜索${isLibrary ? '全部文件' : '广场' + addLabels[dialogPage]}" value="${esc(dialogQuery)}" autocomplete="off">`
+      + `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input composer-dialog-search" type="search" aria-label="搜索${isLibrary ? '资料库文件' : title}" placeholder="搜索${isLibrary ? '全部文件' : '广场' + addLabels[dialogPage]}" value="${esc(dialogQuery)}" autocomplete="off"></label>`
       + '<div class="composer-dialog-results"></div>';
     renderAddDialogResults();
   }
@@ -7049,7 +7398,6 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
   function updateGoal(input, value) {
     if (input === conversationPrompt && activeConversationTask) {
       conversationGoals.set(activeConversationTask, value || null);
-      if (!value) pausedConversationGoals.delete(activeConversationTask);
     } else if (value) conversationGoals.set(input, value);
     else conversationGoals.delete(input);
     if (input === conversationPrompt) {
@@ -7062,48 +7410,6 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     summary.setAttribute('aria-label', `设置新目标：${value}`);
     summary.hidden = !value;
   }
-
-  const summaryGoalSection = document.getElementById('summaryGoalSection');
-  const summaryGoalEdit = document.getElementById('summaryGoalEdit');
-  const summaryGoalInput = document.getElementById('summaryGoalInput');
-  summaryGoalSection.addEventListener('click', event => {
-    const action = event.target.closest('[data-summary-goal-action]')?.dataset.summaryGoalAction;
-    if (!action) return;
-    if (action === 'edit') {
-      summaryGoalInput.value = document.getElementById('summaryGoalText').textContent;
-      document.getElementById('summaryGoalText').hidden = true;
-      summaryGoalEdit.hidden = false;
-      summaryGoalInput.focus();
-    } else if (action === 'cancel') {
-      summaryGoalEdit.hidden = true;
-      document.getElementById('summaryGoalText').hidden = false;
-      summaryGoalSection.querySelector('[data-summary-goal-action="edit"]').focus();
-    } else if (action === 'pause') {
-      if (pausedConversationGoals.has(activeConversationTask)) pausedConversationGoals.delete(activeConversationTask);
-      else pausedConversationGoals.add(activeConversationTask);
-      renderSummaryContents();
-      document.getElementById('summaryGoalPause').focus();
-    } else if (action === 'delete') {
-      updateGoal(conversationPrompt, '');
-      setGoalMode(conversationPrompt, false);
-      outputToggle.focus();
-    }
-  });
-  summaryGoalEdit.addEventListener('submit', event => {
-    event.preventDefault();
-    const value = summaryGoalInput.value.trim();
-    if (!value) { summaryGoalInput.focus(); return; }
-    updateGoal(conversationPrompt, value);
-    summaryGoalSection.querySelector('[data-summary-goal-action="edit"]').focus();
-  });
-  summaryGoalEdit.addEventListener('keydown', event => {
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
-    event.stopPropagation();
-    summaryGoalEdit.hidden = true;
-    document.getElementById('summaryGoalText').hidden = false;
-    summaryGoalSection.querySelector('[data-summary-goal-action="edit"]').focus();
-  });
 
   /* ---------- 5.8 自定义模版：本机配置与可移植分享 ---------- */
   const templateDialog = document.getElementById('templateDialog');
@@ -7460,8 +7766,230 @@ document.getElementById('openTemplates').addEventListener('click', event => {
     });
   });
 
+  artifactSelection = window.ArtifactEditingDemo.create({
+    root:toolFilePreviewBody,
+    getWorkspace:currentFileWorkspace,
+    getTask:()=>activeConversationTask,
+    taskForArtifact,
+    ensureTask:task=>{
+      if(task && (conversationPage.hidden || activeConversationTask!==task)) {
+        const item=currentFileWorkspace(), expanded=workbenchExpanded;
+        setConversationOpen(true,task);
+        if(item?.node) openArtifactPreview(item.node,item.chain);
+        if(expanded) setWorkbenchExpanded(true);
+      }
+    },
+    renderWorkspace:renderToolFileWorkspace,
+    referencesChanged:()=>fullscreenChatInput.dispatchEvent(new Event('input', {bubbles:true})),
+    focusComposer:()=>{
+      const item=currentFileWorkspace();
+      const owner=taskForArtifact(item?.chain);
+      if(owner && (conversationPage.hidden || owner!==activeConversationTask)) setConversationOpen(true,owner);
+      const input=fullscreenChat.hidden ? conversationPrompt : fullscreenChatInput;
+      input.focus();
+    },
+    openReference:ref=>{
+      if(ref.task && (conversationPage.hidden || activeConversationTask!==ref.task)) setConversationOpen(true,ref.task);
+      openArtifactPreview(ref.node,ref.chain);
+    },
+    feedback:showConversationFeedback,
+  });
+
   /* 初始化 */
   autoResize();
   refreshSendState();
   refreshClipped();
+  // Presentation scenes reuse the real interactions, and only play while their slide is active.
+  if (strategyScene && window.CatPawStrategyScenes.scenes[strategyScene]) {
+    const sceneParams = new URLSearchParams(window.location.search);
+    const snapshotFrame = sceneParams.get('strategyPanel') === 'process' && strategyScene === '2.1' &&
+      ['0', '3', '7'].includes(sceneParams.get('strategyFrame')) ? Number(sceneParams.get('strategyFrame')) : null;
+    const frameReady = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const report = type => window.parent.postMessage({ type, scene: strategyScene }, '*');
+    function stopStrategyDemo() {
+      strategyDemoActive = false;
+      document.documentElement.classList.remove('strategy-demo-active');
+      clearTimeout(stageAutoTimer);
+      clearTimeout(stageAdvanceTimer);
+      stageAdvanceTimer = null;
+      clearInterval(stageClockTimer);
+      clearTimeout(promptTransitionTimer);
+      clearTimeout(caseTransitionTimer);
+      stopPromptHint();
+      stopGreetingTyping();
+      document.querySelectorAll('.conversation-stage-demo.is-entering').forEach(panel => panel.classList.remove('is-entering'));
+    }
+    function resetStrategyDemo() {
+      strategyDemoActive = true;
+      document.documentElement.classList.add('strategy-demo-active');
+      document.documentElement.dataset.theme = 'light';
+      document.querySelectorAll('.strategy-demo-focus').forEach(el => el.classList.remove('strategy-demo-focus'));
+      caseReturnFocus = null;
+      closeCaseDialog();
+      if (disclosureSettings.open) disclosureSettings.close();
+      disclosureMode = 'work';
+      disclosureSettings.querySelector('[value="work"]').checked = true;
+      setSummaryOpen(false);
+      artifactSelection.clear();
+      setConversationOpen(false);
+      setWorkbench(false);
+      setCollapsed(false);
+      preferredPanelWidths.file = null;
+      if (selectedPromptCategory) setPromptCategory(selectedPromptCategory, false);
+      prompt.value = '';
+      clearSkillTags(prompt);
+      clearLibraryFileCards(prompt);
+      setPromptGuide('');
+      restoreHomeGreeting();
+      autoResize();
+      refreshSendState();
+      stopPromptHint();
+      conversationThread.querySelector('.conversation-stage-demo')?.remove();
+    }
+    function selectStrategyCategory(category) {
+      if (selectedPromptCategory !== category) setPromptCategory(category, false);
+      // Commit the target layout before the deck reveals this iframe.
+      clearTimeout(promptTransitionTimer);
+      clearTimeout(caseTransitionTimer);
+      primaryPrompts.classList.remove('is-transitioning');
+      primaryPrompts.classList.add('has-selection');
+      renderSecondaryPrompts(category);
+      renderCases(currentScope);
+      casesEl.classList.remove('is-changing');
+    }
+    function showStrategyProcess(frameIndex, thinking = false) {
+      setConversationOpen(true, conversationTask);
+      let panel = conversationThread.querySelector('.conversation-stage-demo');
+      if (!panel) {
+        const request = conversationExamples.get(conversationTask).turns.at(-1).prompt;
+        conversationThread.innerHTML = renderUserMessage(request, []) +
+          `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage()}</div></div>`;
+        panel = conversationThread.querySelector('.conversation-stage-demo');
+        conversationPrompt.value = '';
+        resizeConversationPrompt();
+        renderConversationTurnNav();
+      }
+      updateConversationStage(panel, frameIndex, frameIndex === 0, thinking);
+      return panel;
+    }
+    function showStrategyProcessSnapshot(frameIndex) {
+      document.documentElement.classList.add('strategy-process-panel');
+      let panel = document.getElementById('strategyProcessPanel');
+      if (!panel) {
+        panel = document.createElement('section');
+        panel.id = 'strategyProcessPanel';
+        panel.className = 'conversation-stage-demo';
+        panel.setAttribute('aria-label', '任务进程设计 Demo');
+        document.body.append(panel);
+      }
+      // Use the same renderer as the conversation; hold each phase for comparison.
+      panel.dataset.stageFrame = String(frameIndex);
+      panel.innerHTML = renderConversationStageBody(frameIndex, frameIndex === 0);
+      panel.classList.toggle('is-entering', frameIndex === 0 && !reducedMotion.matches);
+      panel.querySelector('.stage-elapsed').textContent = formatStageElapsed(frameIndex === 0 ? 0 : frameIndex === 3 ? 12 : 32);
+    }
+    function reserveStrategySplit() {
+      // Reserve a readable conversation column at the deck's fixed 1200 px viewport.
+      // The normal adaptive layout would otherwise promote this preview to full screen.
+      const sidebarWidth = parseFloat(getComputedStyle(win).getPropertyValue('--user-sidebar-w')) || 320;
+      preferredPanelWidths.file = Math.max(360, win.clientWidth - sidebarWidth - 340);
+    }
+    function showStrategyArtifact(kind = 'ppt', expanded = false) {
+      setConversationOpen(true, artifactEditingTask);
+      if (!expanded) reserveStrategySplit();
+      const example = conversationExamples.get(artifactEditingTask);
+      const folder = FOLDERS.find(entry => entry.id === example.folderId);
+      const node = folder.files.find(file => example.files.includes(file.name) && file.preview?.kind === kind);
+      openArtifactPreview(node, [folder, node]);
+      const item = currentFileWorkspace();
+      item.referenceSlide = 2;
+      item.pptSelection = null;
+      item.pptMode = 'ai';
+      renderToolFileWorkspace(item);
+      setWorkbenchExpanded(expanded);
+    }
+    async function presentStrategyStep(step) {
+      document.querySelectorAll('.strategy-demo-focus').forEach(el => el.classList.remove('strategy-demo-focus'));
+      let processPanel = null;
+      switch (step.action) {
+        case 'home': break;
+        case 'greeting': showGreetingBubble(); break;
+        case 'category': selectStrategyCategory(step.category); break;
+        case 'case':
+          selectStrategyCategory('analyze');
+          openCaseDialog(visibleCaseData(currentScope)[0]);
+          break;
+        case 'reuse': caseDialogPrimary.click(); break;
+        case 'suggestion':
+          selectStrategyCategory('create');
+          secondaryPrompts.querySelector('[data-secondary-index="1"]').click();
+          break;
+        case 'process':
+          if (snapshotFrame !== null) showStrategyProcessSnapshot(step.frame);
+          else processPanel = showStrategyProcess(step.frame, step.thinking);
+          break;
+        case 'mode-settings':
+          processPanel = showStrategyProcess(3);
+          disclosureSettings.showModal();
+          break;
+        case 'development':
+          disclosureSettings.close();
+          disclosureMode = 'development'; // This scene does not persist a user setting.
+          disclosureSettings.querySelector('[value="development"]').checked = true;
+          processPanel = showStrategyProcess(step.frame);
+          break;
+        case 'result-file': {
+          const example = conversationExamples.get(conversationTask);
+          const folder = FOLDERS.find(entry => entry.id === example.folderId);
+          const node = folder.files.find(file => file.name === '门店履约异常明细.xlsx');
+          reserveStrategySplit();
+          openArtifactPreview(node, [folder, node]);
+          break;
+        }
+        case 'artifact-conversation': setConversationOpen(true, artifactEditingTask); break;
+        case 'artifact-side': showStrategyArtifact(step.kind); break;
+        case 'artifact-full': showStrategyArtifact(step.kind, true); break;
+        case 'select-page':
+          showStrategyArtifact('ppt');
+          toolFilePreviewBody.querySelector('.reference-slide').click();
+          break;
+        case 'reference-page':
+          showStrategyArtifact('ppt');
+          toolFilePreviewBody.querySelector('[data-ppt-action="reference"]').click();
+          conversationPrompt.value = '请把这一页的区域差异讲得更清楚，保留原始数据。';
+          resizeConversationPrompt();
+          break;
+        case 'reference-another':
+          toolFilePreviewBody.querySelector('[data-reference-slide="4"]').click();
+          toolFilePreviewBody.querySelector('[data-ppt-action="reference"]').click();
+          conversationPrompt.value = '第 3 页突出区域差异，第 5 页补充对应行动，保留原始数据。';
+          resizeConversationPrompt();
+          break;
+      }
+      await frameReady();
+      if (!strategyDemoActive) return;
+      if (processPanel) conversationScroll.scrollTop += processPanel.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 18;
+      if (step.focus) document.querySelector(step.focus)?.classList.add('strategy-demo-focus');
+    }
+    const player = window.CatPawStrategyScenes.createPlayer({
+      scene: strategyScene, snapshotFrame, reset: resetStrategyDemo, present: presentStrategyStep,
+      stop: stopStrategyDemo, ready: () => report('catpaw:scene-prepared'),
+    });
+    window.addEventListener('message', event => {
+      if (event.source !== window.parent || event.data?.scene !== strategyScene) return;
+      if (event.data.type === 'catpaw:scene-activate') player.activate();
+      if (event.data.type === 'catpaw:scene-preview') player.preview();
+      if (event.data.type === 'catpaw:scene-deactivate') player.deactivate();
+    });
+    document.addEventListener('keydown', event => {
+      if (!strategyDemoActive || window.parent === window || !['ArrowRight','ArrowDown','PageDown',' ','ArrowLeft','ArrowUp','PageUp','Home','End'].includes(event.key)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.parent.postMessage({ type: 'catpaw:scene-key', scene: strategyScene, key: event.key }, '*');
+    }, true);
+    window.addEventListener('pagehide', () => player.deactivate());
+    stopStrategyDemo();
+    report('catpaw:scene-ready');
+    if (window.parent === window) player.activate();
+  }
 })();

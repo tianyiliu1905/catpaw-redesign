@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art web-devices-art" aria-hidden="true" fill="none">
+<style>
+.web-devices-art { --web-ink:#171717; --web-paper:#fff; --web-gray:#a8aaa8; color:var(--web-ink); opacity:.4; transition:opacity .18s ease; }
+.web-devices-art .web-desktop-hero { animation:webDesktopHero 3s ease-in-out infinite paused; }
+.web-devices-art .web-desktop-cards { animation:webDesktopCards 3s ease-in-out infinite paused; }
+.web-devices-art .web-mobile-content { animation:webMobileContent 3s ease-in-out infinite paused; }
+.web-devices-art .web-phone { animation:webPhoneFloat 3s ease-in-out infinite paused; }
+.pill:hover .web-devices-art, .pill:focus-visible .web-devices-art, .web-devices-art:hover { opacity:1; }
+.pill:hover .web-devices-art .web-motion,
+.pill:focus-visible .web-devices-art .web-motion,
+.web-devices-art:hover .web-motion { animation-play-state:running; }
+@keyframes webDesktopHero {
+  0%, 6%, 100% { opacity:0; transform:translateY(3px); }
+  22%, 82% { opacity:1; transform:translateY(0); }
+  96% { opacity:0; transform:translateY(0); }
+}
+@keyframes webDesktopCards {
+  0%, 18%, 100% { opacity:0; transform:translateY(4px); }
+  36%, 82% { opacity:1; transform:translateY(0); }
+  96% { opacity:0; transform:translateY(0); }
+}
+@keyframes webMobileContent {
+  0%, 36%, 100% { opacity:0; transform:translateY(5px); }
+  58%, 82% { opacity:1; transform:translateY(0); }
+  96% { opacity:0; transform:translateY(0); }
+}
+@keyframes webPhoneFloat {
+  0%, 30%, 100% { transform:translateY(0); }
+  56%, 76% { transform:translateY(-4px); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .web-devices-art { transition:none; }
+  .web-devices-art .web-motion { animation:none; opacity:1; transform:none; }
+}
+
+.pill:hover .web-devices-art,
+.pill:focus-visible .web-devices-art,
+.web-devices-art:hover { --web-gray:#7fffb4; }
+</style>
+  <g stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Soft contours and a small ink edge give the monitor physical thickness. -->
+    <path d="M58 96Q60 107 56 113L78 114Q73 106 74 96Z" fill="var(--web-paper, #fff)"/>
+    <path d="M44 119Q49 112 64 112Q80 111 88 119Q67 121 44 119Z" fill="var(--web-paper, #fff)"/>
+    <path d="M24 31Q66 29 108 32Q117 32 117 42L118 90Q118 99 107 100L24 99Q15 99 15 90L15 42Q15 32 24 31Z" fill="currentColor"/>
+    <path d="M22 29Q65 27 106 30Q115 30 115 40L116 87Q116 97 106 97Q63 99 22 96Q13 96 13 87L14 40Q14 30 22 29Z" fill="var(--web-paper, #fff)"/>
+    <path d="M14 84Q63 86 116 84L116 87Q116 97 106 97Q63 99 22 96Q13 96 13 87Z" fill="var(--web-paper, #fff)" stroke-width="2.4"/>
+    <path d="M24 40Q33 39 40 40" stroke-width="2.4"/>
+    <path d="M94 40h1m8 0h1" stroke-width="2.4"/>
+    <g class="web-desktop-hero web-motion" stroke="none">
+      <path d="M26 48Q46 47 63 48Q66 48 66 51V63Q66 66 63 66L26 66Q23 66 23 63V51Q23 48 26 48Z" fill="var(--web-gray, #a8aaa8)"/>
+      <path d="M74 51q12-1 29 0m-29 7h21m-21 7h12" stroke="currentColor" stroke-width="2.4"/>
+    </g>
+    <g class="web-desktop-cards web-motion" fill="var(--web-gray, #a8aaa8)" stroke="none">
+      <path d="M25 72h20q2 0 2 2v3q0 2-2 2H25q-2 0-2-2v-3q0-2 2-2Z"/>
+      <path d="M54 72h20q2 0 2 2v3q0 2-2 2H54q-2 0-2-2v-3q0-2 2-2Z"/>
+      <path d="M83 72h20q2 0 2 2v3q0 2-2 2H83q-2 0-2-2v-3q0-2 2-2Z"/>
+    </g>
+    <!-- Foreground phone: the same page rearranges into a vertical layout. -->
+    <g class="web-phone web-motion">
+      <path d="M98 57Q113 56 130 58Q138 58 138 66L139 130Q139 139 130 140L98 140Q89 140 89 131L89 66Q89 58 98 57Z" fill="currentColor" stroke="var(--web-paper, #fff)" stroke-width="7"/>
+      <path d="M98 57Q113 56 130 58Q138 58 138 66L139 130Q139 139 130 140L98 140Q89 140 89 131L89 66Q89 58 98 57Z" fill="currentColor"/>
+      <path d="M96 55Q112 54 128 56Q136 56 136 65L137 128Q137 137 128 137Q111 139 96 137Q87 137 87 128L87 65Q87 56 96 55Z" fill="var(--web-paper, #fff)"/>
+      <path d="M104 62q8-1 15 0" stroke-width="3.2"/>
+      <g class="web-mobile-content web-motion">
+        <path d="M98 73Q111 72 125 73Q128 73 128 76V92Q128 95 125 95H98Q95 95 95 92V76Q95 73 98 73Z" fill="var(--web-gray, #a8aaa8)" stroke="none"/>
+        <path d="M96 102q13-1 30 0m-30 6h19" stroke-width="2.4"/>
+        <path d="M98 115h25q3 0 3 3v2q0 3-3 3H98q-3 0-3-3v-2q0-3 3-3Z" fill="currentColor" stroke="none"/>
+      </g>
+      <path d="M106 131q6 1 12 0" stroke-width="2.4"/>
+    </g>
+  </g>
+</svg>

@@ -299,6 +299,8 @@
         ['搜索', 'search', '<circle cx="10.5" cy="10.5" r="7.7"/><path d="m15.95 15.95 4.55 4.55"/>', '放大镜镜面更大、握柄更短'],
         ['返回', 'back', '<path d="m11 5-7 7 7 7M4 12h16"/>', '向左返回'],
         ['前进', 'forward', '<path d="m13 5 7 7-7 7M20 12H4"/>', '向右前进'],
+        ['撤销', 'undo', '<path d="m8 7-4 3 4 3M4 10h10a5.5 5.5 0 1 1-1 10.9"/>', '左指回折箭头与向下回转的圆弧'],
+        ['重做', 'redo', '<path d="m16 7 4 3-4 3M20 10H10a5.5 5.5 0 1 0 1 10.9"/>', '撤销图标的水平镜像'],
         ['刷新', 'refresh', '<g transform="translate(0 -.5)"><path d="M20.5 10a9 9 0 1 0 .5 4M20.5 5.5V10H16"/></g>', '更新记录外圈镜像，右上箭头与右下断口；整体略上移']
       ]],
       ['快捷入口与设备', [
@@ -343,7 +345,7 @@
       ['横向长方形', '对照横向主体的宽高、四角与内边距', ['design-resources.svg', 'terminal.svg', 'project-view.svg', 'slides.svg']],
       ['文件夹轮廓', '对照顶部标签、主体高度和底边', ['folder.svg', 'open-folder.svg', 'new-folder.svg', 'organize-files.svg']],
       ['文件与纸张', '对照纸面边界、折角和叠放关系', ['file.svg', 'copy.svg', 'organize-files.svg']],
-      ['箭头与折线', '对照折角方向、线长和视觉重心', ['back.svg', 'forward.svg', 'chevron-right.svg', 'chevron-down.svg', 'maximize.svg', 'minimize.svg']]
+      ['箭头与折线', '对照折角方向、线长和视觉重心', ['back.svg', 'forward.svg', 'undo.svg', 'redo.svg', 'chevron-right.svg', 'chevron-down.svg', 'maximize.svg', 'minimize.svg']]
     ];
     const cardByFilename = new Map(cards.map(card => [card.dataset.filename, card]));
     for (const [title, hint, filenames] of comparisonGroups) {

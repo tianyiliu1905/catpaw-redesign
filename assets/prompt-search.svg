@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art search-globe-art" aria-hidden="true" fill="none">
+<style>
+.search-globe-art { --search-ink: #171717; --search-paper: #fff; color:var(--search-ink); }
+.search-globe-art .search-land { animation:searchGlobeRoll 4s linear infinite paused; }
+.search-globe-art .search-lens { transform-origin:94px 75px; animation:searchLensOrbit 2s linear infinite paused; }
+.pill:hover .search-globe-art .search-land,
+.pill:hover .search-globe-art .search-lens,
+.pill:focus-visible .search-globe-art .search-land,
+.pill:focus-visible .search-globe-art .search-lens,
+.search-globe-art:hover .search-land,
+.search-globe-art:hover .search-lens { animation-play-state:running; }
+@keyframes searchGlobeRoll { from { transform:translateX(0); } to { transform:translateX(-156px); } }
+@keyframes searchLensOrbit {
+  from { transform:translateX(-4px) rotate(0deg) translateX(4px) rotate(0deg); }
+  to { transform:translateX(-4px) rotate(360deg) translateX(4px) rotate(-360deg); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .search-globe-art .search-land, .search-globe-art .search-lens { animation:none; }
+}
+
+.search-globe-art { opacity:.4; transition:opacity .18s ease; }
+.pill:hover .search-globe-art, .pill:focus-visible .search-globe-art, .search-globe-art:hover { opacity:1; }
+@media (prefers-reduced-motion:reduce) { .search-globe-art { transition:none; } }
+
+.pill:hover .search-globe-art,
+.pill:focus-visible .search-globe-art,
+.search-globe-art:hover { --search-land-fill:#7fffb4; }
+</style>
+  <defs>
+    <clipPath id="search-globe-clip"><path d="M70 22C94 21 113 40 114 64C116 89 96 110 71 110C46 112 26 91 26 67C25 42 45 23 70 22Z"/></clipPath>
+    <g id="search-globe-continents" fill="var(--search-land-fill, #a8aaa8)">
+      <path d="M24 28C29 23 36 21 42 23S55 25 56 30 49 35 49 40 53 45 47 48 44 56 38 57 30 52 27 48 20 45 20 39 20 32 24 28Z"/>
+      <path d="M45 63C50 59 57 61 62 64S70 70 69 76 63 83 61 89 60 101 55 105 51 98 51 93 53 86 48 81 41 75 41 70 42 65 45 63Z"/>
+      <path d="M88 29C94 24 101 22 107 24S116 29 123 27 135 27 141 32 146 40 141 45 132 47 127 51 124 60 118 60 110 56 108 51 103 46 97 47 89 45 87 40 84 33 88 29Z"/>
+      <path d="M94 54C99 51 106 54 110 59S114 68 111 75 107 87 103 89 97 84 96 78 95 71 91 66 89 57 94 54Z"/>
+      <path d="M134 82C139 79 145 78 149 81S156 87 153 91 143 95 137 93 130 87 134 82Z"/>
+      <path d="M72 18C76 15 82 16 83 20S81 29 77 29 70 23 72 18Z"/>
+    </g>
+  </defs>
+  <!-- The upright meets the bottom of the tilted cradle, below the sphere. -->
+  <path d="M70 123Q69.3 128 70 133" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50 143Q70 145 91 144L90 147Q71 148 51 146Z" fill="currentColor"/>
+  <path d="M49 143C52 135 60 132 70 132C80 131 89 136 91 144Q72 145 49 143Z" fill="var(--search-paper, #fff)" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/>
+  <g transform="rotate(18 70 66)">
+    <path d="M70 11C101 12 125 34 126 64C128 96 103 122 70 121" stroke="currentColor" stroke-width="4.8" stroke-linecap="round"/>
+    <path d="M70 11Q69.5 16 70 22M70 110Q70.5 115 70 121" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M70 22C94 21 113 40 114 64C116 89 96 110 71 110C46 112 26 91 26 67C25 42 45 23 70 22Z" fill="var(--search-paper, #fff)"/>
+    <g clip-path="url(#search-globe-clip)">
+      <!-- Identical longitude strips, one full period apart: seamless at 0 / 100%. -->
+      <g class="search-land"><use href="#search-globe-continents" x="-156"/><use href="#search-globe-continents"/><use href="#search-globe-continents" x="156"/></g>
+    </g>
+    <path d="M70 22C94 21 113 40 114 64C116 89 96 110 71 110C46 112 26 91 26 67C25 42 45 23 70 22Z" stroke="currentColor" stroke-width="3.2"/>
+  </g>
+  <g class="search-lens" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M109 96Q113 103 119 108" stroke-width="4"/>
+    <path d="M118 107C125 114 134 126 141 134" stroke-width="6.4"/>
+    <path d="M94 49C109 48 122 60 122 76C123 92 111 105 95 105C78 106 66 94 66 78C65 62 77 50 94 49Z" fill="var(--search-paper, #fff)" fill-opacity=".78" stroke-width="4"/>
+  </g>
+</svg>

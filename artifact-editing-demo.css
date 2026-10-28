@@ -1,0 +1,61 @@
+/* 策略 3.2：选区与输入框内引用。 */
+.artifact-selection-menu{position:fixed;z-index:250;display:flex;flex-direction:column;align-items:stretch;width:min(460px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow:auto;padding:8px;background:var(--menu-bg);border:1px solid var(--gray-5);border-radius:12px;box-shadow:0 6px 24px #0002;font-size:var(--type-md);line-height:var(--line-md);color:var(--text-3)}
+.artifact-selection-menu[hidden]{display:none}
+.artifact-selection-toolbar{display:flex;align-items:center;gap:8px;min-width:0}
+.artifact-selection-label{flex:1;min-width:0;padding-left:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.artifact-selection-menu button{display:flex;gap:12px;align-items:center;flex:none;padding:8px 10px;border:0;border-radius:8px;background:var(--gray-3);color:var(--text-1);font:inherit;cursor:pointer}
+.artifact-selection-menu button:hover{background:var(--active)}
+.artifact-selection-menu button span{color:currentColor}
+.artifact-selection-menu [data-selection-comment]{gap:6px;background:transparent;color:var(--text-2)}
+.artifact-selection-menu [data-selection-comment]:hover{background:var(--hover)}
+.artifact-selection-menu [data-selection-comment] .ic{width:16px;height:16px}
+.artifact-comment-editor{padding:10px 4px 2px}
+.artifact-comment-editor[hidden]{display:none}
+.artifact-comment-editor textarea{display:block;width:100%;min-height:88px;max-height:220px;resize:vertical;padding:10px 12px;border:1px solid var(--gray-5);border-radius:8px;background:var(--main-bg);color:var(--text-1);font:inherit;line-height:var(--line-md)}
+.artifact-comment-editor textarea::placeholder{color:var(--text-4)}
+.artifact-comment-editor textarea:focus{outline:2px solid var(--brand-green);outline-offset:1px}
+.artifact-comment-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;color:var(--text-3)}
+.artifact-comment-footer button{padding:4px 6px;background:transparent;color:var(--text-3)}
+.artifact-selection-menu button:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px}
+.artifact-reference-drafts{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin:0 0 10px}
+.artifact-reference-drafts[hidden]{display:none}
+.artifact-reference-card{display:flex;align-items:center;min-width:0;background:var(--gray-3);border-radius:10px;padding:8px;gap:6px;text-align:left}
+.artifact-reference-card>button:first-child{display:flex;align-items:center;flex:1;gap:10px;min-width:0;padding:0;border:0;background:none;text-align:left;color:var(--text-1);font:inherit;cursor:pointer}
+.artifact-reference-card img{display:block;width:72px;height:44px;object-fit:contain;background:#fff;border-radius:4px;flex:none}
+.artifact-reference-type{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:6px;background:var(--surface-bg);font-size:11px;color:var(--text-3)}
+.artifact-reference-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.artifact-reference-copy strong{font-size:12px;font-weight:var(--weight-emphasis);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.artifact-reference-comment{color:var(--text-1);font-size:var(--type-md);line-height:var(--line-md);white-space:pre-wrap;overflow-wrap:anywhere}
+.artifact-reference-copy small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11px;color:var(--text-3);line-height:1.5;white-space:pre-line;max-height:3em}
+.artifact-reference-remove{width:24px;height:24px;flex:none;background:none;border:0;border-radius:6px;font-size:18px;color:var(--text-3);cursor:pointer}
+.artifact-reference-remove:hover{background:var(--active)}
+.artifact-sent-references{display:flex;flex-direction:column;gap:6px;max-width:100%;margin-bottom:8px}
+.artifact-reference-card button:focus-visible,.reference-toolbar button:focus-visible,.reference-ppt-pages button:focus-visible,.reference-slide:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px}
+.fullscreen-chat{flex-wrap:wrap}
+.fullscreen-chat .artifact-reference-drafts{flex:0 0 100%;margin:2px 0 0;max-height:140px}
+.reference-ppt{height:100%;min-height:320px;display:flex;flex-direction:column;background:var(--gray-2)}
+:root[data-theme="dark"] .reference-ppt,
+:root[data-theme="dark"] .reference-ppt-canvas{background:var(--main-bg)}
+.reference-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--surface-bg);border-bottom:1px solid var(--gray-5);color:var(--text-3);font-size:12px}
+.reference-toolbar button{flex:none;border:0;padding:7px 10px;border-radius:7px;background:var(--gray-3);color:var(--text-1);font:inherit;cursor:pointer}
+.reference-toolbar button[aria-pressed=true]{background:var(--success-bg);color:var(--success-text)}
+.reference-ppt-layout{display:flex;flex:1;min-height:0}
+.reference-ppt-pages{width:112px;flex:none;overflow:auto;padding:12px 8px;background:var(--surface-bg);border-right:1px solid var(--gray-5)}
+.reference-ppt-pages button{position:relative;display:block;width:100%;padding:5px;border:0;border-radius:6px;margin-bottom:9px;background:transparent;color:var(--text-3);cursor:pointer}
+.reference-ppt-pages button img{display:block;width:100%;border-radius:3px}
+.reference-ppt-pages .ppt-page-number{position:absolute;right:5px;bottom:5px;display:grid;place-items:center;min-width:19px;height:19px;padding:0 4px;border-radius:6px 0 3px 0;background:rgba(0,0,0,.4);color:#fff;font:600 11px/1 var(--font);font-variant-numeric:tabular-nums;pointer-events:none}
+.reference-ppt-pages button:hover:not([aria-current=page]){box-shadow:inset 0 0 0 2px var(--ds-border-4)}
+.reference-ppt-pages button[aria-current=page]{background:transparent;box-shadow:inset 0 0 0 2px var(--brand-green)}
+.reference-ppt-canvas{display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0;overflow:auto;padding:24px 20px 100px}
+.reference-slide{position:relative;width:100%;max-width:1120px;margin:auto;flex:none;line-height:0;user-select:none;touch-action:none;border-radius:4px;box-shadow:0 3px 18px #0001;cursor:pointer}
+.reference-slide>img{display:block;width:100%;height:auto;border-radius:inherit;pointer-events:none}
+.reference-ppt-canvas>p{font-size:11px;color:var(--text-3);text-align:center;flex:none}
+.reference-page-selected{outline:2px solid var(--brand-green);outline-offset:3px}
+.reference-cropping .reference-slide{cursor:crosshair}
+.reference-crop-box{position:absolute;border:2px solid var(--brand-green);background:#4bcc7a20;box-shadow:0 0 0 1px #fff8;pointer-events:none}
+.reference-crop-box[hidden]{display:none}
+.excel-grid td.reference-cell-selected{background:var(--success-bg)!important;outline:1px solid var(--brand-green);outline-offset:-1px}
+.excel-grid:has(.reference-cell-selected){user-select:none}
+::highlight(artifact-word-selection){background:#ccefd7;color:#173f2b}
+@media(max-width:850px){.reference-ppt-pages{width:84px}.reference-ppt-canvas{padding:16px 12px 100px}.reference-toolbar{padding:8px;gap:8px}.artifact-selection-label{max-width:130px}}
+@media(max-width:420px){.artifact-selection-toolbar{flex-wrap:wrap;justify-content:flex-end}.artifact-selection-label{flex-basis:100%;max-width:none}.artifact-comment-footer{align-items:flex-start}.artifact-comment-footer>span{flex:1}}

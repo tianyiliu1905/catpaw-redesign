@@ -1,0 +1,31 @@
+<!-- Static illustration from the matching primary prompt card in index.html. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art design-pages-art" color="#171717" fill="none">
+  <g stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Landscape slide stack, with a thin second sheet rather than a heavy shadow. -->
+    <path d="M21 38Q64 36 110 39Q118 39 118 47L119 98Q119 105 111 106Q64 107 21 105Q15 105 15 98V46Q15 39 21 38Z" fill="var(--design-paper, #fff)"/>
+    <path d="M20 31Q65 29 109 32Q115 32 115 39L116 92Q116 99 108 99Q63 101 20 98Q13 98 13 91L14 39Q14 32 20 31Z" fill="var(--design-paper, #fff)"/>
+    <g class="design-slide-title design-motion">
+      <path d="M25 44Q44 43 66 44" stroke-width="4"/>
+      <path d="M25 53h26m-26 6h18" stroke-width="2.4"/>
+    </g>
+    <g class="design-slide-chart design-motion" fill="var(--design-gray, #a8aaa8)" stroke="none">
+      <path d="M28 76Q32 75 36 76V88H28Z"/>
+      <path d="M43 68Q47 67 51 68V88H43Z"/>
+      <path d="M58 61Q62 60 66 61V88H58Z"/>
+      <path d="M25 89Q47 90 70 89" stroke="currentColor" stroke-width="2.4"/>
+    </g>
+    <path d="M101 91h3" stroke-width="2"/>
+    <!-- Portrait poster in front: headline, bold flower, small footer. -->
+    <path d="M89 55Q111 53 134 56Q140 56 140 63L141 134Q141 141 134 142Q112 143 89 141Q82 141 82 134L82 63Q82 56 89 55Z" fill="var(--design-paper, #fff)" stroke="var(--design-paper, #fff)" stroke-width="7"/>
+    <path d="M89 55Q111 53 134 56Q140 56 140 63L141 134Q141 141 134 142Q112 143 89 141Q82 141 82 134L82 63Q82 56 89 55Z" fill="var(--design-paper, #fff)"/>
+    <path d="M85 53Q108 51 130 54Q137 54 137 61L138 131Q138 138 131 139Q108 140 85 138Q79 138 79 131L79 61Q79 54 85 53Z" fill="var(--design-paper, #fff)"/>
+    <g class="design-poster-title design-motion">
+      <path d="M90 66Q106 65 126 66m-36 9h25" stroke-width="4"/>
+    </g>
+    <g class="design-flower design-motion" stroke-width="2.6">
+      <path d="M111 105C91 108 84 94 91 89C97 85 106 93 111 100C108 79 124 77 127 86C129 93 122 100 116 104C136 101 138 116 130 120C123 123 117 115 113 110C117 129 101 133 97 125C94 119 102 109 111 105Z" fill="var(--design-gray, #a8aaa8)"/>
+      <path d="M108 102Q112 99 116 103Q119 108 114 111Q108 113 106 108Q105 105 108 102Z" fill="currentColor" stroke="none"/>
+    </g>
+    <path d="M89 132q8-1 14 0m19 0h5" stroke-width="2"/>
+  </g>
+</svg>

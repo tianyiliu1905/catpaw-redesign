@@ -1,0 +1,93 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>数据分析 · SVG 装饰</title><style>
+body{margin:0;padding:64px;background:#fafaf9;color:#171717;font:14px system-ui}main{max-width:800px;margin:auto}h1{font-size:22px}p{color:#777;line-height:1.8}.samples{display:flex;flex-wrap:wrap;gap:40px;align-items:center;margin-top:36px}.study{border:0;border-radius:32px;background:#f0f0ed;padding:32px;cursor:pointer}.study svg{display:block;width:280px;height:280px}.tag{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;overflow:hidden;position:relative;width:176px;height:92px;border:1px solid #ddd;border-radius:12px;background:white;text-align:left;padding:11px;cursor:pointer}.tag strong{font-size:14px;position:relative;z-index:1}.tag small{font-size:10px;color:#888;margin-top:4px;position:relative;z-index:1}.tag svg{position:absolute;width:88px;right:-8px;bottom:-12px}button:focus-visible{outline:2px solid #777;outline-offset:4px}
+
+.analysis-table-art { --analysis-ink:#171717; --analysis-paper:#fff; --analysis-gray:#a8aaa8; color:var(--analysis-ink); }
+.analysis-table-art .analysis-selection { transform-origin:20px 52px; animation:analysisSelect 2.8s ease-in-out infinite paused; }
+.analysis-table-art .analysis-cursor { animation:analysisDrag 2.8s ease-in-out infinite paused; }
+.analysis-table-art .analysis-pie { transform-origin:112px 94px; animation:analysisPiePop 2.8s ease-in-out infinite paused; }
+.pill:hover .analysis-table-art .analysis-motion,
+.pill:focus-visible .analysis-table-art .analysis-motion,
+.analysis-table-art:hover .analysis-motion { animation-play-state:running; }
+@keyframes analysisSelect {
+  0%, 12%, 100% { transform:scale(.5, .333333); opacity:1; }
+  32% { transform:scale(.5, 1); opacity:1; }
+  44%, 82% { transform:scale(1); opacity:1; }
+  92% { transform:scale(1); opacity:0; }
+  94% { transform:scale(.5, .333333); opacity:0; }
+}
+@keyframes analysisDrag {
+  0%, 12%, 100% { transform:translate(0, 0); opacity:1; }
+  32% { transform:translate(0, 36px); opacity:1; }
+  44%, 50% { transform:translate(24px, 36px); opacity:1; }
+  60%, 92% { transform:translate(24px, 36px); opacity:0; }
+  94% { transform:translate(0, 0); opacity:0; }
+}
+@keyframes analysisPiePop {
+  0%, 48%, 100% { transform:translateY(14px) scale(.35); opacity:0; }
+  64% { transform:translateY(-2px) scale(1.06); opacity:1; }
+  70%, 82% { transform:translateY(0) scale(1); opacity:1; }
+  94% { transform:translateY(-6px) scale(.94); opacity:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .analysis-table-art .analysis-motion { animation:none; }
+  .analysis-table-art .analysis-selection { transform:scale(1); }
+  .analysis-table-art .analysis-cursor { opacity:0; }
+  .analysis-table-art .analysis-pie { opacity:1; transform:none; }
+}
+
+.analysis-table-art { opacity:.4; transition:opacity .18s ease; }
+.pill:hover .analysis-table-art, .pill:focus-visible .analysis-table-art, .analysis-table-art:hover { opacity:1; }
+@media (prefers-reduced-motion:reduce) { .analysis-table-art { transition:none; } }
+
+.pill:hover .analysis-table-art,
+.pill:focus-visible .analysis-table-art,
+.analysis-table-art:hover { --analysis-gray:#7fffb4; }
+</style><main><h1>分析数据</h1><p>悬停查看：从单格向下拖选 3 行 × 2 列，再弹出饼图。<br>2.8 秒循环；移出暂停，移入接续。</p><div class="samples"><button class="pill study" aria-label="预览数据分析动画"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art analysis-table-art" aria-hidden="true" fill="none">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- A gently bowed sheet with a solid ink edge, rather than a UI window. -->
+    <path d="M31 34C55 32 87 33 112 35Q122 36 123 46L124 119Q124 131 113 132L34 132Q23 132 23 120L23 46Q23 36 31 34Z" fill="currentColor"/>
+    <path d="M29 29C52 27 88 29 106 30Q116 30 116 40L117 113Q117 124 106 124C81 126 51 123 29 124Q19 124 19 114L20 40Q20 30 29 29Z" fill="var(--analysis-paper, #fff)" stroke="currentColor" stroke-width="3.2"/>
+    <path d="M29 29C52 27 88 29 106 30Q116 30 116 40V52C86 50 53 54 20 52V40Q20 30 29 29Z" fill="currentColor"/>
+    <path d="M32 40q10-1 18 0" stroke="var(--analysis-paper, #fff)" stroke-width="4"/>
+    <circle cx="104" cy="41" r="2" fill="var(--analysis-paper, #fff)"/>
+    <!-- Each cell is still 24 × 18; slight curves give the grid a drawn quality. -->
+    <path class="analysis-selection analysis-motion" d="M23 52Q44 51 65 52Q68 52 68 55L68 103Q68 106 65 106Q44 107 23 106Q20 106 20 103V55Q20 52 23 52Z" fill="var(--analysis-gray, #a8aaa8)" fill-opacity=".55"/>
+    <path d="M20 70Q65 68 116 70M20 88Q64 90 116 88M20 106Q65 104 117 106M44 53Q42 87 44 123M68 52Q70 87 68 124M92 52Q90 89 92 124" stroke="currentColor" stroke-width="1.92"/>
+    <path class="analysis-selection analysis-motion" d="M23 52Q44 51 65 52Q68 52 68 55L68 103Q68 106 65 106Q44 107 23 106Q20 106 20 103V55Q20 52 23 52Z" stroke="currentColor" stroke-width="2.8"/>
+    <g class="analysis-cursor analysis-motion">
+      <path d="M44 70Q43 69 43 72L45 90Q45 93 47 90L51 86 56 93Q57 95 59 93L61 91Q62 90 60 88L55 82 62 81Q65 81 62 79Z" fill="currentColor" stroke="var(--analysis-paper, #fff)" stroke-width="2"/>
+    </g>
+  </g>
+  <g class="analysis-pie analysis-motion" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Thick rounded pie, with a lifted quarter and a clean paper knockout. -->
+    <path d="M112 69C93 69 79 80 79 94V104C79 119 94 129 112 129S145 118 145 104V90C145 77 130 66 115 66Z" fill="var(--analysis-paper, #fff)" stroke="var(--analysis-paper, #fff)" stroke-width="9"/>
+    <path d="M80 94C80 80 94 70 112 70S144 80 144 94V104C144 118 130 128 112 128S80 118 80 104Z" fill="currentColor"/>
+    <path d="M112 94V70C94 70 80 80 80 94S94 118 112 118 144 108 144 94Z" fill="var(--analysis-paper, #fff)"/>
+    <path d="M112 94H144C144 107 130 118 112 118Q103 118 96 115Z" fill="var(--analysis-gray, #a8aaa8)"/>
+    <path d="M115 89V65C133 65 147 75 147 89Z" fill="currentColor"/>
+  </g>
+</svg></button><button class="pill tag"><strong>分析数据</strong><small>查指标 · 找原因</small><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art analysis-table-art" aria-hidden="true" fill="none">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- A gently bowed sheet with a solid ink edge, rather than a UI window. -->
+    <path d="M31 34C55 32 87 33 112 35Q122 36 123 46L124 119Q124 131 113 132L34 132Q23 132 23 120L23 46Q23 36 31 34Z" fill="currentColor"/>
+    <path d="M29 29C52 27 88 29 106 30Q116 30 116 40L117 113Q117 124 106 124C81 126 51 123 29 124Q19 124 19 114L20 40Q20 30 29 29Z" fill="var(--analysis-paper, #fff)" stroke="currentColor" stroke-width="3.2"/>
+    <path d="M29 29C52 27 88 29 106 30Q116 30 116 40V52C86 50 53 54 20 52V40Q20 30 29 29Z" fill="currentColor"/>
+    <path d="M32 40q10-1 18 0" stroke="var(--analysis-paper, #fff)" stroke-width="4"/>
+    <circle cx="104" cy="41" r="2" fill="var(--analysis-paper, #fff)"/>
+    <!-- Each cell is still 24 × 18; slight curves give the grid a drawn quality. -->
+    <path class="analysis-selection analysis-motion" d="M23 52Q44 51 65 52Q68 52 68 55L68 103Q68 106 65 106Q44 107 23 106Q20 106 20 103V55Q20 52 23 52Z" fill="var(--analysis-gray, #a8aaa8)" fill-opacity=".55"/>
+    <path d="M20 70Q65 68 116 70M20 88Q64 90 116 88M20 106Q65 104 117 106M44 53Q42 87 44 123M68 52Q70 87 68 124M92 52Q90 89 92 124" stroke="currentColor" stroke-width="1.92"/>
+    <path class="analysis-selection analysis-motion" d="M23 52Q44 51 65 52Q68 52 68 55L68 103Q68 106 65 106Q44 107 23 106Q20 106 20 103V55Q20 52 23 52Z" stroke="currentColor" stroke-width="2.8"/>
+    <g class="analysis-cursor analysis-motion">
+      <path d="M44 70Q43 69 43 72L45 90Q45 93 47 90L51 86 56 93Q57 95 59 93L61 91Q62 90 60 88L55 82 62 81Q65 81 62 79Z" fill="currentColor" stroke="var(--analysis-paper, #fff)" stroke-width="2"/>
+    </g>
+  </g>
+  <g class="analysis-pie analysis-motion" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Thick rounded pie, with a lifted quarter and a clean paper knockout. -->
+    <path d="M112 69C93 69 79 80 79 94V104C79 119 94 129 112 129S145 118 145 104V90C145 77 130 66 115 66Z" fill="var(--analysis-paper, #fff)" stroke="var(--analysis-paper, #fff)" stroke-width="9"/>
+    <path d="M80 94C80 80 94 70 112 70S144 80 144 94V104C144 118 130 128 112 128S80 118 80 104Z" fill="currentColor"/>
+    <path d="M112 94V70C94 70 80 80 80 94S94 118 112 118 144 108 144 94Z" fill="var(--analysis-paper, #fff)"/>
+    <path d="M112 94H144C144 107 130 118 112 118Q103 118 96 115Z" fill="var(--analysis-gray, #a8aaa8)"/>
+    <path d="M115 89V65C133 65 147 75 147 89Z" fill="currentColor"/>
+  </g>
+</svg></button></div></main></html>

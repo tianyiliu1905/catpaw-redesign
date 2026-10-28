@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CatPaw · 设计策略</title>
+  <style>
+    :root{color-scheme:light;--black:#111;--gray:#575757;--muted:#777;--line:#d8d8d8;--paper:#fff;--surround:#f2f2f2}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,BlinkMacSystemFont,sans-serif;color:var(--black)}
+    body{background:var(--surround)}
+    button{font:inherit}
+    button:focus-visible{outline:2px solid var(--black);outline-offset:3px}
+    .shell{min-height:100dvh;display:grid;grid-template-rows:1fr auto;gap:12px;padding:24px}
+    .stage{position:relative;align-self:center;justify-self:center;width:min(1440px,calc(100vw - 48px),calc((100dvh - 112px)*16/9));aspect-ratio:16/9;background:var(--paper);box-shadow:0 12px 38px #00000012;overflow:hidden}
+    .canvas{position:absolute;left:0;top:0;width:1280px;height:720px;transform:scale(var(--scale,1));transform-origin:top left}
+    .slide{position:absolute;inset:0;display:none;padding:36px 48px 40px;background:var(--paper)}
+    .slide.active{display:flex;flex-direction:column}
+    .slide.preparing{visibility:hidden}
+    .topline{display:flex;align-items:center;justify-content:space-between;padding-bottom:13px;font-size:13px;font-weight:600;letter-spacing:.025em}
+    .topline .right{color:var(--gray);font-weight:400;font-variant-numeric:tabular-nums}
+    .mainline{margin-top:24px;display:flex;align-items:center;gap:18px;color:var(--gray);font-size:14px}
+    .mainline .number{font-weight:700;color:var(--black)}
+    .mainline .status{margin-left:auto;border:1px solid var(--line);padding:5px 10px;font-size:12px;color:var(--gray)}
+    h1,h2,h3,p{margin:0}
+    h1{margin-top:22px;max-width:1128px;font-size:40px;font-weight:680;line-height:1.22;letter-spacing:-.045em}
+    .body{display:grid;grid-template-columns:36% minmax(0,1fr);gap:52px;flex:1;min-height:0;margin-top:43px}
+    .action-slide .mainline,.action-slide h1{max-width:375px}
+    .action-slide .mainline .status{margin-left:0}
+    .action-slide .body{display:block;margin-top:43px}
+    .action-slide .left-content{width:375px}
+    .action-slide .design-slot{position:absolute;top:88px;right:48px;bottom:112px;width:780px}
+    .left-content{padding-top:22px;min-width:0}
+    .label{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:620}
+    .actions{border-top:1px solid var(--line);padding-top:20px;margin-top:34px;min-width:0}
+    .action-list{margin-top:9px}
+    .action{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+    .action:last-child{border-bottom:0}
+    .action-no{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:3px}
+    .action h3{font-size:15px;line-height:1.44;font-weight:600}
+    .action-detail{min-width:0}
+    .user-concern{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+    .user-concern .label{flex:none}
+    .user-concern p{color:var(--gray);font-size:14px;line-height:1.45}
+    .action-detail h3{margin-top:14px;font-size:20px;line-height:1.38;font-weight:650}
+    .action-detail p{margin-top:12px;font-size:16px;line-height:1.58;color:var(--gray)}
+    .design-slot{display:flex;flex-direction:column;min-width:0;min-height:0;margin:0;border:1px solid var(--line)}
+    .design-slot.has-demo{border:0}
+    .design-slot-body{display:grid;place-items:center;flex:1;min-height:0;color:#aaa;font-size:16px}
+    .demo-slot-body{display:block;overflow:hidden;background:#bde5e8 url('./assets/demo-wallpaper.png') center / cover no-repeat}
+    .demo-viewport{position:relative;width:100%;height:100%;overflow:hidden}
+    .demo-viewport iframe{position:absolute;width:1200px;height:800px;border:0;transform-origin:top left;pointer-events:none;visibility:hidden}
+    .demo-viewport iframe.is-ready{visibility:visible}
+    .phase-demo-context{position:absolute;top:88px;left:430px;right:48px}
+    .phase-demo-context .user-concern{margin-bottom:12px;padding-bottom:12px}
+    .phase-demo-context .action-detail h3{margin-top:8px}
+    .phase-demo-context .action-detail p{margin-top:9px}
+    .phase-demo-grid{position:absolute;top:270px;right:48px;bottom:40px;left:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+    .phase-demo-card{display:flex;flex-direction:column;min-width:0;min-height:0;margin:0}
+    .phase-demo-card figcaption{display:flex;align-items:baseline;gap:10px;min-height:39px}
+    .phase-demo-card figcaption strong{font-size:17px;font-weight:650}
+    .phase-demo-card figcaption span{color:var(--muted);font-size:12px}
+    .phase-demo-card .demo-viewport{flex:1;min-height:0;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+    .phase-demo-card iframe{width:600px;height:620px}
+    .process-demo{display:flex;flex-direction:column;width:100%;height:100%;padding:27px 30px;background:#fff}
+    .process-demo-heading{padding-bottom:16px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600}
+    .process-demo-flow{display:grid;grid-template-rows:repeat(3,minmax(0,1fr));flex:1;min-height:0}
+    .process-demo-phase{display:grid;grid-template-columns:114px minmax(0,1fr);gap:21px;min-height:0;padding:21px 0;border-bottom:1px solid var(--line)}
+    .process-demo-phase:last-child{border-bottom:0}
+    .process-demo-phase>span{color:var(--muted);font-size:12px;font-weight:600}
+    .process-demo-content{min-width:0;font-size:14px;line-height:1.45}
+    .process-demo-content strong{display:block;font-weight:650}
+    .process-demo-line{margin-top:10px;color:var(--gray);font-size:12px}
+    .process-demo-box{margin-top:9px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;color:var(--gray);font-size:12px}
+    .process-demo-box b{color:var(--black);font-weight:600}
+    .process-demo-current{border-color:var(--black);color:var(--black)}
+    .process-demo-columns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .process-demo-columns .process-demo-box{margin-top:9px}
+    .strategy-diagram{width:100%;height:100%;padding:27px 30px;background:#fff;color:var(--black)}
+    .strategy-diagram-heading{padding-bottom:16px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600}
+    .strategy-diagram-caption{margin-top:18px;color:var(--gray);font-size:13px;line-height:1.5}
+    .workspace-layout{display:grid;gap:14px;height:310px;margin-top:25px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fafafa}
+    .workspace-layout.face{grid-template-columns:1.7fr 1fr}
+    .workspace-layout.side{grid-template-columns:1.35fr 1fr}
+    .workspace-layout.call{display:block;position:relative}
+    .workspace-pane{min-width:0;padding:15px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    .workspace-pane>strong{display:block;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:12px;font-weight:650}
+    .workspace-chat-line{margin-top:15px;padding:11px;border-radius:8px;background:#f5f5f5;font-size:12px;line-height:1.5}
+    .workspace-chat-line.reply{margin-left:32px;background:#fff;border:1px solid var(--line)}
+    .workspace-chat-input{margin-top:25px;padding:12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
+    .workspace-artifact{display:grid;grid-template-columns:44px 1fr;gap:10px;height:233px;margin-top:10px}
+    .workspace-thumbs{display:flex;flex-direction:column;gap:7px}
+    .workspace-thumbs i{display:block;height:34px;border:1px solid var(--line);background:#f5f5f5}
+    .workspace-thumbs i:first-child{border-color:var(--black)}
+    .workspace-page{position:relative;padding:17px;border:1px solid var(--line);background:#fff}
+    .workspace-page b{display:block;width:68%;height:8px;background:#333}
+    .workspace-page i{display:block;height:6px;margin-top:13px;background:#ddd}
+    .workspace-page i:nth-of-type(2){width:81%}
+    .workspace-page i:nth-of-type(3){width:56%}
+    .workspace-layout.call .workspace-pane{height:100%}
+    .workspace-layout.call .workspace-artifact{height:233px}
+    .workspace-annotation{position:absolute;right:19px;top:112px;padding:8px 10px;border:1px solid var(--black);border-radius:7px;background:#fff;font-size:11px}
+    .workspace-call-entry{position:absolute;right:30px;bottom:28px;padding:10px 13px;border:1px solid var(--black);border-radius:18px;background:#fff;font-size:12px}
+    .workspace-key{display:flex;gap:17px;margin-top:17px;color:var(--gray);font-size:12px}
+    .workspace-key strong{color:var(--black);font-weight:650}
+    .pet-desktop{position:relative;height:310px;margin-top:25px;padding:22px;border:1px solid var(--line);border-radius:12px;background:#f7f7f7;overflow:hidden}
+    .pet-other-window{width:62%;height:202px;padding:17px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:12px}
+    .pet-other-window i{display:block;width:72%;height:8px;margin-top:22px;background:#e6e6e6;border-radius:4px}
+    .pet-other-window i:nth-of-type(2){width:90%}
+    .pet-other-window i:nth-of-type(3){width:56%}
+    .pet-notice{position:absolute;right:25px;bottom:24px;width:340px;padding:16px 18px;border:1px solid var(--black);border-radius:12px;background:#fff;box-shadow:0 8px 20px #00000012}
+    .pet-notice-head{display:flex;align-items:center;gap:10px;color:var(--gray);font-size:12px}
+    .pet-notice-head img{width:36px;height:36px}
+    .pet-notice strong{display:block;margin-top:12px;font-size:16px}
+    .pet-notice p{margin-top:7px;color:var(--gray);font-size:12px;line-height:1.5}
+    .pet-notice-link{display:block;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;font-weight:650}
+    .participation-chart{width:100%;height:348px;margin-top:18px}
+    .participation-chart svg{display:block;width:100%;height:100%}
+    .participation-chart text{font-family:inherit;fill:var(--black)}
+    .participation-chart .axis-label{font-size:14px;font-weight:650}
+    .participation-chart .axis-end{font-size:11px;fill:var(--muted)}
+    .participation-chart .point-title{font-size:15px;font-weight:650}
+    .participation-chart .point-note{font-size:11px;fill:var(--gray)}
+    .participation-chart .point text{paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+    .participation-chart .point circle{fill:#fff;stroke:var(--black);stroke-width:2}
+    .participation-chart .point.pet circle{fill:var(--black)}
+    .mode-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+    .mode-panel{min-height:280px;padding:20px;border:1px solid var(--line);border-radius:10px}
+    .mode-panel.is-default{border-color:var(--black)}
+    .mode-panel small{display:block;color:var(--muted);font-size:11px}
+    .mode-panel h3{margin-top:8px;font-size:19px}
+    .mode-panel p{margin-top:24px;font-size:15px;line-height:1.55}
+    .mode-panel ul{margin:22px 0 0;padding:0;list-style:none}
+    .mode-panel li{padding:9px 0;border-top:1px solid var(--line);color:var(--gray);font-size:12px}
+    .mode-shared{margin-top:18px;padding:12px 16px;border:1px solid var(--line);color:var(--gray);font-size:12px}
+    .result-formats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}
+    .result-format{min-height:280px;padding:18px;border:1px solid var(--line);border-radius:10px}
+    .result-format small,.result-format strong{display:block}
+    .result-format small{color:var(--muted);font-size:11px}
+    .result-format strong{margin-top:8px;font-size:17px}
+    .result-format .visual{display:flex;align-items:flex-end;gap:10px;height:100px;margin-top:30px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+    .result-format .visual i{display:block;flex:1;background:#d9d9d9}
+    .result-format .visual i:last-child{background:#333}
+    .result-format .compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:30px}
+    .result-format .compare span{display:grid;place-items:center;height:100px;border:1px solid var(--line);font-size:12px}
+    .result-format .compare span:last-child{border-color:var(--black)}
+    .result-format .plain{margin-top:30px;font-size:22px;font-weight:650;line-height:1.35}
+    .result-format p{margin-top:17px;color:var(--gray);font-size:12px;line-height:1.5}
+    .result-review{display:grid;grid-template-columns:1.35fr 1fr;gap:15px;margin-top:25px}
+    .result-review-main,.result-review-side{min-height:295px;padding:21px;border:1px solid var(--line);border-radius:10px}
+    .result-review-main h3,.result-review-side h3{font-size:17px}
+    .result-review-main p,.result-review-side p{margin-top:13px;color:var(--gray);font-size:12px;line-height:1.55}
+    .result-review-row{display:flex;justify-content:space-between;gap:8px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+    .result-review-row:first-of-type{margin-top:20px}
+    .result-review-row b{font-weight:650}
+    .result-review-link{display:block;margin-top:21px;padding-top:12px;border-top:1px solid var(--line);font-size:12px}
+    .control-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:28px}
+    .control-step{min-height:275px;padding:19px;border:1px solid var(--line);border-radius:10px}
+    .control-step.active{border-color:var(--black)}
+    .control-step small{display:block;color:var(--muted);font-size:11px}
+    .control-step h3{margin-top:12px;font-size:17px;line-height:1.4}
+    .control-step p{margin-top:25px;color:var(--gray);font-size:13px;line-height:1.55}
+    .control-step .control-line{margin-top:21px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;line-height:1.45}
+    .recovery-flow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+    .recovery-panel{min-height:300px;padding:21px;border:1px solid var(--line);border-radius:10px}
+    .recovery-panel h3{font-size:18px}
+    .recovery-panel p{margin-top:18px;color:var(--gray);font-size:13px;line-height:1.6}
+    .recovery-panel ul{margin:23px 0 0;padding:0;list-style:none}
+    .recovery-panel li{padding:10px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.4}
+    .recovery-panel li strong{font-weight:650}
+    .continuation-flow{display:grid;grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr);gap:10px;align-items:center;margin-top:28px}
+    .continuation-card{min-height:300px;padding:20px;border:1px solid var(--line);border-radius:10px}
+    .continuation-card small{display:block;color:var(--muted);font-size:11px}
+    .continuation-card h3{margin-top:10px;font-size:18px;line-height:1.35}
+    .continuation-card p{margin-top:18px;color:var(--gray);font-size:13px;line-height:1.55}
+    .continuation-card ul{margin:20px 0 0;padding:0;list-style:none}
+    .continuation-card li{padding:10px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.4}
+    .continuation-card li strong{font-weight:650}
+    .continuation-arrow{color:var(--gray);font-size:25px;text-align:center}
+    .design-note{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:var(--gray);font-size:14px;line-height:1.5}
+    .capability-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 8px;margin-top:14px}
+    .capability-item{min-width:0}
+    .capability-card{position:relative;height:80px;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--paper);box-shadow:0 3px 10px #00000009;overflow:hidden}
+    .capability-card strong,.capability-card small{position:relative;z-index:1;display:block;white-space:nowrap}
+    .capability-card strong{font-size:13px;line-height:1.3;font-weight:650}
+    .capability-card small{margin-top:3px;color:var(--muted);font-size:10px;line-height:1.3}
+    .capability-card .capability-illustration{position:absolute;right:-8px;bottom:-12px;width:88px;height:88px;object-fit:contain;opacity:.4;pointer-events:none}
+    .capability-evidence{margin-top:4px;color:var(--gray);font-size:9px;line-height:1.3}
+    .capability-source{margin-top:8px;color:var(--muted);font-size:10px;line-height:1.35}
+    .capability-source a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+    .story-kicker{margin-top:44px;color:var(--gray);font-size:14px;font-weight:600}
+    .story-slide h1{margin-top:20px;max-width:1010px;font-size:47px;line-height:1.22}
+    .story-copy{margin-top:26px;max-width:930px;color:var(--gray);font-size:21px;line-height:1.6}
+    .story-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:auto;padding-top:23px;border-top:2px solid var(--black)}
+    .story-step{min-height:104px;border-right:1px solid var(--line)}
+    .story-step:last-child{border-right:0}
+    .story-step span{display:block;color:var(--muted);font-size:12px}
+    .story-step strong{display:block;margin-top:13px;font-size:19px;line-height:1.35;font-weight:650}
+    .chapter-questions{margin-top:auto;padding-top:22px;border-top:1px solid var(--line)}
+    .chapter-question-list{display:flex;gap:30px;margin-top:14px}
+    .chapter-question-list p{flex:1;min-width:0;font-size:17px;line-height:1.42;font-weight:600}
+    .chapter-slide .story-steps{margin-top:27px;padding-top:18px}
+    .chapter-slide .story-step{min-height:72px}
+    .chapter-slide .story-step strong{margin-top:8px;font-size:17px}
+    #slide-strategy-2 .story-steps,#slide-strategy-3 .story-steps{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+    #slide-strategy-2 .chapter-question-list,#slide-strategy-3 .chapter-question-list{gap:18px}
+    #slide-strategy-2 .chapter-question-list p,#slide-strategy-3 .chapter-question-list p{font-size:15px}
+    .overview-slide .story-kicker{margin-top:35px}
+    .overview-slide h1{font-size:42px;max-width:1120px}
+    .overview-slide .story-copy{margin-top:15px;max-width:1060px;font-size:19px}
+    .scene-flow{display:grid;grid-template-columns:minmax(0,1fr) 78px minmax(0,1fr) 78px minmax(0,1fr);align-items:stretch;flex:1;min-height:0;margin-top:36px}
+    .scene-flow-node{display:flex;flex-direction:column;min-width:0;border-top:2px solid var(--black);border-bottom:1px solid var(--line);padding:19px 0 20px}
+    .scene-flow-node .step-number{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+    .scene-flow-node h2{margin-top:16px;font-size:22px;line-height:1.3;font-weight:650}
+    .scene-flow-node .question{margin-top:27px;font-size:24px;line-height:1.42;font-weight:620}
+    .scene-flow-node .purpose{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);color:var(--gray);font-size:15px;line-height:1.45}
+    .scene-flow-node .purpose span{display:block;margin-bottom:5px;color:var(--muted);font-size:12px}
+    .scene-flow-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:0 8px;color:var(--gray)}
+    .scene-flow-connector .arrow{position:relative;display:block;width:100%;height:1px;background:var(--black)}
+    .scene-flow-connector .arrow:after{content:"";position:absolute;right:0;top:-5px;width:10px;height:10px;border-top:1px solid var(--black);border-right:1px solid var(--black);transform:rotate(45deg)}
+    .scene-flow-connector span:last-child{font-size:11px;line-height:1.3;text-align:center}
+    .catalog-slide .story-kicker{margin-top:20px}
+    .catalog-slide h1{margin-top:9px;font-size:36px}
+    .catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;flex:1;min-height:0;margin-top:22px}
+    .catalog-column{min-width:0;border-top:2px solid var(--black);padding-top:12px}
+    .catalog-column>.scene{display:block;color:var(--muted);font-size:12px}
+    .catalog-column>h2{margin-top:5px;font-size:17px;line-height:1.3}
+    .catalog-point{margin-top:15px}
+    .catalog-point-heading{display:flex;align-items:baseline;gap:8px;font-size:14px;line-height:1.35}
+    .catalog-point-heading span{flex:none;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+    .catalog-point-heading strong{font-weight:650}
+    .catalog-point-heading>strong{flex:none}
+    .catalog-point-concern{flex:1;min-width:0;margin-left:8px;color:var(--gray);font-size:12px;font-weight:400;line-height:1.45}
+    .catalog-point-concern .concern-label{margin-right:6px;color:var(--muted);font-size:12px}
+    .catalog-point ol{margin:5px 0 0;padding:0;list-style:none}
+    .catalog-point li{display:grid;grid-template-columns:45px minmax(0,1fr);gap:5px;padding:3px 0;color:var(--gray);font-size:12px;line-height:1.35}
+    .catalog-point li span:first-child{color:var(--muted);font-variant-numeric:tabular-nums}
+    .evolution-slide .story-kicker{margin-top:36px}
+    .evolution-slide h1{font-size:44px;max-width:1100px}
+    .evolution-slide .story-copy{margin-top:17px;max-width:1070px;font-size:19px}
+    .evolution-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;flex:1;min-height:0;margin-top:42px}
+    .evolution-phase{display:flex;flex-direction:column;border-top:1px solid var(--line);padding-top:20px;min-width:0}
+    .evolution-phase.current{border-top:3px solid var(--black);padding-top:18px}
+    .evolution-phase .phase-no{color:var(--muted);font-size:12px}
+    .evolution-phase h2{margin-top:19px;font-size:23px;line-height:1.3}
+    .evolution-phase .phase-type{margin-top:8px;color:var(--gray);font-size:15px}
+    .evolution-phase p{margin-top:24px;max-width:345px;color:var(--gray);font-size:15px;line-height:1.62}
+    .evolution-phase.current h2,.evolution-phase.current .phase-type{color:var(--black)}
+    .evolution-phase .phase-state{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--gray)}
+    .evolution-phase.current .phase-state{font-weight:650;color:var(--black)}
+    .context-slide .story-kicker{margin-top:34px}
+    .context-slide h1{font-size:42px;max-width:1110px}
+    .context-slide .story-copy{margin-top:15px;max-width:1050px;font-size:18px}
+    .context-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-rows:repeat(2,minmax(0,1fr));column-gap:44px;row-gap:22px;flex:1;min-height:0;margin-top:32px}
+    .context-block{border-top:2px solid var(--black);padding-top:19px;min-width:0}
+    .context-block:first-child{grid-row:1 / -1}
+    .context-block:not(:first-child){padding-top:12px}
+    .context-block .block-label{color:var(--muted);font-size:12px}
+    .context-block h2{margin-top:20px;font-size:22px;line-height:1.36}
+    .context-block p{margin-top:16px;color:var(--gray);font-size:15px;line-height:1.62}
+    .context-block .block-note{display:block;margin-top:18px;color:var(--black);font-size:13px;font-weight:600;line-height:1.5}
+    .context-block:not(:first-child) h2{margin-top:10px;font-size:20px}
+    .context-block:not(:first-child) p{margin-top:9px;font-size:14px;line-height:1.45}
+    .context-block:not(:first-child) .block-note{margin-top:8px;font-size:12px}
+    .context-evidence{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}
+    .context-evidence p{margin:0;padding:8px 0;border-top:1px solid var(--line);font-size:13px;line-height:1.45}
+    .context-evidence strong{display:block;color:var(--black);font-weight:650}
+    .context-evidence span{display:block;margin-top:3px}
+    .context-block:first-child .block-note{margin-top:10px;color:var(--gray);font-size:12px;font-weight:400}
+    .context-sources{display:flex;gap:20px;align-items:center;border-top:1px solid var(--line);padding-top:13px;color:var(--muted);font-size:11px}
+    .context-sources a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+    .controls{justify-self:center;display:flex;align-items:center;justify-content:center;gap:16px;color:var(--gray);font-size:12px}
+    .controls button{width:33px;height:33px;border:1px solid var(--line);background:var(--paper);color:var(--black);cursor:pointer}
+    .controls button:hover:not(:disabled){border-color:var(--black)}
+    .controls button:disabled{opacity:.3;cursor:default}
+    .controls output{min-width:68px;text-align:center;font-variant-numeric:tabular-nums}
+    .controls small{margin-left:16px;color:var(--muted)}
+    @media(max-width:700px){.shell{padding:12px;gap:8px}.stage{width:min(calc(100vw - 24px),calc((100dvh - 72px)*16/9))}.controls small{display:none}}
+    @media print{
+      @page{size:16in 9in;margin:0}
+      html,body{width:16in;margin:0;background:white;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+      .shell{display:block;padding:0}.stage{width:16in;height:9in;aspect-ratio:auto;box-shadow:none;overflow:visible}.canvas{position:static;width:auto;height:auto;transform:none}
+      .slide,.slide.active{position:relative;display:flex;width:16in;height:9in;page-break-after:always;break-after:page}
+      .controls{display:none}
+      .demo-viewport iframe{visibility:visible}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main class="stage" aria-label="CatPaw 设计策略宽屏演示文稿">
+      <div class="canvas" id="canvas"></div>
+    </main>
+    <nav class="controls" aria-label="翻页">
+      <button type="button" id="prev" aria-label="上一页">←</button>
+      <output id="counter" aria-live="polite"></output>
+      <button type="button" id="next" aria-label="下一页">→</button>
+      <small>方向键翻页 · 可打印为 PDF</small>
+    </nav>
+  </div>
+  <script src="./strategy-scenes.js"></script>
+  <script>
+    const pointSlides = [
+      {
+        no:'1.1', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'能力可感：用熟悉的任务与产物，让用户看懂 Agent 能做什么。',
+        thesis:'先让用户认出可以委托的任务，以及可能得到的成果类型。',
+        question:'“它到底能帮我完成什么？”',
+        context:'初次使用者更容易理解熟悉的任务和产物类型；首屏堆叠太多文字与具体案例，反而会增加理解负担。四类入口依据 ToC 与 ToB 的真实任务类型归并，但不等同于统计分类。',
+        actions:[
+          ['用四类任务入口说明能力与产物','将常见工作与成果并列呈现；短说明帮助用户选方向，具体成品留到案例区。']
+        ], check:'用户能说出至少一种可委托的任务，以及可能得到的产物类型。'
+      },
+      {
+        no:'1.2', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'预期可管：从案例看清结果，再决定是否借用做法。',
+        thesis:'案例不只展示成品，还要帮助用户判断适不适合自己、下一步怎么开始。',
+        question:'“做出来是什么样？我能照着试吗？”',
+        context:'认识能力后，用户仍需要看到具体结果，确认产物质量与自己的任务是否匹配，再决定要不要借用案例中的做法。',
+        actions:[
+          ['按任务方向提供相关案例','选择“分析数据”后，案例区同步展示对应的报告、看板和表格成果，缩小寻找范围。'],
+          ['点开案例，直接查看成品','案例卡片先给产物预览；进入详情后可以查看完整成品，不必等待一次生成。'],
+          ['交代做法，保留改写空间','详情同时展示产物、使用的 Skill 和原始 Prompt；“做同款”将内容带回输入区，由用户修改后再发送。']
+        ], check:'用户能看清成品与做法，判断是否适合自己的任务，并从案例开始一条可编辑的需求。'
+      },
+      {
+        no:'1.3', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'上手可启：由助理主动接话，帮助用户迈出表达需求的第一步。',
+        thesis:'用户一旦表现出开始意愿，界面就给出下一句，而不是留下一片空白。',
+        question:'“我知道想试，但该怎么说？”',
+        context:'空输入框要求用户一次想清目标、材料和要求。轻量回应可以把任务描述变成逐步展开的对话。',
+        actions:[
+          ['聚焦时主动问候','小猫和标题气泡回应输入动作，邀请用户先说一个方向。'],
+          ['选任务标签后接具体话题','例如选择 PPT 后追问受众和材料，让下一步补充什么更明确。'],
+          ['提供可改写的起点','示例说法、二级推荐和“做同款”可回填输入；用户确认后再发送。']
+        ], check:'用户不必先写出完整 Prompt，也能顺利发起第一轮任务。'
+      },
+      {
+        no:'2.1', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'过程可懂：按任务阶段与用户需要调整信息披露。',
+        thesis:'先讲清当前进展，再按需提供更深的执行细节。',
+        question:'“它听懂了吗？现在在做什么？我需要看多少细节？”',
+        context:'用户在工作前、工作时和结束后的关注点不同；办公用户与研发用户需要的过程深度也不同。',
+        actions:[
+          ['按任务阶段切换信息重点','工作前确认目标和任务安排；工作时收起清单，已完成动作收入可展开的思考记录，页面只突出当前工作；结束后直接呈现总结与产物。'],
+          ['按用户需要切换过程深度','默认工作模式用任务语言解释进展；研发模式在设置中开启，补充工具与调用细节。切换模式不重启任务。']
+        ], check:'不同用户都能快速判断任务是否按预期推进，并按需核对执行依据。'
+      },
+      {
+        no:'2.2', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'过程可控：中途可干预，异常可恢复。',
+        thesis:'让用户知道何时能改方向，卡住时又该怎样继续。',
+        question:'“我现在能改方向吗？出错后还能接着做吗？”',
+        context:'Agent 执行时间较长，用户可能补充新要求，也可能遇到文件缺失、工具失败等异常；如果只能等待，用户会失去控制感。',
+        actions:[
+          ['在关键节点允许调整方向','执行中保留暂停、补充要求和调整任务安排的入口；说明对当前步骤与已有成果的影响，再按新方向继续。'],
+          ['异常发生时给出恢复路径','指出哪里卡住、影响什么、已保留什么；提供重试、更换资料或处理非关键缺口的选择，关键缺口由用户确认。']
+        ], check:'用户能及时介入；遇到异常也清楚哪些工作保留、下一步如何恢复。'
+      },
+      {
+        no:'2.3', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'结果可视：让结果以最容易判断的形式出现。',
+        thesis:'结果形式跟着用户要解决的问题走。',
+        question:'“结果说明了什么？我能直接判断并使用吗？”',
+        context:'长篇文字不总是最容易理解的交付形式。比较、变化和优先级需要看得见；简单结论则不必强行做成图。',
+        actions:[
+          ['按问题选择结果形式','一句结论用文字；对象比较并排展示；趋势与优先级用图表呈现。让用户先看懂答案，再决定是否深入。'],
+          ['把结论、依据与产物连起来','关键结论旁保留指标口径、来源和待确认项；支持从结果定位到对应产物，继续追问或修改。']
+        ], check:'用户不必从长段说明中寻找结论，也能核对依据并继续使用产物。'
+      },
+      {
+        no:'2.4', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'协作可续：让已确认的任务上下文承接下一轮对话。',
+        thesis:'展示 Agent 此刻真正沿用的共识，让下一句有明确的起点。',
+        question:'“下一轮它还知道我们说过什么吗？”',
+        context:'对话继续时，用户担心新要求落错任务，也担心已确认的目标和约束被遗忘。这里关注对话上下文的承接；完整产物上的定点修改归入策略三。',
+        actions:[
+          ['标明当前任务与结果','继续对话时明确要求将作用于哪项任务及其结果。'],
+          ['展示可修正的关键共识','例如受众、保留项与待解决问题，并让用户能查看和纠正。'],
+          ['承接新要求时说明延续关系','说明新要求会改变什么、保留什么；信息不足或冲突时及时澄清。']
+        ], check:'用户能确认 Agent 沿用的是当前仍有效的上下文，无需反复重讲。'
+      },
+      {
+        no:'3.1', strategy:'策略三 · 优化产物体验，推动成果落地', status:'待深化', title:'布局可适：让窗口随人和 Agent 的参与状态切换。',
+        thesis:'对话、并排、批注与桌宠触达，对应四种不同的人机参与关系。',
+        question:'“修改完整产物时，我和 Agent 怎样保持协作？”',
+        context:'讨论方向时看对话；核对内容时边看边聊；集中批注时让 Agent 暂退；人暂时离开时，桌宠传达 Agent 的工作状态。',
+        actions:[
+          ['Face-to-face：以对话为主建立方向','放大对话，产物保留可打开的预览。适合先说明修改目标、讨论方向，再进入具体页面。'],
+          ['Side-by-side：边看产物边讨论','产物与对话并排，比例可调。PPT 保留缩略页与画布；Word 保留阅读宽度和目录；设计稿保留画布、缩放与图层。'],
+          ['On-call：以产物为主专心批注','产物占据主视野，Agent 暂不主动占用注意力；对话缩为可唤起入口。用户批注时保留页码、滚动、缩放和选区。'],
+          ['桌宠：人暂离时保持 Agent 可触达','用户离开主窗口后，Agent 可继续处理已交付的产物任务；桌宠轻量呈现进展，在需要确认或完成时提醒，点击回到原工作现场。']
+        ], check:'待验证：四种状态能自然切换，产物、任务进度与修改上下文始终连贯。'
+      },
+      {
+        no:'3.2', strategy:'策略三 · 优化产物体验，推动成果落地', title:'意见可达：从产物上批注或选取，把修改上下文带进对话。',
+        thesis:'用户指出对象、说明意见，界面替他携带位置与内容。',
+        question:'“能不能直接指着要改的地方说？”',
+        context:'复杂产物里的某页、某段或某个区域难以用文字准确描述；反复交代位置与原文，会增加人机交互成本。',
+        actions:[
+          ['在产物上批注或选取内容','PPT 可选页或框选局部，Word 可划词和批注，设计稿可圈选画布区域；Excel 可选单元格。选中本身不自动提交。'],
+          ['把引用与批注带入对话','输入框保留文件、位置、内容预览和批注；用户只需补充“怎么改”，发送前可检查、移除或回到原位置。'],
+          ['支持多条意见集中交付','在多个位置留下意见后统一提交，让 Agent 看到每条意见对应的对象，减少一处一轮的反复沟通。']
+        ], check:'用户能少打字、少往返，并确认每条意见指向正确内容。'
+      },
+      {
+        no:'3.3', strategy:'策略三 · 优化产物体验，推动成果落地', status:'待设计', title:'版本可溯：每轮改动看得见，也回得去。',
+        thesis:'把产物变化留成可以查看和恢复的历史。',
+        question:'“我能找到上一版，并撤回不满意的修改吗？”',
+        context:'复杂产物经过多轮修改后，只保留最新文件不足以让用户核对变化，也难以找回先前认可的内容。版本界面尚未设计。',
+        actions:[
+          ['为产物改动建立可辨版本','产物实际发生修改时记录版本、时间、变更摘要与受影响位置，让用户知道每一版从何而来。'],
+          ['呈现差异并提供回退','查看两版变化和被保留的内容；回退前说明影响，并让用户选择恢复到哪一版。']
+        ], check:'待设计与验证：用户能看清版本差异，并安全回到认可的产物状态。'
+      },
+      {
+        no:'3.4', strategy:'策略三 · 优化产物体验，推动成果落地', status:'待设计', title:'成果可续：让这份产物成为下一次委托的起点。',
+        thesis:'在完成时留下可用的成果，也让下一次能从它继续。',
+        question:'“这份成果下次还能接着用吗？”',
+        context:'完整产物经过多轮修改后，用户需要确认最终交付了什么、仍有哪些待确认项，以及下次能否沿用这份结果。',
+        actions:[
+          ['收束本轮并提供继续入口','明确交付物、已解决的问题和待确认项；只展示实际保留的偏好与约束，并提供从现有产物继续修改或发起相似任务的入口。']
+        ], check:'待设计与验证：用户看得见本轮价值，并能从真实保留的成果继续委托。'
+      }
+    ];
+
+    const catalogConcerns = {
+      '1.1':'能做哪些工作，会交付什么？',
+      '1.2':'结果什么样，能借用做法吗？',
+      '1.3':'不知道怎么说，如何开始？',
+      '2.1':'听懂了吗，现在做到哪了？',
+      '2.2':'中途能改吗，出错如何继续？',
+      '2.3':'结果说明什么，依据在哪？',
+      '2.4':'之前的共识，下一轮还记得吗？',
+      '3.1':'怎样边看、边聊、专心修改？',
+      '3.2':'能直接指着要改的地方说吗？',
+      '3.3':'改了什么，能回到上一版吗？',
+      '3.4':'这份成果，下次还能接着用吗？'
+    };
+
+    const actionConcerns = {
+      '1.1':[
+        '“它能帮我做哪些工作，最后会交付什么？”'
+      ],
+      '1.2':[
+        '“有没有和我当前任务相近的案例？”',
+        '“这个案例做出来到底是什么样？”',
+        '“我能借用它的做法，再改成自己的需求吗？”'
+      ],
+      '1.3':[
+        '“我还没想好怎么说，它能先接住我吗？”',
+        '“选了任务方向后，我接下来该补充什么？”',
+        '“有没有一句可以直接改写的起点？”'
+      ],
+      '2.1':[
+        '“它理解对了吗，现在做到哪一步了？”',
+        '“这些过程我能看懂吗，需要时能看到细节吗？”'
+      ],
+      '2.2':[
+        '“我发现方向不对，现在能改吗？”',
+        '“卡住了会怎样，之前的工作还在吗？”'
+      ],
+      '2.3':[
+        '“结果能不能一眼看出重点？”',
+        '“这结论从哪里来，产物在哪里？”'
+      ],
+      '2.4':[
+        '“这一轮接着讨论哪项任务？”',
+        '“之前确定的要求还有效吗？”',
+        '“新要求会改变哪些已确认内容？”'
+      ],
+      '3.1':[
+        '“我能先把修改方向聊清楚吗？”',
+        '“能边看产物边说这处怎么改吗？”',
+        '“我专心批注时，对话能先让开吗？”',
+        '“我离开窗口后，怎样知道它做到哪了？”'
+      ],
+      '3.2':[
+        '“我能直接在要改的地方留下意见吗？”',
+        '“能把那段内容和位置一起带进对话吗？”',
+        '“多处意见能一次交代清楚吗？”'
+      ],
+      '3.3':[
+        '“这轮改动对应哪一版？”',
+        '“我能看出两版差异并回退吗？”'
+      ],
+      '3.4':[
+        '“这份成果和已确认的要求，下次还能接着用吗？”'
+      ]
+    };
+    if(pointSlides.some(point=>actionConcerns[point.no]?.length!==point.actions.length)){
+      throw new Error('每个设计动作都需要对应一条用户关注');
+    }
+
+    const evolution = {
+      no:'evolution', kind:'evolution', title:'从研发工作台，到个人 Agent。',
+      story:'Agent 的工作形态正在降低使用门槛。本项目聚焦中间的办公阶段：先让普通用户看懂、敢用、愿意继续交付任务。',
+      phases:[
+        ['研发型 Agent','IDE → Codex 形态','保留工作台和研发术语，适合专业开发者。虽已简化部分交互并加入 Office 基础能力，对普通办公用户仍有门槛。','已有基础'],
+        ['办公型 Agent','本次设计聚焦','围绕办公任务组织能力与产物，把执行过程翻译成工作语言，收起大多数研发视角的信息，降低首次委托与修改门槛。','我们现在在这里'],
+        ['个人型 Agent','未来方向','更贴近个人情境，更主动地理解目标、连接信息并提出下一步。此次只作为方向，不把未来能力写成当前承诺。','后续演化']
+      ]
+    };
+    const contextSlide = {
+      no:'context', kind:'context', title:'面向更多样的职场用户。',
+      story:'CatPaw 正从内部专业工具走向对外使用。当前阶段要让不熟悉 Agent 工具的人更容易开始，也修复既有体验问题。',
+      blocks:[
+        ['背景','用户与任务都变了','从熟悉 Agent 的内部研发用户，扩展到岗位和技术背景更丰富的外部用户。','WorkBuddy 外部参照：25–35 岁职场白领超 70%；文档/PPT 近 40%，数据约 20%。',[
+          ['CatPaw ToC · 首轮 n=3,322','软件开发 50.4% · 内容创作 18.5%'],
+          ['CatPaw ToB · 抽样 n=938','追问/指代 53.5%；经营分析/报告 7.9%，纯查数 2.8%']
+        ]],
+        ['目标','顺畅完成并采纳成果','无需先学专业工具，也能发起任务、看懂进展与结果，并愿意采用产物。','衡量：一轮对话完成率 · 成果采纳率'],
+        ['挑战','门槛贯穿整段协作','发起前不知道能做什么；执行中难判断是否做对；产物要改却说不准位置；结束后又得从头交代。','依次降低发起、判断、修改和再次委托的门槛；产品转型期还要取舍功能：办公默认只展示必要能力，研发深度按需打开。']
+      ]
+    };
+    const overview = {
+      no:'overview', kind:'overview', title:'三个使用场景',
+      story:'从发起任务到检查结果，用户的关注点会变化。先解决能否开始，再建立执行信任；出现完整产物后，进入查看与修改场景。',
+      steps:[
+        ['发起前','它能做什么？','降低启动门槛，建立正确预期'],
+        ['对话与执行中','它懂我、做对了吗？','构建对话闭环，保障透明可控'],
+        ['完整产物出现后','怎样改好，下次接着做？','优化产物体验，推动成果落地']
+      ]
+    };
+    const catalog = {no:'catalog',kind:'catalog',title:'三个场景的策略与设计动作'};
+    const chapters = {
+      1:{no:'strategy-1',kind:'chapter',label:'策略一 / 发起任务前',title:'降低启动门槛，建立正确预期',story:'通过熟悉的任务入口、可查看的成品案例和主动接话的引导，让用户知道 Agent 能做什么、会交付什么，并轻松发起第一轮任务。',steps:['能力可感','预期可管','上手可启']},
+      2:{no:'strategy-2',kind:'chapter',label:'策略二 / 对话与执行中',title:'构建对话闭环，保障透明可控',story:'通过意图确认、过程可视、中途可干预、异常可恢复和结果可迭代的闭环设计，打造透明、可控、连贯的对话体验。完整产物的呈现与定点修改归入策略三。',steps:['过程可懂','过程可控','结果可视','协作可续']},
+      3:{no:'strategy-3',kind:'chapter',label:'策略三 / 完整产物修改',title:'优化产物体验，推动成果落地',story:'针对 PPT、Word、设计稿等完整产物，提供适合查看与修改的布局，让用户通过批注和引用便捷表达意见，核对版本并回退，使产物友好呈现、顺畅修改，最终落地使用。',steps:['布局可适','意见可达','版本可溯','成果可续']}
+    };
+    const slides=[evolution,contextSlide,overview,catalog];
+    for(const [index,point] of pointSlides.entries()){
+      const chapter=Number(point.no.split('.')[0]);
+      if(index===0||Number(pointSlides[index-1].no.split('.')[0])!==chapter){
+        slides.push({...chapters[chapter],questions:pointSlides.filter(item=>Number(item.no.split('.')[0])===chapter).map(item=>item.question)});
+      }
+      if(point.no==='3.1') slides.push({no:'3.1-analysis',kind:'participation-analysis',title:'四种人机参与状态'});
+      point.actions.forEach((action,actionIndex)=>slides.push({
+        ...point,
+        kind:'action',
+        pointNo:point.no,
+        no:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
+        action,
+        actionIndex
+      }));
+    }
+
+    const pageView = {
+      '1.1':['能力可感','首页：任务入口与产物类型'],
+      '1.2':['预期可管','案例列表、详情与做同款'],
+      '1.3':['上手可启','小猫气泡与输入引导'],
+      '2.1':['过程可懂','阶段与模式的信息披露'],
+      '2.2':['过程可控','中途干预与异常恢复'],
+      '2.3':['结果可视','按问题选择结果形式'],
+      '2.4':['协作可续','当前产物与任务共识'],
+      '3.1':['布局可适','四种人机参与状态与窗口关系'],
+      '3.2':['意见可达','批注、选区与对话引用'],
+      '3.3':['版本可溯','版本记录、差异与回退（待设计）'],
+      '3.4':['成果可续','本轮交付与下次继续入口（待设计）']
+    };
+    const capabilityCards = [
+      ['网站和应用','建网站 · 做应用','./assets/strategy-prompt-web.svg','ToC 开发 50.4% · ToB 有建站样本'],
+      ['分析数据','查指标 · 找原因','./assets/strategy-prompt-analysis.svg','ToC 数据 11.3% · ToB 经营 10.7%'],
+      ['设计与创作','海报 · PPT · 文案','./assets/strategy-prompt-design.svg','ToC 创作 18.5% · ToB 内容 7.4%'],
+      ['查找与解答','搜问题 · 找资料','./assets/strategy-prompt-search.svg','ToC 问答 9.9% · ToB 咨询 6.9%']
+    ];
+    const processDemo = `<div class="phase-demo-grid" aria-label="任务进程的三个设计状态">${[
+      [0,'01　工作前','确认目标，展开待办任务'],
+      [3,'02　工作时','收起安排，突出当前工作'],
+      [7,'03　工作结束','收束总结，交付产物']
+    ].map(([frame,title,caption])=>`<figure class="phase-demo-card"><figcaption><strong>${title}</strong><span>${caption}</span></figcaption><div class="demo-viewport" data-demo-width="600" data-demo-height="620"><iframe title="任务进程 Demo：${title}" data-scene="2.1" data-frame="${frame}" src="./index.html?strategyScene=2.1&amp;strategyPanel=process&amp;strategyFrame=${frame}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></figure>`).join('')}</div>`;
+    const modeDemo = `
+      <div class="strategy-diagram" aria-label="工作模式与研发模式信息层级示意">
+        <div class="strategy-diagram-heading">同一任务进程 / 两种披露层级</div>
+        <div class="mode-panels">
+          <div class="mode-panel is-default"><small>默认</small><h3>工作模式</h3><p>正在核对门店异常与订单口径</p><ul><li>已读取趋势图与异常明细</li><li>缺失时间戳待人工核实</li><li>下一步：比较跟进优先级</li></ul></div>
+          <div class="mode-panel"><small>设置中开启</small><h3>研发模式</h3><p>正在核对门店异常与订单口径</p><ul><li>读取文件 · 趋势图、异常明细</li><li>表格分析 · 检查时间戳字段</li><li>查看调用参数与处理对象</li></ul></div>
+        </div>
+        <div class="mode-shared">相同的任务状态、计划与结果；只改变过程信息的深度。</div>
+      </div>`;
+    const interventionDemo = `
+      <div class="strategy-diagram" aria-label="中途调整任务方向示意">
+        <div class="strategy-diagram-heading">过程可控 / 中途调整 · 设计示意</div>
+        <div class="control-flow">
+          <div class="control-step"><small>01　当前工作</small><h3>正在比较门店跟进优先级</h3><p>任务安排已完成 1/3；已核对的资料和口径继续保留。</p><div class="control-line">用户可查看当前正在做什么</div></div>
+          <div class="control-step active"><small>02　用户介入</small><h3>“先看华东区域，其他区域稍后再做。”</h3><p>提供暂停与补充要求的入口，让用户在任务进行中修正方向。</p><div class="control-line">确认：当前比较会暂停，已有核对结果保留</div></div>
+          <div class="control-step"><small>03　调整后继续</small><h3>先比较华东门店</h3><p>更新任务安排并说明变化，再从已完成的工作接续执行。</p><div class="control-line">新方向可见；未完成部分重新排队</div></div>
+        </div>
+        <p class="strategy-diagram-caption">介入时交代对当前步骤和已有成果的影响，避免用户重新开始。</p>
+      </div>`;
+    const recoveryDemo = `
+      <div class="strategy-diagram" aria-label="异常说明与恢复路径示意">
+        <div class="strategy-diagram-heading">过程可控 / 异常恢复 · 设计示意</div>
+        <div class="recovery-flow">
+          <div class="recovery-panel"><h3>异常发生在哪里</h3><p>异常明细缺少部分订单的时间戳，暂时无法判断这些订单的延迟时长。</p><ul><li><strong>受影响：</strong>延迟排序中的 2 条记录</li><li><strong>已保留：</strong>趋势图读取、其他订单核对结果</li><li><strong>当前状态：</strong>等待用户确认关键缺口</li></ul></div>
+          <div class="recovery-panel"><h3>怎样继续</h3><p>给出和异常类型相符的恢复选择，不把不确定的结果当作已完成。</p><ul><li><strong>重试：</strong>重新读取原文件</li><li><strong>补充资料：</strong>上传包含时间戳的明细</li><li><strong>继续处理：</strong>先完成不受影响的记录，并标出待核实项</li></ul></div>
+        </div>
+        <p class="strategy-diagram-caption">关键缺口由用户确认；恢复后沿用已完成且仍有效的工作。</p>
+      </div>`;
+    const resultFormatDemo = `
+      <div class="strategy-diagram" aria-label="按问题选择结果形式示意">
+        <div class="strategy-diagram-heading">结果可视 / 形式跟着问题走 · 设计示意</div>
+        <div class="result-formats">
+          <div class="result-format"><small>问题：结论是什么？</small><strong>简短回答</strong><div class="plain">优先跟进<br>5 条异常</div><p>一句话能说清时，直接给出结论。</p></div>
+          <div class="result-format"><small>问题：哪里更需要处理？</small><strong>并排比较</strong><div class="compare"><span>门店 A<br>3 条</span><span>门店 B<br>5 条</span></div><p>把对象放在一起，差异更容易判断。</p></div>
+          <div class="result-format"><small>问题：变化有多大？</small><strong>图表呈现</strong><div class="visual"><i style="height:36%"></i><i style="height:53%"></i><i style="height:74%"></i><i style="height:92%"></i></div><p>趋势和优先级用视觉结构说明。</p></div>
+        </div>
+        <p class="strategy-diagram-caption">先让用户看见答案，需要时再展开细节。</p>
+      </div>`;
+    const resultReviewDemo = `
+      <div class="strategy-diagram" aria-label="结论、依据与产物关联示意">
+        <div class="strategy-diagram-heading">结果可视 / 从结论走向依据与产物 · 设计示意</div>
+        <div class="result-review">
+          <div class="result-review-main"><h3>优先跟进 5 条门店异常</h3><p>按影响范围与重复发生情况排序，待确认项单独标记。</p><div class="result-review-row"><span>门店 B · 连续延迟</span><b>高优先级</b></div><div class="result-review-row"><span>门店 A · 缺失时间戳</span><b>待核实</b></div><div class="result-review-row"><span>门店 C · 偶发波动</span><b>低优先级</b></div><span class="result-review-link">打开产物：门店履约异常明细.xlsx →</span></div>
+          <div class="result-review-side"><h3>判断依据</h3><p>口径：近 7 天订单异常；重复出现与影响订单数共同决定优先级。</p><div class="result-review-row"><span>来源</span><b>趋势图、异常明细</b></div><div class="result-review-row"><span>待确认</span><b>缺失时间戳</b></div><span class="result-review-link">继续追问或调整排序 →</span></div>
+        </div>
+        <p class="strategy-diagram-caption">让用户能从结果核对依据，也能直接进入产物继续工作。</p>
+      </div>`;
+    const continuationDemo = `
+      <div class="strategy-diagram" aria-label="完成产物后承接下一次委托的设计示意">
+        <div class="strategy-diagram-heading">成果可续 / 从本轮交付到下次起点 · 设计示意</div>
+        <div class="continuation-flow">
+          <div class="continuation-card"><small>本轮完成</small><h3>季度复盘.pptx</h3><p>已调整结构和重点图表，形成可继续修改的完整文稿。</p><ul><li><strong>已解决：</strong>结论前置、图表口径统一</li><li><strong>仍需确认：</strong>第 3 页指标来源</li></ul></div>
+          <span class="continuation-arrow" aria-hidden="true">→</span>
+          <div class="continuation-card"><small>下次从这里继续</small><h3>以现有产物为起点</h3><p>入口与实际保留的内容关联，减少重新交代。</p><ul><li><strong>继续修改：</strong>打开这份 PPT</li><li><strong>发起相似任务：</strong>沿用已确认的结构</li></ul></div>
+        </div>
+        <p class="strategy-diagram-caption">让用户看见本轮交付，也能确认哪些信息真的可以沿用。</p>
+      </div>`;
+    const workspaceDemo = [
+      `<div class="strategy-diagram" aria-label="Face-to-face 对话为主的窗口布局示意">
+        <div class="strategy-diagram-heading">布局可适 / Face-to-face · 对话为主</div>
+        <div class="workspace-layout face">
+          <div class="workspace-pane"><strong>对话 · 讨论修改方向</strong><div class="workspace-chat-line">这份汇报要更突出结论，先调整整体结构。</div><div class="workspace-chat-line reply">我会先梳理叙事顺序，再定位需要修改的页面。</div><div class="workspace-chat-input">继续说明目标与要求…</div></div>
+          <div class="workspace-pane"><strong>当前产物 · 可随时打开</strong><div class="workspace-artifact"><div class="workspace-thumbs"><i></i><i></i><i></i></div><div class="workspace-page"><b></b><i></i><i></i><i></i></div></div></div>
+        </div><div class="workspace-key"><span><strong>主视野</strong> 对话</span><span><strong>产物</strong> 保留预览与入口</span></div>
+        <p class="strategy-diagram-caption">讨论目标与改动方向时，对话拥有更多空间；产物仍是这轮对话的对象。</p>
+      </div>`,
+      `<div class="strategy-diagram" aria-label="Side-by-side 产物与对话并排的窗口布局示意">
+        <div class="strategy-diagram-heading">布局可适 / Side-by-side · 边看边聊</div>
+        <div class="workspace-layout side">
+          <div class="workspace-pane"><strong>产物 · 当前修改位置</strong><div class="workspace-artifact"><div class="workspace-thumbs"><i></i><i></i><i></i></div><div class="workspace-page"><b></b><i></i><i></i><i></i></div></div></div>
+          <div class="workspace-pane"><strong>对话 · 针对所见内容</strong><div class="workspace-chat-line">第 2 页的结论太靠后了。</div><div class="workspace-chat-line reply">我会把结论提到页首，保留图表证据。</div><div class="workspace-chat-input">描述这处要怎样改…</div></div>
+        </div><div class="workspace-key"><span><strong>主视野</strong> 产物 + 对话</span><span><strong>比例</strong> 按任务调整</span></div>
+        <p class="strategy-diagram-caption">PPT 显示缩略页与画布；Word 保持阅读宽度与目录；设计稿保留缩放、画布和图层。</p>
+      </div>`,
+      `<div class="strategy-diagram" aria-label="On-call 产物为主、对话随时可唤起的窗口布局示意">
+        <div class="strategy-diagram-heading">布局可适 / On-call · 产物为主</div>
+        <div class="workspace-layout call">
+          <div class="workspace-pane"><strong>产物 · 专心查看与批注</strong><div class="workspace-artifact"><div class="workspace-thumbs"><i></i><i></i><i></i></div><div class="workspace-page"><b></b><i></i><i></i><i></i><span class="workspace-annotation">批注：这里需要说明原因</span></div></div></div>
+          <div class="workspace-call-entry">与 Agent 对话 ↗</div>
+        </div><div class="workspace-key"><span><strong>主视野</strong> 产物</span><span><strong>对话</strong> 缩为可唤起入口</span></div>
+        <p class="strategy-diagram-caption">批注时让内容占满视野；唤起对话后，仍停留在当前页、位置、缩放与选区。</p>
+      </div>`,
+      `<div class="strategy-diagram" aria-label="桌宠在人暂离主窗口后提供任务触达的设计示意">
+        <div class="strategy-diagram-heading">布局可适 / 桌宠 · 人暂离</div>
+        <div class="pet-desktop">
+          <div class="pet-other-window">桌面上的其他工作<i></i><i></i><i></i></div>
+          <div class="pet-notice"><div class="pet-notice-head"><img src="./assets/logo.png" alt=""><span>CatPaw 桌宠 · 正在处理</span></div><strong>门店异常任务已完成 2/3</strong><p>正在整理优先跟进建议；需要你确认时会提醒。</p><span class="pet-notice-link">打开任务，回到刚才的产物位置 →</span></div>
+        </div><div class="workspace-key"><span><strong>人</strong> 暂离主窗口</span><span><strong>Agent</strong> 继续执行已交付任务</span></div>
+        <p class="strategy-diagram-caption">桌宠轻量传达进展与确认需求；点击后回到同一任务、产物和修改位置。</p>
+      </div>`
+    ];
+    const participationAnalysis = `<div class="strategy-diagram" aria-label="四种窗口状态下人类与 Agent 的相对参与度示意">
+        <div class="strategy-diagram-heading">场景分析 / 四种人机参与状态</div>
+        <div class="participation-chart" role="img" aria-label="横轴是人的参与度，向右更高；纵轴是 Agent 的参与度，向上更高。四种状态沿左上到右下的曲线排列：桌宠触达是人低 Agent 高，Face-to-face 是人较高 Agent 高，Side-by-side 比 Face-to-face 更靠右，On-call 是人高 Agent 低。">
+          <svg viewBox="0 0 720 350" aria-hidden="true">
+            <line x1="80" y1="157" x2="690" y2="157" stroke="#dedede" stroke-dasharray="4 6"/>
+            <line x1="385" y1="28" x2="385" y2="285" stroke="#dedede" stroke-dasharray="4 6"/>
+            <path d="M135 48 C235 49 315 75 400 92 C452 107 478 136 500 145 C543 170 552 216 575 235 C609 246 638 246 655 246" fill="none" stroke="#13a96b" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+            <path d="M80 27V285H690" fill="none" stroke="#111" stroke-width="1.6"/>
+            <path d="m74 36 6-9 6 9M681 279l9 6-9 6" fill="none" stroke="#111" stroke-width="1.6"/>
+            <text class="axis-label" x="390" y="335">人的参与度</text>
+            <text class="axis-label" transform="translate(20 218) rotate(-90)">Agent 的参与度</text>
+            <text class="axis-end" x="80" y="306">低</text><text class="axis-end" x="678" y="306">高</text>
+            <text class="axis-end" x="57" y="33">高</text><text class="axis-end" x="57" y="284">低</text>
+            <g class="point pet"><circle cx="154" cy="52" r="7"/><text class="point-title" x="169" y="48">桌宠触达</text><text class="point-note" x="169" y="66">人暂离 · Agent 继续做</text></g>
+            <g class="point"><circle cx="400" cy="92" r="7"/><text class="point-title" x="416" y="80">Face-to-face</text><text class="point-note" x="416" y="96">共同对话</text></g>
+            <g class="point"><circle cx="500" cy="145" r="7"/><text class="point-title" x="516" y="133">Side-by-side</text><text class="point-note" x="516" y="149">边看产物边聊</text></g>
+            <g class="point"><circle cx="575" cy="235" r="7"/><text class="point-title" x="591" y="223">On-call</text><text class="point-note" x="591" y="239">人批注 · Agent 待唤起</text></g>
+          </svg>
+        </div>
+        <p class="strategy-diagram-caption">从桌宠到 On-call，人的投入增加，Agent 的即时参与减少；对话与并排的差别还在注意力落点。</p>
+      </div>`;
+    const escapeHtml = value => String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const canvas=document.getElementById('canvas');
+    const topline=index=>`<div class="topline"><span>CATPAW / 设计策略</span><span class="right">${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</span></div>`;
+    canvas.innerHTML=slides.map((slide,index)=>{
+      if(slide.kind==='evolution')return `
+        <section class="slide story-slide evolution-slide" id="slide-evolution" aria-label="Agent 工作形态演化：${escapeHtml(slide.title)}">
+          ${topline(index)}
+          <div class="story-kicker">前序 / Agent 工作形态的演化</div>
+          <h1>${escapeHtml(slide.title)}</h1>
+          <p class="story-copy">${escapeHtml(slide.story)}</p>
+          <div class="evolution-grid">${slide.phases.map(([name,type,description,state],i)=>`<div class="evolution-phase ${i===1?'current':''}"><span class="phase-no">0${i+1}</span><h2>${escapeHtml(name)}</h2><span class="phase-type">${escapeHtml(type)}</span><p>${escapeHtml(description)}</p><span class="phase-state">${escapeHtml(state)}</span></div>`).join('')}</div>
+        </section>`;
+      if(slide.kind==='context')return `
+        <section class="slide story-slide context-slide" id="slide-context" aria-label="当前阶段的背景、目标与挑战">
+          ${topline(index)}
+          <div class="story-kicker">当前阶段 / 对外办公型 Agent</div>
+          <h1>${escapeHtml(slide.title)}</h1>
+          <p class="story-copy">${escapeHtml(slide.story)}</p>
+          <div class="context-grid">${slide.blocks.map(([label,heading,detail,note,evidence])=>`<div class="context-block"><span class="block-label">${escapeHtml(label)}</span><h2>${escapeHtml(heading)}</h2><p>${escapeHtml(detail)}</p>${evidence?`<div class="context-evidence">${evidence.map(([scope,finding])=>`<p><strong>${escapeHtml(scope)}</strong><span>${escapeHtml(finding)}</span></p>`).join('')}</div>`:''}<span class="block-note">${escapeHtml(note)}</span></div>`).join('')}</div>
+          <div class="context-sources"><span>CatPaw 数据为 2026 年 9 月样本，ToC 与 ToB 口径不同；WorkBuddy 仅作外部参照</span><a href="https://km.sankuai.com/collabpage/2789760458" target="_blank" rel="noopener noreferrer">ToC query 报告</a><a href="https://km.sankuai.com/collabpage/2786789535" target="_blank" rel="noopener noreferrer">ToB query 报告</a></div>
+        </section>`;
+      if(slide.kind==='overview')return `
+        <section class="slide story-slide overview-slide" id="slide-overview" aria-label="项目总览：${escapeHtml(slide.title)}">
+          ${topline(index)}
+          <div class="story-kicker">项目总览 / 任务推进中的三个场景</div>
+          <h1>${escapeHtml(slide.title)}</h1>
+          <p class="story-copy">${escapeHtml(slide.story)}</p>
+          <div class="scene-flow" aria-label="三个使用场景的推进流程">${slide.steps.map(([scene,question,purpose],i)=>`${i?`<div class="scene-flow-connector" aria-label="${i===1?'发出任务':'出现完整产物'}"><span class="arrow" aria-hidden="true"></span><span>${i===1?'发出任务':'形成完整产物'}</span></div>`:''}<div class="scene-flow-node"><span class="step-number">场景 0${i+1}</span><h2>${escapeHtml(scene)}</h2><p class="question">“${escapeHtml(question)}”</p><p class="purpose"><span>策略${['一','二','三'][i]}</span>${escapeHtml(purpose)}</p></div>`).join('')}</div>
+        </section>`;
+      if(slide.kind==='catalog')return `
+        <section class="slide story-slide catalog-slide" id="slide-catalog" aria-label="${escapeHtml(slide.title)}">
+          ${topline(index)}
+          <div class="story-kicker">全局索引 / 3 个场景 · ${pointSlides.length} 个策略点 · ${pointSlides.reduce((total,point)=>total+point.actions.length,0)} 个设计动作</div>
+          <h1>${escapeHtml(slide.title)}</h1>
+          <div class="catalog-grid">${[1,2,3].map(chapter=>`<div class="catalog-column"><span class="scene">场景 0${chapter} / ${escapeHtml(chapters[chapter].label.split(' / ')[1])}</span><h2>${escapeHtml(pointSlides.find(point=>Number(point.no.split('.')[0])===chapter).strategy)}</h2>${pointSlides.filter(point=>Number(point.no.split('.')[0])===chapter).map(point=>`<div class="catalog-point"><div class="catalog-point-heading"><span>${escapeHtml(point.no)}</span><strong>${escapeHtml(pageView[point.no][0])}</strong><p class="catalog-point-concern"><span class="concern-label">用户关注点</span>${escapeHtml(catalogConcerns[point.no])}</p></div><ol>${point.actions.map((action,actionIndex)=>`<li><span>${escapeHtml(`${point.no}.${actionIndex+1}`)}</span><span>${escapeHtml(action[0])}</span></li>`).join('')}</ol></div>`).join('')}</div>`).join('')}</div>
+        </section>`;
+      if(slide.kind==='chapter')return `
+        <section class="slide story-slide chapter-slide" id="slide-${escapeHtml(slide.no)}" aria-label="${escapeHtml(slide.label+'：'+slide.title)}">
+          ${topline(index)}
+          <div class="story-kicker">${escapeHtml(slide.label)}</div>
+          <h1>${escapeHtml(slide.title)}</h1>
+          <p class="story-copy">${escapeHtml(slide.story)}</p>
+          <div class="chapter-questions"><span class="label">用户此刻正在想</span><div class="chapter-question-list">${slide.questions.map(question=>`<p>${escapeHtml(question)}</p>`).join('')}</div></div>
+          <div class="story-steps">${slide.steps.map((step,i)=>`<div class="story-step"><span>0${i+1}</span><strong>${escapeHtml(step)}</strong></div>`).join('')}</div>
+        </section>`;
+      if(slide.kind==='participation-analysis')return `
+        <section class="slide action-slide analysis-slide" id="slide-${escapeHtml(slide.no)}" aria-label="策略三场景分析：${escapeHtml(slide.title)}">
+          ${topline(index)}
+          <div class="mainline"><span class="number">3.1</span><span>策略三 · 场景分析</span></div>
+          <h1>${escapeHtml(slide.title)}</h1>
+          <div class="body"><div class="left-content"><div class="action-detail"><span class="label">场景分析</span><h3>谁在场，谁在持续工作？</h3><p>同一份完整产物，在讨论、边看边改、专心批注和人暂离时，需要不同的窗口关系。</p></div><p class="design-note">先看人和 Agent 的参与度，再分别设计四种状态；切换时仍沿用同一任务、产物和修改上下文。</p></div><figure class="design-slot" aria-label="人和 Agent 参与度的四状态分析图">${participationAnalysis}</figure></div>
+        </section>`;
+      if(slide.no==='2.1')return `
+        <section class="slide phase-demo-slide" id="slide-2.1" aria-label="2.1 过程可懂：任务进程的三个设计状态">
+          ${topline(index)}
+          <div class="mainline"><span class="number">2.1</span><span>${escapeHtml(slide.strategy)}</span></div>
+          <h1>${escapeHtml(pageView[slide.pointNo][0])}</h1>
+          <div class="phase-demo-context">
+            <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns[slide.pointNo][slide.actionIndex])}</p></div>
+            <div class="action-detail"><span class="label">设计动作 2.1.1</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
+          </div>
+          ${processDemo}
+        </section>`;
+      return `
+        <section class="slide action-slide" id="slide-${escapeHtml(slide.no)}" aria-label="${escapeHtml(slide.pointNo+' '+pageView[slide.pointNo][0]+'：'+slide.action[0])}">
+          ${topline(index)}
+          <div class="mainline"><span class="number">${escapeHtml(slide.pointNo)}</span><span>${escapeHtml(slide.strategy)}</span>${slide.status?`<span class="status">${escapeHtml(slide.status)}</span>`:''}</div>
+          <h1>${escapeHtml(pageView[slide.pointNo][0])}</h1>
+          <div class="body">
+            <div class="left-content">
+              <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns[slide.pointNo][slide.actionIndex])}</p></div>
+              <div class="action-detail"><span class="label">设计动作 ${escapeHtml(`${slide.pointNo}.${slide.actionIndex+1}`)}</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
+              ${slide.note&&slide.actionIndex===0?`<p class="design-note">${escapeHtml(slide.note)}</p>`:''}
+              ${slide.pointNo==='1.1'&&slide.actionIndex===0?`<div class="capability-cards" aria-label="首页四类任务入口及选择依据">${capabilityCards.map(([title,subtitle,illustration,evidence])=>`<div class="capability-item"><div class="capability-card"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(subtitle)}</small><img class="capability-illustration" src="${escapeHtml(illustration)}" alt=""></div><p class="capability-evidence">${escapeHtml(evidence)}</p></div>`).join('')}</div><p class="capability-source">四类是任务归并，并非统计标签。ToC 首轮 n=3,322；ToB 抽样 n=938。来源：<a href="https://km.sankuai.com/collabpage/2789760458" target="_blank" rel="noopener noreferrer">ToC 报告</a> · <a href="https://km.sankuai.com/collabpage/2786789535" target="_blank" rel="noopener noreferrer">ToB 报告</a></p>`:''}
+            </div>
+            <figure class="design-slot ${CatPawStrategyScenes.scenes[slide.no]?'has-demo':''}" data-design-slot="${escapeHtml(slide.no)}" aria-label="设计稿：${escapeHtml(pageView[slide.pointNo][1])}">${CatPawStrategyScenes.scenes[slide.no]?`<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="CatPaw Demo：${escapeHtml(slide.action[0])}" data-scene="${escapeHtml(slide.no)}" src="./index.html?strategyScene=${escapeHtml(slide.no)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`:slide.no==='2.1'?processDemo:slide.no==='2.1-2'?modeDemo:slide.no==='2.2'?interventionDemo:slide.no==='2.2-2'?recoveryDemo:slide.no==='2.3'?resultFormatDemo:slide.no==='2.3-2'?resultReviewDemo:slide.pointNo==='3.1'?workspaceDemo[slide.actionIndex]:slide.pointNo==='3.4'?continuationDemo:slide.pointNo==='3.3'?`<div class="design-slot-body">版本界面待设计</div>`:`<div class="design-slot-body">对应设计稿放在这里</div>`}</figure>
+          </div>
+        </section>`;
+    }).join('');
+
+    const pages=[...canvas.querySelectorAll('.slide')];
+    const stage=document.querySelector('.stage');
+    const previous=document.getElementById('prev');
+    const next=document.getElementById('next');
+    const counter=document.getElementById('counter');
+    const fromHash=()=>{
+      const hash=decodeURIComponent(location.hash);
+      const canonical=/^#1\.1-[23]$/.test(hash)?'#1.1':hash==='#2.1-3'?'#2.1-2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.4':hash;
+      return slides.findIndex(slide=>'#'+slide.no===canonical);
+    };
+    let current=Math.max(0,fromHash());
+    function fitDemo(page){
+      page.querySelectorAll('.demo-viewport').forEach(viewport=>{
+        if(!viewport.clientWidth||!viewport.clientHeight)return;
+        const frame=viewport.querySelector('iframe');
+        const demoWidth=Number(viewport.dataset.demoWidth)||1200;
+        const demoHeight=Number(viewport.dataset.demoHeight)||800;
+        const scale=Math.min(viewport.clientWidth/demoWidth,viewport.clientHeight/demoHeight);
+        // Keep the chosen CSS viewport fixed; only scale the complete preview.
+        frame.style.transform=`scale(${scale})`;
+        frame.style.left=`${(viewport.clientWidth-demoWidth*scale)/2}px`;
+        frame.style.top=`${(viewport.clientHeight-demoHeight*scale)/2}px`;
+      });
+    }
+    function revealDemo(page){
+      page.querySelectorAll('.demo-viewport iframe').forEach(frame=>{
+        if(frame.dataset.prepared!=='true'||!page.classList.contains('active'))return;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          if(page.classList.contains('active')&&frame.dataset.prepared==='true')frame.classList.add('is-ready');
+        }));
+      });
+    }
+    function fit(){canvas.style.setProperty('--scale',stage.clientWidth/1280);fitDemo(pages[current])}
+    function show(index,updateHash=true){
+      pages[current]?.querySelectorAll('.demo-viewport iframe').forEach(frame=>{
+        frame.contentWindow?.postMessage({type:'catpaw:scene-deactivate',scene:frame.dataset.scene},'*');
+      });
+      current=Math.max(0,Math.min(pages.length-1,index));
+      const page=pages[current];
+      page.classList.add('preparing');
+      const frames=page.querySelectorAll('.demo-viewport iframe');
+      frames.forEach(frame=>{frame.classList.remove('is-ready');delete frame.dataset.prepared;});
+      pages.forEach((page,i)=>page.classList.toggle('active',i===current));
+      fitDemo(page);
+      page.classList.remove('preparing');
+      frames.forEach(frame=>{
+        if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:'catpaw:scene-activate',scene:frame.dataset.scene},'*');
+      });
+      revealDemo(page);
+      previous.disabled=current===0;next.disabled=current===pages.length-1;
+      counter.value=`${current+1} / ${pages.length}`;
+      document.title=`${slides[current].kind==='action'?slides[current].pointNo+' '+slides[current].action[0]:slides[current].title} · CatPaw 设计策略`;
+      if(updateHash)history.replaceState(null,'','#'+slides[current].no);
+    }
+    previous.addEventListener('click',()=>show(current-1));
+    next.addEventListener('click',()=>show(current+1));
+    document.addEventListener('keydown',event=>{
+      if(['ArrowRight','ArrowDown','PageDown',' '].includes(event.key)){event.preventDefault();show(current+1)}
+      if(['ArrowLeft','ArrowUp','PageUp'].includes(event.key)){event.preventDefault();show(current-1)}
+      if(event.key==='Home'){event.preventDefault();show(0)}
+      if(event.key==='End'){event.preventDefault();show(pages.length-1)}
+    });
+    window.addEventListener('hashchange',()=>{const index=fromHash();if(index>=0)show(index,false)});
+    window.addEventListener('message',event=>{
+      const frame=Array.from(canvas.querySelectorAll('iframe[data-scene]')).find(item=>item.contentWindow===event.source);
+      if(!frame||frame.dataset.scene!==event.data?.scene)return;
+      const page=frame.closest('.slide');
+      if(event.data.type==='catpaw:scene-ready'){
+        frame.dataset.connected='true';
+        frame.contentWindow.postMessage({type:page.classList.contains('active')?'catpaw:scene-activate':'catpaw:scene-preview',scene:frame.dataset.scene},'*');
+      }
+      if(event.data.type==='catpaw:scene-prepared'){
+        frame.dataset.prepared='true';
+        fitDemo(page);revealDemo(page);
+      }
+      if(event.data.type==='catpaw:scene-key'&&page.classList.contains('active')){
+        if(['ArrowRight','ArrowDown','PageDown',' '].includes(event.data.key))show(current+1);
+        if(['ArrowLeft','ArrowUp','PageUp'].includes(event.data.key))show(current-1);
+        if(event.data.key==='Home')show(0);
+        if(event.data.key==='End')show(pages.length-1);
+      }
+    });
+    document.addEventListener('visibilitychange',()=>{
+      pages[current]?.querySelectorAll('iframe[data-scene]').forEach(frame=>{
+        if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:document.hidden?'catpaw:scene-deactivate':'catpaw:scene-activate',scene:frame.dataset.scene},'*');
+      });
+    });
+    window.addEventListener('beforeprint',()=>pages.forEach(fitDemo));
+    pages.forEach(page=>page.querySelectorAll('.demo-viewport iframe').forEach(frame=>{
+      frame.addEventListener('load',()=>{frame.dataset.loaded='true';fitDemo(page);revealDemo(page)});
+    }));
+    new ResizeObserver(fit).observe(stage);
+    fit();show(current,false);
+  </script>
+</body>
+</html>
