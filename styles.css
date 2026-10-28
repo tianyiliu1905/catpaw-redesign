@@ -563,7 +563,7 @@ stroke-width:1.8;
 .icon-btn:hover{ background: var(--hover); color: var(--text-2); }
 .icon-btn:active{ background: var(--active); }
 
-/* 两种新建任务入口固定在任务列表上方。 */
+/* 新建任务入口固定在任务列表上方。 */
 .sidebar-pinned{
   grid-column:2; grid-row:2;
   display:flex;
@@ -2483,16 +2483,20 @@ font-size:30px;
   white-space:nowrap;
 }
 .greeting-title[hidden],.greeting-bubble[hidden]{ display:none; }
-/* 引导语与原标题共用位置和字体，不再使用气泡外框。 */
+/* 以整个标题区域的中心线对齐，两侧等量留白，避免短句被推向右侧。 */
 .greeting-bubble{
   display:block;
-  width:max-content;
+  left:50%;
+  right:auto;
+  width:calc(50% - 20px);
   max-width:none;
+  transform:translate(-50%,-50%);
   padding:0;
   background:transparent;
   font:inherit;
   letter-spacing:inherit;
-  text-align:left;
+  text-align:center;
+  white-space:nowrap;
   overflow-wrap:normal;
 }
 /* 完整文案先占位；逐字只动透明度和位置，避免多字同时模糊造成重绘卡顿。 */
@@ -2502,16 +2506,16 @@ font-size:30px;
   animation:greetingInkReveal 340ms cubic-bezier(.2,.7,.2,1) both;
   animation-delay:var(--ink-delay, 0ms);
 }
-/* 主列变窄后仍让猫爪与引导语并排；换行时由布局自然撑开高度。 */
+/* 窄列用对称的左右栏平衡猫爪占位，文字仍落在标题中心线上。 */
 @container (max-width:740px){
 .hero.is-engaged .greeting{
-  display:flex;
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr) 120px;
   align-items:center;
   gap:30px;
   height:auto;
   min-height:120px;
-  padding-left:calc(25% - 140px);
-  padding-right:12px;
+  padding:0;
 }
 .hero.is-engaged .greeting-mascot{
   position:relative;
@@ -2524,13 +2528,14 @@ font-size:30px;
   position:relative;
   top:auto;
   left:auto;
-  flex:0 1 auto;
+  right:auto;
+  width:100%;
   min-width:0;
-  max-width:calc(100% - 150px);
+  max-width:none;
   transform:none;
   padding:0;
-  white-space:normal;
-  overflow-wrap:anywhere;
+  white-space:nowrap;
+  overflow-wrap:normal;
 }
 }
 @container (max-width:560px){
@@ -2549,12 +2554,13 @@ font-size:30px;
 }
 .hero .greeting-title > span{ display:block; }
 .hero.is-engaged .greeting{
+  grid-template-columns:72px minmax(0,1fr) 72px;
   gap:12px;
   min-height:96px;
-  padding-left:var(--greeting-start);
+  padding:0;
 }
-.hero.is-engaged .greeting-mascot{ width:72px; height:72px; }
-.hero.is-engaged .greeting-bubble{ max-width:calc(100% - 84px); }
+.hero.is-engaged .greeting-mascot{ left:auto; width:72px; height:72px; }
+.hero.is-engaged .greeting-bubble{ max-width:none; }
 }
 @keyframes greetingInkReveal{
   0%{ opacity:0; transform:translate3d(0,2px,0) scale(.975); }

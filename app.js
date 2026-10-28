@@ -1840,30 +1840,31 @@ safeHouseToggle.addEventListener('click', toggleSafeHouse);
   let promptGuide = '';
   const greetingTitle = greeting.querySelector('.greeting-title');
   const greetingBubble = greeting.querySelector('.greeting-bubble');
+  // 正常布局最窄文字区约 261px；22px 字号、-0.5px 字距下，12 个全角字约 258.5px。
+  // 问候文案连同标点最多 12 字，保留原字号与固定中心，不做动态缩放。
   const greetingMessages = {
-    develop: ['想做网站还是应用？', '有什么想做出来的小想法？', '这个网站或应用，准备给谁用？', '先说说你想解决什么问题吧。'],
-    analyze: ['想从数据里发现什么？', '有哪个指标让你在意？', '把数据给我，说说你最关心什么。', '想先看整体，还是找找变化原因？'],
-    create: ['海报、PPT 还是文案？', '这次想做一份什么作品？', '有主题或参考吗？我们从这里开始。', '想把什么想法表达出来？'],
-    research: ['有什么想了解的？', '想查资料，还是一起理清问题？', '把问题告诉我，我们一起看看。', '有什么需要比较或弄明白的？'],
-    apps: ['想做什么样的 App？', '这个 App 想帮谁解决问题？', '先说一个你最想要的功能吧。', '有什么日常小事，想交给 App 来做？'],
-    websites: ['想拥有一个怎样的网站？', '这个网站准备展示什么？', '有喜欢的网站风格吗？', '先说说网站给谁看、用来做什么吧。'],
-    slides: ['这份 PPT 想讲些什么？', '这次汇报，最想让大家记住什么？', '材料准备好了吗？先说说主题也行。', '这份 PPT 准备讲给谁听？'],
+    develop: ['想做网站还是应用？', '有什么想做出来的小想法？', '准备给谁使用？', '想解决什么问题？'],
+    analyze: ['想从数据里发现什么？', '有哪个指标让你在意？', '数据里最关心什么？', '看整体，还是找原因？'],
+    create: ['海报、PPT 还是文案？', '这次想做一份什么作品？', '有主题或参考吗？', '想把什么想法表达出来？'],
+    research: ['有什么想了解的？', '查资料，还是解答问题？', '说说你的问题吧。', '有什么需要弄明白的？'],
+    apps: ['想做什么样的 App？', '这个应用准备给谁用？', '最想要什么功能？', '想让应用帮你做什么？'],
+    websites: ['想拥有一个怎样的网站？', '这个网站准备展示什么？', '有喜欢的网站风格吗？', '网站主要用来做什么？'],
+    slides: ['这份汇报想讲什么？', '这次汇报的重点是什么？', '先说说主题也可以。', '这份汇报准备给谁听？'],
   };
   const defaultGreetingMessages = [
     '今天想做点什么？',
     '说说今天想完成的事吧。',
     '有什么想法？我在听。',
     '从一个小想法开始也可以。',
-    '有什么工作，想一起理一理？',
-    '还没想好怎么说？先说个方向吧。',
-    '想做什么，或者有什么卡住了？',
+    '有什么工作想一起理理？',
+    '先说个大致方向吧。',
+    '有什么事卡住了吗？',
     '把手头的事说给我听听吧。',
   ];
   const lastGreetingByContext = new Map();
   let selectedPromptGreeting = null;
   let currentGreetingMessage = '';
   let currentGreetingContext = '';
-
   function stopGreetingTyping() {
     greetingBubble.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
   }
@@ -2097,7 +2098,7 @@ promptGuide = text;
       { label: '财报解读', title: '泡泡玛特业绩分析', theme: 'finance', greeting: '财报里的信息有点多？', prompt: '解读泡泡玛特财报，制作一份业绩分析 PPT，数据图表为主、克制专业风。' },
       { label: '工作总结', title: '季度工作总结汇报', theme: 'summary', greeting: '这个季度辛苦啦。', prompt: '季度工作总结汇报 PPT，简约商务风，含业绩回顾、亮点、不足、下季计划。' },
       { label: '新品发布会', title: '新产品发布会演示', theme: 'launch', greeting: '新品有哪些亮点？', prompt: '新产品发布会演示 PPT，科技感暗调，含痛点、产品亮点、演示、发售信息。' },
-      { label: '培训课件', title: '新员工入职培训', theme: 'onboarding', greeting: '一起给新人准备份贴心指南吧。', prompt: '新员工入职培训课件 PPT，清爽分模块、多图示少文字，含文化、制度、流程。' },
+      { label: '培训课件', title: '新员工入职培训', theme: 'onboarding', greeting: '给新人准备份指南吧。', prompt: '新员工入职培训课件 PPT，清爽分模块、多图示少文字，含文化、制度、流程。' },
     ];
     const websiteScenarios = [
       { label: '企业网站首页', theme: 'corporate', greeting: '想展示企业的哪些优势？', prompt: '创建一个企业网站，风格要大气、商务、专业。设计一个完整的企业网站首页，包括导航栏、hero 区域、服务介绍、公司优势、客户评价等部分。' },
@@ -2106,9 +2107,9 @@ promptGuide = text;
       { label: '话题社区', theme: 'community', greeting: '想让大家在这里聊些什么？', prompt: '参考微博的能力和布局生成一个暗黑色调的话题社区。' },
     ];
     const appScenarios = [
-      { label: '健身打卡', theme: 'fitness', greeting: '一起做个健身打卡 App 吧。', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
+      { label: '健身打卡', theme: 'fitness', greeting: '做个健身打卡应用吧。', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
       { label: '国风阅读', theme: 'reading', greeting: '国风阅读很有韵味呀。', prompt: '设计并开发一个国风阅读 App，宣纸米底 + 水墨留白，含书架、翻页阅读器、书签笔记、书城推荐。' },
-      { label: '露营装备租赁', theme: 'camping', greeting: '一起把露营的准备变轻松吧。', prompt: '设计并开发一个露营装备租赁 App，户外大地色系，含装备浏览、租赁下单、取还日期、订单管理。' },
+      { label: '露营装备租赁', theme: 'camping', greeting: '让露营准备更轻松吧。', prompt: '设计并开发一个露营装备租赁 App，户外大地色系，含装备浏览、租赁下单、取还日期、订单管理。' },
       { label: '宠物健康管理', theme: 'petcare', greeting: '毛孩子值得细心照顾呀。', prompt: '设计并开发一款宠物健康管理 App，温馨圆润的暖橙色系，含宠物档案、疫苗/驱虫提醒、健康日记、附近宠物服务。' },
     ];
     return {
@@ -2118,7 +2119,7 @@ promptGuide = text;
         secondary: [
           { label: '搭建网站', greeting: '聊聊你想做的网站吧。', prompt: '帮我搭建一个 [网站类型]，面向 [目标用户]，包含 [页面和核心功能]，风格为 [视觉风格]。' },
           { label: '制作网页应用', greeting: '有什么想变轻松的事？', prompt: '帮我做一个 [网页应用类型]，用于 [目标场景]，需要 [核心功能]。请先梳理方案，再完成可运行版本。' },
-          { label: '开发手机应用', greeting: '心里的 App 是什么样的？', prompt: '帮我设计并开发一个 [手机应用类型]，面向 [目标用户]，需要 [核心功能与页面]。' },
+          { label: '开发手机应用', greeting: '想做什么样的应用？', prompt: '帮我设计并开发一个 [手机应用类型]，面向 [目标用户]，需要 [核心功能与页面]。' },
           { label: '优化现有网站或应用', greeting: '哪里用着不太顺心？', prompt: '检查 [网站或应用]，找出最影响体验或性能的问题，按优先级优化并验证。' },
         ],
         cases: [
@@ -2146,7 +2147,7 @@ promptGuide = text;
           { label: '设计海报与图片', greeting: '有什么喜欢的主题和风格？', prompt: '为 [产品或活动] 设计一张海报，突出 [核心信息]，面向 [目标人群]，风格为 [视觉风格]。' },
           { label: '制作汇报 PPT', greeting: '一起把这次汇报准备好吧。', prompt: '根据 [主题或材料] 制作一份面向 [受众] 的 PPT，重点呈现 [关键信息]，做到结构清晰、图表易读。' },
           { label: '写活动文案', greeting: '想让大家记住什么？', prompt: '围绕 [活动或产品] 写 [渠道] 的推广文案，包含标题、卖点、正文和明确的行动引导。' },
-          { label: '设计品牌视觉', greeting: '你希望品牌带给人什么感觉？', prompt: '为 [品牌或产品] 设计视觉方案，说明配色、字体、图形风格和适用场景。' },
+          { label: '设计品牌视觉', greeting: '希望品牌给人什么感觉？', prompt: '为 [品牌或产品] 设计视觉方案，说明配色、字体、图形风格和适用场景。' },
         ],
         cases: [
           caseData().design[0],
@@ -7660,12 +7661,6 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     templateMessage(persisted ? '已保存任务方法；再次使用时会回填可编辑指令，文件与原对话不会附带。' : '仅在本次页面会话中可用；存储失败，请不要将其视为已持久保存。');
     templateDialog.showModal();
   });
-document.getElementById('openTemplates').addEventListener('click', event => {
-  templateReturnFocus = event.currentTarget;
-  templateMessage('');
-  showTemplateList();
-  templateDialog.showModal();
-});
   document.getElementById('templateClose').addEventListener('click', () => templateDialog.close());
   templateDialog.addEventListener('click', event => { if (event.target === templateDialog) templateDialog.close(); });
   templateDialog.addEventListener('close', () => {
