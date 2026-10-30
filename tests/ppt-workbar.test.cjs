@@ -8,12 +8,52 @@ function setup(){
  const seeds=[{title:'第一页',subtitle:'概览',lines:['初始内容']},{title:'第二页',subtitle:'数据',lines:['华东 480']}];
  api.model(item,seeds);return {api,item,seeds};
 }
-test('mode changes reuse the same deck and preserve slide and selection',()=>{
+test('editing tools expand independently of the file header controls and deck',()=>{
  const {api,item,seeds}=setup();item.referenceSlide=1;item.pptSelection=api.current(item).elements[0].id;
  const deck=api.model(item),id=item.pptSelection;
- item.pptMode='edit';assert.match(api.render(item,seeds),/data-ppt-tab="insert"/);
- item.pptMode='ai';assert.doesNotMatch(api.render(item,seeds),/补充资料/);
+ const collapsed=api.render(item,seeds);
+ assert.doesNotMatch(collapsed,/data-reference-crop/);
+ assert.doesNotMatch(collapsed,/data-ppt-action="reference"/);
+ assert.doesNotMatch(collapsed,/data-ppt-action="present"/);
+ assert.doesNotMatch(collapsed,/ppt-page-menu|页面操作|data-ppt-action="(?:new-page|copy-page|delete-page|page-up|page-down)"/);
+ assert.doesNotMatch(collapsed,/data-ppt-picker="scope"|修改范围/);
+ assert.match(collapsed,/class="ppt-workbar-group"/);
+ assert.doesNotMatch(collapsed,/data-ppt-action="toggle-page-preview"/);
+ assert.match(collapsed,/class="reference-ppt-layout"><aside class="ppt-page-sidebar" id="ppt-page-preview">/);
+ assert.match(collapsed,/class="ppt-tools-combo" data-open="false"/);
+ assert.match(collapsed,/data-ppt-action="toggle-tools" aria-expanded="false"[^>]*aria-label="编辑工具"/);
+ assert.match(collapsed,/class="ppt-tools-icon"/);
+ assert.match(collapsed,/class="ppt-edit-drawer"[^>]*data-open="false"[^>]*inert/);
+ item.pptToolsExpanded=true;
+ const expanded=api.render(item,seeds);
+ assert.doesNotMatch(expanded,/data-reference-crop/);
+ assert.doesNotMatch(expanded,/data-ppt-action="reference"/);
+ assert.doesNotMatch(expanded,/data-ppt-action="present"/);
+ assert.doesNotMatch(expanded,/data-ppt-picker="scope"|修改范围/);
+ assert.match(expanded,/class="ppt-tools-combo" data-open="true"/);
+ assert.doesNotMatch(expanded,/ppt-tools-chevron/);
+ assert.match(expanded,/data-ppt-action="toggle-tools" aria-expanded="true"/);
+ assert.match(expanded,/class="ppt-edit-drawer"[^>]*data-open="true"/);
+ assert.deepEqual([...expanded.matchAll(/data-ppt-tab="([^"]+)"/g)].map(match=>match[1]),
+  ['text','image','shape','table','chart','layout','format','design','animation']);
+ assert.match(expanded,/assets\/figma-edit-toolbar\/image\.svg/);
+ assert.match(expanded,/class="ppt-edit-panel" hidden/);
+ assert.match(expanded,/data-ppt-tab="text" aria-selected="false"/);
+ item.pptToolPanelOpen=true;
+ const withCategory=api.render(item,seeds);
+ assert.match(withCategory,/class="ppt-edit-panel">/);
+ assert.match(withCategory,/data-ppt-tab="text" aria-selected="true"/);
+ assert.match(withCategory,/data-ppt-action="edit-text"/);
  assert.equal(api.model(item),deck);assert.equal(item.referenceSlide,1);assert.equal(item.pptSelection,id);
+});
+test('page thumbnails remain visible even when a saved item has the old collapsed state',()=>{
+ const {api,item,seeds}=setup();item.referenceSlide=1;item.pptToolsExpanded=true;
+ item.pptPagePreviewCollapsed=true;
+ const html=api.render(item,seeds);
+ assert.doesNotMatch(html,/data-ppt-action="toggle-page-preview"|data-preview-collapsed|id="ppt-page-preview"[^>]*inert/);
+ assert.match(html,/class="reference-ppt-layout"><aside class="ppt-page-sidebar" id="ppt-page-preview">/);
+ assert.match(html,/data-reference-slide="1"[^>]*aria-current="page"/);
+ assert.match(html,/class="ppt-edit-drawer"[^>]*data-open="true"/);
 });
 test('text edit updates main SVG and thumbnail source; undo/redo restore values',()=>{
  const {api,item}=setup(),element=api.current(item).elements[0];

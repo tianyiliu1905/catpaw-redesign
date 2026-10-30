@@ -51,8 +51,22 @@
     function hide(clear = false) {generation++;menu.hidden=true; pending=null; selectionRect=null;commentInput.value='';commentEditor.hidden=true;commentButton.setAttribute('aria-expanded','false');if(clear) clearHighlights();}
     function cancel() {
       hide(true);drag=null;cropMode=false;root.classList.remove('reference-cropping');
-      const button=root.querySelector('[data-reference-crop]');
-      if(button){button.setAttribute('aria-pressed','false');button.textContent='框选区域';}
+      const button=options.pptCropButton||root.querySelector('[data-reference-crop]');
+      if(button){
+        button.setAttribute('aria-pressed','false');
+        const label=button.querySelector('.file-ppt-action-label');
+        if(label)label.textContent='框选区域';else button.textContent='框选区域';
+        button.title='框选区域';
+      }
+    }
+    function toggleCrop(crop){
+      cropMode=!cropMode;
+      hide(true);
+      crop.setAttribute('aria-pressed',String(cropMode));
+      const label=crop.querySelector('.file-ppt-action-label');
+      if(label)label.textContent=cropMode?'取消框选':'框选区域';else crop.textContent=cropMode?'取消框选':'框选区域';
+      crop.title=cropMode?'取消框选':'框选区域';
+      root.classList.toggle('reference-cropping',cropMode);
     }
     function base(item,kind,label) { return {id:`selection-${++nextId}`,node:item.node,chain:item.chain.slice(),task:options.taskForArtifact(item.chain) || getTask(),kind,label,fileName:item.node.name}; }
     function positionMenu() {
@@ -185,8 +199,12 @@
       const thumb=event.target.closest('[data-reference-slide]');
       if(thumb){cancel();item.referenceSlide=Number(thumb.dataset.referenceSlide);item.pptSelection=null;options.renderWorkspace(item);return;}
       const crop=event.target.closest('[data-reference-crop]');
-      if(crop){cropMode=!cropMode;hide(true);crop.setAttribute('aria-pressed',String(cropMode));crop.textContent=cropMode?'取消框选':'框选区域';root.classList.toggle('reference-cropping',cropMode);return;}
+      if(crop){toggleCrop(crop);return;}
       if(event.target.closest('.reference-slide')&&!cropMode)pageReference(item,root.querySelector('.reference-slide'));
+    });
+    options.pptCropButton?.addEventListener('click',()=>{
+      const item=getWorkspace();
+      if(item?.node?.preview?.kind==='ppt'&&item.node.preview.referenceDemo&&!item.pptPresent)toggleCrop(options.pptCropButton);
     });
     root.addEventListener('pointerdown',event=>{
       if(event.button!==0)return;
@@ -241,7 +259,7 @@
       const link=event.target.closest('[data-artifact-reference]');
       if(link){const ref=registry.get(link.dataset.artifactReference);if(ref)locate(ref);}
     });
-    window.PptWorkbench.install({root,getWorkspace,renderWorkspace:options.renderWorkspace,cancelSelection:cancel,feedback:options.feedback,
+    const pptWorkbench=window.PptWorkbench.install({root,getWorkspace,renderWorkspace:options.renderWorkspace,cancelSelection:cancel,feedback:options.feedback,
       reference:async(item,element)=>{
         cancel();const index=item.referenceSlide||0,page=deck(item)[index],rect=root.querySelector('.reference-slide').getBoundingClientRect();
         if(element){
@@ -249,13 +267,20 @@
           const ref={...base(item,'ppt',`第 ${index+1} 页 · 所选元素`),slide:index,slideId:page.id,elementId:element.id,box,text:element.text||element.rows?.map(row=>row.join(' / ')).join('；')||'图片或形状',image:slideImage(index,item)};
           try {const source=new Image();source.src=ref.image;await source.decode();const c=document.createElement('canvas');c.width=Math.max(1,Math.round(box.w*960));c.height=Math.max(1,Math.round(box.h*540));c.getContext('2d').drawImage(source,box.x*960,box.y*540,box.w*960,box.h*540,0,0,c.width,c.height);ref.image=c.toDataURL('image/png');}catch{/* Keep full-page snapshot if crop cannot be decoded. */}
           if(getWorkspace()!==item||getTask()!==ref.task)return;show(ref,rect);
-        }else if(item.pptScope==='deck'){
-          show({...base(item,'ppt',`整份 PPT · ${deck(item).length} 页`),slide:0,slideId:deck(item)[0].id,image:slideImage(0,item),text:deck(item).map((_,i)=>slideText(i,item)).join('\n'),pages:deck(item).map((p,i)=>({id:p.id,text:slideText(i,item)}))},rect);
         }else pageReference(item,root.querySelector('.reference-slide'));
         add();
       },
     });
-    return {entries,renderSent,renderDrafts,cancel,clear(){drafts.delete(getTask());renderDrafts();},taskChanged(){cancel();renderDrafts();}};
+    options.pptReferenceButton?.addEventListener('click',()=>{
+      const item=getWorkspace();
+      if(item?.node?.preview?.kind==='ppt'&&item.node.preview.referenceDemo&&!item.pptPresent)pptWorkbench.action(item,'reference');
+    });
+    return {entries,renderSent,renderDrafts,cancel,
+      previewPpt(){
+        const item=getWorkspace();
+        if(item?.node?.preview?.kind==='ppt'&&item.node.preview.referenceDemo&&!item.pptPresent)pptWorkbench.action(item,'present');
+      },
+      clear(){drafts.delete(getTask());renderDrafts();},taskChanged(){cancel();renderDrafts();}};
   }
   window.ArtifactEditingDemo={files,renderPpt,create};
 })();

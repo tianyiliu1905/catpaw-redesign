@@ -49,7 +49,6 @@
 .reference-ppt-canvas{display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0;overflow:auto;padding:24px 20px 100px}
 .reference-slide{position:relative;width:100%;max-width:1120px;margin:auto;flex:none;line-height:0;user-select:none;touch-action:none;border-radius:4px;box-shadow:0 3px 18px #0001;cursor:pointer}
 .reference-slide>img{display:block;width:100%;height:auto;border-radius:inherit;pointer-events:none}
-.reference-ppt-canvas>p{font-size:11px;color:var(--text-3);text-align:center;flex:none}
 .reference-page-selected{outline:2px solid var(--brand-green);outline-offset:3px}
 .reference-cropping .reference-slide{cursor:crosshair}
 .reference-crop-box{position:absolute;border:2px solid var(--brand-green);background:#4bcc7a20;box-shadow:0 0 0 1px #fff8;pointer-events:none}

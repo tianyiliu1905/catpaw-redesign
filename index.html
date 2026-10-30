@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="./styles.css" />
 <link rel="stylesheet" href="./artifact-editing-demo.css">
 <link rel="stylesheet" href="./ppt-workbar.css">
+<link rel="stylesheet" href="./supplier-conversation-demo.css">
 </head>
 <body>
 
@@ -101,7 +102,7 @@
             <span class="task-name">把季度复盘要点汇总成幻灯片</span>
             <span class="task-state"></span>
           </a>
-          <a class="task flush" href="#" data-scope="office" data-state="new">
+          <a class="task flush" id="supplierComparisonTask" href="#" data-scope="office" data-state="new" data-open-conversation>
             <span class="task-name">对比三家供应商的报价与交期</span>
             <span class="task-state"><i class="dot-new"></i></span>
           </a>
@@ -453,7 +454,10 @@
 
         <h1 class="greeting" id="homeGreeting">
           <span class="greeting-mascot" aria-hidden="true">
-            <img class="greeting-logo" src="assets/title-logo.png" alt="">
+            <img class="greeting-logo" src="assets/title-logo-core.svg" alt="">
+            <svg class="greeting-star" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+              <path d="M147.56 73.56C147.25 73.18 147.51 72.98 147.69 72.69C147.86 72.40 148.18 72.10 148.62 71.81C149.07 71.52 149.75 71.33 150.38 70.94C151.00 70.54 151.67 70.04 152.38 69.44C153.08 68.83 153.88 68.26 154.62 67.31C155.38 66.36 156.12 65.18 156.88 63.75C157.62 62.32 158.41 60.05 159.12 58.75L161.15 55.95C161.57 55.64 161.34 56.44 161.65 56.90C161.96 57.36 162.53 57.91 163.00 58.69C163.47 59.46 163.99 60.71 164.50 61.56C165.01 62.42 165.53 63.17 166.06 63.81C166.59 64.46 166.94 64.85 167.69 65.44C168.44 66.02 169.40 66.65 170.56 67.31C171.73 67.98 173.70 68.83 174.69 69.44L176.50 70.94C176.72 71.33 176.27 71.52 176.00 71.81C175.73 72.10 175.35 72.40 174.88 72.69C174.40 72.98 173.72 73.19 173.12 73.56C172.53 73.94 171.93 74.40 171.31 74.94C170.70 75.48 170.08 75.93 169.44 76.81C168.79 77.70 168.12 78.84 167.44 80.25C166.75 81.66 165.94 84.03 165.31 85.25L163.69 87.56C163.23 87.89 162.96 87.50 162.56 87.19C162.17 86.88 161.75 86.38 161.31 85.69C160.88 85.00 160.43 83.88 159.94 83.06C159.45 82.25 158.93 81.50 158.38 80.81C157.82 80.12 157.41 79.57 156.62 78.94C155.84 78.30 154.86 77.66 153.69 77.00C152.51 76.34 150.58 75.57 149.56 75.00L147.56 73.56ZM156.38 71.81C156.24 72.33 156.34 72.45 156.62 72.94C156.91 73.43 157.39 74.03 158.06 74.75C158.74 75.47 159.99 76.62 160.69 77.25C161.39 77.88 161.91 78.29 162.25 78.50C162.59 78.71 162.40 78.77 162.75 78.50C163.10 78.23 163.65 77.69 164.38 76.88C165.10 76.06 166.44 74.48 167.12 73.62C167.81 72.77 168.27 72.15 168.50 71.75C168.73 71.35 168.77 71.60 168.50 71.25C168.23 70.90 167.69 70.35 166.88 69.62C166.06 68.90 164.48 67.56 163.62 66.88C162.77 66.19 162.15 65.73 161.75 65.50C161.35 65.27 161.57 65.26 161.25 65.50C160.93 65.74 160.45 66.22 159.81 66.94C159.18 67.66 158.01 69.00 157.44 69.81C156.86 70.62 156.51 71.29 156.38 71.81Z" fill="#000" fill-rule="evenodd"/>
+            </svg>
             <svg class="greeting-shake" viewBox="0 0 200 200" fill="none" aria-hidden="true">
               <g transform="translate(-6 0)">
                 <g class="greeting-shake-frame greeting-shake-frame-a">
@@ -888,6 +892,10 @@
           <button class="file-mode-toggle" id="toolFileModeToggle" type="button" hidden>编辑代码</button>
           <button class="file-edit-save" id="toolFileEditSave" type="button" hidden>保存</button>
           <button class="file-edit-discard" id="toolFileEditDiscard" type="button" hidden>取消</button>
+          <div class="file-ppt-actions" id="toolFilePptActions" hidden>
+            <button id="toolFilePptCrop" type="button" data-reference-crop aria-pressed="false" title="框选区域"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><span class="file-ppt-action-label">框选区域</span></button>
+            <button id="toolFilePptReference" type="button" title="添加到对话"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/></svg><span class="file-ppt-action-label">添加到对话</span></button>
+          </div>
           <button class="file-share-button" id="toolFileShare" type="button" title="分享产物" aria-label="分享当前产物" hidden>
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/></svg>
           </button>
@@ -1023,7 +1031,7 @@
 <!-- 案例详情：所有场景的案例共用同一弹窗，内容由当前卡片动态填充 -->
 <dialog class="case-dialog" id="caseDialog" aria-labelledby="caseDialogTitle">
   <div class="case-dialog-shell">
-    <button class="case-dialog-close" id="caseDialogClose" type="button" title="关闭" aria-label="关闭案例详情">
+    <button class="case-dialog-close" id="caseDialogClose" type="button" aria-label="关闭案例详情">
       <svg viewBox="0 0 24 24" class="ic"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>
     </button>
     <div class="case-dialog-visual" id="caseDialogVisual" aria-label="案例产物预览"></div>
@@ -1176,6 +1184,7 @@
 <script src="./ppt-workbar.js"></script>
 <script src="./artifact-editing-demo.js"></script>
 <script src="./strategy-scenes.js"></script>
+<script src="./supplier-conversation-demo.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

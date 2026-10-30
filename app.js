@@ -939,10 +939,8 @@ const thumb = summaryArtifactIcon(type);
           aria-label="${esc(section.heading)}第 ${paragraphIndex + 1} 段" data-word-section="${sectionIndex}" data-word-paragraph="${paragraphIndex}" spellcheck="false">${esc(text)}</p>`).join('')}
       </section>`).join('');
     return `<div class="pv-office pv-word" aria-label="文档演示预览">
-      <div class="office-toolbar">${preview.referenceDemo ? '<span>划选文字后，添加到对话提出修改要求</span>' : '<span>开始</span><span>插入</span><span>布局</span><span>审阅</span>'}<span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div>
-      <div class="word-layout"><nav class="word-outline" aria-label="文档大纲"><strong>大纲</strong>${preview.sections.map((section, index) => `<button type="button" data-word-jump="${index}">${esc(section.heading)}</button>`).join('')}</nav>
-        <div class="word-canvas"><article class="word-page" style="--office-zoom:${zoom / 100}"><h1>${esc(preview.title)}</h1><div class="word-subtitle">${esc(preview.subtitle || '上海虹桥店 · 2026 年 9 月 21 日')}</div><hr>${sections}<footer>由 CatPaw 生成 · 演示文档</footer></article></div></div>
-      <div class="office-footer"><span>第 1 页 · 共 1 页</span><div class="office-zoom"><button type="button" data-office-zoom="-10" aria-label="缩小文档">−</button><span>${zoom}%</span><button type="button" data-office-zoom="10" aria-label="放大文档">＋</button></div></div>
+      <div class="office-toolbar">${preview.referenceDemo ? '<span>划选文字后，添加到对话提出修改要求</span>' : '<span>开始</span><span>插入</span><span>布局</span><span>审阅</span>'}<span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span><div class="office-zoom"><button type="button" data-office-zoom="-10" aria-label="缩小文档">−</button><span>${zoom}%</span><button type="button" data-office-zoom="10" aria-label="放大文档">＋</button></div></div>
+      <div class="word-layout"><div class="word-canvas"><article class="word-page" style="--office-zoom:${zoom / 100}"><h1>${esc(preview.title)}</h1><div class="word-subtitle">${esc(preview.subtitle || '上海虹桥店 · 2026 年 9 月 21 日')}</div><hr>${sections}<footer>由 CatPaw 生成 · 演示文档</footer></article></div></div>
     </div>`;
   }
 
@@ -959,7 +957,6 @@ const thumb = summaryArtifactIcon(type);
       <div class="excel-formula"><span data-excel-address>选择单元格</span><span class="excel-fx">ƒx</span><output data-excel-value>选中单元格后显示内容</output></div>
       <div class="excel-scroll"><table class="excel-grid"><thead><tr><th class="excel-corner"></th>${letters.map(letter => `<th>${letter}</th>`).join('')}</tr><tr><th class="excel-row-number">${preview.referenceDemo ? '1' : '#'}</th>${sheet.columns.map(name => `<th class="excel-column-name">${esc(name)}</th>`).join('')}</tr></thead><tbody>${rows.map(({ row, rowIndex }) => `<tr><th class="excel-row-number">${rowIndex + (preview.referenceDemo ? 2 : 1)}</th>${row.map((_, columnIndex) => `<td tabindex="0" data-excel-row="${rowIndex}" data-excel-column="${columnIndex}" data-excel-address="${letters[columnIndex]}${rowIndex + (preview.referenceDemo ? 2 : 1)}" title="${preview.referenceDemo ? '选择后添加到对话' : columnIndex === 5 && sheet.name === '异常明细' ? '根据超时单 ÷ 订单量自动计算' : '双击编辑'}">${esc(spreadsheetCell(sheet, rowIndex, columnIndex))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
       <div class="excel-tabs" role="tablist" aria-label="工作表">${preview.sheets.map((entry, index) => `<button type="button" role="tab" data-excel-sheet="${index}" aria-selected="${index === sheetIndex}" class="${index === sheetIndex ? 'active' : ''}">${esc(entry.name)}</button>`).join('')}</div>
-      <div class="office-footer"><span>工作表 ${sheetIndex + 1} / ${preview.sheets.length}</span><span>${sheet.name === '异常明细' ? '超时率按订单量自动计算 · ' : ''}更改仅保存在当前会话</span></div>
     </div>`;
   }
 
@@ -991,7 +988,6 @@ const thumb = summaryArtifactIcon(type);
           <div class="ppt-notes"><b>备注</b><span>本季度核心指标保持稳健增长，履约效率和门店经营质量持续改善。</span></div>
         </main>
       </div>
-      <footer class="ppt-status"><span>幻灯片 1 / 5　　简体中文</span><span>▦　▤　　−　 72%　＋</span></footer>
     </div>`,
 
     /* 文档：渲染成排版后的富文本，而不是显示源码。
@@ -1831,9 +1827,19 @@ safeHouseToggle.addEventListener('click', toggleSafeHouse);
   const homeGoalTag = document.getElementById('homeGoalTag');
   const hero = document.querySelector('.hero');
   const greeting = document.getElementById('homeGreeting');
+  const greetingMascot = greeting.querySelector('.greeting-mascot');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const mascotHoverEffects = ['shake', 'rainbow'];
+  let nextMascotHoverIndex = 0;
+  greetingMascot.addEventListener('mouseenter', () => {
+    greetingMascot.dataset.hoverEffect = mascotHoverEffects[nextMascotHoverIndex];
+    nextMascotHoverIndex = (nextMascotHoverIndex + 1) % mascotHoverEffects.length;
+  });
+  greetingMascot.addEventListener('mouseleave', () => {
+    delete greetingMascot.dataset.hoverEffect;
+  });
   const promptHint = document.getElementById('promptHint');
   const hintExamples = ['帮我做一份报告…', '帮我做一个演示文稿…', '帮我整理表格数据…', '帮我搭建一个网站…'];
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let hintIndex = 0;
   let hintInterval = null;
   let hintTransition = null;
@@ -2604,6 +2610,9 @@ const fileCloseDiscard = document.getElementById('fileCloseDiscard');
 const fileCloseSave = document.getElementById('fileCloseSave');
   const toolFilePreviewTitle = document.getElementById('toolFilePreviewTitle');
   const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
+  const toolFilePptActions = document.getElementById('toolFilePptActions');
+  const toolFilePptCrop = document.getElementById('toolFilePptCrop');
+  const toolFilePptReference = document.getElementById('toolFilePptReference');
 const fileActions = document.getElementById('fileActions');
 const fileActionsTrigger = document.getElementById('fileActionsTrigger');
 const fileActionsMenu = document.getElementById('fileActionsMenu');
@@ -3656,6 +3665,7 @@ const preview = node.preview;
   }
 
   const FILE_ACTION_ICONS = {
+    preview: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 5.5 4-5.5 4V8Z"/>',
     chat: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>',
     reveal: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>',
     default: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
@@ -3676,11 +3686,12 @@ const preview = node.preview;
     }
     fileActionsMenu.setAttribute('aria-label', '文件操作');
     fileActionsMenu.innerHTML = [
+      ...(node.preview?.kind === 'ppt' && node.preview.referenceDemo ? [['preview', '预览']] : []),
       ['chat', '添加到对话'],
       ['reveal', '在文件夹显示'],
       ['default', '默认打开方式', config.label],
       ['open', '打开方式', '›'],
-    ].map(([action, label, detail], index) => `<button class="file-actions-item" type="button" role="menuitem" data-file-action="${action}"${index === 2 ? ' data-divider' : ''}>` +
+    ].map(([action, label, detail]) => `<button class="file-actions-item" type="button" role="menuitem" data-file-action="${action}"${action === 'default' ? ' data-divider' : ''}>` +
       `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${FILE_ACTION_ICONS[action]}</svg>` +
       `<span class="file-actions-label">${label}</span>${detail ? `<span class="file-actions-detail">${esc(detail)}</span>` : ''}</button>`).join('');
   }
@@ -3711,6 +3722,7 @@ const preview = node.preview;
     toolFileEditSave.hidden = !editing;
     toolFileEditDiscard.hidden = !editing;
     toolFileEditSave.disabled = !editing;
+    toolFilePptActions.hidden = editing || !(item.node?.preview?.referenceDemo && item.node.preview.kind === 'ppt' && hasVisualPreview);
     toolFileShare.hidden = editing || !isArtifactNode(item.node);
     setFileActionsMenu(false);
     activeFilePath = treeVisible ? item.path || null : null;
@@ -3955,8 +3967,6 @@ const preview = node.preview;
   toolFilePreviewBody.addEventListener('click', (event) => {
     const item = currentFileWorkspace();
     if (!item?.node?.preview) return;
-    const jump = event.target.closest('[data-word-jump]');
-    if (jump) toolFilePreviewBody.querySelector(`#word-section-${jump.dataset.wordJump}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     const zoom = event.target.closest('[data-office-zoom]');
     if (zoom) {
       item.officeZoom = Math.min(140, Math.max(70, (item.officeZoom || 100) + Number(zoom.dataset.officeZoom)));
@@ -4158,6 +4168,7 @@ const preview = node.preview;
     }
     setFileActionsMenu(false);
     if (target.dataset.fileApp) openCurrentFileWith(target.dataset.fileApp);
+    else if (action === 'preview') { fileActionsTrigger.focus({ preventScroll: true }); artifactSelection?.previewPpt(); }
     else if (action === 'chat') appendFileToConversation(item.node);
     else if (action === 'reveal') revealCurrentFile();
     else if (action === 'default') openCurrentFileWith(openWithConfig(item.node).label);
@@ -4572,7 +4583,14 @@ const mainView = document.querySelector('.main');
     { work: '复核履约指标统计口径', state: 'running', detail: '正在核对订单去重、时间戳对齐及分时段阈值，确保看板与异常明细的统计口径一致。' },
   ];
   const artifactEditingTask = document.getElementById('artifactEditingTask');
+  const supplierComparisonTask = document.getElementById('supplierComparisonTask');
   const conversationExamples = new Map([
+    [supplierComparisonTask, {
+      folderId:'default',
+      turns:[{ prompt:'对比三家供应商的报价与交期，帮我选一个合适的方案，再整理成方便讨论的采购建议。',
+        reply:'我会把三家供应商放在同一口径下比较。先确认数量、预算和到货要求，再看看报价与交期的取舍。' }],
+      files:[],
+    }],
     [artifactEditingTask, {
       folderId:'default',
       turns:[{prompt:'把季度经营数据和复盘要点整理成汇报 PPT，附上经营数据表和复盘说明，方便我继续调整。',
@@ -5297,6 +5315,23 @@ const mainView = document.querySelector('.main');
   const startedConversationDemos = new Set();
   const conversationGoals = new Map();
   let activeConversationTask = null;
+  const supplierDemo = window.CatPawSupplierDemo.createController({
+    container:conversationThread,
+    isActive:() => activeConversationTask === supplierComparisonTask,
+    appendTurn(text, html) {
+      conversationThread.insertAdjacentHTML('beforeend', renderConversationTurnTime(new Date()) + renderUserMessage(text, []) +
+        `<div class="conversation-message assistant-message"><div class="assistant-content">${html}${renderMessageMeta('assistant')}</div></div>`);
+      moveConversationProgressToLatestTurn();
+      renderConversationTurnNav();
+      requestAnimationFrame(() => {
+        const latest = conversationThread.querySelector('.assistant-message:last-child');
+        if (latest) conversationScroll.scrollTop += latest.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 20;
+      });
+    },
+    persist:() => {
+      if (activeConversationTask === supplierComparisonTask) conversationThreads.set(supplierComparisonTask, conversationThread.innerHTML);
+    },
+  });
   function updateSummaryArtifactBadge() {
     const scheduled = mainView.classList.contains('conversation-open') && scheduledRunTasks.has(activeConversationTask);
     content.classList.toggle('scheduled-conversation', scheduled);
@@ -5337,10 +5372,10 @@ const mainView = document.querySelector('.main');
   const conversationStageFrames = [
     {
       acknowledgement: '明白，你希望结合趋势图和异常明细，找出需要优先跟进的门店，并明确处理顺序。我会整理优先级依据和跟进建议，缺失记录及责任归属会保留为待确认项。',
-      stage: 'plan', planCompleted: 0,
+      stage: 'plan', planCompleted: 0, globalState: 'planning',
     },
     {
-      stage: 'work', planCompleted: 0,
+      stage: 'work', planCompleted: 0, globalState: 'reading',
       progress: '正在读取趋势图、异常明细和分析文档，确认文件与字段是否齐全。',
       tool: '读取文件', toolIcon: 'file', technical: '打开趋势图、门店履约异常明细.xlsx 和门店履约分析.docx，检查订单 ID、门店及时间字段。',
       detail: '正在读取三份资料并检查可用字段。',
@@ -5348,7 +5383,7 @@ const mainView = document.querySelector('.main');
       completed: '已读取趋势图、异常明细和分析文档',
     },
     {
-      stage: 'work', planCompleted: 0,
+      stage: 'work', planCompleted: 0, globalState: 'analyzing',
       progress: '正在按订单去重并核对接单、到店、出餐和交接时间，单列缺失记录。',
       tool: '表格分析', toolIcon: 'table', technical: '按订单 ID 去重，检查接单、到店、出餐和交接时间戳；缺失值不参与确定性归因。',
       detail: '正在核对订单和时间字段，标出缺失记录。',
@@ -5356,7 +5391,11 @@ const mainView = document.querySelector('.main');
       completed: '已核对订单口径，并标出缺失时间戳',
     },
     {
-      stage: 'work', planCompleted: 1,
+      stage: 'checkpoint', planCompleted: 1, globalState: 'summarizing',
+      summary: '资料和统计口径已核对，缺失时间戳已单列待核实。接下来比较异常的影响范围，确定优先跟进的门店。',
+    },
+    {
+      stage: 'work', planCompleted: 1, globalState: 'analyzing',
       progress: '正在比较超时时长、影响订单数和重复发生情况，筛选需要优先跟进的异常。',
       tool: '数据分析', toolIcon: 'chart', technical: '按超时时长、影响订单数和重复发生次数比较异常；缺失时间戳记录单独保留。',
       detail: '正在比较异常持续时间、影响范围和重复发生情况。',
@@ -5364,7 +5403,7 @@ const mainView = document.querySelector('.main');
       completed: '已比较异常的影响范围和重复情况',
     },
     {
-      stage: 'work', planCompleted: 1,
+      stage: 'work', planCompleted: 1, globalState: 'checking',
       progress: '正在对照筛选结果与分析文档的结论，检查优先级是否有遗漏或矛盾。',
       tool: '读取文档', toolIcon: 'document', technical: '读取门店履约分析.docx 的结论段，逐项对照异常明细中的门店、时段与订单数量。',
       detail: '正在把筛选结果与分析文档交叉核对。',
@@ -5372,7 +5411,11 @@ const mainView = document.querySelector('.main');
       completed: '已对照分析文档复核优先级',
     },
     {
-      stage: 'work', planCompleted: 2,
+      stage: 'checkpoint', planCompleted: 2, globalState: 'summarizing',
+      summary: '已筛出需要优先跟进的 5 条异常，并与分析文档交叉核对。接下来整理门店侧的处理顺序和待确认事项。',
+    },
+    {
+      stage: 'work', planCompleted: 2, globalState: 'generating',
       progress: '正在整理优先异常的跟进顺序，并标注仍需人工确认的事项。',
       tool: '整理结果', toolIcon: 'list', technical: '汇总优先跟进的 5 条异常，列出门店侧处理顺序和待确认的责任归属。',
       detail: '正在整理 5 条优先异常和处理建议。',
@@ -5380,7 +5423,7 @@ const mainView = document.querySelector('.main');
       completed: '已整理 5 条优先异常和处理顺序',
     },
     {
-      stage: 'work', planCompleted: 2,
+      stage: 'work', planCompleted: 2, globalState: 'checking',
       progress: '正在逐项复核建议与原始记录的对应关系，避免把推测写成结论。',
       tool: '结果检查', toolIcon: 'check', technical: '检查每条建议与异常明细的对应关系；保留待确认责任方和缺失时间戳。',
       detail: '正在复核建议与原始记录的对应关系。',
@@ -5388,9 +5431,13 @@ const mainView = document.querySelector('.main');
       completed: '已复核建议依据和待确认事项',
     },
     {
-      stage: 'done', planCompleted: 3,
-      summary: '已按统一口径核对资料，筛出需要优先跟进的 5 条异常，并整理了门店侧处理顺序。建议先核对重复超时和晚高峰异常集中的门店，再排查出餐延迟。',
-      caveat: '缺失时间戳与责任归属仍需结合原始记录和门店反馈人工确认。',
+      stage: 'checkpoint', planCompleted: 3, globalState: 'generating',
+      summary: '5 条优先异常的跟进建议已整理并复核，缺失时间戳与责任归属已标注为待确认。接下来汇总结果，交付异常明细。',
+    },
+    {
+      stage: 'done', planCompleted: 3, globalState: 'done',
+      summary: '已整理 5 条优先异常及跟进建议，详见明细表。',
+      caveat: '缺失时间戳与责任归属仍待人工核实。',
     },
   ];
   const conversationStagePlan = [
@@ -5398,6 +5445,11 @@ const mainView = document.querySelector('.main');
     { title: '比较门店跟进优先级' },
     { title: '整理建议与待确认项' },
   ];
+  const conversationGlobalStates = {
+    planning: '正在制定计划',
+    thinking: '思考中', reading: '读取中', analyzing: '分析中',
+    generating: '生成中', checking: '检查中', summarizing: '整理中', done: '已完成',
+  };
   const stageToolIcons = {
     code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',
     file: '<path d="M7 3h7l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/>',
@@ -5413,8 +5465,9 @@ const mainView = document.querySelector('.main');
   }
 
   function renderStageToolCall(frame, development) {
-    const icon = stageToolIcons[frame.call.name === 'python' ? 'code' : frame.toolIcon];
-    return `<details class="stage-tool-call" data-tool-state="running"${development ? ' open' : ''}><summary aria-label="${esc(frame.call.name)}，运行中，查看调用参数"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg><svg viewBox="0 0 24 24" class="ic stage-tool-shine">${icon}</svg></span><span class="stage-tool-copy"><strong>${esc(frame.call.name)}</strong><span class="stage-tool-description">${esc(frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details"><p>${esc(frame.technical)}</p><span class="stage-call-label">调用参数</span><pre><code>${esc(JSON.stringify(frame.call.input, null, 2))}</code></pre></div></details>`;
+    const name = development ? frame.call.name : frame.tool;
+    const icon = stageToolIcons[development && frame.call.name === 'python' ? 'code' : frame.toolIcon];
+    return `<details class="stage-tool-call" data-tool-state="running"${development ? ' open' : ''}><summary aria-label="${esc(name)}，运行中，展开查看工具调用"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg><svg viewBox="0 0 24 24" class="ic stage-tool-shine">${icon}</svg></span><span class="stage-tool-copy"><strong>${esc(name)}</strong><span class="stage-tool-description">${esc(frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details"><p>${esc(frame.technical)}</p><span class="stage-call-label">工具：${esc(frame.call.name)} · 调用参数</span><pre><code>${esc(JSON.stringify(frame.call.input, null, 2))}</code></pre></div></details>`;
   }
 
   function renderStageAcknowledgement(text) {
@@ -5425,7 +5478,7 @@ const mainView = document.querySelector('.main');
     return fragments.map((fragment, index) => `<span class="stage-ink-fragment" style="--ink-delay:${120 + Math.round(index * interval)}ms">${esc(fragment)}</span>`).join('');
   }
 
-  function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false) {
+  function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false, visibleFrames = null) {
     const frame = conversationStageFrames[frameIndex];
     const before = frame.stage === 'plan';
     const done = frame.stage === 'done';
@@ -5438,19 +5491,22 @@ const mainView = document.querySelector('.main');
       return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${state === 'done' ? check : `<span class="stage-plan-digit">${index + 1}</span>`}</span><span class="stage-plan-title">${esc(step.title)}</span></li>`;
     }).join('');
     const planMarkup = `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="stagePlanBody"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${conversationStagePlan.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="stagePlanBody"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
-    const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex);
-    const completedItems = completedEvents.map((event, index) => `<li class="stage-completed-item${index === newCompletedIndex ? ' is-new' : ''}"><span class="stage-completed-check" aria-hidden="true">${check}</span><span class="stage-completed-text">${esc(event.completed)}</span><span class="stage-completed-tool">${esc(event.call.name)}</span></li>`).join('');
+    const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex).filter((event,index) => event.call && (!visibleFrames || visibleFrames.includes(index+1)));
+    const completedItems = completedEvents.map((event, index) => `<li class="stage-completed-item${index === newCompletedIndex ? ' is-new' : ''}"><span class="stage-completed-check" aria-hidden="true">${check}</span><span class="stage-completed-text">${esc(event.completed)}</span><span class="stage-completed-tool">${esc(development ? event.call.name : event.tool)}</span></li>`).join('');
     const completedMarkup = completedEvents.length
       ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner"><section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
       : '';
-    const currentMarkup = before || done ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${renderStageToolCall(frame, development)}</section>`;
+    const checkpointMarkup = conversationStageFrames.slice(0, frameIndex + 1)
+      .filter(event => event.stage === 'checkpoint')
+      .map(event => `<section class="stage-checkpoint" data-completed-group="${event.planCompleted}" aria-label="${esc(conversationStagePlan[event.planCompleted - 1].title)}的阶段总结"><p>${esc(event.summary)}</p></section>`).join('');
+    const currentMarkup = frame.stage !== 'work' ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${renderStageToolCall(frame, development)}</section>`;
     const resultName = '门店履约异常明细.xlsx';
-    const resultMarkup = done ? `<section class="stage-summary" aria-label="工作总结"><p>${esc(frame.summary)}${esc(frame.caveat)}</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>` : '';
-    const thinkingStatus = `<strong>${done ? '思考完成' : '正在思考'}</strong><span class="stage-elapsed" aria-label="已用时间">0秒</span>`;
-    const thinkingMarkup = `<div class="stage-thinking">${completedEvents.length
+    const resultMarkup = done ? `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>${esc(frame.summary)}${esc(frame.caveat)}</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section></div>` : '';
+    const thinkingStatus = `<strong class="stage-global-label" role="status" aria-live="polite" aria-atomic="true">${esc(conversationGlobalStates[frame.globalState])}</strong><span class="stage-elapsed" aria-label="任务累计用时">0秒</span>`;
+    const thinkingMarkup = `<div class="stage-thinking" data-global-state="${esc(frame.globalState)}">${completedEvents.length
       ? `<button class="stage-thinking-status stage-thinking-toggle" type="button" aria-expanded="${thinkingOpen}" aria-controls="stageThinkingDetails">${thinkingStatus}<svg viewBox="0 0 24 24" class="ic stage-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>${completedMarkup}`
       : `<div class="stage-thinking-status">${thinkingStatus}</div>`}</div>`;
-    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + planMarkup + currentMarkup + resultMarkup;
+    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + planMarkup + checkpointMarkup + currentMarkup + resultMarkup;
   }
 
   function renderConversationStage(entering = false) {
@@ -5492,7 +5548,7 @@ const mainView = document.querySelector('.main');
     if (!panel || panel.classList.contains('is-entering') || conversationPage.hidden || activeConversationTask !== conversationTask) return;
     const frameIndex = Number(panel.dataset.stageFrame);
     if (frameIndex >= conversationStageFrames.length - 1) return;
-    const duration = frameIndex === 0 ? 6000 : 5000;
+    const duration = frameIndex === 0 ? 6000 : conversationStageFrames[frameIndex].stage === 'checkpoint' ? 3000 : 5000;
     stageAutoTimer = setTimeout(() => {
       if (panel.isConnected && !conversationPage.hidden && activeConversationTask === conversationTask && Number(panel.dataset.stageFrame) === frameIndex) {
         advanceConversationStage(panel, frameIndex + 1);
@@ -5502,20 +5558,26 @@ const mainView = document.querySelector('.main');
 
   function updateConversationStage(panel, frameIndex, planOpen = frameIndex === 0, thinkingOpen = panel.querySelector('.stage-thinking-toggle')?.getAttribute('aria-expanded') === 'true') {
     clearTimeout(stageAutoTimer);
-    const previousEvents = Math.max(0, Number(panel.dataset.stageFrame) - 1);
-    const nextEvents = Math.max(0, frameIndex - 1);
+    const followLatest = conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight < 64;
+    const previousEvents = conversationStageFrames.slice(1, Number(panel.dataset.stageFrame)).filter(event => event.call).length;
+    const nextEvents = conversationStageFrames.slice(1, frameIndex).filter(event => event.call).length;
     if (frameIndex === 0 && Number(panel.dataset.stageFrame) === conversationStageFrames.length - 1) {
       panel.dataset.startedAt = String(Date.now());
       delete panel.dataset.finishedAt;
       thinkingOpen = false;
       panel.classList.toggle('is-entering', !reducedMotion.matches);
     }
-    if (conversationStageFrames[frameIndex].stage === 'done') panel.dataset.finishedAt = String(Date.now());
+    if (conversationStageFrames[frameIndex].stage === 'done' && !panel.dataset.finishedAt) panel.dataset.finishedAt = String(Date.now());
     panel.dataset.stageFrame = String(frameIndex);
     panel.innerHTML = renderConversationStageBody(frameIndex, planOpen, nextEvents > previousEvents ? nextEvents - 1 : -1, thinkingOpen);
     syncStageDemoControls();
     conversationThreads.set(conversationTask, conversationThread.innerHTML);
     scheduleStageAutoAdvance(panel);
+    if (followLatest) requestAnimationFrame(() => {
+      if (panel.isConnected && Number(panel.dataset.stageFrame) === frameIndex && activeConversationTask === conversationTask) {
+        conversationScroll.scrollTop = conversationScroll.scrollHeight;
+      }
+    });
   }
 
   function advanceConversationStage(panel, next, immediate = false) {
@@ -5547,7 +5609,7 @@ const mainView = document.querySelector('.main');
     const index = Number(panel.dataset.stageFrame);
     const phase = index === 0 ? 1 : conversationStageFrames[index].stage === 'done' ? 3 : 2;
     const action = index === 0 ? '开始工作 →' : phase === 3
-      ? '重播演示 ↺' : index === conversationStageFrames.length - 2 ? '查看结果 →' : '演示下一步 →';
+      ? '重播演示 ↺' : index === conversationStageFrames.length - 2 ? '查看结果 →' : conversationStageFrames[index].stage === 'checkpoint' ? '继续下一阶段 →' : '演示下一步 →';
     stageDemoAdvance.textContent = `${phase}/3 · ${action}`;
   }
 
@@ -5979,6 +6041,7 @@ const mainView = document.querySelector('.main');
             return node ? { node, chain: [folder, node] } : null;
           }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
+          (task === supplierComparisonTask && index === 0 ? supplierDemo.initial() : '') +
           (example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && startedConversationDemos.has(task) && index === turns.length - 1 ? renderConversationStage() : '') +
           (reply ? renderMessageMeta('assistant') : '') +
@@ -6203,6 +6266,15 @@ function beginConversationTurn(message) {
   const text = typeof message === 'string' ? message : message.text;
   const attachments = typeof message === 'string' ? [] : message.attachments || [];
   const references = typeof message === 'string' ? [] : message.references || [];
+  if (activeConversationTask === supplierComparisonTask) {
+    conversationThread.insertAdjacentHTML('beforeend', renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments, false, false, references) +
+      `<div class="conversation-message assistant-message"><div class="assistant-content">${supplierDemo.replyToText(text)}${renderMessageMeta('assistant')}</div></div>`);
+    conversationThreads.set(supplierComparisonTask, conversationThread.innerHTML);
+    moveConversationProgressToLatestTurn();
+    renderConversationTurnNav();
+    requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+    return;
+  }
   const receipt = references.length
     ? `已收到针对「${references.map(ref => `${ref.fileName} · ${ref.label}`).join('」、「')}」的修改意见。当前为交互演示，尚未连接生成服务，产物内容没有改变。`
     : '已记录消息。当前原型未连接生成服务，文件内容没有更新；可继续查看原产物或补充要求。';
@@ -7763,6 +7835,8 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
 
   artifactSelection = window.ArtifactEditingDemo.create({
     root:toolFilePreviewBody,
+    pptCropButton:toolFilePptCrop,
+    pptReferenceButton:toolFilePptReference,
     getWorkspace:currentFileWorkspace,
     getTask:()=>activeConversationTask,
     taskForArtifact,
@@ -7797,27 +7871,158 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
   // Presentation scenes reuse the real interactions, and only play while their slide is active.
   if (strategyScene && window.CatPawStrategyScenes.scenes[strategyScene]) {
     const sceneParams = new URLSearchParams(window.location.search);
-    const snapshotFrame = sceneParams.get('strategyPanel') === 'process' && strategyScene === '2.1' &&
-      ['0', '3', '7'].includes(sceneParams.get('strategyFrame')) ? Number(sceneParams.get('strategyFrame')) : null;
+    const snapshotFrame = ((sceneParams.get('strategyPanel') === 'process' && strategyScene === '2.1' &&
+      ['0', '4', '10'].includes(sceneParams.get('strategyFrame'))) ||
+      (sceneParams.get('strategyPanel') === 'layout' && strategyScene === '3.1' &&
+      ['0', '1', '2'].includes(sceneParams.get('strategyFrame')))) ? Number(sceneParams.get('strategyFrame')) : null;
+    const processPanelMode = sceneParams.get('strategyPanel') === 'process' && strategyScene === '2.1';
+    const processVisibleFrames = window.CatPawStrategyScenes.scenes['2.1'].map(step=>step.frame);
     const frameReady = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const report = type => window.parent.postMessage({ type, scene: strategyScene }, '*');
+    let greetingDemoCursor = null;
+    let continuedGreetingText = '';
+    let promptHoverFrame = null;
+    let processPlanningTimer = null;
+    const usesSpotlight = ['2.1-2','2.1-3','2.1-4'].includes(strategyScene);
+    if (usesSpotlight || strategyScene === '2.1-5') document.documentElement.classList.add('strategy-flat-composer');
+    let spotlightOverlay = null, spotlightSvg = null, spotlightMaskPath = null, spotlightFrame = null;
+    function stopStrategySpotlight() {
+      cancelAnimationFrame(spotlightFrame);
+      spotlightFrame = null;
+      if (spotlightOverlay) spotlightOverlay.hidden = true;
+    }
+    function showStrategySpotlight(selector) {
+      stopStrategySpotlight();
+      if (!spotlightOverlay) {
+        spotlightOverlay=document.createElement('div');
+        spotlightOverlay.className='strategy-spotlight';
+        spotlightOverlay.setAttribute('aria-hidden','true');
+        spotlightSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        spotlightSvg.setAttribute('preserveAspectRatio','none');
+        spotlightMaskPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+        spotlightMaskPath.setAttribute('fill-rule','evenodd');
+        spotlightSvg.append(spotlightMaskPath);
+        spotlightOverlay.append(spotlightSvg);
+        document.body.append(spotlightOverlay);
+      }
+      spotlightOverlay.hidden=false;
+      let lastBounds='';
+      const update=()=>{
+        spotlightFrame=null;
+        if(!strategyDemoActive)return;
+        const target=document.querySelector(selector);
+        const clip=target?.closest('.conversation-scroll')?.getBoundingClientRect();
+        const viewport={width:window.innerWidth,height:window.innerHeight};
+        const bounds=window.CatPawStrategyScenes.spotlightBounds(target?.getBoundingClientRect(),viewport,clip);
+        const path=window.CatPawStrategyScenes.spotlightPath(viewport,bounds);
+        if(path!==lastBounds){
+          spotlightSvg.setAttribute('viewBox',`0 0 ${viewport.width} ${viewport.height}`);
+          spotlightMaskPath.setAttribute('d',path);
+          lastBounds=path;
+        }
+        spotlightFrame=requestAnimationFrame(update);
+      };
+      update();
+    }
+
+    function ensureStrategyDemoCursor(host = document.body) {
+      if (!greetingDemoCursor) {
+        greetingDemoCursor = document.createElement('div');
+        greetingDemoCursor.className = 'strategy-greeting-cursor';
+        greetingDemoCursor.setAttribute('aria-hidden', 'true');
+        greetingDemoCursor.innerHTML = '<svg viewBox="0 0 28 34" fill="none"><path d="M3 3v24l6-6 5 10 5-2-5-10h10L3 3Z" fill="#fff" stroke="#202020" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+      }
+      // A modal is in the browser's top layer: its pointer must live inside it.
+      if (greetingDemoCursor.parentElement !== host) host.append(greetingDemoCursor);
+      return greetingDemoCursor;
+    }
+    function positionCaseReuseCursor(selector = null) {
+      const cursor = ensureStrategyDemoCursor(caseDialog);
+      const target = selector ? caseDialog.querySelector(selector) : caseDialogSkill;
+      if (!target) return;
+      if (selector === '.case-dialog-prompt-box') target.scrollIntoView({ block:'nearest', behavior:'instant' });
+      const rect = target.getBoundingClientRect();
+      cursor.hidden = false;
+      cursor.classList.remove('is-clicking');
+      cursor.classList.toggle('is-moving', Boolean(selector));
+      cursor.style.setProperty('--cursor-x', `${selector === '#caseDialogPrimary' ? rect.left + rect.width / 2 - 3 : rect.left + 20}px`);
+      cursor.style.setProperty('--cursor-y', `${selector ? rect.top + Math.min(rect.height / 2, 22) - 3 : rect.top - 25}px`);
+    }
+    function syncPromptDemoHover() {
+      if (!greetingDemoCursor || greetingDemoCursor.hidden) return;
+      const rect = greetingDemoCursor.getBoundingClientRect();
+      const hovered = document.elementFromPoint(rect.left + 3, rect.top + 3)?.closest('#primaryPrompts [data-prompt-category]');
+      primaryPromptButtons.forEach(button=>button.classList.toggle('strategy-prompt-hover',button===hovered));
+    }
+    function trackPromptDemoHover() {
+      cancelAnimationFrame(promptHoverFrame);
+      const endsAt = performance.now() + 1200;
+      const tick = now => {
+        promptHoverFrame = null;
+        if (!strategyDemoActive) return;
+        syncPromptDemoHover();
+        if (now < endsAt) promptHoverFrame = requestAnimationFrame(tick);
+      };
+      promptHoverFrame = requestAnimationFrame(tick);
+    }
+    function positionPromptDemoCursor(category) {
+      const cursor = ensureStrategyDemoCursor();
+      const target = category ? primaryPromptButtons.find(button=>button.dataset.promptCategory===category) : primaryPrompts;
+      const rect = target.getBoundingClientRect();
+      cursor.hidden = false;
+      cursor.classList.toggle('is-moving', Boolean(category));
+      cursor.style.setProperty('--cursor-x', `${rect.left + (category ? rect.width * .42 : 24) - 3}px`);
+      cursor.style.setProperty('--cursor-y', `${rect.top + (category ? rect.height * .45 : -28) - 3}px`);
+      trackPromptDemoHover();
+    }
+    function positionGreetingDemoCursor(approach = false) {
+      ensureStrategyDemoCursor();
+      const rect = (approach ? prompt : card).getBoundingClientRect();
+      const x = approach ? rect.left + Math.min(80, rect.width * .2) : Math.min(window.innerWidth - 40, rect.right - 24);
+      const y = approach ? rect.top + Math.min(18, rect.height / 2) : Math.min(window.innerHeight - 40, rect.bottom + 35);
+      greetingDemoCursor.hidden = false;
+      greetingDemoCursor.classList.toggle('is-moving', approach);
+      greetingDemoCursor.style.setProperty('--cursor-x', `${x - 3}px`);
+      greetingDemoCursor.style.setProperty('--cursor-y', `${y - 3}px`);
+    }
     function stopStrategyDemo() {
       strategyDemoActive = false;
+      stopStrategySpotlight();
+      cancelAnimationFrame(promptHoverFrame);
+      promptHoverFrame = null;
+      clearTimeout(processPlanningTimer);
+      processPlanningTimer = null;
       document.documentElement.classList.remove('strategy-demo-active');
       clearTimeout(stageAutoTimer);
       clearTimeout(stageAdvanceTimer);
       stageAdvanceTimer = null;
       clearInterval(stageClockTimer);
+      stageClockTimer = null;
       clearTimeout(promptTransitionTimer);
       clearTimeout(caseTransitionTimer);
       stopPromptHint();
       stopGreetingTyping();
+      if (greetingDemoCursor) greetingDemoCursor.hidden = true;
+      primaryPromptButtons.forEach(button=>button.classList.remove('strategy-prompt-hover'));
+      document.documentElement.classList.remove('strategy-greeting-zoom','strategy-greeting-prime','strategy-greeting-continuation','strategy-reuse-arrival');
       document.querySelectorAll('.conversation-stage-demo.is-entering').forEach(panel => panel.classList.remove('is-entering'));
     }
-    function resetStrategyDemo() {
+    function resetStrategyDemo({restartTask = true} = {}) {
       strategyDemoActive = true;
+      if (strategyScene.startsWith('2.3-')) {
+        supplierDemo.reset();
+        conversationThreads.delete(supplierComparisonTask);
+        conversationComposerDrafts.delete(supplierComparisonTask);
+        if (activeConversationTask === supplierComparisonTask) activeConversationTask = null;
+      }
       document.documentElement.classList.add('strategy-demo-active');
       document.documentElement.dataset.theme = 'light';
+      const processPreview=document.getElementById('strategyProcessPanel');
+      if(processPreview){
+        if(restartTask){delete processPreview.dataset.startedAt;delete processPreview.dataset.finishedAt;}
+        processPreview.scrollTop=0;
+      }
+      if (greetingDemoCursor) greetingDemoCursor.className = 'strategy-greeting-cursor';
       document.querySelectorAll('.strategy-demo-focus').forEach(el => el.classList.remove('strategy-demo-focus'));
       caseReturnFocus = null;
       closeCaseDialog();
@@ -7864,11 +8069,21 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
         resizeConversationPrompt();
         renderConversationTurnNav();
       }
+      if (strategyScene === '2.1-4' && conversationStageFrames[frameIndex].stage === 'done') {
+        panel.dataset.startedAt = String(Date.now() - 38000);
+        delete panel.dataset.finishedAt;
+      }
       updateConversationStage(panel, frameIndex, frameIndex === 0, thinking);
       return panel;
     }
-    function showStrategyProcessSnapshot(frameIndex) {
+    function reportProcessProgress(frameIndex,panel) {
+      const frame=conversationStageFrames[frameIndex];
+      const tools={current:frame.call?{id:frameIndex,name:frame.tool}:null,completed:conversationStageFrames.slice(1,frameIndex).flatMap((event,index)=>event.call&&(!processPanelMode||processVisibleFrames.includes(index+1))?[{id:index+1,name:event.tool}]:[])};
+      window.parent.postMessage({type:'catpaw:scene-progress',scene:strategyScene,frame:frameIndex,activity:frame.tool || (frame.stage==='checkpoint'?'阶段总结':''),status:panel?.querySelector('.stage-global-label')?.textContent || conversationGlobalStates[frame.globalState],tools},'*');
+    }
+    function showStrategyProcessSnapshot(frameIndex, live = false) {
       document.documentElement.classList.add('strategy-process-panel');
+      document.documentElement.classList.toggle('strategy-process-live', live);
       let panel = document.getElementById('strategyProcessPanel');
       if (!panel) {
         panel = document.createElement('section');
@@ -7877,11 +8092,39 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
         panel.setAttribute('aria-label', '任务进程设计 Demo');
         document.body.append(panel);
       }
-      // Use the same renderer as the conversation; hold each phase for comparison.
+      // Reuse the actual conversation renderer for both live playback and fixed comparisons.
+      if (live && !panel.dataset.startedAt) {
+        panel.dataset.startedAt = String(Date.now());
+      }
+      if (live) {
+        clearInterval(stageClockTimer);
+        stageClockTimer = null;
+        if (conversationStageFrames[frameIndex].stage === 'done' && !panel.dataset.finishedAt) panel.dataset.finishedAt = String(Date.now());
+        if (!panel.dataset.finishedAt) stageClockTimer = setInterval(()=>{if(strategyDemoActive && panel.isConnected)updateStageClock(panel)},1000);
+      }
       panel.dataset.stageFrame = String(frameIndex);
-      panel.innerHTML = renderConversationStageBody(frameIndex, frameIndex === 0);
+      panel.innerHTML = renderConversationStageBody(frameIndex, frameIndex === 0, -1, false, processVisibleFrames);
       panel.classList.toggle('is-entering', frameIndex === 0 && !reducedMotion.matches);
-      panel.querySelector('.stage-elapsed').textContent = formatStageElapsed(frameIndex === 0 ? 0 : frameIndex === 3 ? 12 : 32);
+      clearTimeout(processPlanningTimer);
+      if (live && frameIndex===0 && !reducedMotion.matches) {
+        const status=panel.querySelector('.stage-global-label');
+        const thinking=panel.querySelector('.stage-thinking');
+        status.textContent=conversationGlobalStates.thinking;
+        thinking.dataset.globalState='thinking';
+        processPlanningTimer=setTimeout(()=>{
+          processPlanningTimer=null;
+          if(!strategyDemoActive||panel.dataset.stageFrame!=='0')return;
+          status.textContent=conversationGlobalStates.planning;
+          thinking.dataset.globalState='planning';
+          reportProcessProgress(0,panel);
+        },1950);
+      }
+      if (live) {
+        updateStageClock(panel);
+        requestAnimationFrame(()=>{
+          if(strategyDemoActive && panel.dataset.stageFrame===String(frameIndex))panel.scrollTop=frameIndex===0?0:panel.scrollHeight;
+        });
+      } else panel.querySelector('.stage-elapsed').textContent = formatStageElapsed(frameIndex === 0 ? 0 : frameIndex === 4 ? 18 : 48);
     }
     function reserveStrategySplit() {
       // Reserve a readable conversation column at the deck's fixed 1200 px viewport.
@@ -7899,8 +8142,9 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       const item = currentFileWorkspace();
       item.referenceSlide = 2;
       item.pptSelection = null;
-      item.pptMode = 'ai';
+      item.pptToolsExpanded = false;
       renderToolFileWorkspace(item);
+      setCollapsed(expanded);
       setWorkbenchExpanded(expanded);
     }
     async function presentStrategyStep(step) {
@@ -7908,23 +8152,87 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       let processPanel = null;
       switch (step.action) {
         case 'home': break;
+        case 'prompt-hover-ready': positionPromptDemoCursor(); break;
+        case 'prompt-hover-move': positionPromptDemoCursor(step.category); break;
+        case 'prompt-hover': syncPromptDemoHover(); break;
+        case 'prompt-category-click':
+          greetingDemoCursor?.classList.add('is-clicking');
+          primaryPromptButtons.find(button=>button.dataset.promptCategory===step.category)?.click();
+          break;
+        case 'prompt-hover-end':
+          cancelAnimationFrame(promptHoverFrame);
+          promptHoverFrame = null;
+          if (greetingDemoCursor) greetingDemoCursor.hidden = true;
+          primaryPromptButtons.forEach(button=>button.classList.remove('strategy-prompt-hover'));
+          break;
         case 'greeting': showGreetingBubble(); break;
+        case 'greeting-resume':
+          document.documentElement.classList.add('strategy-greeting-prime','strategy-greeting-zoom');
+          prompt.focus({preventScroll:true});
+          stopGreetingTyping();
+          if(continuedGreetingText){
+            currentGreetingMessage=continuedGreetingText;
+            currentGreetingContext='default';
+            lastGreetingByContext.set('default',continuedGreetingText);
+          }
+          greetingBubble.textContent=currentGreetingMessage;
+          greetingBubble.setAttribute('aria-label',currentGreetingMessage);
+          break;
+        case 'greeting-zoom-out':
+          document.documentElement.classList.remove('strategy-greeting-prime');
+          document.documentElement.classList.add('strategy-greeting-continuation');
+          void win.offsetWidth;
+          document.documentElement.classList.remove('strategy-greeting-zoom');
+          break;
+        case 'prompt-secondary-pointer': {
+          const target=secondaryPrompts.querySelector(`[data-secondary-index="${step.index}"]`);
+          const rect=target.getBoundingClientRect();
+          const cursor=ensureStrategyDemoCursor();
+          cursor.classList.remove('is-clicking');
+          cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+rect.width*.45-3}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+rect.height*.5-3}px`);
+          break;
+        }
+        case 'prompt-secondary-click':
+          greetingDemoCursor?.classList.add('is-clicking');
+          secondaryPrompts.querySelector(`[data-secondary-index="${step.index}"]`)?.click();
+          break;
+        case 'greeting-ready': positionGreetingDemoCursor(); break;
+        case 'greeting-pointer': positionGreetingDemoCursor(true); break;
+        case 'greeting-click':
+          greetingDemoCursor?.classList.add('is-clicking');
+          prompt.focus({ preventScroll: true });
+          document.documentElement.classList.add('strategy-greeting-zoom');
+          break;
         case 'category': selectStrategyCategory(step.category); break;
         case 'case':
           selectStrategyCategory('analyze');
           openCaseDialog(visibleCaseData(currentScope)[0]);
           break;
-        case 'reuse': caseDialogPrimary.click(); break;
+        case 'case-reuse-ready': positionCaseReuseCursor(); break;
+        case 'case-reuse-pointer': positionCaseReuseCursor(step.target); break;
+        case 'case-reuse-press': greetingDemoCursor?.classList.add('is-clicking'); break;
+        case 'reuse':
+          ensureStrategyDemoCursor().hidden = true;
+          caseDialogPrimary.click();
+          document.documentElement.classList.add('strategy-reuse-arrival');
+          break;
+        case 'reuse-composer-pointer':
+          positionGreetingDemoCursor(true);
+          greetingDemoCursor?.classList.remove('is-clicking');
+          break;
         case 'suggestion':
           selectStrategyCategory('create');
           secondaryPrompts.querySelector('[data-secondary-index="1"]').click();
           break;
         case 'process':
-          if (snapshotFrame !== null) showStrategyProcessSnapshot(step.frame);
+          if (processPanelMode) showStrategyProcessSnapshot(step.frame, snapshotFrame === null);
           else processPanel = showStrategyProcess(step.frame, step.thinking);
           break;
+        case 'process-focus': break;
         case 'mode-settings':
-          processPanel = showStrategyProcess(3);
+          processPanel = showStrategyProcess(4);
           disclosureSettings.showModal();
           break;
         case 'development':
@@ -7941,30 +8249,67 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
           openArtifactPreview(node, [folder, node]);
           break;
         }
+        case 'supplier-start': setConversationOpen(true, supplierComparisonTask); break;
+        case 'supplier-confirm': conversationThread.querySelector('[data-quote-form="conditions"]')?.requestSubmit(); break;
+        case 'supplier-focus': break;
+        case 'supplier-metric': conversationThread.querySelector(`[data-quote-metric="${step.metric}"]`)?.click(); break;
+        case 'supplier-pick':
+          conversationThread.querySelector('[data-quote-choice="supplier"][value="a"]')?.click();
+          conversationThread.querySelector(`[data-quote-choice="format"][value="${step.format}"]`)?.click();
+          break;
+        case 'supplier-follow-up': {
+          const checkbox = conversationThread.querySelector('[data-quote-choice="follow-up"][value="sample"]');
+          if (checkbox && !checkbox.checked) checkbox.click();
+          break;
+        }
+        case 'supplier-generate': conversationThread.querySelector('[data-quote-form="result"]')?.requestSubmit(); break;
+        case 'supplier-note':
+          conversationPrompt.value = '请先确认样品与验收标准，再跟进交期。';
+          resizeConversationPrompt();
+          sendConversationMessage();
+          break;
+        case 'supplier-update': conversationThread.querySelector('.assistant-message:last-child [data-quote-generate]')?.click(); break;
         case 'artifact-conversation': setConversationOpen(true, artifactEditingTask); break;
         case 'artifact-side': showStrategyArtifact(step.kind); break;
         case 'artifact-full': showStrategyArtifact(step.kind, true); break;
         case 'select-page':
-          showStrategyArtifact('ppt');
+          showStrategyArtifact('ppt', true);
           toolFilePreviewBody.querySelector('.reference-slide').click();
           break;
         case 'reference-page':
-          showStrategyArtifact('ppt');
-          toolFilePreviewBody.querySelector('[data-ppt-action="reference"]').click();
-          conversationPrompt.value = '请把这一页的区域差异讲得更清楚，保留原始数据。';
-          resizeConversationPrompt();
+          showStrategyArtifact('ppt', true);
+          toolFilePptReference.click();
+          fullscreenChatInput.value = '请把这一页的区域差异讲得更清楚，保留原始数据。';
+          fullscreenChatInput.dispatchEvent(new Event('input', {bubbles:true}));
           break;
         case 'reference-another':
           toolFilePreviewBody.querySelector('[data-reference-slide="4"]').click();
-          toolFilePreviewBody.querySelector('[data-ppt-action="reference"]').click();
-          conversationPrompt.value = '第 3 页突出区域差异，第 5 页补充对应行动，保留原始数据。';
-          resizeConversationPrompt();
+          toolFilePptReference.click();
+          fullscreenChatInput.value = '第 3 页突出区域差异，第 5 页补充对应行动，保留原始数据。';
+          fullscreenChatInput.dispatchEvent(new Event('input', {bubbles:true}));
           break;
       }
       await frameReady();
       if (!strategyDemoActive) return;
       if (processPanel) conversationScroll.scrollTop += processPanel.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 18;
-      if (step.focus) document.querySelector(step.focus)?.classList.add('strategy-demo-focus');
+      if (usesSpotlight && step.focus) {
+        const target=conversationThread.querySelector(step.focus);
+        if(target){
+          const bounds=target.getBoundingClientRect(),clip=conversationScroll.getBoundingClientRect();
+          if(bounds.top<clip.top+18||bounds.bottom>clip.bottom-18)conversationScroll.scrollTop+=bounds.top-clip.top-18;
+        }
+      }
+      if (strategyScene.startsWith('2.3-') && step.focus) {
+        const target = conversationThread.querySelector(step.focus);
+        if (target) conversationScroll.scrollTop += target.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 22;
+      }
+      if(strategyScene==='1.3-2'&&step.action==='greeting-click')window.parent.postMessage({type:'catpaw:greeting-state',scene:strategyScene,greeting:currentGreetingMessage},'*');
+      if (usesSpotlight && step.focus) showStrategySpotlight(step.focus);
+      else if (step.focus) document.querySelector(step.focus)?.classList.add('strategy-demo-focus');
+      if (step.action === 'process') {
+        if(processPanelMode&&document.getElementById('strategyProcessPanel')?.dataset.stageFrame!==String(step.frame))return;
+        reportProcessProgress(step.frame,processPanelMode?document.getElementById('strategyProcessPanel'):processPanel);
+      }
     }
     const player = window.CatPawStrategyScenes.createPlayer({
       scene: strategyScene, snapshotFrame, reset: resetStrategyDemo, present: presentStrategyStep,
@@ -7972,9 +8317,16 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     });
     window.addEventListener('message', event => {
       if (event.source !== window.parent || event.data?.scene !== strategyScene) return;
-      if (event.data.type === 'catpaw:scene-activate') player.activate();
+      if (event.data.type === 'catpaw:scene-activate') {
+        if(strategyScene==='1.3-3')continuedGreetingText=typeof event.data.greetingText==='string'&&Array.from(event.data.greetingText).length<=12?event.data.greetingText:'';
+        player.activate();
+      }
       if (event.data.type === 'catpaw:scene-preview') player.preview();
       if (event.data.type === 'catpaw:scene-deactivate') player.deactivate();
+      if (event.data.type === 'catpaw:scene-seek' && processPanelMode && [0,1,4,10].includes(event.data.frame)) {
+        if(event.data.frame===1)player.seek(1,{endFrame:10});
+        else player.seek(event.data.frame);
+      }
     });
     document.addEventListener('keydown', event => {
       if (!strategyDemoActive || window.parent === window || !['ArrowRight','ArrowDown','PageDown',' ','ArrowLeft','ArrowUp','PageUp','Home','End'].includes(event.key)) return;

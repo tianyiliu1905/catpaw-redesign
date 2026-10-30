@@ -1,38 +1,40 @@
 /* PPT 的 AI 模式与编辑模式共享画布。 */
-.ppt-workbar{position:relative;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--surface-bg);border-bottom:1px solid var(--gray-5);font-size:12px;color:var(--text-2)}
-.ppt-workbar button,.ppt-workbar select,.ppt-edit-panel button,.ppt-edit-panel input,.ppt-selection-tools button,.ppt-workbar-footer button,.ppt-workbar-footer select,.ppt-page-menu button{font:inherit;color:var(--text-1);border:0;background:transparent;border-radius:7px;padding:7px 9px;cursor:pointer;white-space:nowrap}
-.ppt-picker{position:relative;flex:none}
-.ppt-workbar .ppt-picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:34px;padding:7px 10px;border-radius:var(--radius-sm);font-weight:var(--weight-emphasis,600)}
-.ppt-picker-mode .ppt-picker-trigger{background:var(--gray-3)}
-.ppt-picker-scope .ppt-picker-trigger{color:var(--text-3)}
-.ppt-picker-trigger[aria-expanded=true],.ppt-picker-trigger:hover{background:var(--hover)}
-.ppt-picker-trigger svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:transform .14s ease}
-.ppt-picker-trigger[aria-expanded=true] svg{transform:rotate(180deg)}
-.ppt-picker-menu{position:absolute;z-index:20;top:calc(100% + 6px);left:0;display:grid;gap:2px;min-width:max(100%,148px);padding:var(--menu-small-padding);border:0;border-radius:var(--menu-radius);background:var(--menu-bg);box-shadow:var(--menu-shadow)}
-.ppt-picker-menu[hidden]{display:none}
-.ppt-workbar .ppt-picker-menu button{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;min-height:34px;padding:7px 10px;border-radius:var(--radius-sm);text-align:left;color:var(--menu-text)}
-.ppt-workbar .ppt-picker-menu button:hover,.ppt-workbar .ppt-picker-menu button:focus-visible{background:var(--hover);outline:none}
-.ppt-workbar .ppt-picker-menu button[aria-checked=true]{background:var(--active);font-weight:var(--weight-emphasis,600)}
-.ppt-picker-menu button svg{display:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ppt-picker-menu button[aria-checked=true] svg{display:block}
-.ppt-workbar button:hover:not(:disabled),.ppt-edit-panel button:hover:not(:disabled),.ppt-selection-tools button:hover,.ppt-page-menu button:hover:not(:disabled){background:var(--hover)}
-.ppt-workbar button:disabled,.ppt-edit-panel button:disabled,.ppt-page-menu button:disabled{opacity:.35;cursor:default}
-.ppt-workbar-group{display:flex;padding-right:8px;border-right:1px solid var(--gray-5)}
-.ppt-workbar-group button{display:grid;place-items:center;width:32px;height:32px;padding:0}
+.ppt-workbar{position:relative;z-index:5;display:flex;align-items:center;gap:10px;min-height:50px;padding:4px 7px;background:var(--gray-3);font-size:12px;color:var(--text-2);container-type:inline-size}
+.ppt-workbar button,.ppt-workbar select,.ppt-edit-panel button,.ppt-edit-panel input,.ppt-selection-tools button{font:inherit;color:var(--text-1);border:0;background:transparent;border-radius:7px;padding:7px 9px;cursor:pointer;white-space:nowrap}
+.ppt-workbar button:hover:not(:disabled),.ppt-edit-panel button:hover:not(:disabled){background:var(--surface-bg)}
+.ppt-selection-tools button:hover{background:var(--hover)}
+.ppt-workbar button:disabled,.ppt-edit-panel button:disabled{opacity:.35;cursor:default}
+.ppt-workbar-controls{display:flex;align-items:center;flex:none;min-width:0;max-width:100%;min-height:42px;overflow:hidden;border-radius:12px;background:var(--surface-bg)}
+.ppt-workbar-group{display:flex;align-items:center;flex:none;gap:0;min-height:42px;padding:2px}
+.ppt-workbar-group button{display:grid;place-items:center;width:32px;height:32px;padding:0;border-radius:50%}
+.ppt-workbar-group button:hover:not(:disabled){background:var(--hover)}
 .ppt-history-icon{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ppt-workbar-end{margin-left:auto}
-.ppt-workbar [data-reference-crop][aria-pressed=true]{background:var(--success-bg);color:var(--success-text)}
-.ppt-edit-tabs{display:flex;gap:2px;flex-wrap:wrap}
-.ppt-edit-tabs [aria-selected=true]{background:var(--gray-3);font-weight:var(--weight-emphasis,600)}
-.ppt-edit-panel{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-height:44px;padding:6px 14px;background:var(--surface-bg);border-bottom:1px solid var(--gray-5);font-size:12px}
+.ppt-tools-combo{display:flex;align-items:center;flex:none;min-width:0;max-width:calc(100cqw - 90px);overflow:hidden}
+.ppt-workbar .ppt-tools-toggle{display:inline-flex;align-items:center;flex:none;min-height:42px;padding:7px 11px;background:transparent;font-weight:var(--weight-emphasis,600)}
+.ppt-workbar .ppt-tools-toggle:hover:not(:disabled),.ppt-workbar .ppt-tools-toggle:focus-visible{background:var(--hover)}
+.ppt-tools-toggle svg{display:block;flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ppt-edit-drawer{flex:none;width:0;height:0;min-width:0;overflow:hidden;opacity:0;transition:width .28s ease,opacity .18s ease}
+.ppt-edit-drawer[data-open=true]{width:max(0px,min(552px,calc(100cqw - 175px)));height:auto;opacity:1}
+.ppt-edit-drawer-inner{width:max(0px,min(552px,calc(100cqw - 175px)));min-width:0;overflow:hidden;background:var(--surface-bg)}
+.ppt-edit-tabs{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;height:42px;overflow-x:auto;overflow-y:hidden;padding:0;font-size:12px;scrollbar-width:none}
+.ppt-edit-tabs::-webkit-scrollbar{display:none}
+.ppt-edit-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;width:44px;height:42px;font:inherit;line-height:20px;color:var(--text-1);border:0;border-radius:7px;padding:0;background:transparent;cursor:pointer;white-space:nowrap}
+.ppt-edit-tab-icon{position:relative;display:grid;place-items:center;flex:none;width:20px;height:20px}
+.ppt-edit-tab-icon-text img{position:absolute;left:2.292px;top:2.292px;mask-image:url('assets/figma-edit-toolbar/textMask.svg');mask-size:20px 20px;mask-position:-2.292px -2.292px;mask-repeat:no-repeat}
+.ppt-edit-tab-icon-layout{transform:rotate(90deg) scaleY(-1)}
+.ppt-edit-tab-icon-layout img{mask-image:url('assets/figma-edit-toolbar/alignMask.svg');mask-size:21.25px 21.25px;mask-position:-.625px -.625px;mask-repeat:no-repeat}
+.ppt-edit-tab-icon-animation img{position:absolute;left:2px;top:1.61px}
+.ppt-edit-tab-divider{display:block;flex:none}
+.ppt-edit-tabs button:hover{background:var(--hover)}
+.ppt-edit-tabs [aria-selected=true]{background:var(--hover);font-weight:var(--weight-emphasis,600)}
+.ppt-edit-panel{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-height:44px;padding:6px 14px;background:var(--surface-bg);font-size:12px}
+.ppt-edit-panel[hidden]{display:none}
+.ppt-workbar .ppt-edit-panel button:hover:not(:disabled){background:var(--hover)}
 .ppt-edit-panel label{display:flex;align-items:center;gap:5px;color:var(--text-3)}
 .ppt-edit-panel input[type=number]{width:52px;padding:5px;background:var(--gray-3)}
 .ppt-edit-panel input[type=color]{width:28px;height:28px;padding:2px}
-.ppt-page-sidebar{width:112px;display:flex;flex-direction:column;flex:none;min-height:0;background:var(--surface-bg);border-right:1px solid var(--gray-5)}
-.ppt-page-sidebar .reference-ppt-pages{flex:1;width:100%;border-right:0}
-.ppt-page-menu{flex:none;border-top:1px solid var(--gray-5);padding:8px;font-size:12px}
-.ppt-page-menu summary{cursor:pointer;color:var(--text-3);padding:6px 0}
-.ppt-page-menu button{display:block;width:100%;text-align:left}
+.ppt-page-sidebar{width:112px;display:flex;flex-direction:column;flex:none;min-height:0;overflow:hidden;background:var(--gray-3);border-right:1px solid var(--gray-5)}
+.ppt-page-sidebar .reference-ppt-pages{flex:1;width:100%;border-right:0;background:var(--gray-3)}
 .ppt-element-hit{position:absolute;cursor:move;outline:1px solid transparent;touch-action:none}
 .ppt-element-hit:hover{outline-color:#4bcc7a88}
 .ppt-element-hit.is-selected{outline:2px solid #4bcc7a}
@@ -64,12 +66,10 @@
 .ppt-selection-tools .ppt-text-menu button{width:100%;padding:6px 8px;border:0;border-radius:5px;background:transparent;color:var(--text-1);font:inherit;text-align:left;white-space:nowrap;cursor:pointer}
 .ppt-text-menu button:hover,.ppt-text-menu button:focus-visible{background:var(--hover);outline:none}
 .ppt-text-tool:focus-visible,.ppt-add-reference:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px}
-.ppt-workbar-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;padding:6px 12px;border-top:1px solid var(--gray-5);background:var(--surface-bg);font-size:11px;color:var(--text-3)}
-.ppt-workbar-footer>div{display:flex;align-items:center}
-.ppt-workbar-footer label{white-space:nowrap}
-:root[data-theme="dark"] :is(.ppt-workbar,.ppt-edit-panel,.ppt-page-sidebar,.reference-ppt-pages,.ppt-page-menu,.ppt-workbar-footer){background:var(--main-bg)}
-:root[data-theme="dark"] .ppt-picker-mode .ppt-picker-trigger,
-:root[data-theme="dark"] .ppt-edit-tabs [aria-selected=true]{background:var(--main-bg);box-shadow:inset 0 0 0 1px var(--gray-5)}
+:root[data-theme="dark"] :is(.ppt-workbar,.ppt-page-sidebar,.ppt-page-sidebar .reference-ppt-pages){background:var(--gray-2)}
+:root[data-theme="dark"] .ppt-edit-drawer-inner{background:var(--surface-bg)}
+:root[data-theme="dark"] .ppt-edit-tab-icon img{filter:invert(1)}
+:root[data-theme="dark"] .ppt-edit-tabs [aria-selected=true]{background:var(--hover)}
 .ppt-editor-dialog{width:min(480px,calc(100vw - 32px));border:1px solid var(--gray-5);border-radius:16px;padding:22px;background:var(--surface-bg);color:var(--text-1);box-shadow:var(--soft-shadow)}
 .ppt-editor-dialog::backdrop{background:#0005}
 .ppt-editor-dialog h3{font-size:18px;margin:0 0 12px}
@@ -79,8 +79,8 @@
 .ppt-editor-dialog button{padding:8px 16px;border:0;border-radius:8px;background:var(--gray-3);color:var(--text-1);cursor:pointer}
 .ppt-editor-dialog [type=submit]{background:var(--success-bg);color:var(--success-text)}
 .ppt-editor-dialog .ppt-dialog-error{color:var(--warning-text)}
-.ppt-workbar button:focus-visible,.ppt-edit-panel button:focus-visible,.ppt-selection-tools button:focus-visible{outline:2px solid var(--brand-green);outline-offset:1px}
-@media(max-width:850px){.ppt-workbar{padding:8px;gap:3px}.ppt-page-sidebar{width:84px}.ppt-workbar-footer{flex-wrap:wrap}.ppt-workbar-end{margin-left:0}}
+.ppt-workbar button:focus-visible,.ppt-edit-tabs button:focus-visible,.ppt-edit-panel button:focus-visible,.ppt-selection-tools button:focus-visible{outline:2px solid var(--brand-green);outline-offset:1px}
+@media(max-width:850px){.ppt-workbar{padding:4px 7px;gap:3px}.ppt-page-sidebar{width:84px}}
 .ppt-selection-slot{height:0;flex:none;position:static}
 /* 原生 dialog 顶层覆盖侧栏、页签和对话框，不受工作区裁切影响。 */
 .ppt-preview-window{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#101113;color:#fff;outline:0;font-family:var(--font)}

@@ -17,8 +17,9 @@ class Element {
   contains(target){return target===this;}
   scrollIntoView(){}
 }
-function setup() {
+function setup({pptHeader=false}={}) {
   const root=new Element(),doc=new Element(),label=new Element(),button=new Element();
+  const pptCrop=new Element(),pptReference=new Element(),pptActions=[];
   const commentButton=new Element(),commentInput=new Element(),commentEditor=new Element(),commentCancel=new Element();
   const containers={conversationReferences:new Element(),fullscreenReferences:new Element()};
   const menu=new Element();menu.offsetWidth=260;menu.offsetHeight=44;
@@ -28,7 +29,7 @@ function setup() {
   let activeTask='review';let workspace;let focused=0;let located;
   const window=new Element();window.getSelection=()=>null;
   const context={window,document:doc,innerWidth:1200,innerHeight:800,requestAnimationFrame:cb=>cb()};
-  vm.createContext(context);vm.runInContext(fs.readFileSync('ppt-workbar.js','utf8'),context);window.PptWorkbench.install=()=>({});vm.runInContext(fs.readFileSync('artifact-editing-demo.js','utf8'),context);
+  vm.createContext(context);vm.runInContext(fs.readFileSync('ppt-workbar.js','utf8'),context);window.PptWorkbench.install=()=>({action:(item,name)=>pptActions.push({item,name})});vm.runInContext(fs.readFileSync('artifact-editing-demo.js','utf8'),context);
   const api=window.ArtifactEditingDemo;
   const nodes=api.files();workspace={node:nodes[1],chain:[{id:'default'},nodes[1]],officeSheet:0};
   const cells=[];
@@ -37,14 +38,14 @@ function setup() {
   root.contains=el=>cells.includes(el);
   root.querySelectorAll=selector=>selector.includes('td[data-excel-row]')?cells:[];
   root.querySelector=selector=>selector.includes('data-excel-address')?address:selector.includes('data-excel-value')?value:null;
-  const controller=api.create({root,getWorkspace:()=>workspace,getTask:()=>activeTask,taskForArtifact:()=> 'review',ensureTask:task=>{activeTask=task;},focusComposer:()=>focused++,renderWorkspace(){},openReference:ref=>{located=ref;},feedback(){}});
+  const controller=api.create({root,pptCropButton:pptHeader?pptCrop:undefined,pptReferenceButton:pptHeader?pptReference:undefined,getWorkspace:()=>workspace,getTask:()=>activeTask,taskForArtifact:()=> 'review',ensureTask:task=>{activeTask=task;},focusComposer:()=>focused++,renderWorkspace(){},openReference:ref=>{located=ref;},feedback(){}});
   const select=async(start,end=start)=>{
     await root.fire('pointerdown',{button:0,target:start,preventDefault(){}});
     doc.elementFromPoint=()=>end;
     await doc.fire('pointermove',{clientX:120,clientY:120});
     await doc.fire('pointerup',{target:end});
   };
-  return {api,controller,cells,select,button,commentButton,commentInput,commentEditor,commentCancel,menu,root,doc,window,containers,address,value,setWorkspace:item=>workspace=item,get focused(){return focused;},setTask:task=>activeTask=task,get located(){return located;}};
+  return {api,controller,cells,select,button,commentButton,commentInput,commentEditor,commentCancel,menu,root,doc,window,containers,address,value,pptCrop,pptReference,pptActions,setWorkspace:item=>workspace=item,get focused(){return focused;},setTask:task=>activeTask=task,get located(){return located;}};
 }
 test('three linked artifacts, five distinct PPT pages and local inline thumbnails',()=>{
   const {api}=setup();const files=api.files();
@@ -52,8 +53,23 @@ test('three linked artifacts, five distinct PPT pages and local inline thumbnail
   const first=api.renderPpt(files[0].preview,{node:files[0],referenceSlide:0});
   const third=api.renderPpt(files[0].preview,{node:files[0],referenceSlide:2});
   assert.equal((first.match(/data-reference-slide=/g)||[]).length,5);
-  assert.match(third,/第 3 \/ 5 页/);assert.notEqual(first,third);
+  assert.match(third,/data-reference-slide="2" aria-label="第 3 页：[^"]+" aria-current="page"/);
+  assert.doesNotMatch(third,/第 3 \/ 5 页/);assert.notEqual(first,third);
   assert.match(third,/data:image\/svg\+xml/);
+});
+test('PPT preview is available through the file menu action',()=>{
+  const s=setup(),node=s.api.files()[0];
+  s.controller.previewPpt();
+  assert.equal(s.pptActions.length,0);
+  const item={node,chain:[{id:'default'},node],referenceSlide:0};
+  s.setWorkspace(item);
+  s.controller.previewPpt();
+  assert.equal(s.pptActions.length,1);
+  assert.equal(s.pptActions[0].name,'present');
+  assert.equal(s.pptActions[0].item,item);
+  item.pptPresent=true;
+  s.controller.previewPpt();
+  assert.equal(s.pptActions.length,1);
 });
 test('Excel rectangle includes header, original range and exact selected values',async()=>{
   const s=setup();await s.select(s.cells[1],s.cells[10]);
@@ -121,6 +137,35 @@ test('PPT crop uses normalized slide coordinates and stores the actual image sna
   assert.match(s.controller.renderSent([ref]),/标题缩短一些，保留季度与部门/);
   assert.equal(canvas.width,480);assert.equal(canvas.height,338);
   assert.equal(drawing[0],img);assert.equal(drawing[1],80);assert.equal(drawing[2],67.5);
+});
+
+test('PPT header crop and reference controls retain their original actions',async()=>{
+  const s=setup({pptHeader:true}),node=s.api.files()[0],item={node,chain:[{id:'default'},node],referenceSlide:0};
+  s.setWorkspace(item);
+  await s.pptCrop.fire('click');
+  assert.equal(s.pptCrop.attributes['aria-pressed'],'true');
+  assert.equal(s.pptCrop.textContent,'取消框选');
+  assert(s.root.classes.has('reference-cropping'));
+  await s.pptCrop.fire('click');
+  assert.equal(s.pptCrop.attributes['aria-pressed'],'false');
+  assert(!s.root.classes.has('reference-cropping'));
+  await s.pptReference.fire('click');
+  assert.equal(s.pptActions.length,1);
+  assert.equal(s.pptActions[0].item,item);
+  assert.equal(s.pptActions[0].name,'reference');
+});
+test('crop label changes without replacing its icon',async()=>{
+  const s=setup({pptHeader:true}),node=s.api.files()[0];
+  s.setWorkspace({node,chain:[{id:'default'},node],referenceSlide:0});
+  const label=new Element();
+  s.pptCrop.querySelector=selector=>selector==='.file-ppt-action-label'?label:null;
+  s.pptCrop.innerHTML='<svg class="ic"></svg><span class="file-ppt-action-label"></span>';
+  await s.pptCrop.fire('click');
+  assert.equal(label.textContent,'取消框选');
+  assert.match(s.pptCrop.innerHTML,/<svg/);
+  s.controller.cancel();
+  assert.equal(label.textContent,'框选区域');
+  assert.match(s.pptCrop.innerHTML,/<svg/);
 });
 
 test('annotation editor keeps selection until explicitly added and safely preserves multiline comments',async()=>{

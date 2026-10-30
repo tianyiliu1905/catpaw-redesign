@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CatPaw · 设计策略</title>
   <style>
-    :root{color-scheme:light;--black:#111;--gray:#575757;--muted:#777;--line:#d8d8d8;--paper:#fff;--surround:#f2f2f2}
+    :root{color-scheme:light;--black:#111;--gray:#575757;--muted:#777;--line:#d8d8d8;--paper:#fff;--surround:#f2f2f2;--action-title-size:20px;--detail-label-size:12px;--detail-body-size:16px;--detail-copy-width:320px;--detail-demo-width:860px}
     *{box-sizing:border-box}
     html,body{margin:0;min-height:100%;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,BlinkMacSystemFont,sans-serif;color:var(--black)}
     body{background:var(--surround)}
@@ -17,21 +17,29 @@
     .slide{position:absolute;inset:0;display:none;padding:36px 48px 40px;background:var(--paper)}
     .slide.active{display:flex;flex-direction:column}
     .slide.preparing{visibility:hidden}
-    .topline{display:flex;align-items:center;justify-content:space-between;padding-bottom:13px;font-size:13px;font-weight:600;letter-spacing:.025em}
+    .topline{position:relative;display:flex;align-items:center;justify-content:space-between;padding-bottom:13px;font-size:13px;font-weight:600;letter-spacing:.025em}
+    .deck-progress{position:absolute;top:-1px;left:178px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;width:318px;letter-spacing:0}
+    .deck-progress-step{display:block;color:#aaa;font-size:11px;font-weight:400;line-height:14px}
+    .deck-progress-step.is-current{color:var(--black);font-weight:650}
+    .deck-progress-step.is-complete{color:var(--gray)}
+    .deck-progress-track{display:block;height:2px;margin-top:5px;background:#e6e6e6;overflow:hidden}
+    .deck-progress-fill{display:block;width:var(--phase-progress,0%);height:100%;background:var(--black)}
     .topline .right{color:var(--gray);font-weight:400;font-variant-numeric:tabular-nums}
     .mainline{margin-top:24px;display:flex;align-items:center;gap:18px;color:var(--gray);font-size:14px}
     .mainline .number{font-weight:700;color:var(--black)}
-    .mainline .status{margin-left:auto;border:1px solid var(--line);padding:5px 10px;font-size:12px;color:var(--gray)}
+    .mainline .status{margin-left:auto;font-size:12px;color:var(--gray)}
     h1,h2,h3,p{margin:0}
     h1{margin-top:22px;max-width:1128px;font-size:40px;font-weight:680;line-height:1.22;letter-spacing:-.045em}
     .body{display:grid;grid-template-columns:36% minmax(0,1fr);gap:52px;flex:1;min-height:0;margin-top:43px}
-    .action-slide .mainline,.action-slide h1{max-width:375px}
-    .action-slide .mainline .status{margin-left:0}
-    .action-slide .body{display:block;margin-top:43px}
-    .action-slide .left-content{width:375px}
-    .action-slide .design-slot{position:absolute;top:88px;right:48px;bottom:112px;width:780px}
+    .action-slide .mainline,.action-slide h1{max-width:var(--detail-copy-width)}
+    .action-slide .mainline{gap:12px}
+    .action-slide .mainline .status{margin-left:0;flex:none;white-space:nowrap}
+    .action-slide .body{display:block;margin-top:30px}
+    .action-slide .left-content{width:var(--detail-copy-width);padding-top:12px}
+    .action-slide .user-concern{margin-bottom:14px;padding-bottom:10px}
+    .action-slide .design-slot{position:absolute;top:96px;right:24px;bottom:40px;width:var(--detail-demo-width)}
     .left-content{padding-top:22px;min-width:0}
-    .label{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:620}
+    .label{font-size:var(--detail-label-size);letter-spacing:.08em;color:var(--muted);font-weight:620}
     .actions{border-top:1px solid var(--line);padding-top:20px;margin-top:34px;min-width:0}
     .action-list{margin-top:9px}
     .action{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
@@ -39,13 +47,14 @@
     .action-no{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:3px}
     .action h3{font-size:15px;line-height:1.44;font-weight:600}
     .action-detail{min-width:0}
-    .user-concern{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid var(--line)}
-    .user-concern .label{flex:none}
-    .user-concern p{color:var(--gray);font-size:14px;line-height:1.45}
-    .action-detail h3{margin-top:14px;font-size:20px;line-height:1.38;font-weight:650}
-    .action-detail p{margin-top:12px;font-size:16px;line-height:1.58;color:var(--gray)}
+    .user-concern{display:block;margin-bottom:18px;padding-bottom:15px}
+    .user-concern .label{display:block}
+    .user-concern p{margin-top:14px;color:var(--gray);font-size:var(--action-title-size);line-height:1.38;font-weight:650}
+    .action-detail h3{margin-top:14px;font-size:var(--action-title-size);line-height:1.38;font-weight:650}
+    .action-detail p{margin-top:12px;font-size:var(--detail-body-size);line-height:1.58;color:var(--gray)}
     .design-slot{display:flex;flex-direction:column;min-width:0;min-height:0;margin:0;border:1px solid var(--line)}
     .design-slot.has-demo{border:0}
+    #slide-3\.1-analysis .design-slot{border:0}
     .design-slot-body{display:grid;place-items:center;flex:1;min-height:0;color:#aaa;font-size:16px}
     .demo-slot-body{display:block;overflow:hidden;background:#bde5e8 url('./assets/demo-wallpaper.png') center / cover no-repeat}
     .demo-viewport{position:relative;width:100%;height:100%;overflow:hidden}
@@ -53,15 +62,75 @@
     .demo-viewport iframe.is-ready{visibility:visible}
     .phase-demo-context{position:absolute;top:88px;left:430px;right:48px}
     .phase-demo-context .user-concern{margin-bottom:12px;padding-bottom:12px}
+    .phase-demo-context .user-concern p{margin-top:8px}
     .phase-demo-context .action-detail h3{margin-top:8px}
     .phase-demo-context .action-detail p{margin-top:9px}
-    .phase-demo-grid{position:absolute;top:270px;right:48px;bottom:40px;left:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+    .phase-demo-grid{position:absolute;top:300px;right:32px;bottom:28px;left:32px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .phase-demo-card{display:flex;flex-direction:column;min-width:0;min-height:0;margin:0}
     .phase-demo-card figcaption{display:flex;align-items:baseline;gap:10px;min-height:39px}
     .phase-demo-card figcaption strong{font-size:17px;font-weight:650}
     .phase-demo-card figcaption span{color:var(--muted);font-size:12px}
     .phase-demo-card .demo-viewport{flex:1;min-height:0;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
     .phase-demo-card iframe{width:600px;height:620px}
+    .process-pair{position:absolute;top:284px;right:40px;bottom:28px;left:40px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .process-pair-panel{display:flex;flex-direction:column;min-width:0;min-height:0;margin:0}
+    .process-pair-panel figcaption{display:flex;align-items:baseline;gap:12px;min-height:34px;font-size:16px;font-weight:650}
+    .process-pair-panel figcaption span{color:var(--muted);font-size:12px;font-weight:400}
+    .process-pair-panel .demo-viewport{flex:1;min-height:0;border:1px solid var(--line);border-radius:10px;background:#fff}
+    .process-pair-panel iframe{width:660px;height:500px}
+    .process-schematic{--process-intent-height:70px;--process-block-gap:6px;--process-plan-compact-height:48px;position:relative;overflow:hidden;display:flex;flex:1;flex-direction:column;min-height:0;padding:16px 0 0}
+    .process-tabs{display:inline-flex;align-items:center;gap:4px;border-bottom:1px solid var(--line)}
+    .process-tabs button{margin-bottom:-1px;padding:5px 8px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-size:12px;line-height:1.5;cursor:pointer}
+    .process-tabs button[aria-selected="true"]{border-color:var(--black);color:var(--black);font-weight:650}
+    .process-map-status{display:block;position:relative;background:transparent;text-align:left;cursor:pointer;width:min(100%,440px);min-height:22px;margin:0 auto 8px;padding:7px 32px 7px 10px;border:1px solid var(--line);color:var(--muted);font-size:14px;line-height:1.5}
+    .process-map-status::after{content:"";position:absolute;right:13px;top:12px;width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .2s}
+    .process-map-status[aria-expanded="true"]::after{transform:rotate(45deg)}
+    .process-map-history{position:absolute;top:57px;left:50%;z-index:5;width:min(100%,440px);max-height:220px;overflow:auto;padding:7px 10px;border:1px solid var(--line);background:#fff;transform:translateX(-50%);box-shadow:0 5px 15px #0000000d}
+    .process-map-history[hidden]{display:none}
+    .process-map-history ol{margin:0;padding:0;list-style:none}
+    .process-map-history li{padding:6px 0;color:var(--gray);font-size:13px;line-height:1.5}
+    .process-map-history li::before{content:"✓";margin-right:10px;color:var(--muted)}
+    .process-map-tools.is-idle{visibility:hidden}
+    .process-tool-transfer{position:absolute!important;z-index:6;flex-direction:column;gap:5px;min-height:0;pointer-events:none;transform-origin:top left}
+    .process-tool-transfer small{font-size:11px;font-weight:400}
+    .process-map-columns{position:relative;flex:1;min-height:0}
+    .process-map-column{width:min(100%,440px);margin:0 auto}
+    .process-map-column[hidden],.process-map-column:not(.is-current){display:none}
+    .process-map-body{display:flex;flex-direction:column;gap:var(--process-block-gap);padding-top:12px}
+    .process-map-block{display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:10px 6px;background:#ddd;color:var(--black);font-size:13px;font-weight:600;line-height:1.5;text-align:center}
+    .process-map-intent,.process-map-plan{min-height:var(--process-intent-height)}
+    .process-map-plan-compact{min-height:var(--process-plan-compact-height);background:#eee;color:var(--muted)}
+    .process-map-tools{min-height:126px;flex-direction:column;gap:5px}
+    .process-map-tools small{font-size:11px;font-weight:400}
+    .process-map-folded{height:14px;padding:0;background:#eee}
+    .process-map-result{min-height:180px}
+    .process-map-column.is-current .process-map-tools::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 20%,#ffffff99 50%,transparent 80%);transform:translateX(-100%);animation:processMapSweep 2s ease-in-out infinite}
+    .process-map-column.is-current .process-map-result{animation:processMapResult .5s ease-out both}
+    .process-map-caption{min-height:48px;margin-top:14px;font-size:14px;line-height:1.5;color:var(--gray)}
+    .process-schematic[data-transition="before-working"] .process-map-column[data-phase="before"]{position:absolute;top:0;left:50%;z-index:1;display:block;transform:translateX(-50%);pointer-events:none}
+    .process-schematic[data-transition="before-working"] .process-map-column[data-phase="before"] .process-map-plan{visibility:hidden}
+    .process-schematic[data-transition="before-working"] .process-map-intent{animation:processIntentExit .42s ease-in both}
+    .process-schematic[data-transition="before-working"] .process-map-column[data-phase="working"]{position:relative;z-index:2}
+    .process-schematic[data-transition="before-working"] .process-map-plan-compact{animation:processPlanMove .76s cubic-bezier(.22,.68,0,1) both}
+    .process-schematic[data-transition="before-working"] .process-map-tools{animation:processToolsEnter .42s .72s cubic-bezier(.22,.68,0,1) both}
+    @keyframes processIntentExit{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-120%)}}
+    @keyframes processPlanMove{0%{transform:translateY(calc(var(--process-intent-height) + var(--process-block-gap)));height:var(--process-intent-height);background:#ddd;color:var(--black)}55%{transform:translateY(0);height:var(--process-intent-height);background:#ddd;color:var(--black)}100%{transform:translateY(0);height:var(--process-plan-compact-height);background:#eee;color:var(--muted)}}
+    @keyframes processToolsEnter{from{opacity:0;transform:translateX(120%)}to{opacity:1;transform:translateX(0)}}
+    @media(prefers-reduced-motion:reduce){.process-schematic[data-transition="before-working"] .process-map-column[data-phase="before"]{display:none}.process-schematic[data-transition="before-working"] :is(.process-map-intent,.process-map-plan-compact,.process-map-tools){animation:none}}
+    @keyframes processMapSweep{to{transform:translateX(100%)}}
+    @keyframes processMapResult{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(prefers-reduced-motion:reduce){.process-map-column{transition:none}.process-map-column.is-current,.process-map-column.is-current .process-map-tools::after,.process-map-column.is-current .process-map-result{animation:none}}
+    .layout-demo-slide .phase-demo-grid{top:310px}
+    .layout-demo-card figcaption{flex-direction:column;gap:5px;min-height:0}
+    .layout-demo-description{min-height:44px;margin:10px 0 14px;color:var(--gray);font-size:14px;line-height:1.5}
+    .layout-demo-card .demo-viewport{border:0;border-radius:0;background:#bde5e8 url('./assets/demo-wallpaper.png') center / cover no-repeat}
+    .layout-demo-card iframe{width:1200px;height:800px}
+    .context-summary-preview{max-width:600px;margin:24px auto 0;padding:22px 24px;border:1px solid var(--line);border-radius:14px}
+    .context-summary-preview>h3{font-size:20px;line-height:1.4}
+    .context-summary-preview>p{margin-top:6px;color:var(--gray);font-size:14px;line-height:1.5}
+    .context-summary-section{margin-top:20px}
+    .context-summary-section h4{margin:0 0 7px;color:var(--muted);font-size:12px;font-weight:500}
+    .context-summary-section p{font-size:15px;line-height:1.65;color:var(--gray)}
     .process-demo{display:flex;flex-direction:column;width:100%;height:100%;padding:27px 30px;background:#fff}
     .process-demo-heading{padding-bottom:16px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600}
     .process-demo-flow{display:grid;grid-template-rows:repeat(3,minmax(0,1fr));flex:1;min-height:0}
@@ -103,17 +172,6 @@
     .workspace-call-entry{position:absolute;right:30px;bottom:28px;padding:10px 13px;border:1px solid var(--black);border-radius:18px;background:#fff;font-size:12px}
     .workspace-key{display:flex;gap:17px;margin-top:17px;color:var(--gray);font-size:12px}
     .workspace-key strong{color:var(--black);font-weight:650}
-    .pet-desktop{position:relative;height:310px;margin-top:25px;padding:22px;border:1px solid var(--line);border-radius:12px;background:#f7f7f7;overflow:hidden}
-    .pet-other-window{width:62%;height:202px;padding:17px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--muted);font-size:12px}
-    .pet-other-window i{display:block;width:72%;height:8px;margin-top:22px;background:#e6e6e6;border-radius:4px}
-    .pet-other-window i:nth-of-type(2){width:90%}
-    .pet-other-window i:nth-of-type(3){width:56%}
-    .pet-notice{position:absolute;right:25px;bottom:24px;width:340px;padding:16px 18px;border:1px solid var(--black);border-radius:12px;background:#fff;box-shadow:0 8px 20px #00000012}
-    .pet-notice-head{display:flex;align-items:center;gap:10px;color:var(--gray);font-size:12px}
-    .pet-notice-head img{width:36px;height:36px}
-    .pet-notice strong{display:block;margin-top:12px;font-size:16px}
-    .pet-notice p{margin-top:7px;color:var(--gray);font-size:12px;line-height:1.5}
-    .pet-notice-link{display:block;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;font-weight:650}
     .participation-chart{width:100%;height:348px;margin-top:18px}
     .participation-chart svg{display:block;width:100%;height:100%}
     .participation-chart text{font-family:inherit;fill:var(--black)}
@@ -154,6 +212,33 @@
     .result-review-row:first-of-type{margin-top:20px}
     .result-review-row b{font-weight:650}
     .result-review-link{display:block;margin-top:21px;padding-top:12px;border-top:1px solid var(--line);font-size:12px}
+    .reply-decision{display:flex;flex-direction:column;gap:14px;padding:28px}
+    .reply-decision h2{font-size:21px;line-height:1.4}
+    .reply-decision-intro{color:var(--gray);font-size:14px;line-height:1.6}
+    .reply-decision-row{display:grid;grid-template-columns:124px 22px 1fr;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:16px}
+    .reply-decision-row h3{font-size:16px;line-height:1.4}
+    .reply-decision-row p{margin-top:6px;color:var(--gray);font-size:13px;line-height:1.5}
+    .reply-decision-row .reply-arrow{font-size:22px;text-align:center}
+    .reply-decision-example{border-left:2px solid var(--black);padding-left:14px}
+    .reply-decision-example strong{display:block;font-size:15px;line-height:1.45}
+    .reply-decision-note{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6}
+    .reply-analysis-premise{margin-bottom:18px}
+    .reply-table-styles{display:flex;flex-direction:column;gap:16px;padding:24px;min-height:0}
+    .reply-table-styles>h2{font-size:20px;line-height:1.4}
+    .reply-table-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;min-height:0}
+    .reply-table-panel{min-width:0}
+    .reply-table-panel:last-child{grid-column:1/-1}
+    .reply-table-panel h3{font-size:15px;line-height:1.5;margin-bottom:10px}
+    .reply-table-panel h3 span{margin-left:8px;font-size:12px;color:var(--muted);font-weight:400}
+    .reply-table-panel table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;line-height:1.5}
+    .reply-table-panel :is(th,td){padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+    .reply-table-panel th{color:var(--gray);font-weight:500;background:#f6f6f6}
+    .reply-table-panel tr>:first-child{text-align:left}
+    .reply-table-panel .is-preferred{font-weight:650;color:#237348}
+    .reply-table-panel .is-risk{color:#996425}
+    .reply-table-bar{display:inline-block;vertical-align:middle;height:6px;width:100px;background:#eee;margin-right:12px;border-radius:2px;overflow:hidden}
+    .reply-table-bar i{display:block;height:100%;background:#8baf9a}
+    .reply-table-styles>p{color:var(--muted);font-size:12px;line-height:1.5}
     .control-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:28px}
     .control-step{min-height:275px;padding:19px;border:1px solid var(--line);border-radius:10px}
     .control-step.active{border-color:var(--black)}
@@ -197,8 +282,13 @@
     .story-step span{display:block;color:var(--muted);font-size:12px}
     .story-step strong{display:block;margin-top:13px;font-size:19px;line-height:1.35;font-weight:650}
     .chapter-questions{margin-top:auto;padding-top:22px;border-top:1px solid var(--line)}
+    #slide-strategy-1 .chapter-questions,#slide-strategy-1 .story-steps{border-top:0}
     .chapter-question-list{display:flex;gap:30px;margin-top:14px}
     .chapter-question-list p{flex:1;min-width:0;font-size:17px;line-height:1.42;font-weight:600}
+    #slide-strategy-1 .chapter-question-list p{position:relative;display:flex;align-items:center;min-height:62px;padding:12px 14px;border:1.5px solid var(--black);color:var(--black)}
+    #slide-strategy-1 .chapter-question-list p:not(:last-child)::after{content:"";position:absolute;right:-24px;top:50%;width:24px;border-top:2px solid var(--black);transform:translateY(-50%)}
+    #slide-strategy-1 .chapter-question-list p:not(:last-child)::before{content:"";position:absolute;right:-30px;top:50%;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--black);transform:translateY(-50%)}
+    #slide-strategy-1 .story-steps{margin-top:10px}
     .chapter-slide .story-steps{margin-top:27px;padding-top:18px}
     .chapter-slide .story-step{min-height:72px}
     .chapter-slide .story-step strong{margin-top:8px;font-size:17px}
@@ -225,7 +315,7 @@
     .catalog-column{min-width:0;border-top:2px solid var(--black);padding-top:12px}
     .catalog-column>.scene{display:block;color:var(--muted);font-size:12px}
     .catalog-column>h2{margin-top:5px;font-size:17px;line-height:1.3}
-    .catalog-point{margin-top:15px}
+    .catalog-point{margin-top:12px}
     .catalog-point-heading{display:flex;align-items:baseline;gap:8px;font-size:14px;line-height:1.35}
     .catalog-point-heading span{flex:none;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
     .catalog-point-heading strong{font-weight:650}
@@ -233,7 +323,7 @@
     .catalog-point-concern{flex:1;min-width:0;margin-left:8px;color:var(--gray);font-size:12px;font-weight:400;line-height:1.45}
     .catalog-point-concern .concern-label{margin-right:6px;color:var(--muted);font-size:12px}
     .catalog-point ol{margin:5px 0 0;padding:0;list-style:none}
-    .catalog-point li{display:grid;grid-template-columns:45px minmax(0,1fr);gap:5px;padding:3px 0;color:var(--gray);font-size:12px;line-height:1.35}
+    .catalog-point li{display:grid;grid-template-columns:45px minmax(0,1fr);gap:5px;padding:2px 0;color:var(--gray);font-size:12px;line-height:1.35}
     .catalog-point li span:first-child{color:var(--muted);font-variant-numeric:tabular-nums}
     .evolution-slide .story-kicker{margin-top:36px}
     .evolution-slide h1{font-size:44px;max-width:1100px}
@@ -311,67 +401,68 @@
         ], check:'用户能说出至少一种可委托的任务，以及可能得到的产物类型。'
       },
       {
-        no:'1.2', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'预期可管：从案例看清结果，再决定是否借用做法。',
-        thesis:'案例不只展示成品，还要帮助用户判断适不适合自己、下一步怎么开始。',
+        no:'1.2', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'预期可管：从案例看清结果，建立产物预期。',
+        thesis:'通过相关案例和完整成品，帮助用户判断结果是否适合自己的任务。',
         question:'“做出来是什么样？我能照着试吗？”',
-        context:'认识能力后，用户仍需要看到具体结果，确认产物质量与自己的任务是否匹配，再决定要不要借用案例中的做法。',
+        context:'认识能力后，用户仍需要看到具体结果，确认产物质量与自己的任务是否匹配。借用案例做法、改写并发起任务，从上手可启开始展开。',
         actions:[
-          ['按任务方向提供相关案例','选择“分析数据”后，案例区同步展示对应的报告、看板和表格成果，缩小寻找范围。'],
-          ['点开案例，直接查看成品','案例卡片先给产物预览；进入详情后可以查看完整成品，不必等待一次生成。'],
-          ['交代做法，保留改写空间','详情同时展示产物、使用的 Skill 和原始 Prompt；“做同款”将内容带回输入区，由用户修改后再发送。']
-        ], check:'用户能看清成品与做法，判断是否适合自己的任务，并从案例开始一条可编辑的需求。'
+          ['按任务方向提供相关案例','鼠标点击“分析数据”卡片后，案例区随之浮现对应的报告、看板和表格成果，缩小寻找范围。'],
+          ['点开案例，直接查看成品','案例卡片先给产物预览；进入详情后可以查看完整成品，不必等待一次生成。']
+        ], check:'用户能看清成品，判断质量与自己的任务是否匹配，形成结果预期。'
       },
       {
-        no:'1.3', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'上手可启：由助理主动接话，帮助用户迈出表达需求的第一步。',
-        thesis:'用户一旦表现出开始意愿，界面就给出下一句，而不是留下一片空白。',
-        question:'“我知道想试，但该怎么说？”',
-        context:'空输入框要求用户一次想清目标、材料和要求。轻量回应可以把任务描述变成逐步展开的对话。',
+        no:'1.3', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'上手可启：借用案例起点与主动接话，帮助用户发起任务。',
+        thesis:'从看懂案例过渡到借用做法，再通过主动接话，帮助用户发起任务。',
+        question:'“我想试试，我要怎么做？”',
+        context:'看过案例之后，用户需要可借用、可改写的起点；直接输入时，也需要轻量接话，逐步补充目标、材料和要求。',
         actions:[
-          ['聚焦时主动问候','小猫和标题气泡回应输入动作，邀请用户先说一个方向。'],
-          ['选任务标签后接具体话题','例如选择 PPT 后追问受众和材料，让下一步补充什么更明确。'],
-          ['提供可改写的起点','示例说法、二级推荐和“做同款”可回填输入；用户确认后再发送。']
+          ['交代做法，提供可改写的起点','鼠标依次指向案例中的 Skill 与原始 Prompt，再点击“做同款”。案例预览、Skill 与 Prompt 一起带回输入区，成为用户可继续改写的起点。'],
+          ['聚焦时主动问候','鼠标点击输入框后，标题切换为问候语，邀请用户先说一个方向；设计稿窗口同步放大，聚焦输入框与问候区域，突出点击与回应之间的关系。'],
+          ['选任务标签后接具体话题','承接上一页，设计稿先回到正常尺寸。鼠标点击“设计与创作”卡片，欢迎语随任务方向变化；再点击“制作汇报 PPT”标签，欢迎语进一步聚焦具体话题。']
         ], check:'用户不必先写出完整 Prompt，也能顺利发起第一轮任务。'
       },
       {
         no:'2.1', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'过程可懂：按任务阶段与用户需要调整信息披露。',
         thesis:'先讲清当前进展，再按需提供更深的执行细节。',
         question:'“它听懂了吗？现在在做什么？我需要看多少细节？”',
-        context:'用户在工作前、工作时和结束后的关注点不同；办公用户与研发用户需要的过程深度也不同。',
+        context:'为降低办公用户的理解门槛，默认折叠技术细节与历史过程，按阶段突出重点；同时保留研发模式，回应仍然存在的研发与深度用户需求。',
+        research:{title:'按任务阶段切换信息重点',concern:'“它理解对了吗，现在做到哪一步了？”',body:'面向办公用户降低理解门槛，研究各阶段最需要的信息：工作前确认意图与安排，工作时突出当前执行，结束后呈现结果与产物。后续设计分别回应这三个阶段。'},
         actions:[
-          ['按任务阶段切换信息重点','工作前确认目标和任务安排；工作时收起清单，已完成动作收入可展开的思考记录，页面只突出当前工作；结束后直接呈现总结与产物。'],
-          ['按用户需要切换过程深度','默认工作模式用任务语言解释进展；研发模式在设置中开启，补充工具与调用细节。切换模式不重启任务。']
+          ['工作前：确认意图与任务规划','收到任务即显示全局响应与计时，先复述目标、产物与关键约束，再展开完整待办。让用户确认任务已被接住，并检查理解与推进安排。'],
+          ['工作时：突出当前执行与阶段总结','待办收成一行，持续展示全局状态与当前工作；用任务语言解释工具执行。每组完成后固定留下阶段总结，再进入下一组；历史过程按需展开。'],
+          ['结束后：呈现结果、产物与待确认项','停止计时，直接呈现简短结论与可打开的产物，将仍需人工确认的事项写入正文。过程记录与待办保留为可展开内容，方便回看。'],
+          ['按需查看不同深度的执行细节','为仍有核验、排查需求的研发与深度用户保留研发模式，与默认工作模式沿用同一任务和进度。哪些技术信息默认展示、哪些按需展开，规则待细化。']
         ], check:'不同用户都能快速判断任务是否按预期推进，并按需核对执行依据。'
       },
       {
-        no:'2.2', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'过程可控：中途可干预，异常可恢复。',
+        no:'2.2', strategy:'策略二 · 构建对话闭环，保障透明可控', status:'待定', title:'过程可控：中途可干预，异常可恢复。',
         thesis:'让用户知道何时能改方向，卡住时又该怎样继续。',
         question:'“我现在能改方向吗？出错后还能接着做吗？”',
         context:'Agent 执行时间较长，用户可能补充新要求，也可能遇到文件缺失、工具失败等异常；如果只能等待，用户会失去控制感。',
         actions:[
-          ['在关键节点允许调整方向','执行中保留暂停、补充要求和调整任务安排的入口；说明对当前步骤与已有成果的影响，再按新方向继续。'],
-          ['异常发生时给出恢复路径','指出哪里卡住、影响什么、已保留什么；提供重试、更换资料或处理非关键缺口的选择，关键缺口由用户确认。']
-        ], check:'用户能及时介入；遇到异常也清楚哪些工作保留、下一步如何恢复。'
+          ['中途干预（待定）','保留中途调整方向的目标。当前尚无对应设计，介入时机、入口和对已有工作的影响待定。'],
+          ['异常恢复（待定）','保留异常后能够继续的目标。当前尚无对应设计，异常说明、恢复方式与确认机制待定。']
+        ], check:'待定：中途干预与异常恢复尚无对应设计，后续结合任务能力明确。'
       },
       {
-        no:'2.3', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'结果可视：让结果以最容易判断的形式出现。',
-        thesis:'结果形式跟着用户要解决的问题走。',
-        question:'“结果说明了什么？我能直接判断并使用吗？”',
-        context:'长篇文字不总是最容易理解的交付形式。比较、变化和优先级需要看得见；简单结论则不必强行做成图。',
+        no:'2.3', strategy:'策略二 · 构建对话闭环，保障透明可控', status:'原型验证', title:'结果可视：按用户下一步任务组织回复与交互。',
+        thesis:'让用户先看懂答案，再决定是否深入；需要表达偏好时，可以直接选择、填写或勾选。',
+        question:'“能不能更快看懂结果，并方便地作出选择？”',
+        context:'回复形式取决于用户接下来要确认、理解、比较，还是补充信息。短回复减少阅读，可视化降低理解成本，交互组件降低表达成本。六类组件已接入供应商对比原型，自动选择与组装规则仍需验证。',
+        analysis:{title:'按下一步任务判断回复形式',concern:'“这次需要一句答案，还是看懂结果、作出选择？”',premiseTitle:'回答正确，也不一定好用',premise:'简单确认写成长文，比较数据散在段落里，偏好只能靠文字描述，都会增加理解与表达成本。回复还需要适合用户接下来要做的事。',body:'因此，先区分确认答案、理解比较、补充信息三类场景，再选择短回复、可视化呈现或交互控件。'},
         actions:[
-          ['按问题选择结果形式','一句结论用文字；对象比较并排展示；趋势与优先级用图表呈现。让用户先看懂答案，再决定是否深入。'],
-          ['把结论、依据与产物连起来','关键结论旁保留指标口径、来源和待确认项；支持从结果定位到对应产物，继续追问或修改。']
-        ], check:'用户不必从长段说明中寻找结论，也能核对依据并继续使用产物。'
+          ['提供适配数据结构的表格样式','为明细记录、横向对比与指标差异设计预设表格，统一表头、数字对齐、单位与重点标记。数据按统一结构填入；设计侧可调整预设，自动选型与预设编辑入口仍待实现。'],
+          ['用选择与确认降低表达成本','条件可直接修改，呈现偏好可看图选择，跟进事项可勾选，并保留文字补充。选择会带入后续建议；补充要求后可继续更新，也能调整条件重新比较，减少反复交代。']
+        ], check:'用户能看懂重点、完成选择，并在下一轮沿用选择与补充要求；自动选用组件的规则仍待真实任务验证。'
       },
       {
-        no:'2.4', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'协作可续：让已确认的任务上下文承接下一轮对话。',
-        thesis:'展示 Agent 此刻真正沿用的共识，让下一句有明确的起点。',
-        question:'“下一轮它还知道我们说过什么吗？”',
-        context:'对话继续时，用户担心新要求落错任务，也担心已确认的目标和约束被遗忘。这里关注对话上下文的承接；完整产物上的定点修改归入策略三。',
+        no:'2.4', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'协作可续：对话结束后，在摘要中留下简明上下文。',
+        thesis:'用户回来时，能从摘要快速了解任务来由和本轮进展。',
+        question:'“过一阵再回来，能快速想起这次在做什么吗？”',
+        context:'对话结束后，用户需要用很短的时间回顾任务背景，不必翻阅全部历史。摘要保留背景、目标与必要约定，帮助用户接着协作；完整产物的定点修改归入策略三。',
         actions:[
-          ['标明当前任务与结果','继续对话时明确要求将作用于哪项任务及其结果。'],
-          ['展示可修正的关键共识','例如受众、保留项与待解决问题，并让用户能查看和纠正。'],
-          ['承接新要求时说明延续关系','说明新要求会改变什么、保留什么；信息不足或冲突时及时澄清。']
-        ], check:'用户能确认 Agent 沿用的是当前仍有效的上下文，无需反复重讲。'
+          ['对话结束后在摘要保留简明上下文','用几句话交代为什么做、要达成什么，以及必要的约定和本轮进展。用户再次打开摘要即可回顾背景，减少翻查历史和重新交代的成本。']
+        ], check:'用户不翻阅完整对话，也能从摘要快速回顾背景并继续协作。'
       },
       {
         no:'3.1', strategy:'策略三 · 优化产物体验，推动成果落地', status:'待深化', title:'布局可适：让窗口随人和 Agent 的参与状态切换。',
@@ -379,10 +470,8 @@
         question:'“修改完整产物时，我和 Agent 怎样保持协作？”',
         context:'讨论方向时看对话；核对内容时边看边聊；集中批注时让 Agent 暂退；人暂时离开时，桌宠传达 Agent 的工作状态。',
         actions:[
-          ['Face-to-face：以对话为主建立方向','放大对话，产物保留可打开的预览。适合先说明修改目标、讨论方向，再进入具体页面。'],
-          ['Side-by-side：边看产物边讨论','产物与对话并排，比例可调。PPT 保留缩略页与画布；Word 保留阅读宽度和目录；设计稿保留画布、缩放与图层。'],
-          ['On-call：以产物为主专心批注','产物占据主视野，Agent 暂不主动占用注意力；对话缩为可唤起入口。用户批注时保留页码、滚动、缩放和选区。'],
-          ['桌宠：人暂离时保持 Agent 可触达','用户离开主窗口后，Agent 可继续处理已交付的产物任务；桌宠轻量呈现进展，在需要确认或完成时提醒，点击回到原工作现场。']
+          ['按人机互动的参与程度适配布局','按讨论方向、边看边聊、专心批注三种状态，调整对话与产物的主次；切换时保留当前任务、产物、位置和修改上下文。'],
+          ['桌宠：人暂离时保持 Agent 可触达','用户切到线上会议等其他工作时，Agent 继续处理产物任务。沿用 Demo 桌面背景，中间展示模拟 Zoom 会议，右下角的桌宠轻量提示进展与待确认项，按需展开任务摘要。']
         ], check:'待验证：四种状态能自然切换，产物、任务进度与修改上下文始终连贯。'
       },
       {
@@ -419,12 +508,12 @@
 
     const catalogConcerns = {
       '1.1':'能做哪些工作，会交付什么？',
-      '1.2':'结果什么样，能借用做法吗？',
+      '1.2':'结果什么样，适合我的任务吗？',
       '1.3':'不知道怎么说，如何开始？',
       '2.1':'听懂了吗，现在做到哪了？',
       '2.2':'中途能改吗，出错如何继续？',
-      '2.3':'结果说明什么，依据在哪？',
-      '2.4':'之前的共识，下一轮还记得吗？',
+      '2.3':'能更快理解结果、作出选择吗？',
+      '2.4':'回来时，能快速想起任务背景吗？',
       '3.1':'怎样边看、边聊、专心修改？',
       '3.2':'能直接指着要改的地方说吗？',
       '3.3':'改了什么，能回到上一版吗？',
@@ -437,35 +526,32 @@
       ],
       '1.2':[
         '“有没有和我当前任务相近的案例？”',
-        '“这个案例做出来到底是什么样？”',
-        '“我能借用它的做法，再改成自己的需求吗？”'
+        '“这个案例做出来到底是什么样？”'
       ],
       '1.3':[
+        '“我能借用它的做法，再改成自己的需求吗？”',
         '“我还没想好怎么说，它能先接住我吗？”',
-        '“选了任务方向后，我接下来该补充什么？”',
-        '“有没有一句可以直接改写的起点？”'
+        '“选了任务方向后，我接下来该补充什么？”'
       ],
       '2.1':[
-        '“它理解对了吗，现在做到哪一步了？”',
-        '“这些过程我能看懂吗，需要时能看到细节吗？”'
+        '“它接到任务了吗，理解和安排对不对？”',
+        '“现在在做什么，刚做完什么，接下来呢？”',
+        '“最后得到了什么，哪些还需要我确认？”',
+        '“需要核对执行细节时，我能在哪里看？”'
       ],
       '2.2':[
         '“我发现方向不对，现在能改吗？”',
         '“卡住了会怎样，之前的工作还在吗？”'
       ],
       '2.3':[
-        '“结果能不能一眼看出重点？”',
-        '“这结论从哪里来，产物在哪里？”'
+        '“这些数据能排得清楚、方便比较吗？”',
+        '“能直接填、选或勾，并沿用到下一轮吗？”'
       ],
       '2.4':[
-        '“这一轮接着讨论哪项任务？”',
-        '“之前确定的要求还有效吗？”',
-        '“新要求会改变哪些已确认内容？”'
+        '“对话结束后，能在摘要里快速回顾背景吗？”'
       ],
       '3.1':[
-        '“我能先把修改方向聊清楚吗？”',
-        '“能边看产物边说这处怎么改吗？”',
-        '“我专心批注时，对话能先让开吗？”',
+        '“讨论、查看和批注时，界面能配合我的关注点吗？”',
         '“我离开窗口后，怎样知道它做到哪了？”'
       ],
       '3.2':[
@@ -528,11 +614,13 @@
         slides.push({...chapters[chapter],questions:pointSlides.filter(item=>Number(item.no.split('.')[0])===chapter).map(item=>item.question)});
       }
       if(point.no==='3.1') slides.push({no:'3.1-analysis',kind:'participation-analysis',title:'四种人机参与状态'});
+      if(point.analysis) slides.push({...point,kind:'reply-analysis',pointNo:point.no});
+      if(point.research) slides.push({...point,kind:'process-research',pointNo:point.no});
       point.actions.forEach((action,actionIndex)=>slides.push({
         ...point,
         kind:'action',
         pointNo:point.no,
-        no:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
+        no:point.analysis||point.research?`${point.no}-${actionIndex+2}`:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
         action,
         actionIndex
       }));
@@ -544,24 +632,48 @@
       '1.3':['上手可启','小猫气泡与输入引导'],
       '2.1':['过程可懂','阶段与模式的信息披露'],
       '2.2':['过程可控','中途干预与异常恢复'],
-      '2.3':['结果可视','按问题选择结果形式'],
-      '2.4':['协作可续','当前产物与任务共识'],
+      '2.3':['结果可视','按下一步任务组织回复 · 供应商对比原型'],
+      '2.4':['协作可续','对话结束后的摘要与简明上下文'],
       '3.1':['布局可适','四种人机参与状态与窗口关系'],
       '3.2':['意见可达','批注、选区与对话引用'],
       '3.3':['版本可溯','版本记录、差异与回退（待设计）'],
       '3.4':['成果可续','本轮交付与下次继续入口（待设计）']
     };
-    const capabilityCards = [
-      ['网站和应用','建网站 · 做应用','./assets/strategy-prompt-web.svg','ToC 开发 50.4% · ToB 有建站样本'],
-      ['分析数据','查指标 · 找原因','./assets/strategy-prompt-analysis.svg','ToC 数据 11.3% · ToB 经营 10.7%'],
-      ['设计与创作','海报 · PPT · 文案','./assets/strategy-prompt-design.svg','ToC 创作 18.5% · ToB 内容 7.4%'],
-      ['查找与解答','搜问题 · 找资料','./assets/strategy-prompt-search.svg','ToC 问答 9.9% · ToB 咨询 6.9%']
-    ];
-    const processDemo = `<div class="phase-demo-grid" aria-label="任务进程的三个设计状态">${[
-      [0,'01　工作前','确认目标，展开待办任务'],
-      [3,'02　工作时','收起安排，突出当前工作'],
-      [7,'03　工作结束','收束总结，交付产物']
-    ].map(([frame,title,caption])=>`<figure class="phase-demo-card"><figcaption><strong>${title}</strong><span>${caption}</span></figcaption><div class="demo-viewport" data-demo-width="600" data-demo-height="620"><iframe title="任务进程 Demo：${title}" data-scene="2.1" data-frame="${frame}" src="./index.html?strategyScene=2.1&amp;strategyPanel=process&amp;strategyFrame=${frame}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></figure>`).join('')}</div>`;
+    const replyDecisionDemo = `<div class="reply-decision" aria-label="按用户下一步任务选择回复形式">
+      <h2>用户接下来要做什么？</h2>
+      <p class="reply-decision-intro">先判断需要完成的任务，再决定回复里放什么。</p>
+      <div class="reply-decision-row"><div><h3>确认一个答案</h3><p>事实、状态、简单确认</p></div><span class="reply-arrow" aria-hidden="true">→</span><div class="reply-decision-example"><strong>短回复</strong><p>“已按 400 件、14 天到货比较。”<br>一句话能说明时，就直接回答。</p></div></div>
+      <div class="reply-decision-row"><div><h3>理解、比较结果</h3><p>重点、差异、变化</p></div><span class="reply-arrow" aria-hidden="true">→</span><div class="reply-decision-example"><strong>结论与指标摘要 · 同维度对比 · 趋势与分布图</strong><p>先看重点，再按需查看依据。</p></div></div>
+      <div class="reply-decision-row"><div><h3>表达偏好或约束</h3><p>选方案、补条件、定行动</p></div><span class="reply-arrow" aria-hidden="true">→</span><div class="reply-decision-example"><strong>视觉选项 · 结构化确认 · 可操作清单</strong><p>直接选、填、勾，也能用文字补充。</p></div></div>
+      <p class="reply-decision-note">同一轮可以组合使用。控件承接一个明确决定，选择后沿用上下文；自动选择与组装组件的规则仍待真实任务验证。</p>
+    </div>`;
+    const replyTableStylesDemo = `<div class="reply-table-styles" aria-label="明细、对比与增强表格三种预设样式示意">
+      <h2>同一份数据，适配不同阅读任务</h2>
+      <div class="reply-table-grid">
+        <section class="reply-table-panel"><h3>明细表<span>查看逐条记录</span></h3><table aria-label="供应商报价明细样式"><thead><tr><th scope="col">供应商</th><th scope="col">总价 / 元</th><th scope="col">交期 / 天</th></tr></thead><tbody><tr><th scope="row">恒川制造</th><td>47,200</td><td>12</td></tr><tr><th scope="row">青禾供应</th><td>43,200</td><td>18</td></tr><tr><th scope="row">立衡工厂</th><td>50,400</td><td>9</td></tr></tbody></table></section>
+        <section class="reply-table-panel"><h3>对比表<span>同一维度下权衡</span></h3><table aria-label="供应商横向对比样式"><thead><tr><th scope="col">维度</th><th scope="col">恒川</th><th scope="col">青禾</th><th scope="col">立衡</th></tr></thead><tbody><tr><th scope="row">总价 / 元</th><td>47,200</td><td>43,200</td><td>50,400</td></tr><tr><th scope="row">交期 / 天</th><td>12</td><td>18</td><td>9</td></tr><tr><th scope="row">满足条件</th><td class="is-preferred">是</td><td>超期</td><td>超预算</td></tr></tbody></table></section>
+        <section class="reply-table-panel"><h3>增强表<span>用数据条和状态发现差异</span></h3><table aria-label="带数据条与状态的增强表格样式"><thead><tr><th scope="col">供应商</th><th scope="col">采购总价 / 元</th><th scope="col">预算与交期</th></tr></thead><tbody><tr><th scope="row">恒川制造</th><td><span class="reply-table-bar" aria-hidden="true"><i style="width:94%"></i></span>47,200</td><td class="is-preferred">预算内 · 按期</td></tr><tr><th scope="row">青禾供应</th><td><span class="reply-table-bar" aria-hidden="true"><i style="width:86%"></i></span>43,200</td><td class="is-risk">超期 4 天</td></tr><tr><th scope="row">立衡工厂</th><td><span class="reply-table-bar" aria-hidden="true"><i style="width:100%"></i></span>50,400</td><td class="is-risk">超预算 400 元</td></tr></tbody></table></section>
+      </div><p>样式示意 · 按 400 件、预算 50,000 元、14 天到货的采购样例呈现；预设表格与编辑入口尚待接入 Demo。</p>
+    </div>`;
+    const processDemo = `<div class="process-pair" aria-label="信息示意与实际对话同步演示">
+      <figure class="process-pair-panel"><figcaption>信息展示示意<div class="process-tabs" role="tablist" aria-label="任务展示状态" data-process-tabs><button type="button" id="process-tab-before" role="tab" aria-controls="process-map-before" aria-selected="true" tabindex="0" data-process-frame="0">初步生成</button><button type="button" id="process-tab-working" role="tab" aria-controls="process-map-working" aria-selected="false" tabindex="-1" data-process-frame="1">生成中</button><button type="button" id="process-tab-after" role="tab" aria-controls="process-map-after" aria-selected="false" tabindex="-1" data-process-frame="10">生成后</button></div></figcaption>
+        <div class="process-schematic" data-phase="before">
+          <button type="button" class="process-map-status" data-process-status aria-expanded="false" aria-controls="process-map-history" aria-label="全局响应状态：思考中">全局响应状态</button><div class="process-map-history" id="process-map-history" data-process-history hidden><ol data-process-completed></ol></div>
+          <div class="process-map-columns">
+            <div class="process-map-column is-current" data-phase="before" id="process-map-before" role="tabpanel" aria-labelledby="process-tab-before"><div class="process-map-body"><div class="process-map-block process-map-intent">意图理解</div><div class="process-map-block process-map-plan">任务规划</div></div></div>
+            <div class="process-map-column" data-phase="working" id="process-map-working" role="tabpanel" aria-labelledby="process-tab-working" hidden><div class="process-map-body"><div class="process-map-block process-map-plan-compact">弱化任务规划</div><div class="process-map-block process-map-tools">工具调用<small data-process-tool>突出当前执行</small></div></div></div>
+            <div class="process-map-column" data-phase="after" id="process-map-after" role="tabpanel" aria-labelledby="process-tab-after" hidden><div class="process-map-body"><div class="process-map-block process-map-folded" aria-label="过程已收起"></div><div class="process-map-block process-map-result">结果</div></div></div>
+          </div>
+          <p class="process-map-caption" role="status" aria-live="polite">先确认理解与目标，展示任务规划。</p>
+        </div>
+      </figure>
+      <figure class="process-pair-panel"><figcaption>实际对话演示<span data-process-phase-label>初步生成</span></figcaption><div class="demo-viewport" data-demo-width="660" data-demo-height="500"><iframe title="任务进程 Demo：与信息示意同步播放" data-scene="2.1" data-process-sync="true" src="./index.html?strategyScene=2.1&amp;strategyPanel=process" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></figure>
+    </div>`;
+    const layoutComparisonsDemo = `<div class="phase-demo-grid" aria-label="三种人机参与场景的并排设计 Demo">${[
+      [0,'Face-to-face','对话为主 · 建立方向','先讨论修改目标与整体方向，产物保留可打开的预览。'],
+      [1,'Side-by-side','对话与产物并排 · 边看边聊','看着具体页面讨论修改，对话与产物同时可见。'],
+      [2,'On-call','产物全屏 · 专心批注','收起任务列表，产物全屏展示；底部保留轻量对话入口。'],
+    ].map(([frame,title,caption,description])=>`<figure class="phase-demo-card layout-demo-card"><figcaption><strong>${title}</strong><span>${caption}</span></figcaption><p class="layout-demo-description">${description}</p><div class="demo-viewport" data-demo-width="1200" data-demo-height="800"><iframe title="布局场景 Demo：${title}" data-scene="3.1" data-frame="${frame}" src="./index.html?strategyScene=3.1&amp;strategyPanel=layout&amp;strategyFrame=${frame}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></figure>`).join('')}</div>`;
     const modeDemo = `
       <div class="strategy-diagram" aria-label="工作模式与研发模式信息层级示意">
         <div class="strategy-diagram-heading">同一任务进程 / 两种披露层级</div>
@@ -570,44 +682,6 @@
           <div class="mode-panel"><small>设置中开启</small><h3>研发模式</h3><p>正在核对门店异常与订单口径</p><ul><li>读取文件 · 趋势图、异常明细</li><li>表格分析 · 检查时间戳字段</li><li>查看调用参数与处理对象</li></ul></div>
         </div>
         <div class="mode-shared">相同的任务状态、计划与结果；只改变过程信息的深度。</div>
-      </div>`;
-    const interventionDemo = `
-      <div class="strategy-diagram" aria-label="中途调整任务方向示意">
-        <div class="strategy-diagram-heading">过程可控 / 中途调整 · 设计示意</div>
-        <div class="control-flow">
-          <div class="control-step"><small>01　当前工作</small><h3>正在比较门店跟进优先级</h3><p>任务安排已完成 1/3；已核对的资料和口径继续保留。</p><div class="control-line">用户可查看当前正在做什么</div></div>
-          <div class="control-step active"><small>02　用户介入</small><h3>“先看华东区域，其他区域稍后再做。”</h3><p>提供暂停与补充要求的入口，让用户在任务进行中修正方向。</p><div class="control-line">确认：当前比较会暂停，已有核对结果保留</div></div>
-          <div class="control-step"><small>03　调整后继续</small><h3>先比较华东门店</h3><p>更新任务安排并说明变化，再从已完成的工作接续执行。</p><div class="control-line">新方向可见；未完成部分重新排队</div></div>
-        </div>
-        <p class="strategy-diagram-caption">介入时交代对当前步骤和已有成果的影响，避免用户重新开始。</p>
-      </div>`;
-    const recoveryDemo = `
-      <div class="strategy-diagram" aria-label="异常说明与恢复路径示意">
-        <div class="strategy-diagram-heading">过程可控 / 异常恢复 · 设计示意</div>
-        <div class="recovery-flow">
-          <div class="recovery-panel"><h3>异常发生在哪里</h3><p>异常明细缺少部分订单的时间戳，暂时无法判断这些订单的延迟时长。</p><ul><li><strong>受影响：</strong>延迟排序中的 2 条记录</li><li><strong>已保留：</strong>趋势图读取、其他订单核对结果</li><li><strong>当前状态：</strong>等待用户确认关键缺口</li></ul></div>
-          <div class="recovery-panel"><h3>怎样继续</h3><p>给出和异常类型相符的恢复选择，不把不确定的结果当作已完成。</p><ul><li><strong>重试：</strong>重新读取原文件</li><li><strong>补充资料：</strong>上传包含时间戳的明细</li><li><strong>继续处理：</strong>先完成不受影响的记录，并标出待核实项</li></ul></div>
-        </div>
-        <p class="strategy-diagram-caption">关键缺口由用户确认；恢复后沿用已完成且仍有效的工作。</p>
-      </div>`;
-    const resultFormatDemo = `
-      <div class="strategy-diagram" aria-label="按问题选择结果形式示意">
-        <div class="strategy-diagram-heading">结果可视 / 形式跟着问题走 · 设计示意</div>
-        <div class="result-formats">
-          <div class="result-format"><small>问题：结论是什么？</small><strong>简短回答</strong><div class="plain">优先跟进<br>5 条异常</div><p>一句话能说清时，直接给出结论。</p></div>
-          <div class="result-format"><small>问题：哪里更需要处理？</small><strong>并排比较</strong><div class="compare"><span>门店 A<br>3 条</span><span>门店 B<br>5 条</span></div><p>把对象放在一起，差异更容易判断。</p></div>
-          <div class="result-format"><small>问题：变化有多大？</small><strong>图表呈现</strong><div class="visual"><i style="height:36%"></i><i style="height:53%"></i><i style="height:74%"></i><i style="height:92%"></i></div><p>趋势和优先级用视觉结构说明。</p></div>
-        </div>
-        <p class="strategy-diagram-caption">先让用户看见答案，需要时再展开细节。</p>
-      </div>`;
-    const resultReviewDemo = `
-      <div class="strategy-diagram" aria-label="结论、依据与产物关联示意">
-        <div class="strategy-diagram-heading">结果可视 / 从结论走向依据与产物 · 设计示意</div>
-        <div class="result-review">
-          <div class="result-review-main"><h3>优先跟进 5 条门店异常</h3><p>按影响范围与重复发生情况排序，待确认项单独标记。</p><div class="result-review-row"><span>门店 B · 连续延迟</span><b>高优先级</b></div><div class="result-review-row"><span>门店 A · 缺失时间戳</span><b>待核实</b></div><div class="result-review-row"><span>门店 C · 偶发波动</span><b>低优先级</b></div><span class="result-review-link">打开产物：门店履约异常明细.xlsx →</span></div>
-          <div class="result-review-side"><h3>判断依据</h3><p>口径：近 7 天订单异常；重复出现与影响订单数共同决定优先级。</p><div class="result-review-row"><span>来源</span><b>趋势图、异常明细</b></div><div class="result-review-row"><span>待确认</span><b>缺失时间戳</b></div><span class="result-review-link">继续追问或调整排序 →</span></div>
-        </div>
-        <p class="strategy-diagram-caption">让用户能从结果核对依据，也能直接进入产物继续工作。</p>
       </div>`;
     const continuationDemo = `
       <div class="strategy-diagram" aria-label="完成产物后承接下一次委托的设计示意">
@@ -644,14 +718,7 @@
         </div><div class="workspace-key"><span><strong>主视野</strong> 产物</span><span><strong>对话</strong> 缩为可唤起入口</span></div>
         <p class="strategy-diagram-caption">批注时让内容占满视野；唤起对话后，仍停留在当前页、位置、缩放与选区。</p>
       </div>`,
-      `<div class="strategy-diagram" aria-label="桌宠在人暂离主窗口后提供任务触达的设计示意">
-        <div class="strategy-diagram-heading">布局可适 / 桌宠 · 人暂离</div>
-        <div class="pet-desktop">
-          <div class="pet-other-window">桌面上的其他工作<i></i><i></i><i></i></div>
-          <div class="pet-notice"><div class="pet-notice-head"><img src="./assets/logo.png" alt=""><span>CatPaw 桌宠 · 正在处理</span></div><strong>门店异常任务已完成 2/3</strong><p>正在整理优先跟进建议；需要你确认时会提醒。</p><span class="pet-notice-link">打开任务，回到刚才的产物位置 →</span></div>
-        </div><div class="workspace-key"><span><strong>人</strong> 暂离主窗口</span><span><strong>Agent</strong> 继续执行已交付任务</span></div>
-        <p class="strategy-diagram-caption">桌宠轻量传达进展与确认需求；点击后回到同一任务、产物和修改位置。</p>
-      </div>`
+      `<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="桌宠场景：Zoom 会议中收到 CatPaw 任务提示" data-scene="3.1-2" src="./desktop-pet-demo.html" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`
     ];
     const participationAnalysis = `<div class="strategy-diagram" aria-label="四种窗口状态下人类与 Agent 的相对参与度示意">
         <div class="strategy-diagram-heading">场景分析 / 四种人机参与状态</div>
@@ -674,9 +741,27 @@
         </div>
         <p class="strategy-diagram-caption">从桌宠到 On-call，人的投入增加，Agent 的即时参与减少；对话与并排的差别还在注意力落点。</p>
       </div>`;
+    const contextSummaryDemo = `<div class="strategy-diagram" aria-label="对话结束后摘要中的简明上下文示意">
+      <div class="strategy-diagram-heading">对话结束后 / 在摘要中回顾上下文</div>
+      <div class="context-summary-preview"><h3>摘要</h3><p>整理本周门店履约异常</p>
+        <div class="context-summary-section"><h4>背景与目标</h4><p>为安排本周门店跟进，结合履约趋势图和异常明细，找出需要优先处理的门店，并明确跟进顺序。</p></div>
+        <div class="context-summary-section"><h4>关键约定</h4><p>按统一订单口径比较；缺失时间戳与责任归属保留待核实。</p></div>
+        <div class="context-summary-section"><h4>本轮进展</h4><p>已整理 5 条优先异常及跟进建议，可据此继续补充门店反馈。</p></div>
+      </div><p class="strategy-diagram-caption">几句话说明来由、目标和进展；再次进入时，不必翻回整段对话。</p>
+    </div>`;
     const escapeHtml = value => String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const canvas=document.getElementById('canvas');
-    const topline=index=>`<div class="topline"><span>CATPAW / 设计策略</span><span class="right">${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</span></div>`;
+    const deckPhaseRanges=[1,2,3].map((chapter,index)=>({start:slides.findIndex(slide=>slide.no===`strategy-${chapter}`),end:index<2?slides.findIndex(slide=>slide.no===`strategy-${chapter+1}`):slides.length}));
+    function deckProgressData(index){
+      const phase=deckPhaseRanges.findIndex(range=>index>=range.start&&index<range.end);
+      const fractions=deckPhaseRanges.map((range,i)=>phase<0||i>phase?0:i<phase?1:(index-range.start+1)/(range.end-range.start));
+      return {phase,fractions,value:Math.round(fractions.reduce((sum,value)=>sum+value,0)/3*100)};
+    }
+    const topline=index=>{
+      const progress=deckProgressData(index),labels=['对话前','对话','修改中'];
+      const description=progress.phase<0?'项目介绍':`${labels[progress.phase]}，场景内进度 ${Math.round(progress.fractions[progress.phase]*100)}%`;
+      return `<div class="topline"><span>CATPAW / 设计策略</span><div class="deck-progress" role="progressbar" aria-label="设计策略场景进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.value}" aria-valuetext="${description}">${labels.map((label,i)=>`<span class="deck-progress-step ${progress.phase===i?'is-current':progress.fractions[i]===1?'is-complete':''}"${progress.phase===i?' aria-current="step"':''}><span>${label}</span><span class="deck-progress-track"><span class="deck-progress-fill" style="--phase-progress:${(progress.fractions[i]*100).toFixed(1)}%"></span></span></span>`).join('')}</div><span class="right">${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</span></div>`;
+    };
     canvas.innerHTML=slides.map((slide,index)=>{
       if(slide.kind==='evolution')return `
         <section class="slide story-slide evolution-slide" id="slide-evolution" aria-label="Agent 工作形态演化：${escapeHtml(slide.title)}">
@@ -716,7 +801,7 @@
           <div class="story-kicker">${escapeHtml(slide.label)}</div>
           <h1>${escapeHtml(slide.title)}</h1>
           <p class="story-copy">${escapeHtml(slide.story)}</p>
-          <div class="chapter-questions"><span class="label">用户此刻正在想</span><div class="chapter-question-list">${slide.questions.map(question=>`<p>${escapeHtml(question)}</p>`).join('')}</div></div>
+          <div class="chapter-questions"><span class="label">用户此刻正在想</span><div class="chapter-question-list"${slide.no==='strategy-1'?' aria-label="从能力认知、形成预期到开始尝试的用户问题流程"':''}>${slide.questions.map(question=>`<p>${escapeHtml(question)}</p>`).join('')}</div></div>
           <div class="story-steps">${slide.steps.map((step,i)=>`<div class="story-step"><span>0${i+1}</span><strong>${escapeHtml(step)}</strong></div>`).join('')}</div>
         </section>`;
       if(slide.kind==='participation-analysis')return `
@@ -726,14 +811,36 @@
           <h1>${escapeHtml(slide.title)}</h1>
           <div class="body"><div class="left-content"><div class="action-detail"><span class="label">场景分析</span><h3>谁在场，谁在持续工作？</h3><p>同一份完整产物，在讨论、边看边改、专心批注和人暂离时，需要不同的窗口关系。</p></div><p class="design-note">先看人和 Agent 的参与度，再分别设计四种状态；切换时仍沿用同一任务、产物和修改上下文。</p></div><figure class="design-slot" aria-label="人和 Agent 参与度的四状态分析图">${participationAnalysis}</figure></div>
         </section>`;
+      if(slide.kind==='reply-analysis')return `
+        <section class="slide action-slide analysis-slide" id="slide-2.3" aria-label="2.3 结果可视：场景分析">
+          ${topline(index)}
+          <div class="mainline"><span class="number">2.3</span><span>策略二 · 场景分析</span></div>
+          <h1>结果可视</h1>
+          <div class="body"><div class="left-content">
+            <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(slide.analysis.concern)}</p></div>
+            <div class="action-detail reply-analysis-premise"><span class="label">问题洞察</span><h3>${escapeHtml(slide.analysis.premiseTitle)}</h3><p>${escapeHtml(slide.analysis.premise)}</p></div>
+            <div class="action-detail"><span class="label">场景分析</span><h3>${escapeHtml(slide.analysis.title)}</h3><p>${escapeHtml(slide.analysis.body)}</p></div>
+          </div><figure class="design-slot" aria-label="回复形式的场景分析">${replyDecisionDemo}</figure></div>
+        </section>`;
+      if(slide.no==='3.1')return `
+        <section class="slide phase-demo-slide layout-demo-slide" id="slide-3.1" aria-label="3.1.1 布局可适：三种参与场景并排比较">
+          ${topline(index)}
+          <div class="mainline"><span class="number">3.1</span><span>${escapeHtml(slide.strategy)}</span></div>
+          <h1>${escapeHtml(pageView[slide.pointNo][0])}</h1>
+          <div class="phase-demo-context">
+            <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns[slide.pointNo][slide.actionIndex])}</p></div>
+            <div class="action-detail"><span class="label">设计动作 3.1.1</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
+          </div>
+          ${layoutComparisonsDemo}
+        </section>`;
       if(slide.no==='2.1')return `
-        <section class="slide phase-demo-slide" id="slide-2.1" aria-label="2.1 过程可懂：任务进程的三个设计状态">
+        <section class="slide phase-demo-slide" id="slide-2.1" aria-label="2.1 过程可懂：设计研究与阶段展示分析">
           ${topline(index)}
           <div class="mainline"><span class="number">2.1</span><span>${escapeHtml(slide.strategy)}</span></div>
           <h1>${escapeHtml(pageView[slide.pointNo][0])}</h1>
           <div class="phase-demo-context">
-            <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns[slide.pointNo][slide.actionIndex])}</p></div>
-            <div class="action-detail"><span class="label">设计动作 2.1.1</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
+            <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(slide.research.concern)}</p></div>
+            <div class="action-detail"><span class="label">设计研究</span><h3>${escapeHtml(slide.research.title)}</h3><p>${escapeHtml(slide.research.body)}</p></div>
           </div>
           ${processDemo}
         </section>`;
@@ -747,9 +854,9 @@
               <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns[slide.pointNo][slide.actionIndex])}</p></div>
               <div class="action-detail"><span class="label">设计动作 ${escapeHtml(`${slide.pointNo}.${slide.actionIndex+1}`)}</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
               ${slide.note&&slide.actionIndex===0?`<p class="design-note">${escapeHtml(slide.note)}</p>`:''}
-              ${slide.pointNo==='1.1'&&slide.actionIndex===0?`<div class="capability-cards" aria-label="首页四类任务入口及选择依据">${capabilityCards.map(([title,subtitle,illustration,evidence])=>`<div class="capability-item"><div class="capability-card"><strong>${escapeHtml(title)}</strong><small>${escapeHtml(subtitle)}</small><img class="capability-illustration" src="${escapeHtml(illustration)}" alt=""></div><p class="capability-evidence">${escapeHtml(evidence)}</p></div>`).join('')}</div><p class="capability-source">四类是任务归并，并非统计标签。ToC 首轮 n=3,322；ToB 抽样 n=938。来源：<a href="https://km.sankuai.com/collabpage/2789760458" target="_blank" rel="noopener noreferrer">ToC 报告</a> · <a href="https://km.sankuai.com/collabpage/2786789535" target="_blank" rel="noopener noreferrer">ToB 报告</a></p>`:''}
+              ${slide.pointNo==='1.1'&&slide.actionIndex===0?`<p class="capability-source">四类是任务归并，并非统计标签。ToC 首轮 n=3,322；ToB 抽样 n=938。来源：<a href="https://km.sankuai.com/collabpage/2789760458" target="_blank" rel="noopener noreferrer">ToC 报告</a> · <a href="https://km.sankuai.com/collabpage/2786789535" target="_blank" rel="noopener noreferrer">ToB 报告</a></p>`:''}
             </div>
-            <figure class="design-slot ${CatPawStrategyScenes.scenes[slide.no]?'has-demo':''}" data-design-slot="${escapeHtml(slide.no)}" aria-label="设计稿：${escapeHtml(pageView[slide.pointNo][1])}">${CatPawStrategyScenes.scenes[slide.no]?`<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="CatPaw Demo：${escapeHtml(slide.action[0])}" data-scene="${escapeHtml(slide.no)}" src="./index.html?strategyScene=${escapeHtml(slide.no)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`:slide.no==='2.1'?processDemo:slide.no==='2.1-2'?modeDemo:slide.no==='2.2'?interventionDemo:slide.no==='2.2-2'?recoveryDemo:slide.no==='2.3'?resultFormatDemo:slide.no==='2.3-2'?resultReviewDemo:slide.pointNo==='3.1'?workspaceDemo[slide.actionIndex]:slide.pointNo==='3.4'?continuationDemo:slide.pointNo==='3.3'?`<div class="design-slot-body">版本界面待设计</div>`:`<div class="design-slot-body">对应设计稿放在这里</div>`}</figure>
+            <figure class="design-slot ${CatPawStrategyScenes.scenes[slide.no]||slide.no==='3.1-2'?'has-demo':''}" data-design-slot="${escapeHtml(slide.no)}" aria-label="设计稿：${escapeHtml(pageView[slide.pointNo][1])}">${slide.no==='2.4'?contextSummaryDemo:CatPawStrategyScenes.scenes[slide.no]?`<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="CatPaw Demo：${escapeHtml(slide.action[0])}" data-scene="${escapeHtml(slide.no)}" src="./index.html?strategyScene=${escapeHtml(slide.no)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`:slide.no==='2.1'?processDemo:slide.no==='2.1-5'?modeDemo:slide.pointNo==='2.2'?`<div class="design-slot-body">${slide.actionIndex===0?'中途干预':'异常恢复'}设计待定</div>`:slide.pointNo==='2.3'?replyTableStylesDemo:slide.pointNo==='3.1'?workspaceDemo[slide.actionIndex===0?0:3]:slide.pointNo==='3.4'?continuationDemo:slide.pointNo==='3.3'?`<div class="design-slot-body">版本界面待设计</div>`:`<div class="design-slot-body">对应设计稿放在这里</div>`}</figure>
           </div>
         </section>`;
     }).join('');
@@ -759,9 +866,10 @@
     const previous=document.getElementById('prev');
     const next=document.getElementById('next');
     const counter=document.getElementById('counter');
+    let sharedGreetingText='';
     const fromHash=()=>{
       const hash=decodeURIComponent(location.hash);
-      const canonical=/^#1\.1-[23]$/.test(hash)?'#1.1':hash==='#2.1-3'?'#2.1-2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.4':hash;
+      const canonical=hash==='#1.2-3'?'#1.3':/^#1\.1-[23]$/.test(hash)?'#1.1':/^#2\.4-[23]$/.test(hash)?'#2.4':hash==='#2.3-4'?'#2.3-3':hash==='#3.1-3'?'#3.1':hash==='#3.1-4'?'#3.1-2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.4':hash;
       return slides.findIndex(slide=>'#'+slide.no===canonical);
     };
     let current=Math.max(0,fromHash());
@@ -771,12 +879,83 @@
         const frame=viewport.querySelector('iframe');
         const demoWidth=Number(viewport.dataset.demoWidth)||1200;
         const demoHeight=Number(viewport.dataset.demoHeight)||800;
+        // Preserve the exterior wallpaper so the app window has breathing room on both sides.
         const scale=Math.min(viewport.clientWidth/demoWidth,viewport.clientHeight/demoHeight);
-        // Keep the chosen CSS viewport fixed; only scale the complete preview.
         frame.style.transform=`scale(${scale})`;
         frame.style.left=`${(viewport.clientWidth-demoWidth*scale)/2}px`;
         frame.style.top=`${(viewport.clientHeight-demoHeight*scale)/2}px`;
       });
+    }
+    function clearProcessToolTransfer(diagram){
+      const effect=diagram.processToolEffect;
+      if(!effect)return;
+      effect.animations.forEach(animation=>animation.cancel());
+      effect.timers.forEach(timer=>clearTimeout(timer));
+      effect.ghost?.remove();
+      diagram.processToolEffect=null;
+      if(diagram.dataset.historyPinned!=='true'){
+        diagram.querySelector('[data-process-history]').hidden=true;
+        diagram.querySelector('[data-process-status]').setAttribute('aria-expanded','false');
+      }
+    }
+    function syncProcessToolHistory(diagram,frameIndex,tools){
+      const history=diagram.querySelector('[data-process-history]');
+      if(!history)return;
+      const previous=diagram.processToolState;
+      const completed=Array.isArray(tools?.completed)?tools.completed:[];
+      const current=tools?.current||null;
+      diagram.querySelector('[data-process-status]').disabled=completed.length===0;
+      const transfer=CatPawStrategyScenes.completedToolTransfer(previous,frameIndex,completed);
+      const block=diagram.querySelector('.process-map-tools');
+      const source=transfer?{rect:block.getBoundingClientRect(),ghost:block.cloneNode(true)}:null;
+      clearProcessToolTransfer(diagram);
+      const records=diagram.querySelector('[data-process-completed]');
+      records.replaceChildren(...completed.map(item=>{
+        const row=document.createElement('li');row.dataset.toolRecord=String(item.id);row.textContent=item.name;return row;
+      }));
+      diagram.processToolState={frame:frameIndex,current};
+      block.classList.toggle('is-idle',!current);
+      if(frameIndex===0||completed.length===0){diagram.dataset.historyPinned='false';history.hidden=true;diagram.querySelector('[data-process-status]').setAttribute('aria-expanded','false')}
+      if(!source||!source.rect.width||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+      const header=diagram.querySelector('[data-process-status]').getBoundingClientRect();
+      const destination={left:source.rect.left,top:header.bottom+6,width:source.rect.width,height:24};
+      const origin=diagram.getBoundingClientRect();
+      const scale=origin.width/diagram.offsetWidth||1;
+      const ghost=source.ghost;
+      ghost.className='process-map-block process-tool-transfer';ghost.setAttribute('aria-hidden','true');
+      Object.assign(ghost.style,{left:`${(source.rect.left-origin.left)/scale}px`,top:`${(source.rect.top-origin.top)/scale-diagram.clientTop}px`,width:`${source.rect.width/scale}px`,height:`${source.rect.height/scale}px`});
+      diagram.append(ghost);
+      const animations=[ghost.animate([{opacity:1,transform:'translate(0,0) scale(1)'},{opacity:.6,transform:'translate(0,-18px) scale(.98)',offset:.22},{opacity:0,transform:`translate(${(destination.left-source.rect.left)/scale}px,${(destination.top-source.rect.top)/scale}px) scale(${destination.width/source.rect.width},${destination.height/source.rect.height})`}],{duration:650,easing:'cubic-bezier(.22,.68,0,1)',fill:'forwards'})];
+      if(current)animations.push(block.animate([{opacity:0,transform:'translateX(40px)'},{opacity:1,transform:'translateX(0)'}],{delay:650,duration:320,fill:'backwards',easing:'ease-out'}));
+      const effect={animations,ghost,timers:[]};diagram.processToolEffect=effect;
+      effect.timers.push(setTimeout(()=>{if(diagram.processToolEffect===effect)ghost.remove()},650));
+
+    }
+    function syncProcessDiagram(page,frameIndex,activity='',status='',tools=null){
+      const phase=CatPawStrategyScenes.processPhaseForFrame(frameIndex);
+      const diagram=page.querySelector('.process-schematic');
+      if(!phase||!diagram)return;
+      if(typeof diagram.animate==='function')syncProcessToolHistory(diagram,frameIndex,tools);
+      const changed=diagram.dataset.phase!==phase;
+      if(changed)diagram.dataset.transition=diagram.dataset.phase==='before'&&phase==='working'?'before-working':'';
+      diagram.dataset.phase=phase;
+      const statusLabel=typeof status==='string'&&status?status:{before:'思考中',working:'生成中',after:'已完成'}[phase];
+      const statusElement=diagram.querySelector('[data-process-status]');
+      statusElement.textContent='全局响应状态';
+      statusElement.setAttribute('aria-label',`全局响应状态：${statusLabel}`);
+      page.querySelectorAll('.process-map-column').forEach(column=>{
+        column.hidden=column.dataset.phase!==phase;
+        column.setAttribute('aria-hidden',String(column.hidden));
+        column.classList.toggle('is-current',!column.hidden);
+        if(column.dataset.phase===phase)column.setAttribute('aria-current','step');else column.removeAttribute('aria-current');
+      });
+      page.querySelectorAll('[data-process-frame]').forEach(tab=>{
+        const selected=CatPawStrategyScenes.processPhaseForFrame(Number(tab.dataset.processFrame))===phase;
+        tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
+      });
+      page.querySelector('[data-process-phase-label]').textContent={before:'初步生成',working:'生成中',after:'生成后'}[phase];
+      if(changed||frameIndex===0)diagram.querySelector('.process-map-caption').textContent={before:'先确认理解与目标，展示任务规划。',working:'任务规划收成一行，突出当前工具调用，保留阶段总结。',after:'收起过程信息，直接呈现结果与产物。'}[phase];
+      diagram.querySelector('[data-process-tool]').textContent=phase==='working'&&typeof activity==='string'&&activity?activity:'突出当前执行';
     }
     function revealDemo(page){
       page.querySelectorAll('.demo-viewport iframe').forEach(frame=>{
@@ -788,19 +967,25 @@
     }
     function fit(){canvas.style.setProperty('--scale',stage.clientWidth/1280);fitDemo(pages[current])}
     function show(index,updateHash=true){
+      pages[current]?.querySelectorAll('.process-schematic').forEach(clearProcessToolTransfer);
       pages[current]?.querySelectorAll('.demo-viewport iframe').forEach(frame=>{
         frame.contentWindow?.postMessage({type:'catpaw:scene-deactivate',scene:frame.dataset.scene},'*');
       });
       current=Math.max(0,Math.min(pages.length-1,index));
+      if(document.activeElement?.matches('iframe')){
+        stage.setAttribute('tabindex','-1');
+        stage.focus({preventScroll:true});
+      }
       const page=pages[current];
       page.classList.add('preparing');
       const frames=page.querySelectorAll('.demo-viewport iframe');
-      frames.forEach(frame=>{frame.classList.remove('is-ready');delete frame.dataset.prepared;});
+      frames.forEach(frame=>{frame.classList.remove('is-ready');delete frame.dataset.prepared;delete frame.dataset.requestedFrame;});
       pages.forEach((page,i)=>page.classList.toggle('active',i===current));
       fitDemo(page);
+      if(slides[current].no==='2.1')syncProcessDiagram(page,0);
       page.classList.remove('preparing');
       frames.forEach(frame=>{
-        if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:'catpaw:scene-activate',scene:frame.dataset.scene},'*');
+        if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:'catpaw:scene-activate',scene:frame.dataset.scene,greetingText:sharedGreetingText},'*');
       });
       revealDemo(page);
       previous.disabled=current===0;next.disabled=current===pages.length-1;
@@ -808,6 +993,34 @@
       document.title=`${slides[current].kind==='action'?slides[current].pointNo+' '+slides[current].action[0]:slides[current].title} · CatPaw 设计策略`;
       if(updateHash)history.replaceState(null,'','#'+slides[current].no);
     }
+    canvas.addEventListener('click',event=>{
+      const tab=event.target.closest('[data-process-frame]');
+      if(!tab)return;
+      const page=tab.closest('.slide');
+      if(!page.classList.contains('active'))return;
+      const frame=page.querySelector('iframe[data-process-sync]');
+      const target=Number(tab.dataset.processFrame);
+      if(!CatPawStrategyScenes.processPhaseForFrame(target))return;
+      frame.dataset.requestedFrame=String(target);
+      if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:'catpaw:scene-seek',scene:frame.dataset.scene,frame:target},'*');
+    });
+    canvas.addEventListener('keydown',event=>{
+      if(event.target.closest('[data-process-status]')&&['Enter',' '].includes(event.key)){event.stopPropagation();return}
+      const tab=event.target.closest('[data-process-frame]');
+      if(!tab)return;
+      const tabs=[...tab.closest('[data-process-tabs]').querySelectorAll('[data-process-frame]')];
+      let index=tabs.indexOf(tab);
+      if(['ArrowRight','ArrowLeft','Home','End'].includes(event.key)){
+        event.preventDefault();event.stopPropagation();
+        index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length;
+        tabs[index].focus();tabs[index].click();
+      }else if(['Enter',' '].includes(event.key))event.stopPropagation();
+    });
+    canvas.addEventListener('click',event=>{
+      const status=event.target.closest('[data-process-status]');if(!status)return;
+      const diagram=status.closest('.process-schematic'),history=diagram.querySelector('[data-process-history]');
+      const open=history.hidden;diagram.dataset.historyPinned=String(open);history.hidden=!open;status.setAttribute('aria-expanded',String(open));
+    });
     previous.addEventListener('click',()=>show(current-1));
     next.addEventListener('click',()=>show(current+1));
     document.addEventListener('keydown',event=>{
@@ -821,9 +1034,16 @@
       const frame=Array.from(canvas.querySelectorAll('iframe[data-scene]')).find(item=>item.contentWindow===event.source);
       if(!frame||frame.dataset.scene!==event.data?.scene)return;
       const page=frame.closest('.slide');
+      if(event.data.type==='catpaw:greeting-state'&&frame.dataset.scene==='1.3-2'&&page.classList.contains('active')&&typeof event.data.greeting==='string'&&Array.from(event.data.greeting).length<=12)sharedGreetingText=event.data.greeting;
       if(event.data.type==='catpaw:scene-ready'){
         frame.dataset.connected='true';
-        frame.contentWindow.postMessage({type:page.classList.contains('active')?'catpaw:scene-activate':'catpaw:scene-preview',scene:frame.dataset.scene},'*');
+        const requested=page.classList.contains('active')&&frame.dataset.requestedFrame!==undefined;
+        frame.contentWindow.postMessage({type:requested?'catpaw:scene-seek':page.classList.contains('active')?'catpaw:scene-activate':'catpaw:scene-preview',scene:frame.dataset.scene,greetingText:sharedGreetingText,...(requested?{frame:Number(frame.dataset.requestedFrame)}:{})},'*');
+      }
+      if(event.data.type==='catpaw:scene-progress'&&frame.dataset.processSync==='true'&&page.classList.contains('active')&&!document.hidden){
+        if(frame.dataset.requestedFrame!==undefined&&Number(frame.dataset.requestedFrame)!==event.data.frame)return;
+        delete frame.dataset.requestedFrame;
+        syncProcessDiagram(page,event.data.frame,event.data.activity,event.data.status,event.data.tools);
       }
       if(event.data.type==='catpaw:scene-prepared'){
         frame.dataset.prepared='true';
@@ -837,8 +1057,9 @@
       }
     });
     document.addEventListener('visibilitychange',()=>{
+      if(document.hidden)pages[current]?.querySelectorAll('.process-schematic').forEach(clearProcessToolTransfer);
       pages[current]?.querySelectorAll('iframe[data-scene]').forEach(frame=>{
-        if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:document.hidden?'catpaw:scene-deactivate':'catpaw:scene-activate',scene:frame.dataset.scene},'*');
+        if(frame.dataset.connected==='true')frame.contentWindow.postMessage({type:document.hidden?'catpaw:scene-deactivate':'catpaw:scene-activate',scene:frame.dataset.scene,greetingText:sharedGreetingText},'*');
       });
     });
     window.addEventListener('beforeprint',()=>pages.forEach(fitDemo));
