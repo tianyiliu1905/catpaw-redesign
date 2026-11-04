@@ -5682,16 +5682,18 @@ const mainView = document.querySelector('.main');
     const before=stageResultHistory[stageResultHistory.length-1][0].rows;
     const after=stageResultNode().preview.sheets[0].rows;
     const moved=after.filter((row,index)=>JSON.stringify(row)!==JSON.stringify(before[index])).length;
+    const counts = `<span class="stage-revision-added">+${moved}</span><span class="stage-revision-removed">−${moved}</span>`;
     return `<section class="stage-revision" aria-label="产物修改总结">
-      <div class="stage-revision-icon conversation-artifact-icon" aria-hidden="true"><img src="assets/artifact-${artifactIconByExtension[resultName.split('.').pop().toLowerCase()] || 'doc'}.svg" alt=""></div>
-      <div class="stage-revision-info"><span>已编辑 ${esc(resultName)}</span><small>版本 ${version} · 调整 ${moved} 行顺序</small></div>
-      <button type="button" data-stage-undo>撤销 ↶</button>
-      <details class="stage-revision-details"><summary>查看变更</summary>
-        <div class="stage-revision-comparison"><p>按超时率从高到低排序</p>
+      <div class="stage-revision-icon" aria-hidden="true"><img src="assets/figma-diff.svg" alt="" width="22" height="22"></div>
+      <div class="stage-revision-info"><span>已编辑 1 个文件</span><small aria-label="调整 ${moved} 行顺序，新增和移除各 ${moved} 行">${counts}</small></div>
+      <button type="button" data-stage-undo aria-label="撤回本轮修改">撤销</button>
+      <details class="stage-revision-details"><summary>审核</summary>
+        <div class="stage-revision-comparison"><p>版本 ${version} · 按超时率从高到低排序，调整 ${moved} 行顺序</p>
           <table><thead><tr><th>位置</th><th>修改前</th><th>修改后</th></tr></thead>
           <tbody>${after.map((row,index)=>`<tr><td>${index+1}</td><td>${esc(before[index].slice(0,3).join(' · '))}</td><td>${esc(row.slice(0,3).join(' · '))}</td></tr>`).join('')}</tbody></table>
         </div>
       </details>
+      <div class="stage-revision-files"><div class="stage-revision-file"><span class="stage-revision-filename" title="${esc(resultName)}">${esc(resultName)}</span><span class="stage-revision-counts" aria-label="调整 ${moved} 行顺序">${counts}</span></div></div>
       <p class="stage-version-status" role="status" aria-live="polite"></p>
     </section>`;
   }
@@ -5699,7 +5701,7 @@ const mainView = document.querySelector('.main');
     const resultName = '门店履约异常明细.xlsx';
     const version = stageResultHistory.length + 1;
     const change = stageResultHistory.length ? '按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。' : '汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。';
-    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>${esc(frame.summary)}${esc(frame.caveat)}</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
+    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p><dl class="stage-result-summary"><div><dt>已完成</dt><dd>核对资料与统计口径，复核异常及处理优先级。</dd></div><div><dt>交付内容</dt><dd>异常明细表，包含异常记录、处理顺序与跟进建议。</dd></div><div><dt>待确认</dt><dd>缺失的时间戳与责任归属已单列，需人工核实。</dd></div></dl></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
   }
   function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false, visibleFrames = null) {
     const frame = conversationStageFrames[frameIndex];
@@ -5717,12 +5719,12 @@ const mainView = document.querySelector('.main');
     const planMarkup = `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="stagePlanBody"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${conversationStagePlan.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="stagePlanBody"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
     const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex).filter((event,index) => event.call && (!visibleFrames || visibleFrames.includes(index+1)));
     const completedItems = completedEvents.map((event, index) => `<li class="stage-completed-item${index === newCompletedIndex ? ' is-new' : ''}"><span class="stage-completed-check" aria-hidden="true">${check}</span><span class="stage-completed-text">${esc(event.completed)}</span><span class="stage-completed-tool">${esc(development ? event.call.name : event.tool)}</span></li>`).join('');
-    const completedMarkup = completedEvents.length || done
-      ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner">${done ? planMarkup : ''}<section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
-      : '';
     const checkpointMarkup = conversationStageFrames.slice(0, frameIndex + 1)
       .filter(event => event.stage === 'checkpoint')
       .map(event => `<section class="stage-checkpoint" data-completed-group="${event.planCompleted}" aria-label="${esc(conversationStagePlan[event.planCompleted - 1].title)}的阶段总结"><p>${esc(event.summary)}</p></section>`).join('');
+    const completedMarkup = completedEvents.length || done
+      ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner">${done ? planMarkup + checkpointMarkup : ''}<section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
+      : '';
     const delegationStage = frameIndex === 4 || frameIndex === 5;
     const currentMarkup = frame.stage !== 'work' ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${delegationStage ? renderStageDelegations(frameIndex) : ''}${!delegationStage || development ? renderStageToolCall(frame, development) : ''}</section>`;
     const resultMarkup = done ? renderStageResult(frame) : '';
@@ -5730,7 +5732,7 @@ const mainView = document.querySelector('.main');
     const thinkingMarkup = `<div class="stage-thinking" data-global-state="${esc(frame.globalState)}">${completedEvents.length
       ? `<button class="stage-thinking-status stage-thinking-toggle" type="button" aria-expanded="${thinkingOpen}" aria-controls="stageThinkingDetails">${thinkingStatus}<svg viewBox="0 0 24 24" class="ic stage-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>`
       : `<div class="stage-thinking-status">${thinkingStatus}</div>`}${completedMarkup}</div>`;
-    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + (done ? '' : planMarkup) + checkpointMarkup + currentMarkup + resultMarkup;
+    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + (done ? '' : planMarkup) + (done ? '' : checkpointMarkup) + currentMarkup + resultMarkup;
   }
 
   function renderConversationStage(entering = false) {
@@ -7043,7 +7045,7 @@ function beginConversationTurn(message) {
     const width = tags.offsetWidth;
     const wrapped = width > input.clientWidth - (input === conversationPrompt ? 82 : 72);
     input.parentElement.classList.toggle('has-wrapped-tags', wrapped);
-    input.style.setProperty('--composer-tags-indent', width && !wrapped ? `${width + 8}px` : '0px');
+    input.parentElement.style.setProperty('--composer-tags-indent', width && !wrapped ? `${width + 4}px` : '0px');
   }
   function renderSkillTags(input) {
     const container = skillTagContainers.get(input);
@@ -7135,7 +7137,7 @@ function beginConversationTurn(message) {
       const hue = [...name].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 360, 0);
       return `<span class="connector-avatar connector-avatar-fallback" style="--connector-hue:${hue}" aria-hidden="true">${esc(name.replace(/连接器$/, '').slice(0, 1))}</span>`;
     }
-    return `<svg class="connector-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="12" fill="${look[0]}"/>${look[1]}</svg>`;
+    return `<svg class="connector-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect width="24" height="24" rx="6" fill="${look[0]}"/>${look[1]}</svg>`;
   }
   const expertTriggers = [...document.querySelectorAll('.chip-agent')];
   const expertSelections = new Map();
@@ -7273,7 +7275,7 @@ function beginConversationTurn(message) {
     tray.replaceChildren(...names.map(name => {
       const tag = document.createElement('span');
       tag.className = 'connector-token';
-      tag.innerHTML = `<button class="connector-token-clear" type="button" title="关闭连接器">${addIcon('mcp', 'connector-token-icon')}<svg viewBox="0 0 24 24" class="ic connector-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button><span></span>`;
+      tag.innerHTML = `<button class="connector-token-clear" type="button" title="关闭连接器">${connectorAvatar(name)}<svg viewBox="0 0 24 24" class="ic connector-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button><span></span>`;
       tag.querySelector('button').setAttribute('aria-label', `关闭连接器：${name}`);
       tag.querySelector('button').dataset.connectorName = name;
       tag.querySelector('span:last-child').textContent = name;
