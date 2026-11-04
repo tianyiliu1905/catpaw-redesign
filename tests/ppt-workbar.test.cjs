@@ -8,7 +8,7 @@ function setup(){
  const seeds=[{title:'第一页',subtitle:'概览',lines:['初始内容']},{title:'第二页',subtitle:'数据',lines:['华东 480']}];
  api.model(item,seeds);return {api,item,seeds};
 }
-test('editing tools expand independently of the file header controls and deck',()=>{
+test('toolbox opens one row of insert tools without changing the file header or deck',()=>{
  const {api,item,seeds}=setup();item.referenceSlide=1;item.pptSelection=api.current(item).elements[0].id;
  const deck=api.model(item),id=item.pptSelection;
  const collapsed=api.render(item,seeds);
@@ -20,10 +20,14 @@ test('editing tools expand independently of the file header controls and deck',(
  assert.match(collapsed,/class="ppt-workbar-group"/);
  assert.doesNotMatch(collapsed,/data-ppt-action="toggle-page-preview"/);
  assert.match(collapsed,/class="reference-ppt-layout"><aside class="ppt-page-sidebar" id="ppt-page-preview">/);
+ assert.match(collapsed,/id="ppt-page-preview"><div class="ppt-workbar ppt-workbar-left"/);
+ assert.match(collapsed,/class="reference-ppt-main"><div class="ppt-workbar ppt-workbar-right"/);
  assert.match(collapsed,/class="ppt-tools-combo" data-open="false"/);
- assert.match(collapsed,/data-ppt-action="toggle-tools" aria-expanded="false"[^>]*aria-label="编辑工具"/);
- assert.match(collapsed,/class="ppt-tools-icon"/);
+ assert.match(collapsed,/data-ppt-action="toggle-tools" aria-expanded="false"[^>]*aria-label="展开编辑工具"/);
+ assert.match(collapsed,/class="ppt-tools-icon ppt-tools-icon-closed"/);
+ assert.match(collapsed,/class="ppt-tools-icon ppt-tools-icon-open"/);
  assert.match(collapsed,/class="ppt-edit-drawer"[^>]*data-open="false"[^>]*inert/);
+ assert.doesNotMatch(collapsed,/data-ppt-section=/);
  item.pptToolsExpanded=true;
  const expanded=api.render(item,seeds);
  assert.doesNotMatch(expanded,/data-reference-crop/);
@@ -32,18 +36,17 @@ test('editing tools expand independently of the file header controls and deck',(
  assert.doesNotMatch(expanded,/data-ppt-picker="scope"|修改范围/);
  assert.match(expanded,/class="ppt-tools-combo" data-open="true"/);
  assert.doesNotMatch(expanded,/ppt-tools-chevron/);
- assert.match(expanded,/data-ppt-action="toggle-tools" aria-expanded="true"/);
+ assert.match(expanded,/data-ppt-action="toggle-tools" aria-expanded="true"[^>]*aria-label="收起编辑工具"/);
  assert.match(expanded,/class="ppt-edit-drawer"[^>]*data-open="true"/);
- assert.deepEqual([...expanded.matchAll(/data-ppt-tab="([^"]+)"/g)].map(match=>match[1]),
-  ['text','image','shape','table','chart','layout','format','design','animation']);
- assert.match(expanded,/assets\/figma-edit-toolbar\/image\.svg/);
- assert.match(expanded,/class="ppt-edit-panel" hidden/);
- assert.match(expanded,/data-ppt-tab="text" aria-selected="false"/);
- item.pptToolPanelOpen=true;
- const withCategory=api.render(item,seeds);
- assert.match(withCategory,/class="ppt-edit-panel">/);
- assert.match(withCategory,/data-ppt-tab="text" aria-selected="true"/);
- assert.match(withCategory,/data-ppt-action="edit-text"/);
+ assert.doesNotMatch(expanded,/data-ppt-section=/);
+ assert.deepEqual([...expanded.matchAll(/data-ppt-tool="([^"]+)"/g)].map(match=>match[1]),
+  ['text','image','shape','icon','local-file','link','table','chart','art-text','formula']);
+ assert.match(expanded,/data-section="insert"/);
+ assert.match(expanded,/assets\/figma-ppt-insert\/image\.svg/);
+ assert.match(expanded,/assets\/figma-ppt-insert\/icon-fill\.svg/);
+ assert.equal([...expanded.matchAll(/class="ppt-edit-tab-divider"/g)].length,3);
+ assert.doesNotMatch(expanded,/data-ppt-tab=|class="ppt-edit-panel"|插入文本框|编辑文字/);
+ assert.match(expanded,/class="ppt-edit-tabs"[^>]*role="toolbar"/);
  assert.equal(api.model(item),deck);assert.equal(item.referenceSlide,1);assert.equal(item.pptSelection,id);
 });
 test('page thumbnails remain visible even when a saved item has the old collapsed state',()=>{

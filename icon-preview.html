@@ -251,6 +251,8 @@
         ['所有任务', 'layers', '<path d="M4.1 7.3 11.1 3.4q.9-.5 1.8 0l7 3.9q1.2.7 0 1.4l-7 3.9q-.9.5-1.8 0l-7-3.9q-1.2-.7 0-1.4ZM3.8 12.5l7.3 4.1q.9.5 1.8 0l7.3-4.1M3.8 17l7.3 4.1q.9.5 1.8 0l7.3-4.1"/>', '圆角叠层归集']
       ]],
       ['对话与输入', [
+        ['对话', 'conversation', '<path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/>', '圆润气泡与左下短尾'],
+        ['添加到对话', 'add-to-conversation', '<path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/>', '沿用对话气泡 · 居中加号'],
         ['添加', 'plus', '<path d="M12 5v14M5 12h14"/>', '独立加号'],
         ['快捷功能', 'shortcuts', '<rect x="3" y="4" width="18" height="16" rx="5"/><path d="m7 9 3 3-3 3m6 0h4"/>', '斜杠菜单的命令行入口'],
         ['关闭', 'close', '<path d="M6.5 6.5 17.5 17.5m0-11-11 11"/>', '关闭或清除'],
@@ -268,6 +270,7 @@
         ['点赞', 'thumbs-up', '<path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/>', '袖口与手掌连为一体的圆润拇指向上'],
         ['点踩', 'thumbs-down', '<g transform="rotate(180 12 12)"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></g>', '与点赞同形、无断口的拇指向下'],
         ['信息', 'info', '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', '访问权限说明'],
+        ['完全访问', 'access-full', '<rect x="4" y="10" width="16" height="11" rx="3.5"/><path d="M8 10V7a4 4 0 0 1 7.7-1.5M12 14.5v2"/>', '打开的圆角挂锁 · 表示已开放访问'],
         ['安全屋', 'safe-house', '<path d="M12 3c2.5 1.8 5.2 2.6 8 2.6V12c0 4.6-2.8 7.7-8 9-5.2-1.3-8-4.4-8-9V5.6C6.8 5.6 9.5 4.8 12 3Z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>', '盾牌与勾选'],
         ['分支', 'branch', '<path d="M6 3v12M18 9a9 9 0 0 1-9 9"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/>', '仓库分支'],
         ['智能体', 'avatar', '<rect x="4.5" y="2.8" width="15" height="18.4" rx="7.5"/><path d="M4.5 10.5c2.6-.6 4.4-2 5.8-4.1 2.1 2.4 5.2 3.8 9.2 4.1M2.2 10v5M21.8 10v5"/><g fill="currentColor" stroke="none"><circle cx="9.3" cy="13.5" r="1"/><circle cx="14.7" cy="13.5" r="1"/></g>', '加宽加高的圆润刘海与双眼，耳机略超 Keyline']
@@ -301,6 +304,9 @@
         ['前进', 'forward', '<path d="m13 5 7 7-7 7M20 12H4"/>', '向右前进'],
         ['撤销', 'undo', '<path d="m8 7-4 3 4 3M4 10h10a5.5 5.5 0 1 1-1 10.9"/>', '左指回折箭头与向下回转的圆弧'],
         ['重做', 'redo', '<path d="m16 7 4 3-4 3M20 10H10a5.5 5.5 0 1 0 1 10.9"/>', '撤销图标的水平镜像'],
+        ['工具箱 · 收起', 'toolbox-closed', '<path d="M8 7.5V5.8a2.3 2.3 0 0 1 2.3-2.3h3.4A2.3 2.3 0 0 1 16 5.8v1.7"/><rect x="3" y="7.5" width="18" height="13.5" rx="2.6"/><path d="M3 13h6.5m5 0H21"/><rect x="9.5" y="11.7" width="5" height="2.8" rx=".8"/>', '带提手的收起状态；箱盖与锁扣保持简洁'],
+        ['工具箱 · 展开', 'toolbox-open', '<path d="M7.5 7.5V3.1m-1.4 0h2.8M16.3 7.5V5.4m-1.8-2.7v1.1a1.8 1.8 0 0 0 3.6 0V2.7"/><rect x="3" y="7.5" width="18" height="13.5" rx="2.6"/><path d="M3 13h6.5m5 0H21"/><rect x="9.5" y="11.7" width="5" height="2.8" rx=".8"/>', '只露出螺丝刀与扳手，沿用同一箱体与锁扣'],
+        ['页面切换', 'slide-transition', '<rect x="3" y="5" width="8" height="14" rx="2"/><rect x="15" y="5" width="6" height="14" rx="2"/><path d="M10 12h5m-2.3-2.3L15 12l-2.3 2.3"/>', '两页之间的向右箭头，表示演示文稿切换'],
         ['刷新', 'refresh', '<g transform="translate(0 -.5)"><path d="M20.5 10a9 9 0 1 0 .5 4M20.5 5.5V10H16"/></g>', '更新记录外圈镜像，右上箭头与右下断口；整体略上移']
       ]],
       ['快捷入口与设备', [
@@ -339,12 +345,14 @@
     const cards = [...gallery.querySelectorAll('.card')];
     const comparison = document.getElementById('comparison-gallery');
     const comparisonGroups = [
+      ['对话气泡', '对照共用轮廓、左下短尾与加号的居中留白', ['conversation.svg', 'add-to-conversation.svg', 'new-task.svg']],
       ['圆形轮廓', '对照外圈直径、中心点和断口', ['scheduled-task.svg', 'updated.svg', 'refresh.svg', 'info.svg', 'browser.svg', 'target.svg']],
       ['方形圆角框', '对照主体宽度、高度及圆角', ['experts-skills-connectors.svg', 'design-system.svg', 'task-list.svg', 'web-development.svg', 'panel-left.svg', 'panel-right.svg', 'panel-close.svg', 'panel-open.svg']],
       ['打开页面数量', '沿用右侧栏外框，对照 1–9 与 9+ 的数字重心与留白', ['panel-right.svg', 'open-pages-1.svg', 'open-pages-2.svg', 'open-pages-3.svg', 'open-pages-4.svg', 'open-pages-5.svg', 'open-pages-6.svg', 'open-pages-7.svg', 'open-pages-8.svg', 'open-pages-9.svg', 'open-pages-9-plus.svg']],
       ['横向长方形', '对照横向主体的宽高、四角与内边距', ['design-resources.svg', 'terminal.svg', 'project-view.svg', 'slides.svg']],
       ['文件夹轮廓', '对照顶部标签、主体高度和底边', ['folder.svg', 'open-folder.svg', 'new-folder.svg', 'organize-files.svg']],
       ['文件与纸张', '对照纸面边界、折角和叠放关系', ['file.svg', 'copy.svg', 'organize-files.svg']],
+      ['工具箱状态', '同一箱体、锁扣与线宽，对照收起和展开状态', ['toolbox-closed.svg', 'toolbox-open.svg']],
       ['箭头与折线', '对照折角方向、线长和视觉重心', ['back.svg', 'forward.svg', 'undo.svg', 'redo.svg', 'chevron-right.svg', 'chevron-down.svg', 'maximize.svg', 'minimize.svg']]
     ];
     const cardByFilename = new Map(cards.map(card => [card.dataset.filename, card]));

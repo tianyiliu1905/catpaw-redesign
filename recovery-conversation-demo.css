@@ -1,0 +1,26 @@
+.recovery-demo{color:var(--text-1);font-size:var(--type-lg);line-height:1.75}
+.recovery-status{color:var(--text-3);padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--gray-5)}
+.recovery-demo p{margin:0 0 20px}
+.recovery-retained,.recovery-tool{color:var(--text-3)}
+.recovery-retained>span{color:var(--brand-green);margin-right:8px}
+.recovery-request,.recovery-picker,.recovery-result{border:1px solid var(--gray-5);border-radius:16px;padding:20px;margin-top:20px;background:transparent}
+.recovery-request>p{color:var(--text-3);margin:8px 0 16px}
+.recovery-demo button{font:inherit;border:0;border-radius:9px;padding:8px 14px;background:var(--text-1);color:var(--main-bg);cursor:pointer}
+.recovery-demo button:hover{opacity:.8}
+.recovery-demo button:focus-visible{outline:2px solid var(--brand-green);outline-offset:3px}
+.recovery-demo .recovery-secondary{color:var(--text-3);background:transparent}
+.recovery-actions,.recovery-picker>div{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.recovery-actions{justify-content:flex-start;margin-top:16px}
+.recovery-file{padding:12px 0}.recovery-file>span{color:var(--text-3);margin-left:12px}
+.recovery-demo .recovery-file-option{display:grid;text-align:left;gap:4px;width:100%;margin-top:12px;background:var(--hover);color:var(--text-1)}
+.recovery-file-option small{font:inherit;color:var(--text-3)}
+.recovery-result>span{color:var(--text-3)}
+.recovery-result dl{margin:8px 0 0}.recovery-result dl>div{display:flex;justify-content:space-between}.recovery-result dd{margin:0;font-variant-numeric:tabular-nums}
+.recovery-tool.is-running{background:linear-gradient(100deg,var(--text-3) 30%,var(--text-1) 48%,var(--text-3) 65%);background-size:250% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;animation:recovery-sweep 2.4s linear infinite}
+@keyframes recovery-sweep{from{background-position:100% 0}to{background-position:0 0}}
+@media(prefers-reduced-motion:reduce){.recovery-tool.is-running{animation:none;background:none;color:var(--text-3)}}
+
+.recovery-history{margin:16px 0;color:var(--text-3)}
+.recovery-history summary{cursor:pointer}
+.recovery-history p{margin:10px 0}
+.recovery-result p,.recovery-result ol{margin:10px 0 0}

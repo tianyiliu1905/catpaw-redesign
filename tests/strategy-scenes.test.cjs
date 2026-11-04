@@ -47,7 +47,7 @@ test('one layout action demonstrates conversation, side-by-side and on-call stat
     ['artifact-conversation', undefined], ['artifact-side', 'ppt'],
     ['artifact-full', 'ppt'],
   ]);
-  assert.equal(scenes['3.1-2'], undefined, 'the next design action belongs to the desktop pet');
+  assert.equal(scenes['3.1-2'], undefined, 'desktop pet uses its own activation protocol');
 });
 
 test('on-call and feedback scenes use full-screen artifacts, collapsed tasks and the floating composer', async () => {
@@ -66,7 +66,7 @@ test('on-call and feedback scenes use full-screen artifacts, collapsed tasks and
     currentFileWorkspace:()=>item,renderToolFileWorkspace(){},
     setCollapsed(value){state.collapsed=value;},setWorkbenchExpanded(value){state.expanded=value;},
     toolFilePreviewBody:{querySelector:selector=>({click(){if(selector==='[data-reference-slide="4"]')item.referenceSlide=4;else state.selected++;}})},
-    toolFilePptReference:{click(){state.references.push(item.referenceSlide);}},fullscreenChatInput:input,
+    artifactSelection:{referencePptPage(){state.references.push(item.referenceSlide);}},fullscreenChatInput:input,
     Event:class {constructor(type){this.type=type;}},
   };
   vm.createContext(ctx);vm.runInContext(renderer,ctx);
@@ -75,28 +75,30 @@ test('on-call and feedback scenes use full-screen artifacts, collapsed tasks and
   ctx.showStrategyArtifact('ppt',false);
   assert.equal(state.collapsed,false);assert.equal(state.expanded,false);assert.equal(state.reserved,1,'side-by-side keeps its conversation column');
   for(const scene of ['3.2','3.2-2','3.2-3']){
-    state.references.length=0;state.inputEvents=0;
+    state.references.length=0;state.inputEvents=0;state.selected=0;
     for(const step of scenes[scene])await ctx.presentStrategyStep(step);
     assert.equal(state.collapsed,true,scene);assert.equal(state.expanded,true,scene);
-    if(scene==='3.2')assert.equal(state.selected,1);
+    if(scene==='3.2'){assert.equal(state.selected,1);assert.equal(state.references.length,0);}
     else{
-      assert.equal(scenes[scene][0].focus,'#fullscreenChat');
-      assert.equal(state.inputEvents,scenes[scene].length);
+      assert.equal(scenes[scene].at(-1).focus,'#fullscreenChat');
+      assert.equal(state.inputEvents,scene==='3.2-2'?1:2);
       assert.deepEqual(state.references,scene==='3.2-3'?[2,4]:[2]);
       assert.match(input.value,scene==='3.2-3'?/第 3 页.*第 5 页/:/区域差异/);
     }
   }
 });
 
-test('layout comparison renders three fixed scenarios side by side without advancing', async () => {
+test('layout comparison renders four scenarios including the desktop pet', async () => {
   const html = fs.readFileSync('design-strategy-slides.html', 'utf8');
   const source = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(script => script.includes('const pointSlides'));
   const canvas = {innerHTML: ''};
   vm.runInNewContext(source.split('    const pages=')[0], {document: {getElementById: () => canvas}, CatPawStrategyScenes: {scenes}});
   const slide = canvas.innerHTML.match(/<section[^>]*id="slide-3\.1"[\s\S]*?<\/section>/)[0];
-  assert.equal((slide.match(/<iframe /g) || []).length, 3);
+  assert.equal((slide.match(/<iframe /g) || []).length, 4);
+  assert.ok(!canvas.innerHTML.includes('id="slide-3.1-2"'), 'desktop pet is included in the grid, not a separate slide');
+  assert.match(slide, /data-scene="3\.1-2"[^>]*src="\.\/desktop-pet-demo\.html"/);
   assert.deepEqual([...slide.matchAll(/data-frame="(\d+)"/g)].map(match => Number(match[1])), [0, 1, 2]);
-  for (const title of ['Face-to-face', 'Side-by-side', 'On-call']) assert.ok(slide.includes(title));
+  for (const title of ['Face-to-face', 'Side-by-side', 'On-call', '桌宠触达']) assert.ok(slide.includes(title));
   for (const [frame, action] of ['artifact-conversation', 'artifact-side', 'artifact-full'].entries()) {
     const s = setup('3.1', undefined, frame);
     await s.player.activate();
@@ -145,7 +147,7 @@ test('the process slide pairs an animated three-phase schematic with one live co
   vm.runInNewContext(source.split('    const pages=')[0], {
     document: {getElementById: () => canvas}, CatPawStrategyScenes: {scenes},
   });
-  const slide = canvas.innerHTML.match(/<section class="slide phase-demo-slide"[\s\S]*?<\/section>/)[0];
+  const slide = canvas.innerHTML.match(/<section[^>]*id="slide-2\.1"[\s\S]*?<\/section>/)[0];
   assert.equal((slide.match(/<iframe /g) || []).length, 1);
   assert.ok(slide.includes('data-process-sync="true"'));
   assert.ok(!slide.includes('strategyFrame='), 'the real conversation advances rather than holding a snapshot');
@@ -156,7 +158,7 @@ test('the process slide pairs an animated three-phase schematic with one live co
   assert.equal((canvas.innerHTML.match(/id="slide-2\.1"/g) || []).length, 1);
 });
 
-test('process strategy starts with design research and maps four actions to stages and disclosure depth', () => {
+test('process strategy starts with design research and maps three actions to stages and removes the disclosure-depth page', () => {
   const html = fs.readFileSync('design-strategy-slides.html', 'utf8');
   const source = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(script => script.includes('const pointSlides'));
   const canvas = {innerHTML: ''};
@@ -169,7 +171,7 @@ test('process strategy starts with design research and maps four actions to stag
   assert.ok(research.includes('按任务阶段切换信息重点'));
   assert.doesNotMatch(research,/设计动作 2\.1\./);
   const concerns = [];
-  for (const [index, title] of ['工作前：确认意图与任务规划', '工作时：突出当前执行与阶段总结', '结束后：呈现结果、产物与待确认项', '按需查看不同深度的执行细节'].entries()) {
+  for (const [index, title] of ['工作前：确认意图与任务规划', '工作时：语义化呈现工具执行过程', '结束后：呈现文字、产物与变化'].entries()) {
     const id = `2.1-${index + 2}`;
     context.location.hash = `#${id}`;
     assert.equal(context.route(), id, 'each action hash resolves to its own page');
@@ -178,11 +180,13 @@ test('process strategy starts with design research and maps four actions to stag
     assert.ok(section.includes(title));
     concerns.push(section.match(/class="user-concern"[\s\S]*?<p>([^<]+)<\/p>/)[1]);
   }
-  assert.equal(new Set(concerns).size, 4);
+  assert.equal(new Set(concerns).size, 3);
   const catalog=canvas.innerHTML.match(/<section[^>]*id="slide-catalog"[\s\S]*?<\/section>/)[0];
   assert.ok(!catalog.includes('按任务阶段切换信息重点'),'research is not listed as a design action');
   assert.doesNotMatch(catalog,/>2\.1\.5</);
-  assert.equal(scenes['2.1-5'][0].action, 'mode-settings');
+  assert.equal(scenes['2.1-5'], undefined);
+  assert.doesNotMatch(canvas.innerHTML,/id="slide-2\.1-5"|成果可续/);
+  context.location.hash='#2.1-5';assert.equal(context.route(),'2.1');
   assert.deepEqual(scenes['2.1-2'].map(step=>step.focus),['.stage-thinking','.stage-acknowledgement','.stage-plan']);
 });
 
@@ -197,10 +201,12 @@ test('ink confirmation preserves the complete message and finishes before the pl
     const html=context.ink(message);
     assert.equal(html.replace(/<span[^>]*>/g,'').replace(/<\/span>/g,''),escape(message));
     const delays=[...html.matchAll(/--ink-delay:(\d+)ms/g)].map(match=>Number(match[1]));
-    assert.ok(delays.length>1);assert.equal(delays[0],120);
+    assert.equal(delays.length,Array.from(message).length);
+    assert.equal(delays[0],120);
+    assert.ok(delays.every((delay,index)=>index===0||delay-delays[index-1]<=52));
     const css=fs.readFileSync('styles.css','utf8');
     const planDelay=Number(css.match(/\.conversation-stage-demo\.is-entering \.stage-plan\{ animation-delay:([\d.]+)s/)[1])*1000;
-    assert.ok(Math.max(...delays)+640<planDelay);
+    assert.ok(Math.max(...delays)+340<planDelay);
   }
 });
 
@@ -344,6 +350,83 @@ test('ninth slide shows the reusable ingredients before clicking and returning t
   assert.equal(s.timers.size,0);
 });
 
+test('case detail and reuse show the same design case without leaving presentation outlines',async()=>{
+  const source=fs.readFileSync('app.js','utf8');
+  const renderer=source.slice(source.indexOf('    async function presentStrategyStep('),source.indexOf('    const player = window.CatPawStrategyScenes.createPlayer('));
+  let category=null,opened=null,blurred=0,cleared=0;
+  const designCase={kind:'visual',title:'城市美食节主视觉'};
+  const ctx={document:{querySelectorAll:()=>[]},strategyDemoActive:false,frameReady:async()=>{},currentScope:'office',
+    selectStrategyCategory:value=>category=value,
+    visibleCaseData:()=>category==='create'?[designCase]:[{kind:'dashboard'}],
+    openCaseDialog:item=>opened=item,caseDialogClose:{blur(){blurred++;}},greetingDemoCursor:null,
+    primaryPromptButtons:[{dataset:{promptCategory:'create'},click(){category='create';}}],
+    casesEl:{querySelector:()=>({click(){opened=designCase;},classList:{remove(name){assert.equal(name,'is-selected');cleared++;}}})}};
+  vm.createContext(ctx);vm.runInContext(renderer,ctx);
+  for(const id of ['1.2','1.3']){
+    assert.ok(scenes[id].every(step=>!step.focus),'these demos use the cursor without persistent green outlines');
+    if(id==='1.2'){
+      await ctx.presentStrategyStep(scenes[id].find(step=>step.action==='prompt-category-click'));
+      await ctx.presentStrategyStep(scenes[id].find(step=>step.action==='case-preview-open'));
+    }else await ctx.presentStrategyStep(scenes[id][0]);
+    assert.equal(category,'create');assert.equal(opened,designCase);
+  }
+  assert.equal(blurred,2,'automatic dialogs release the initial close-button focus ring');
+  assert.equal(cleared,1,'the real case click does not leave its thumbnail selected');
+});
+
+test('the simulated case pointer reveals the floating copy button only while its tip is over the prompt',()=>{
+  const source=fs.readFileSync('app.js','utf8');
+  const definition=source.slice(source.indexOf('    function trackCaseReuseHover('),source.indexOf('    function syncPromptDemoHover('));
+  const frames=new Map(),classes=new Set();let serial=0,position={left:20,top:20};
+  const box={getBoundingClientRect:()=>({left:100,right:300,top:100,bottom:250}),classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name),remove:name=>classes.delete(name)}};
+  const buttonClasses=new Set();
+  const primary={getBoundingClientRect:()=>({left:400,right:500,top:300,bottom:336}),classList:{toggle:(name,on)=>on?buttonClasses.add(name):buttonClasses.delete(name),remove:name=>buttonClasses.delete(name)}};
+  const ctx={promptHoverFrame:null,strategyDemoActive:true,caseDialog:{open:true,querySelector:()=>box},
+    caseDialogPrimary:primary,
+    greetingDemoCursor:{hidden:false,getBoundingClientRect:()=>position},performance:{now:()=>0},
+    requestAnimationFrame:callback=>{frames.set(++serial,callback);return serial;},cancelAnimationFrame:id=>frames.delete(id)};
+  vm.createContext(ctx);vm.runInContext(definition,ctx);
+  const next=time=>{const [id,callback]=frames.entries().next().value;frames.delete(id);callback(time);};
+  ctx.trackCaseReuseHover();next(100);assert.equal(classes.size,0);
+  position={left:150,top:130};next(200);assert.ok(classes.has('strategy-case-prompt-hover'));
+  position={left:330,top:280};next(300);assert.equal(classes.size,0);
+  position={left:430,top:310};next(400);assert.ok(buttonClasses.has('strategy-case-primary-hover'));assert.equal(classes.size,0);
+  position={left:150,top:130};next(1300);assert.ok(classes.has('strategy-case-prompt-hover'));assert.equal(frames.size,0);
+  assert.equal(buttonClasses.size,0);
+  buttonClasses.add('strategy-case-primary-hover');
+  ctx.trackCaseReuseHover();ctx.caseDialog.open=false;next(100);assert.equal(classes.size,0);assert.equal(frames.size,0);assert.equal(buttonClasses.size,0);
+  const css=fs.readFileSync('styles.css','utf8');
+  assert.match(css,/\.strategy-embed \.case-dialog-prompt-box\.strategy-case-prompt-hover \.case-dialog-prompt-copy\s*\{[^}]*opacity:1;[^}]*pointer-events:auto/);
+});
+
+test('the reuse animation presses the button then runs its real click handler to restore the editable case draft',async()=>{
+  const source=fs.readFileSync('app.js','utf8');
+  const handler=source.slice(source.indexOf("  caseDialogPrimary.addEventListener('click', () => {"),source.indexOf('  /* 点击摘要中的产物'));
+  const renderer=source.slice(source.indexOf('    async function presentStrategyStep('),source.indexOf('    const player = window.CatPawStrategyScenes.createPlayer('));
+  const buttonClasses=new Set(),cursorClasses=new Set(),arrivals=[];
+  let clickHandler,attached,tag,focused=false,closed=false,selection;
+  const cursor={hidden:false,classList:{add:name=>cursorClasses.add(name)}};
+  const ctx={strategyDemoActive:false,promptHoverFrame:null,frameReady:async()=>{},cancelAnimationFrame(){},
+    greetingDemoCursor:cursor,ensureStrategyDemoCursor:()=>cursor,
+    document:{querySelectorAll:()=>[],documentElement:{classList:{add:name=>arrivals.push(name)}}},
+    caseDialog:{querySelector:()=>({classList:{remove(){}}})},
+    caseDialogPrimary:{classList:{add:name=>buttonClasses.add(name),remove:(...names)=>names.forEach(name=>buttonClasses.delete(name))},
+      addEventListener(type,fn){assert.equal(type,'click');clickHandler=fn;},click(){assert.ok(buttonClasses.has('strategy-case-primary-pressed'));clickHandler();}},
+    activeCase:{title:'城市美食节主视觉',prompt:'为城市美食节设计活动主视觉。'},caseDialogSkill:{textContent:'visual-design'},installedAddItems:{skill:[]},
+    setPromptGuide(){},clearSkillTags(){},addSkillTag(input,skill){tag=skill;},attachCaseArtifact(item){attached=item;},
+    prompt:{value:'',dispatchEvent(event){assert.equal(event.type,'input');},focus(){focused=true;},setSelectionRange(start,end){selection=[start,end];}},
+    closeCaseDialog(){closed=true;},requestAnimationFrame:callback=>callback(),Event:class{constructor(type){this.type=type;}},
+  };
+  vm.createContext(ctx);vm.runInContext(handler,ctx);vm.runInContext(renderer,ctx);
+  await ctx.presentStrategyStep({action:'case-reuse-press'});
+  assert.ok(buttonClasses.has('strategy-case-primary-pressed'));assert.ok(cursorClasses.has('is-clicking'));assert.equal(closed,false);
+  await ctx.presentStrategyStep({action:'reuse'});
+  assert.equal(ctx.prompt.value,ctx.activeCase.prompt);assert.equal(tag,'visual-design');assert.equal(attached,ctx.activeCase);
+  assert.equal(focused,true);assert.equal(closed,true);assert.deepEqual(selection,[ctx.prompt.value.length,ctx.prompt.value.length]);
+  assert.equal(buttonClasses.size,0);assert.equal(cursor.hidden,true);assert.ok(arrivals.includes('strategy-reuse-arrival'));
+  assert.match(fs.readFileSync('styles.css','utf8'),/\.strategy-embed \.case-dialog-primary\.strategy-case-primary-pressed\{ transform:scale\(\.97\); \}/);
+});
+
 test('the presentation pointer moves into the modal top layer and returns to the page', () => {
   const source = fs.readFileSync('app.js','utf8');
   const definition = source.slice(source.indexOf('    function ensureStrategyDemoCursor('),source.indexOf('    function positionCaseReuseCursor('));
@@ -370,7 +453,8 @@ test('every scene points to current design research or an action and a real inte
       assert.ok(source.includes(`case '${step.action}':`), step.action);
       if (index < steps.length - 1) {
         const reuseMinimum = { case:900, 'case-reuse-ready':350, 'case-reuse-pointer':1200, 'case-reuse-press':450, reuse:800 };
-        const minimum = id === '1.3' ? reuseMinimum[step.action] : step.action.startsWith('greeting-') || step.action.startsWith('prompt-') || step.action.startsWith('supplier-') || step.action.startsWith('process') ? 1000 : 3000;
+        const previewMinimum = {'case-preview-pointer':1200,'case-preview-press':450,'intervention-pointer':1200,'intervention-draft-pointer':1200,'intervention-guide-pointer':1200,'intervention-pause':id === '2.2-2' ? 1500 : 6000,'recovery-pointer':1200};
+        const minimum = previewMinimum[step.action] ?? (id === '1.3' ? reuseMinimum[step.action] : step.action.startsWith('greeting-') || step.action.startsWith('prompt-') || step.action.startsWith('supplier-') || step.action.startsWith('process') ? 1000 : 3000);
         assert.ok(Number.isFinite(minimum) && step.hold >= minimum, `${id}/${step.action} must allow its motion to finish`);
       }
     }
@@ -449,9 +533,13 @@ test('case recommendations appear after a pointer click instead of opening in a 
   await s.next();
   await s.next();
   assert.equal(s.events.at(-1).action, 'prompt-category-click');
-  assert.equal(s.events.at(-1).category, 'analyze');
+  assert.equal(s.events.at(-1).category, 'create');
   await s.next();
-  assert.equal(s.events.at(-1).action, 'prompt-hover-end');
+  assert.equal(s.events.at(-1).action, 'case-preview-pointer');
+  await s.next();
+  assert.equal(s.events.at(-1).action, 'case-preview-press');
+  await s.next();
+  assert.equal(s.events.at(-1).action, 'case-preview-open');
   assert.equal(s.timers.size, 0);
   const source=fs.readFileSync('app.js','utf8');
   const handler=source.split("case 'prompt-category-click':")[1].split("case 'prompt-hover-end':")[0];
@@ -476,6 +564,7 @@ test('schematic phase and activity follow the actual process frame instead of a 
     assert.equal(statusLabel.textContent,'全局响应状态');
     assert.equal(statusLabel['aria-label'],`全局响应状态：${status}`);
     assert.equal(diagram.dataset.phase,phase);
+    assert.equal(diagram.dataset.initialStep,phase==='before'&&status==='正在制定计划'?'planning':'intent');
     assert.equal(diagram.dataset.transition||'',phase==='working'?'before-working':'');
     columns.forEach(column=>assert.equal(column['aria-hidden'],String(column.dataset.phase!==phase)));
     assert.deepEqual(columns.filter(column=>column.classes.has('is-current')).map(column=>column.dataset.phase),[phase]);
@@ -485,7 +574,9 @@ test('schematic phase and activity follow the actual process frame instead of a 
   }
   assert.equal(api.processPhaseForFrame(11),null);
   assert.equal(api.processPhaseForFrame('1'),null);
-  assert.equal(caption.textContent,'收起过程信息，直接呈现结果与产物。');
+  assert.equal(caption.textContent,'收起过程信息，直接呈现文字、产物与变化，修改可撤回。');
+  vm.runInContext('syncProcessDiagram(page,0)',ctx);
+  assert.equal(diagram.dataset.initialStep,'intent','returning to the initial phase hides planning until the live status advances');
   assert.ok(html.includes("frame.dataset.processSync==='true'&&page.classList.contains('active')&&!document.hidden"));
 });
 
@@ -601,7 +692,7 @@ test('spotlight path keeps an actual rounded cutout, clamps it and scales to the
 test('only the four affected embedded scenes suppress the composer blur layer', () => {
   const app=fs.readFileSync('app.js','utf8'),css=fs.readFileSync('styles.css','utf8');
   const addClass=app.match(/if \(usesSpotlight \|\| strategyScene === '2.1-5'\) document.documentElement.classList.add\('strategy-flat-composer'\);/)[0];
-  for(const scene of ['2.1','2.1-2','2.1-3','2.1-4','2.1-5','1.3','2.3-2']){
+  for(const scene of ['2.1','2.1-2','2.1-3','2.1-4','2.1-5','1.3','2.4-2']){
     const classes=new Set();
     vm.runInNewContext(addClass,{strategyScene:scene,usesSpotlight:['2.1-2','2.1-3','2.1-4'].includes(scene),document:{documentElement:{classList:{add:value=>classes.add(value)}}}});
     assert.equal(classes.has('strategy-flat-composer'),['2.1-2','2.1-3','2.1-4','2.1-5'].includes(scene));
@@ -753,7 +844,7 @@ test('every slide shows three scene progress segments which fill in order across
   assert.equal((canvas.innerHTML.match(/class="deck-progress"/g)||[]).length,sections.length);
   for(const section of sections){
     assert.ok(section.includes('role="progressbar"'));
-    for(const label of ['对话前','对话','修改中'])assert.ok(section.includes(`<span>${label}</span>`));
+    for(const label of ['发起任务','推进任务','协作迭代'])assert.ok(section.includes(`<span>${label}</span>`));
   }
   assert.equal(ctx.deckProgressData(0).phase,-1);assert.equal(ctx.deckProgressData(0).value,0);
   let lastValue=0;
@@ -801,21 +892,28 @@ test('visual replies have one scene analysis followed by exactly two numbered de
     const end=canvas.innerHTML.indexOf('<section class="slide ',start);
     return canvas.innerHTML.slice(start,end<0?undefined:end);
   };
-  const analysis=sectionFor('2.3');
+  assert.ok(!canvas.innerHTML.includes('协作可续'));
+  assert.ok(sectionFor('2.3-analysis').includes('异常可恢复'));
+  for(const [id,number] of [['2.3',1],['2.3-2',2],['2.3-3',3]]){
+    const recovery=sectionFor(id);
+    assert.ok(recovery.includes(`设计动作 2.3.${number}`));
+    assert.ok(recovery.includes(`data-scene="${id}"`));
+  }
+  const analysis=sectionFor('2.4');
   assert.ok(analysis.includes('场景分析'));
   assert.ok(analysis.includes('按下一步任务判断回复形式'));
-  assert.doesNotMatch(analysis,/设计动作 2\.3\./);
+  assert.doesNotMatch(analysis,/设计动作 2\.4\./);
   for(const label of ['短回复','结论与指标摘要','同维度对比','趋势与分布图','视觉选项','结构化确认','可操作清单']) assert.ok(analysis.includes(label),label);
   const concerns=[];
   const titles=['提供适配数据结构的表格样式','用选择与确认降低表达成本'];
   for(const [index,title] of titles.entries()){
-    const id=`2.3-${index+2}`;
+    const id=`2.4-${index+2}`;
     context.location.hash=`#${id}`;
     assert.equal(context.route(),id);
     const section=sectionFor(id);
-    assert.ok(section.includes(`设计动作 2.3.${index+1}`));
+    assert.ok(section.includes(`设计动作 2.4.${index+1}`));
     assert.ok(section.includes(title));
-    assert.ok(section.includes('原型验证'));
+    assert.ok(!section.includes('原型验证'));
     concerns.push(section.match(/class="user-concern"[\s\S]*?<p>([^<]+)<\/p>/)[1]);
     if(index)assert.ok(section.includes(`data-scene="${id}"`),'input controls use the real supplier conversation');
     else {
@@ -828,28 +926,28 @@ test('visual replies have one scene analysis followed by exactly two numbered de
   const catalog=canvas.innerHTML.match(/<section[^>]*id="slide-catalog"[\s\S]*?<\/section>/)[0];
   for(const title of titles)assert.ok(catalog.includes(title));
   assert.ok(!catalog.includes('按下一步任务判断回复形式'),'analysis does not count as an action in the catalog');
-  assert.doesNotMatch(catalog,/>2\.3\.[34]</);
-  context.location.hash='#2.3-4';assert.equal(context.route(),'2.3-3','old iteration links continue to the merged action');
-  assert.ok(!canvas.innerHTML.includes('id="slide-2.3-4"'));
+  assert.doesNotMatch(catalog,/>2\.4\.[34]</);
+  context.location.hash='#2.4-4';assert.equal(context.route(),'2.4-3','old iteration links continue to the merged action');
+  assert.ok(!canvas.innerHTML.includes('id="slide-2.4-4"'));
   assert.doesNotMatch(canvas.innerHTML,/具体生成什么界面|可视化回复 \/ 设计方向待探索/);
 });
 
 test('the second visual reply action continues from choosing and confirming into iterative replies',async()=>{
-  const iteration=setup('2.3-3');
+  const iteration=setup('2.4-3');
   await iteration.player.activate();
   while(iteration.timers.size)await iteration.next();
   const events=iteration.events.filter(item=>item.action).map(item=>item.action);
   assert.deepEqual(events.slice(0,4),['supplier-start','supplier-confirm','supplier-pick','supplier-follow-up']);
   assert.ok(events.indexOf('supplier-pick')<events.indexOf('supplier-generate'));
   assert.deepEqual(events.slice(-3),['supplier-generate','supplier-note','supplier-update']);
-  const interrupted=setup('2.3-3');
+  const interrupted=setup('2.4-3');
   await interrupted.player.activate();
   interrupted.player.deactivate();
   assert.equal(interrupted.timers.size,0);
   assert.equal(interrupted.events.some(item=>item.action==='supplier-generate'),false);
 });
 
-test('larger full-window previews preserve exterior margins and keep all app controls visible',()=>{
+test('full-window previews fill every edge while retaining the minimum native canvas',()=>{
   const html=fs.readFileSync('design-strategy-slides.html','utf8');
   const definition=html.slice(html.indexOf('    function fitDemo(page){'),html.indexOf('    function clearProcessToolTransfer('));
   const ctx={};vm.runInNewContext(definition+';globalThis.fit=fitDemo;',ctx);
@@ -859,16 +957,34 @@ test('larger full-window previews preserve exterior margins and keep all app con
     const scale=Number(frame.style.transform.match(/scale\(([^)]+)\)/)[1]);
     const left=parseFloat(frame.style.left),top=parseFloat(frame.style.top);
     assert.equal(scale,Math.min(width/1200,height/800));
-    assert.ok(left>=0&&top>=0,'the complete Demo and its exterior wallpaper remain in view');
-    assert.ok(left+24*scale>=24*scale&&width-(left+1176*scale)>=24*scale-1e-9,'neither side margin is cropped');
-    assert.ok(left+24*scale>=0&&left+1176*scale<=width,'left and right window edges stay visible');
-    assert.ok(top+24*scale>=0&&top+776*scale<=height,'top and bottom window edges stay visible');
+    assert.equal(left,0);assert.equal(top,0);
+    assert.ok(Math.abs(parseFloat(frame.style.width)*scale-width)<1e-9);
+    assert.ok(Math.abs(parseFloat(frame.style.height)*scale-height)<1e-9);
+    assert.ok(parseFloat(frame.style.width)>=1200-1e-9);
+    assert.ok(parseFloat(frame.style.height)>=800-1e-9);
+
   }
   const compact={style:{}};
   ctx.fit({querySelectorAll:()=>[{clientWidth:584,clientHeight:374,dataset:{demoWidth:'660',demoHeight:'500'},querySelector:()=>compact}]});
   assert.equal(compact.style.transform,'scale(0.748)');
   assert.ok(parseFloat(compact.style.left)>=0);
   assert.equal(parseFloat(compact.style.top),0,'the compact process view has no exterior margin to crop');
+});
+
+test('greeting close-ups cover their viewport without exposing top or bottom wallpaper bands',()=>{
+  const html=fs.readFileSync('design-strategy-slides.html','utf8');
+  const definition=html.slice(html.indexOf('    function fitDemo(page){'),html.indexOf('    function clearProcessToolTransfer('));
+  const ctx={};vm.runInNewContext(definition+';globalThis.fit=fitDemo;',ctx);
+  for(const scene of ['1.3-2','1.3-3'])for(const [width,height] of [[860,584],[860,560],[397,300]]){
+    const frame={style:{},dataset:{scene}};
+    ctx.fit({querySelectorAll:()=>[{clientWidth:width,clientHeight:height,dataset:{},querySelector:()=>frame}]});
+    const scale=Number(frame.style.transform.match(/scale\(([^)]+)\)/)[1]);
+    const left=parseFloat(frame.style.left),top=parseFloat(frame.style.top);
+    assert.ok(left<=0&&top<=0);
+    assert.ok(left+1200*scale>=width-1e-9&&top+800*scale>=height-1e-9,'the embedded Demo covers every edge');
+  }
+  const css=fs.readFileSync('styles.css','utf8');
+  assert.match(css,/\.strategy-embed\.strategy-greeting-zoom \.window\{transform:scale\(2\)/);
 });
 
 test('the three stage-specific process designs stay in their own phase and reuse the same output',async()=>{
@@ -894,4 +1010,89 @@ test('the three stage-specific process designs stay in their own phase and reuse
   assert.ok(output.includes('class="stage-output"'));
   assert.ok(output.includes('缺失时间戳与责任归属仍待人工核实。'));
   assert.ok(output.includes('门店履约异常明细.xlsx'));
+});
+
+function stagePauseHarness(frame=1){
+  const source=fs.readFileSync('app.js','utf8'),s=stageRenderer();
+  let now=100000,serial=0,currentPanel;const timers=new Map(),intervals=new Map(),histories=[],sent=[],composer=[];
+  function makePanel(dataset={startedAt:'100000',stageFrame:String(frame)}){
+    const classes=new Set(),label={textContent:''},elapsed={textContent:''},acknowledgement={textContent:''},thinking={dataset:{}},control={innerHTML:'',setAttribute(name,value){this[name]=value;},remove(){this.removed=true;}};
+    const planBody={inert:false},planToggle={setAttribute(name,value){this[name]=value;}},plan={dataset:{collapsed:'true'},querySelector:selector=>selector==='.stage-plan-body'?planBody:planToggle};
+    let html='';
+    const panel={dataset:{...dataset},isConnected:true,classes,label,elapsed,control,plan,removedAttributes:[],
+      classList:{contains:name=>classes.has(name),toggle:(name,on)=>on?classes.add(name):classes.delete(name)},
+      get className(){return [...classes].join(' ')},set className(value){classes.clear();value.split(' ').forEach(name=>classes.add(name));if(value==='conversation-stage-history'){histories.push(panel);currentPanel=null;}},
+      get innerHTML(){return html},set innerHTML(value){html=value;label.textContent=value.match(/class="stage-global-label"[^>]*>([^<]+)/)?.[1]||'';},
+      querySelector:selector=>({'.stage-global-label':label,'.stage-elapsed':elapsed,'.stage-acknowledgement p':acknowledgement,'.stage-thinking':thinking,'[data-stage-pause]':control,'.stage-plan':plan})[selector]||null,
+      querySelectorAll:selector=>[{removeAttribute:name=>panel.removedAttributes.push([selector,name])}],
+      cloneNode(){const copy=makePanel(panel.dataset);copy.innerHTML=html;return copy;},
+      replaceWith(history){panel.isConnected=false;histories.push(history);currentPanel=null;},
+    };
+    panel.innerHTML=s.render(Number(dataset.stageFrame));return panel;
+  }
+  currentPanel=makePanel();const panel=currentPanel;
+  const thread={innerHTML:'thread',querySelector:selector=>selector==='.conversation-stage-demo'?currentPanel:
+    selector==='[data-stage-resume-target]'?{replaceWith(value){currentPanel=value;value.isConnected=true;}}:null,
+    insertAdjacentHTML(position,html){sent.push(html);currentPanel=makePanel({startedAt:String(now),stageFrame:'0'});}};
+  const controls={hidden:false},advance={disabled:false};
+  Object.assign(s,{Date:class extends Date{constructor(){super(now)}static now(){return now}},activeConversationTask:s.conversationTask,conversationThread:thread,conversationPage:{hidden:false},
+    conversationScroll:{scrollHeight:1000,scrollTop:0,clientHeight:300},conversationThreads:new Map(),strategyScene:null,strategyDemoActive:true,
+    reducedMotion:{matches:true},document:{getElementById:id=>id==='stageDemoControls'?controls:advance},
+    setTimeout:(callback,duration)=>{timers.set(++serial,{callback,duration});return serial},clearTimeout:id=>timers.delete(id),
+    setInterval:callback=>{intervals.set(++serial,callback);return serial},clearInterval:id=>intervals.delete(id),
+    syncInterventionComposer:()=>composer.push(Boolean(currentPanel?.dataset.pausedAt)),requestAnimationFrame:callback=>callback(),
+    renderConversationTurnTime:()=>'<time>新一轮</time>',renderUserMessage:text=>`<div class="user">${s.esc(text)}</div>`,
+    moveConversationProgressToLatestTurn(){},renderConversationTurnNav(){}});
+  vm.runInContext(source.slice(source.indexOf('  function renderConversationStage(entering'),source.indexOf("  stageDemoAdvance.addEventListener('click'")),s);
+  return {s,panel,get currentPanel(){return currentPanel;},timers,intervals,histories,sent,composer,advance,setClock:value=>now=value,
+    runNext(){const [id,timer]=timers.entries().next().value;timers.delete(id);now+=timer.duration;timer.callback();}};
+}
+
+test('first conversation pauses time and stage advancement, then resumes the remaining wait',()=>{
+  const h=stagePauseHarness(),{s,panel}=h;
+  s.scheduleStageAutoAdvance(panel);const stale=[...h.timers.values()][0].callback;
+  h.setClock(102000);assert.equal(s.setConversationStagePaused(panel,true),true);
+  assert.equal(panel.dataset.autoRemaining,'3000');assert.equal(panel.label.textContent,'已暂停');assert.equal(panel.elapsed.textContent,'2秒');
+  assert.equal(h.timers.size,0);assert.equal(h.intervals.size,0);assert.equal(h.advance.disabled,true);assert.ok(panel.classes.has('is-paused'));
+  h.setClock(130000);stale();s.advanceConversationStage(panel,2,true);s.updateStageClock(panel);
+  assert.equal(panel.dataset.stageFrame,'1');assert.equal(panel.elapsed.textContent,'2秒');
+  // Restoring the cached HTML must restore the paused label and continue button, too.
+  panel.label.textContent='读取中';s.syncStageDemoControls();assert.equal(panel.label.textContent,'已暂停');
+  assert.equal(s.setConversationStagePaused(panel,false),true);assert.equal(panel.elapsed.textContent,'2秒');assert.equal(panel.dataset.pausedDuration,'28000');
+  assert.equal([...h.timers.values()][0].duration,3000);assert.ok(!panel.classes.has('is-paused'));assert.equal(h.advance.disabled,false);
+  stale();assert.equal(panel.dataset.stageFrame,'1','a cancelled pre-pause callback cannot skip the remaining wait');
+  h.runNext();assert.equal(panel.dataset.stageFrame,'2');assert.equal(panel.elapsed.textContent,'5秒');
+  s.updateConversationStage(panel,s.frames.length-1);assert.equal(s.setConversationStagePaused(panel,true),false);
+  s.updateConversationStage(panel,0);assert.equal(panel.dataset.pausedDuration,undefined);assert.equal(panel.elapsed.textContent,'0秒');
+});
+
+test('pausing the plan-collapse transition preserves its target without advancing while paused',()=>{
+  const h=stagePauseHarness(0),{s,panel}=h;s.reducedMotion.matches=false;
+  s.advanceConversationStage(panel,1);assert.equal(panel.dataset.pendingStageFrame,'1');
+  const stale=[...h.timers.values()][0].callback;h.setClock(100100);s.setConversationStagePaused(panel,true);
+  stale();assert.equal(panel.dataset.stageFrame,'0');assert.equal(h.timers.size,0);
+  h.setClock(110000);s.setConversationStagePaused(panel,false);assert.equal(panel.dataset.stageFrame,'1');
+  stale();assert.equal(panel.dataset.stageFrame,'1');assert.equal(panel.dataset.pendingStageFrame,undefined);
+});
+
+test('first conversation sends paused changes as a fresh thinking round and keeps the paused stage as history',()=>{
+  const h=stagePauseHarness(),{s,panel}=h;s.scheduleStageAutoAdvance(panel);h.setClock(102000);s.setConversationStagePaused(panel,true);
+  const previous=panel.innerHTML;h.setClock(110000);
+  assert.equal(s.resumeConversationStageWithMessage({text:'先只看 <华东>',rawText:'先只看 <华东>',attachments:[],references:[]}),true);
+  assert.equal(h.histories.length,1);assert.equal(h.histories[0],panel);assert.equal(h.histories[0].className,'conversation-stage-history');assert.equal(h.histories[0].innerHTML,previous);
+  assert.equal(h.histories[0].label.textContent,'已调整');
+  assert.equal(h.histories[0].removedAttributes.length,2);assert.match(h.sent[0],/先只看 &lt;华东&gt;/);assert.ok(!h.sent[0].includes('先只看 <华东>'));
+  assert.equal(panel.dataset.stageFrame,'1');assert.equal(panel.elapsed.textContent,'2秒');
+  assert.equal(h.currentPanel.dataset.stageFrame,'0');assert.equal(h.currentPanel.elapsed.textContent,'0秒');assert.equal(h.currentPanel.label.textContent,'思考中');
+  assert.equal(h.composer.at(-1),false);assert.equal(s.resumeConversationStageWithMessage({text:'没有暂停'}),false);
+});
+
+test('clicking continue starts a new internal round with no visible user message or turn timestamp',()=>{
+  const h=stagePauseHarness(),{s,panel}=h;s.scheduleStageAutoAdvance(panel);h.setClock(102000);s.setConversationStagePaused(panel,true);
+  h.setClock(110000);assert.equal(s.resumeConversationStageWithMessage(),true);
+  assert.doesNotMatch(h.sent[0],/class="user"|<time>/);assert.match(h.sent[0],/assistant-message/);assert.equal(panel.label.textContent,'已暂停');assert.equal(panel.elapsed.textContent,'2秒');
+  const next=h.currentPanel;assert.notEqual(next,panel);assert.equal(next.dataset.startedAt,'110000');assert.equal(next.dataset.stageFrame,'0');
+  assert.equal(next.label.textContent,'思考中');assert.equal(next.elapsed.textContent,'0秒');
+  h.setClock(112500);s.updateStageClock(next);assert.equal(next.label.textContent,'正在制定计划');assert.equal(next.elapsed.textContent,'2秒');
+  assert.equal(panel.elapsed.textContent,'2秒','the paused round retains its own final elapsed time');
 });

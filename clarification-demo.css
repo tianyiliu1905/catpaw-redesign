@@ -1,0 +1,54 @@
+.conversation-composer-wrap.has-clarification #conversationComposer{display:none}
+.clarify-card{background:var(--main-bg);border:.6px solid #e3e8f2;border-radius:20px;box-shadow:0 2px 8px #2022230d;padding:12px;display:flex;flex-direction:column;gap:4px;color:var(--text-1);font-size:14px;line-height:20px}
+.clarify-card header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 8px}
+.clarify-card header strong{font-size:15px;font-weight:500;line-height:26px}
+.clarify-card nav{display:flex;align-items:center;gap:4px;flex-shrink:0;color:var(--text-3);font-size:12px;line-height:18px}
+.clarify-card button{font:inherit;color:inherit;cursor:pointer;background:transparent;border:0}
+.clarify-card button:disabled{cursor:default;opacity:.4}
+.clarify-card nav button{display:grid;place-items:center;padding:4px;width:24px;height:28px}
+.clarify-icon{display:block;flex:none}
+.clarify-icon-previous{transform:rotate(-90deg) scaleY(-1)}
+.clarify-icon-next{transform:rotate(-90deg)}
+.clarify-options{display:flex;flex-direction:column;gap:4px}
+.clarify-card .clarify-option{display:flex;align-items:center;text-align:left;gap:8px;width:100%;padding:8px;border-radius:8px;font-weight:500;line-height:20px}
+.clarify-option:hover{background:var(--hover)}
+.clarify-option.is-selected{background:#ecf7ef}
+.clarify-number{display:flex;align-items:center;justify-content:center;flex:none;width:24px;height:24px;border:1px solid var(--gray-5);border-radius:50%;background:var(--hover);font-size:12px;font-weight:400;line-height:18px}
+.clarify-option.is-selected .clarify-number{background:#4bcc7a;border-color:#4bcc7a;color:#f9f9f9}
+.clarify-other{display:flex;align-items:center;gap:8px;padding:8px}
+.clarify-other input{width:100%;min-width:0;border:0;background:transparent;color:var(--text-1);font:inherit;line-height:20px;outline:none}
+.clarify-other input::placeholder{color:#a6a6a6}
+.clarify-other:focus-within{outline:1px solid var(--gray-5);border-radius:8px}
+.clarify-card footer{display:flex;justify-content:flex-end}
+.clarify-card footer button{border:1px solid var(--gray-5);border-radius:8px;min-width:60px;padding:4px 8px}
+.clarify-card button:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px}
+.clarify-status{color:var(--text-3)}
+.clarify-answer-summary{margin:20px 0}.clarify-answer-summary>div{display:flex;gap:20px}.clarify-answer-summary dt{color:var(--text-3);width:80px}.clarify-answer-summary dd{margin:0}
+.recovery-demo .clarify-reopen{background:var(--hover);color:var(--text-1)}
+[data-theme="dark"] .clarify-card{border-color:var(--gray-5)}
+[data-theme="dark"] .clarify-option.is-selected{background:#183b26}
+[data-theme="dark"] .clarify-icon{filter:invert(.7)}
+.clarify-field{padding:8px;display:grid;gap:10px}
+.clarify-field textarea,.clarify-range input{font:inherit;color:var(--text-1);background:transparent;border:0;min-width:0;outline:none}
+.clarify-field textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:90px;max-height:160px;border:1px solid var(--gray-5);border-radius:10px;padding:12px;line-height:1.6}
+.clarify-field textarea::placeholder,.clarify-range input::placeholder{color:var(--text-3)}
+.clarify-hint{font-size:12px;line-height:1.5;color:var(--text-3)}
+.clarify-range{display:flex;align-items:center;gap:16px}
+.clarify-range label{flex:1;min-width:0;display:grid;gap:8px}
+.clarify-range label>span{color:var(--text-2)}
+.clarify-range label>div{display:flex;align-items:center;gap:8px;border:1px solid var(--gray-5);border-radius:10px;padding:12px}
+.clarify-range input{width:100%}
+.clarify-range label>div:focus-within,.clarify-field textarea:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px}
+.clarify-card footer{align-items:center;justify-content:space-between;gap:12px;padding:8px}
+.clarify-card footer>div{display:flex;gap:8px}
+.clarify-card footer .clarify-primary{background:var(--text-1);color:var(--main-bg);border-color:transparent;padding:6px 12px}
+.clarify-card .clarify-answer-summary{margin:8px;padding:0}
+.clarify-card .clarify-answer-summary>div{padding:12px 0;align-items:baseline;border-bottom:1px solid var(--gray-5);gap:12px}
+.clarify-answer-summary dt{flex-shrink:0}.clarify-answer-summary dd{flex:1;overflow-wrap:anywhere}
+.clarify-card .clarify-answer-summary button{color:var(--text-3);flex-shrink:0}
+.clarify-confirm-note{margin:4px 8px 12px}
+/* Slide demo: keep selected fills without focus rings around the controls. */
+.strategy-embed .clarify-card button:focus-visible,
+.strategy-embed .clarify-other:focus-within,
+.strategy-embed .clarify-range label>div:focus-within,
+.strategy-embed .clarify-field textarea:focus-visible{outline:none}

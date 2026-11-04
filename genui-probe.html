@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenUI 探针 · 活动收支测算</title>
+<style>
+  :root{
+    --bg:#f6f6f4;--card:#fff;--ink:#17181a;--muted:#6b7076;--line:#e6e6e2;
+    --accent:#1f6f5c;--accent-soft:#e8f2ee;--warn:#b4443a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    padding:24px;display:flex;justify-content:center}
+  .widget{width:100%;max-width:560px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -18px rgba(0,0,0,.35)}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+  h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.01em}
+  .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+  .sub{margin:0 0 16px;font-size:12px;color:var(--muted)}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+  .metric{background:#fbfbfa;padding:10px 12px}
+  .metric dt{font-size:11px;color:var(--muted);margin:0 0 2px}
+  .metric dd{margin:0;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .metric dd.neg{color:var(--warn)}
+  .field{margin-bottom:14px}
+  .field-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  label{font-size:12.5px;color:#33373c}
+  output{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;display:block}
+  input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;
+    background:linear-gradient(to right,var(--accent) var(--fill,50%),#e4e6e2 var(--fill,50%))}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;
+    border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:grab}
+  input[type=range]:focus{outline:none}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:5px;border-radius:999px}
+  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--accent-soft)}
+  .chart{margin-top:4px;border-top:1px solid var(--line);padding-top:14px}
+  .chart-head{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--muted);margin-bottom:6px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .note{margin-top:12px;font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
+  .badge{display:inline-block;margin-top:10px;font-size:11.5px;padding:3px 9px;border-radius:6px;
+    background:var(--accent-soft);color:var(--accent);font-weight:500}
+  .badge.warn{background:#fbeeec;color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="widget" role="group" aria-labelledby="wt">
+  <header>
+    <h1 id="wt">活动收支测算</h1>
+    <span class="tag">本地交互 · 不回传对话</span>
+  </header>
+  <p class="sub">固定成本 ¥12,000,每位参与者成本 ¥60,容量上限 200 人。</p>
+
+  <dl class="metrics">
+    <div class="metric"><dt>门票收入</dt><dd id="m-rev">—</dd></div>
+    <div class="metric"><dt>总成本</dt><dd id="m-cost">—</dd></div>
+    <div class="metric"><dt>利润</dt><dd id="m-profit">—</dd></div>
+    <div class="metric"><dt>保本人数</dt><dd id="m-be">—</dd></div>
+  </dl>
+
+  <div class="field">
+    <div class="field-top"><label for="price">票价</label><output id="price-out" for="price"></output></div>
+    <input type="range" id="price" min="99" max="199" step="1" value="150"
+           aria-describedby="price-hint">
+    <span id="price-hint" hidden>票价范围 99 至 199 元</span>
+  </div>
+
+  <div class="field">
+    <div class="field-top"><label for="att">到场人数</label><output id="att-out" for="att"></output></div>
+    <input type="range" id="att" min="80" max="200" step="1" value="140"
+           aria-describedby="att-hint">
+    <span id="att-hint" hidden>到场人数范围 80 至 200 人</span>
+  </div>
+
+  <div class="chart">
+    <div class="chart-head">
+      <span>利润随票价变化(当前人数)</span>
+      <span id="chart-peak">—</span>
+    </div>
+    <svg id="curve" viewBox="0 0 520 150" role="img" aria-labelledby="curve-t">
+      <title id="curve-t">利润随票价变化的曲线</title>
+      <g id="grid"></g>
+      <path id="line" fill="none" stroke="#1f6f5c" stroke-width="2" stroke-linejoin="round"></path>
+      <line id="zero" stroke="#c9ccc8" stroke-width="1" stroke-dasharray="3 3"></line>
+      <circle id="dot" r="4.5" fill="#fff" stroke="#1f6f5c" stroke-width="2"></circle>
+      <text id="lbl" font-size="10" fill="#4a4f54" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round"></text>
+    </svg>
+    <div id="badge" class="badge" role="status" aria-live="polite"></div>
+  </div>
+
+  <p class="note"><span aria-hidden="true">↔</span><span>拖动滑杆即时重算;预算与成本为虚构样例,仅用于演示控件状态。</span></p>
+</div>
+
+<script>
+(() => {
+  const FIXED = 12000, PER_HEAD = 60;
+  const $ = id => document.getElementById(id);
+  const price = $('price'), att = $('att');
+
+  const fmt = n => '¥' + Math.round(n).toLocaleString('zh-CN');
+  const money = (n, signed) => (n < 0 ? '−' : (signed && n > 0 ? '+' : '')) + fmt(Math.abs(n));
+
+  const P = {l: 44, r: 12, t: 12, b: 22}, W = 520, H = 150;
+
+  function profit(p, a) { return p * a - (FIXED + PER_HEAD * a); }
+  // 给定票价,需要多少人到场才保本
+  function breakeven(p) { return p > PER_HEAD ? Math.ceil(FIXED / (p - PER_HEAD)) : Infinity; }
+
+  function draw(a, p) {
+    const x0 = P.l, x1 = W - P.r, y0 = P.t, y1 = H - P.b;
+    const pMin = 99, pMax = 199;
+    const vals = [];
+    for (let v = pMin; v <= pMax; v++) vals.push(profit(v, a));
+    const lo = Math.min(...vals, 0), hi = Math.max(...vals, 0);
+    const pad = Math.max(1, (hi - lo) * 0.12);
+    const dLo = lo - pad, dHi = hi + pad;
+    const sx = v => x0 + (v - pMin) / (pMax - pMin) * (x1 - x0);
+    const sy = v => y1 - (v - dLo) / (dHi - dLo) * (y1 - y0);
+
+    const pts = vals.map((v, i) => `${sx(pMin + i).toFixed(1)},${sy(v).toFixed(1)}`);
+    $('line').setAttribute('d', 'M' + pts.join('L'));
+
+    $('zero').setAttribute('x1', x0); $('zero').setAttribute('x2', x1);
+    $('zero').setAttribute('y1', sy(0)); $('zero').setAttribute('y2', sy(0));
+
+    // axis ticks
+    const g = $('grid');
+    const ticks = [pMin, 125, 150, 175, pMax];
+    g.innerHTML = ticks.map(v =>
+      `<text x="${sx(v)}" y="${H - 6}" font-size="9.5" fill="#9aa0a4" text-anchor="middle">${v}</text>`
+    ).join('') +
+      [dLo, (dLo + dHi) / 2, dHi].map(v =>
+        `<text x="${x0 - 8}" y="${sy(v) + 3.5}" font-size="9.5" fill="#9aa0a4" text-anchor="end">${Math.round(v / 1000)}k</text>`
+      ).join('');
+
+    const cx = sx(p), cy = sy(profit(p, a));
+    $('dot').setAttribute('cx', cx); $('dot').setAttribute('cy', cy);
+    $('lbl').setAttribute('x', Math.min(cx + 8, W - 78));
+    $('lbl').setAttribute('y', cy - 10);
+    $('lbl').textContent = `当前 ${money(profit(p, a), true)}`;
+
+    const best = Math.max(...vals);
+    const bestP = pMin + vals.indexOf(best);
+    $('chart-peak').textContent = `最优 ¥${bestP} / ${money(best)}`;
+  }
+
+  function render() {
+    const p = +price.value, a = +att.value;
+    const rev = p * a, cost = FIXED + PER_HEAD * a, pf = rev - cost, be = breakeven(p);
+
+    $('price-out').textContent = `¥${p}`;
+    $('att-out').textContent = `${a} 人`;
+    $('m-rev').textContent = fmt(rev);
+    $('m-cost').textContent = fmt(cost);
+    $('m-profit').textContent = money(pf, true);
+    $('m-profit').classList.toggle('neg', pf < 0);
+    $('m-be').textContent = be > 200 ? '超出容量' : `${be} 人`;
+    $('m-be').classList.toggle('neg', be > 200);
+
+    price.style.setProperty('--fill', ((p - 99) / (199 - 99) * 100) + '%');
+    att.style.setProperty('--fill', ((a - 80) / (200 - 80) * 100) + '%');
+
+    const b = $('badge');
+    if (be > 200) {
+      b.className = 'badge warn';
+      b.textContent = `票价偏低 · 即使 200 人满场也无法保本(需 ${be} 人)`;
+    } else if (a < be) {
+      b.className = 'badge warn';
+      b.textContent = `还差 ${be - a} 人保本 · 按当前票价需 ${be} 人到场`;
+    } else {
+      b.className = 'badge';
+      b.textContent = `已保本 · 单场利润 ${money(pf)} · 每多 1 人边际利润 ¥${p - PER_HEAD}`;
+    }
+    draw(a, p);
+  }
+
+  [price, att].forEach(el => el.addEventListener('input', render));
+  render();
+})();
+</script>
+</body>
+</html>

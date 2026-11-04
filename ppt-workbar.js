@@ -2,6 +2,10 @@
 (() => {
   const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const copy = value => JSON.parse(JSON.stringify(value));
+  const toolboxIcons={
+    closed:'<svg class="ppt-tools-icon ppt-tools-icon-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7.5V5.8a2.3 2.3 0 0 1 2.3-2.3h3.4A2.3 2.3 0 0 1 16 5.8v1.7"/><rect x="3" y="7.5" width="18" height="13.5" rx="2.6"/><path d="M3 13h6.5m5 0H21"/><rect x="9.5" y="11.7" width="5" height="2.8" rx=".8"/></svg>',
+    open:'<svg class="ppt-tools-icon ppt-tools-icon-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5V3.1m-1.4 0h2.8M16.3 7.5V5.4m-1.8-2.7v1.1a1.8 1.8 0 0 0 3.6 0V2.7"/><rect x="3" y="7.5" width="18" height="13.5" rx="2.6"/><path d="M3 13h6.5m5 0H21"/><rect x="9.5" y="11.7" width="5" height="2.8" rx=".8"/></svg>'
+  };
   let serial=0;
   const uid = () => `ppt-${++serial}`;
   function model(item, seeds=[]) {
@@ -65,24 +69,17 @@
   const image=(item,index)=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg(item,index));
   const text=(item,index=item.referenceSlide||0)=>model(item)[index].elements.map(e=>e.text||e.rows?.map(r=>r.join(' / ')).join('；')||'').filter(Boolean).join('；');
   const button=(action,label,disabled=false,title=label)=>`<button type="button" data-ppt-action="${action}" ${disabled?'disabled':''} title="${title}" aria-label="${title}">${label}</button>`;
+  const addToConversationIcon='<svg class="ppt-add-reference-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/></svg>';
+  const addToConversationButton=()=>`<button type="button" class="ppt-add-reference" data-ppt-action="reference-element">${addToConversationIcon}<span>添加到对话</span></button>`;
   const historyIcon=action=>`<svg class="ppt-history-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${action==='undo'?'m8 7-4 3 4 3M4 10h10a5.5 5.5 0 1 1-1 10.9':'m16 7 4 3-4 3M20 10H10a5.5 5.5 0 1 0 1 10.9'}"/></svg>`;
-  const editToolbarTabs=[['text','文字'],['image','图片'],['shape','图形'],['table','表格'],['chart','图表'],['layout','对齐'],['format','格式'],['design','设计'],['animation','动画']];
+  const editToolbarTabs=[['text','文本'],['image','图片'],['shape','图形'],['icon','图标'],['local-file','文件'],['link','链接'],['table','表格'],['chart','图表'],['art-text','艺术字'],['formula','公式']];
   const editToolbarIcon=tab=>{
-    const path='assets/figma-edit-toolbar/';
-    if(tab==='text'||tab==='layout')return `<span class="ppt-edit-tab-icon ppt-edit-tab-icon-${tab}" aria-hidden="true"><img src="${path}${tab==='text'?'textFill':'alignFill'}.svg" alt=""></span>`;
-    return `<span class="ppt-edit-tab-icon ppt-edit-tab-icon-${tab}" aria-hidden="true"><img src="${path}${tab}.svg" alt=""></span>`;
+    const insertPath='assets/figma-ppt-insert/';
+    if(tab==='text')return `<span class="ppt-edit-tab-icon ppt-edit-tab-icon-text ppt-edit-tab-icon-insert-text" aria-hidden="true"><img src="${insertPath}text-fill.svg" alt=""></span>`;
+    if(tab==='icon')return `<span class="ppt-edit-tab-icon ppt-edit-tab-icon-insert-icon" aria-hidden="true"><img src="${insertPath}icon-fill.svg" alt=""></span>`;
+    if(tab==='chart')return `<span class="ppt-edit-tab-icon ppt-edit-tab-icon-insert-chart" aria-hidden="true"><img src="${insertPath}chart-fill.svg" alt=""></span>`;
+    return `<span class="ppt-edit-tab-icon ppt-edit-tab-icon-${tab}" aria-hidden="true"><img src="${insertPath}${tab}.svg" alt=""></span>`;
   };
-  function panel(item) {
-    const tab=editToolbarTabs.some(([name])=>name===item.pptTab)?item.pptTab:'text',e=selected(item),isText=e?.type==='text';
-    if(tab==='text')return button('insert-text','插入文本框')+button('edit-text','编辑文字',!isText);
-    if(tab==='shape')return button('insert-shape','插入图形')+button('delete-element','删除图形',e?.type!=='shape');
-    if(tab==='layout')return button('left','左对齐',!e)+button('center','水平居中',!e)+button('top','顶部对齐',!e)+button('front','置于顶层',!e)+button('back','置于底层',!e)+button('copy-element','复制元素',!e)+button('delete-element','删除元素',!e);
-    if(tab==='image')return button('insert-image','插入图片')+button('replace-image','替换图片',e?.type!=='image')+button('image-contain','完整显示',e?.type!=='image')+button('image-cover','填满裁剪',e?.type!=='image');
-    if(tab==='table'||tab==='chart')return button('insert-'+tab,tab==='table'?'插入表格':'插入图表')+button('edit-data','编辑数据',e?.type!==tab);
-    if(tab==='design')return `<label>页面背景 <input data-ppt-page-property="background" type="color" value="${current(item).background}"></label>`;
-    if(tab==='animation')return button('preview-animation','预览动画');
-    return button('edit-text','编辑文字',!isText)+button('bold','B',!isText,'加粗')+button('italic','I',!isText,'斜体')+`<label>字号 <input data-ppt-property="size" type="number" min="10" max="96" value="${e?.size||24}" ${!isText?'disabled':''}></label><label>颜色 <input data-ppt-property="color" type="color" value="${e?.color||'#183f42'}" ${!e||!['text','shape'].includes(e.type)?'disabled':''}></label>`+button('text-left','左对齐',!isText)+button('text-center','居中',!isText);
-  }
   const textIcon=name=>`<img src="assets/ppt-text-toolbar/${name}.svg" alt="">`;
   const textTool=(action,icon,title,pressed=false)=>`<button type="button" class="ppt-text-tool" data-ppt-action="${action}" title="${title}" aria-label="${title}" ${pressed?'aria-pressed="true"':''}>${textIcon(icon)}</button>`;
   function textMenu(kind,label,icon,items){
@@ -90,17 +87,23 @@
   }
   function contextTools(item) {
     const e=selected(item);if(!e)return '';
-    if(e.type!=='text')return `<div class="ppt-selection-tools ppt-selection-tools-simple"><span>${{image:'图片',shape:'形状',table:'表格',chart:'图表'}[e.type]}</span>${e.type==='image'?button('replace-image','替换图片'):['table','chart'].includes(e.type)?button('edit-data','编辑数据'):''}${button('delete-element','删除')}${button('reference-element','添加到对话')}</div>`;
+    if(e.type!=='text')return `<div class="ppt-selection-tools ppt-selection-tools-simple"><span>${{image:'图片',shape:'形状',table:'表格',chart:'图表'}[e.type]}</span>${e.type==='image'?button('replace-image','替换图片'):['table','chart'].includes(e.type)?button('edit-data','编辑数据'):''}${button('delete-element','删除')}${addToConversationButton()}</div>`;
     const color=(name,title,value)=>`<label class="ppt-text-tool ppt-text-color-tool" title="${title}">${textIcon(name)}<input type="color" data-ppt-property="${name==='text-color'?'color':'highlight'}" value="${value}" aria-label="${title}"></label>`;
-    return `<div class="ppt-selection-tools ppt-selection-tools-text" role="toolbar" aria-label="所选文字操作"><button type="button" class="ppt-add-reference" data-ppt-action="reference-element">添加到对话</button><span class="ppt-text-divider">${textIcon('divider')}</span><div class="ppt-text-actions">${textMenu('preset','文字样式','style',[['title','标题'],['body','正文'],['note','注释']])}${color('text-color','文字颜色',e.color||'#183f42')}${color('highlight','文字背景',e.highlight||'#ffff99')}${textMenu('more','更多操作','more',[['edit-text','修改文字'],['copy-element','复制文本框'],['delete-element','删除文本框']])}<span class="ppt-text-divider">${textIcon('divider')}</span>${textMenu('font','字体',null,[['PingFang SC','苹方'],['Arial','Arial'],['Georgia','Georgia']])}${textMenu('size',String(e.size||24),null,[16,18,20,24,28,32,38,48].map(n=>[String(n),String(n)]))}${textMenu('align','对齐','align',[['left','左对齐'],['center','居中'],['right','右对齐']])}${textMenu('list','列表','list',[['none','无列表'],['bullet','项目符号'],['number','编号']])}${textTool('bold','bold','加粗',e.bold)}${textTool('italic','italic','斜体',e.italic)}${textTool('underline','underline','下划线',e.underline)}${textTool('strike','strike','删除线',e.strike)}</div></div>`;
+    return `<div class="ppt-selection-tools ppt-selection-tools-text" role="toolbar" aria-label="所选文字操作">${addToConversationButton()}<span class="ppt-text-divider">${textIcon('divider')}</span><div class="ppt-text-actions">${textMenu('preset','文字样式','style',[['title','标题'],['body','正文'],['note','注释']])}${color('text-color','文字颜色',e.color||'#183f42')}${color('highlight','文字背景',e.highlight||'#ffff99')}${textMenu('more','更多操作','more',[['edit-text','修改文字'],['copy-element','复制文本框'],['delete-element','删除文本框']])}<span class="ppt-text-divider">${textIcon('divider')}</span>${textMenu('font','字体',null,[['PingFang SC','苹方'],['Arial','Arial'],['Georgia','Georgia']])}${textMenu('size',String(e.size||24),null,[16,18,20,24,28,32,38,48].map(n=>[String(n),String(n)]))}${textMenu('align','对齐','align',[['left','左对齐'],['center','居中'],['right','右对齐']])}${textMenu('list','列表','list',[['none','无列表'],['bullet','项目符号'],['number','编号']])}${textTool('bold','bold','加粗',e.bold)}${textTool('italic','italic','斜体',e.italic)}${textTool('underline','underline','下划线',e.underline)}${textTool('strike','strike','删除线',e.strike)}</div></div>`;
   }
   function render(item,seeds) {
     const deck=model(item,seeds),index=item.referenceSlide||0,p=deck[index],h=item.node.preview.history;
-    const expanded=!!item.pptToolsExpanded,panelOpen=expanded&&!!item.pptToolPanelOpen,activeTab=editToolbarTabs.some(([name])=>name===item.pptTab)?item.pptTab:'text';
-    const editDrawer=`<div class="ppt-edit-drawer" id="ppt-edit-drawer" data-open="${expanded}" aria-hidden="${!expanded}" ${expanded?'':'inert'}><div class="ppt-edit-drawer-inner"><div class="ppt-edit-tabs" role="tablist" aria-label="编辑工具">${editToolbarTabs.map(([tab,label],i)=>`${i===6?'<img class="ppt-edit-tab-divider" src="assets/figma-edit-toolbar/divider.svg" alt="" aria-hidden="true">':''}<button type="button" role="tab" data-ppt-tab="${tab}" aria-selected="${panelOpen&&activeTab===tab}">${editToolbarIcon(tab)}<span>${label}</span></button>`).join('')}</div><div class="ppt-edit-panel"${panelOpen?'':' hidden'}>${panel(item)}</div></div></div>`;
-    const workbar=`<div class="ppt-workbar" role="toolbar" aria-label="PPT 工作条"><div class="ppt-workbar-controls"><div class="ppt-workbar-group">${button('undo',historyIcon('undo'),!h.past.length,'撤销')}${button('redo',historyIcon('redo'),!h.future.length,'重做')}</div><div class="ppt-tools-combo" data-open="${expanded}"><button type="button" class="ppt-tools-toggle" data-ppt-action="toggle-tools" aria-expanded="${expanded}" aria-controls="ppt-edit-drawer" aria-label="编辑工具" title="编辑工具"><svg class="ppt-tools-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/><rect x="3" y="7" width="18" height="14" rx="2.5"/><path d="M3 12.5c2.7 1.8 5.7 2.7 9 2.7s6.3-.9 9-2.7M10 14.5v1.5a2 2 0 0 0 4 0v-1.5"/></svg></button>${editDrawer}</div></div></div>`;
+    const expanded=!!item.pptToolsExpanded;
+    const zoom=Math.min(200,Math.max(50,Math.round(Number(item.pptZoom)||100)));
+    const tabs=`<div class="ppt-edit-tabs" data-section="insert" role="toolbar" aria-label="PPT 工具">${editToolbarTabs.map(([tab,label])=>{const divider=['table','art-text','formula'].includes(tab);return `${divider?'<img class="ppt-edit-tab-divider" src="assets/figma-ppt-insert/divider.svg" alt="" aria-hidden="true">':''}<button type="button" data-ppt-tool="${tab}" title="${label}" aria-label="${label}">${editToolbarIcon(tab)}</button>`;}).join('')}</div>`;
+    const editDrawer=`<div class="ppt-edit-drawer" id="ppt-edit-drawer" data-open="${expanded}" aria-hidden="${!expanded}" ${expanded?'':'inert'}><div class="ppt-edit-drawer-inner">${tabs}</div></div>`;
+    const zoomControls=`<div class="ppt-zoom-controls" role="group" aria-label="幻灯片缩放"><button type="button" data-ppt-action="zoom-out" aria-label="缩小幻灯片" title="缩小" ${zoom<=50?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><span class="ppt-zoom-value" aria-live="polite">${zoom}%</span><button type="button" data-ppt-action="zoom-in" aria-label="放大幻灯片" title="放大" ${zoom>=200?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>`;
+    const sidebarWorkbar=`<div class="ppt-workbar ppt-workbar-left" role="toolbar" aria-label="幻灯片操作"><div class="ppt-workbar-controls"><div class="ppt-workbar-group">${button('undo',historyIcon('undo'),!h.past.length,'撤销')}${button('redo',historyIcon('redo'),!h.future.length,'重做')}</div><div class="ppt-tools-combo" data-open="${expanded}"><button type="button" class="ppt-tools-toggle" data-ppt-action="toggle-tools" aria-expanded="${expanded}" aria-controls="ppt-edit-drawer" aria-label="${expanded?'收起':'展开'}编辑工具" title="${expanded?'收起':'展开'}编辑工具">${toolboxIcons.closed}${toolboxIcons.open}</button></div></div></div>`;
+    const editingWorkbar=`<div class="ppt-workbar ppt-workbar-right" role="toolbar" aria-label="PPT 编辑工具">${editDrawer}${zoomControls}</div>`;
     const contextual=`<div class="ppt-selection-slot">${contextTools(item)}</div>`;
-    return `<div class="reference-ppt" aria-label="季度经营复盘演示文稿">${workbar}<div class="reference-ppt-layout"><aside class="ppt-page-sidebar" id="ppt-page-preview"><nav class="reference-ppt-pages" aria-label="幻灯片页面">${deck.map((page,i)=>`<button type="button" draggable="true" data-reference-slide="${i}" aria-label="第 ${i+1} 页：${esc(page.title)}" aria-current="${i===index?'page':'false'}"><img src="${image(item,i)}" alt="${esc(page.title)}" draggable="false"><span class="ppt-page-number" aria-hidden="true">${i+1}</span></button>`).join('')}</nav></aside><div class="reference-ppt-canvas">${contextual}<div class="reference-slide" tabindex="0" role="group" aria-label="选择第 ${index+1} 页"><img src="${image(item,index)}" alt="${esc(p.title)}" draggable="false">${p.elements.map(el=>`<div class="ppt-element-hit ${el.id===item.pptSelection?'is-selected':''}" role="button" tabindex="0" aria-label="${esc(el.text||({image:'图片',shape:'形状',table:'表格',chart:'图表'}[el.type]))}" data-ppt-element="${el.id}" style="left:${el.x/9.6}%;top:${el.y/5.4}%;width:${el.w/9.6}%;height:${el.h/5.4}%">${el.id===item.pptSelection?'<button class="ppt-resize-handle" data-ppt-resize aria-label="拖动调整大小" tabindex="-1"></button>':''}</div>`).join('')}<div class="reference-crop-box" hidden></div></div></div></div></div>`;
+    const thumbnails=deck.map((page,i)=>`<button type="button" draggable="true" data-reference-slide="${i}" aria-label="第 ${i+1} 页：${esc(page.title)}" aria-current="${i===index?'page':'false'}"><img src="${image(item,i)}" alt="${esc(page.title)}" draggable="false"><span class="ppt-page-number" aria-hidden="true">${i+1}</span></button>`).join('');
+    const hits=p.elements.map(el=>`<div class="ppt-element-hit ${el.id===item.pptSelection?'is-selected':''}" role="button" tabindex="0" aria-label="${esc(el.text||({image:'图片',shape:'形状',table:'表格',chart:'图表'}[el.type]))}" data-ppt-element="${el.id}" style="left:${el.x/9.6}%;top:${el.y/5.4}%;width:${el.w/9.6}%;height:${el.h/5.4}%">${el.id===item.pptSelection?'<button class="ppt-resize-handle" data-ppt-resize aria-label="拖动调整大小" tabindex="-1"></button>':''}</div>`).join('');
+    return `<div class="reference-ppt" aria-label="季度经营复盘演示文稿"><div class="reference-ppt-layout"><aside class="ppt-page-sidebar" id="ppt-page-preview">${sidebarWorkbar}<nav class="reference-ppt-pages" aria-label="幻灯片页面">${thumbnails}</nav></aside><div class="reference-ppt-main">${editingWorkbar}<div class="reference-ppt-canvas">${contextual}<div class="reference-slide" tabindex="0" role="group" aria-label="选择第 ${index+1} 页" style="width:${zoom}%;max-width:${1120*zoom/100}px"><img src="${image(item,index)}" alt="${esc(p.title)}" draggable="false">${hits}<div class="reference-crop-box" hidden></div></div></div></div></div></div>`;
   }
   function install(options) {
     const {root,getWorkspace}=options;let gesture=null,suppressClick=false;
@@ -196,10 +199,12 @@
     function syncSelection(item){
       root.querySelectorAll('[data-ppt-element]').forEach(el=>{const on=el.dataset.pptElement===item.pptSelection;el.classList.toggle('is-selected',on);el.querySelector('[data-ppt-resize]')?.remove();if(on)el.insertAdjacentHTML('beforeend','<button class="ppt-resize-handle" data-ppt-resize aria-label="拖动调整大小" tabindex="-1"></button>');});
       const slot=root.querySelector('.ppt-selection-slot');if(slot)slot.innerHTML=contextTools(item);
-      const tools=root.querySelector('.ppt-edit-panel');if(tools)tools.innerHTML=panel(item);
       scheduleToolbar();
     }
     const mutate=(item,fn)=>{commit(item,fn);refresh(item);};
+    function insertText(item,value,style={}){
+      mutate(item,()=>{const el={id:uid(),type:'text',x:160,y:160,w:560,h:110,text:value,size:26,color:'#183f42',...style};current(item).elements.push(el);item.pptSelection=el.id;});
+    }
     function editText(item,e){if(e?.type!=='text')return;ask('编辑文字',e.text,value=>{mutate(item,()=>{e.text=value;if(current(item).elements.find(el=>el.type==='text')===e)current(item).title=value||'未命名页面';});},'支持换行；文本框太小时可拖动右下角放大。');}
     function editData(item,e,kind) {ask(kind==='table'?'编辑表格数据':'编辑图表数据',e?.rows?.map(row=>row.join('\t')).join('\n')||(kind==='table'?'区域\t营收\n华东\t480\n华南\t420':'华东\t480\n华南\t420\n华北\t340'),value=>{
       const rows=value.trim().split('\n').map(line=>line.split(/\t|，|,/).map(s=>s.trim()));
@@ -216,36 +221,85 @@
         commit(target.item,()=>{const old=page.elements.find(e=>e.id===target.elementId);if(target.elementId&&!old)return;const el=old||{id:uid(),type:'image',x:200,y:180,w:480,h:270};el.src=src;el.fit='contain';if(!old)page.elements.push(el);target.item.pptSelection=el.id;});if(active()===target.item)refresh(target.item);
       }catch{options.feedback('图片无法读取，请换一张图片。');}
     });
+    const localFileInput=document.createElement('input');localFileInput.type='file';localFileInput.hidden=true;document.body.append(localFileInput);
+    let localFileTarget=null;
+    localFileInput.addEventListener('change',async()=>{
+      const file=localFileInput.files[0],target=localFileTarget;localFileInput.value='';localFileTarget=null;if(!file||!target)return;
+      const page=model(target.item).find(p=>p.id===target.pageId);if(!page)return;
+      if(['image/png','image/jpeg','image/webp'].includes(file.type)){
+        if(file.size>15*1024*1024){options.feedback('请选择不超过 15 MB 的图片。');return;}
+        try{const src=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});const img=new Image();img.src=src;await img.decode();
+          commit(target.item,()=>{const el={id:uid(),type:'image',x:200,y:180,w:480,h:270,src,fit:'contain'};page.elements.push(el);target.item.pptSelection=el.id;});
+        }catch{options.feedback('文件无法读取，请换一个文件。');return;}
+      }else{
+        commit(target.item,()=>{const el={id:uid(),type:'text',x:160,y:180,w:580,h:78,text:`本地文件：${file.name}`,size:24,color:'#183f42',highlight:'#eaf1ed'};page.elements.push(el);target.item.pptSelection=el.id;});
+      }
+      if(active()===target.item)refresh(target.item);
+    });
     function action(item,name) {
       const e=selected(item);
       if(name==='toggle-tools'){
         item.pptToolsExpanded=!item.pptToolsExpanded;
-        item.pptToolPanelOpen=false;
         const drawer=root.querySelector('.ppt-edit-drawer');
         const combo=root.querySelector('.ppt-tools-combo');
         const toggle=root.querySelector('[data-ppt-action="toggle-tools"]');
-        const panel=root.querySelector('.ppt-edit-panel');
         if(drawer){
           drawer.dataset.open=String(item.pptToolsExpanded);
           drawer.setAttribute('aria-hidden',String(!item.pptToolsExpanded));
           drawer.inert=!item.pptToolsExpanded;
         }
-        if(panel)panel.hidden=true;
-        root.querySelectorAll('[data-ppt-tab]').forEach(tab=>tab.setAttribute('aria-selected','false'));
         if(combo)combo.dataset.open=String(item.pptToolsExpanded);
         toggle?.setAttribute('aria-expanded',String(item.pptToolsExpanded));
+        toggle?.setAttribute('aria-label',`${item.pptToolsExpanded?'收起':'展开'}编辑工具`);
+        toggle?.setAttribute('title',`${item.pptToolsExpanded?'收起':'展开'}编辑工具`);
+        return;
+      }
+      if(name==='zoom-in'||name==='zoom-out'){
+        const currentZoom=Math.min(200,Math.max(50,Math.round(Number(item.pptZoom)||100)));
+        const next=Math.min(200,Math.max(50,currentZoom+(name==='zoom-in'?10:-10)));
+        if(next===currentZoom)return;
+        const canvas=root.querySelector('.reference-ppt-canvas'),slide=root.querySelector('.reference-slide');
+        const canvasRect=canvas.getBoundingClientRect(),oldRect=slide.getBoundingClientRect();
+        const focusX=(canvasRect.left+canvas.clientWidth/2-oldRect.left)/oldRect.width;
+        const focusY=(canvasRect.top+canvas.clientHeight/2-oldRect.top)/oldRect.height;
+        item.pptZoom=next;
+        slide.style.width=`${next}%`;
+        slide.style.maxWidth=`${1120*next/100}px`;
+        root.querySelector('.ppt-zoom-value').textContent=`${next}%`;
+        root.querySelector('[data-ppt-action="zoom-out"]').disabled=next<=50;
+        root.querySelector('[data-ppt-action="zoom-in"]').disabled=next>=200;
+        requestAnimationFrame(()=>{
+          const newRect=slide.getBoundingClientRect();
+          canvas.scrollLeft+=newRect.left+focusX*newRect.width-(canvasRect.left+canvas.clientWidth/2);
+          canvas.scrollTop+=newRect.top+focusY*newRect.height-(canvasRect.top+canvas.clientHeight/2);
+          scheduleToolbar();
+        });
         return;
       }
       if(name==='undo'||name==='redo'){undo(item,name==='redo');refresh(item);return;}
       if(name==='reference-element'){options.reference(item,e);return;}
       if(name==='present'){openPreview(item);return;}
       if(name==='preview-animation'){root.querySelector('.reference-slide>img')?.animate([{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:500,easing:'ease-out'});return;}
+      if(name==='preview-transition'){
+        const slide=root.querySelector('.reference-slide>img'),transition=current(item).transition||'none';
+        if(slide&&transition!=='none')slide.animate(transition==='slide'?[{opacity:0,transform:'translateX(32px)'},{opacity:1,transform:'translateX(0)'}]:[{opacity:0},{opacity:1}],{duration:500,easing:'ease-out'});
+        return;
+      }
+      if(name.startsWith('transition-')){commit(item,()=>{current(item).transition=name.slice(11);});refresh(item);return;}
       if(['previous','next'].includes(name)){item.referenceSlide=Math.max(0,Math.min(model(item).length-1,item.referenceSlide+(name==='next'?1:-1)));refresh(item);return;}
       if(name==='edit-text'){editText(item,e);return;}
       if(name==='insert-image'||name==='replace-image'){imageTarget={item,pageId:current(item).id,elementId:name==='replace-image'?e?.id:null};imageInput.click();return;}
+      if(name==='insert-local-file'){localFileTarget={item,pageId:current(item).id};localFileInput.click();return;}
+      if(name==='insert-link'){
+        ask('插入链接','https://',value=>{const url=value.trim();try{const parsed=new URL(url);if(!['http:','https:'].includes(parsed.protocol))throw Error('unsupported');}catch{dialog.querySelector('.ppt-dialog-error').textContent='请输入有效的 http 或 https 链接。';return false;}insertText(item,url,{size:22,color:'#1670b7',underline:true,link:url});},'输入网址后，会在当前幻灯片中插入链接文字。');return;
+      }
+      if(name==='insert-art-text'){ask('插入艺术字','艺术字',value=>{if(!value.trim())return false;insertText(item,value.trim(),{size:42,bold:true,color:'#246f58',w:620,h:140});});return;}
+      if(name==='insert-formula'){ask('插入公式','E = mc²',value=>{if(!value.trim())return false;insertText(item,value.trim(),{size:36,fontFamily:'Georgia, serif',w:580,h:110});});return;}
+      if(name==='insert-comment'){ask('添加批注','',value=>{if(!value.trim())return false;insertText(item,value.trim(),{size:18,highlight:'#fff1c9',w:360,h:130});});return;}
       if(['insert-table','insert-chart','edit-data'].includes(name)){const kind=name==='edit-data'?e?.type:name.slice(7);if(['table','chart'].includes(kind))editData(item,name==='edit-data'?e:null,kind);return;}
       mutate(item,()=>{
         const elements=current(item).elements;
+        if(name==='insert-icon'){const el={id:uid(),type:'text',x:200,y:160,w:100,h:112,text:'✦',size:80,color:'#246f58',align:'center'};elements.push(el);item.pptSelection=el.id;return;}
         if(name==='insert-text'||name==='insert-shape'){const type=name.slice(7),el={id:uid(),type,x:160,y:160,w:320,h:100,text:type==='text'?'双击修改文字':undefined,size:26,color:type==='text'?'#183f42':'#b7e4c6'};elements.push(el);item.pptSelection=el.id;return;}
         if(!e)return;
         if(name==='bold')e.bold=!e.bold;if(name==='italic')e.italic=!e.italic;
@@ -260,8 +314,8 @@
     root.addEventListener('click',event=>{
       const item=active();if(!item)return;
       if(suppressClick){event.preventDefault();event.stopImmediatePropagation();suppressClick=false;return;}
-      const tab=event.target.closest('[data-ppt-tab]'),button=event.target.closest('[data-ppt-action]'),hit=event.target.closest('[data-ppt-element]'),textTrigger=event.target.closest('[data-ppt-text-menu]'),textChoice=event.target.closest('[data-ppt-text-choice]');
-      if(tab||button||textTrigger||textChoice||hit&&!root.classList.contains('reference-cropping')){event.stopImmediatePropagation();
+      const tool=event.target.closest('[data-ppt-tool]'),button=event.target.closest('[data-ppt-action]'),hit=event.target.closest('[data-ppt-element]'),textTrigger=event.target.closest('[data-ppt-text-menu]'),textChoice=event.target.closest('[data-ppt-text-choice]');
+      if(tool||button||textTrigger||textChoice||hit&&!root.classList.contains('reference-cropping')){event.stopImmediatePropagation();
         if(textTrigger){
           const menu=textTrigger.nextElementSibling,open=menu.hidden;
           closeTextMenus();menu.hidden=!open;textTrigger.setAttribute('aria-expanded',String(open));
@@ -283,7 +337,7 @@
             });
           }
         }
-        else if(tab){item.pptToolPanelOpen=tab.dataset.pptTab!==item.pptTab||!item.pptToolPanelOpen;item.pptTab=tab.dataset.pptTab;refresh(item);}else if(button&&!button.disabled)action(item,button.dataset.pptAction);
+        else if(tool)action(item,`insert-${tool.dataset.pptTool}`);else if(button&&!button.disabled)action(item,button.dataset.pptAction);
         else if(hit){if(suppressClick){suppressClick=false;return;}item.pptSelection=hit.dataset.pptElement;options.cancelSelection();syncSelection(item);}
       }
     },true);

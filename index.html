@@ -15,6 +15,9 @@
 <link rel="stylesheet" href="./artifact-editing-demo.css">
 <link rel="stylesheet" href="./ppt-workbar.css">
 <link rel="stylesheet" href="./supplier-conversation-demo.css">
+<link rel="stylesheet" href="./conversation-queue-demo.css">
+<link rel="stylesheet" href="./recovery-conversation-demo.css">
+<link rel="stylesheet" href="./clarification-demo.css">
 </head>
 <body>
 
@@ -110,20 +113,24 @@
             <span class="task-name">调研竞品在会员权益上的差异</span>
             <span class="task-state"><span class="task-time">5h</span></span>
           </a>
-          <a class="task flush" href="#" data-scope="office">
-            <span class="task-name">核对上月推广费用的结算口径</span>
-            <span class="task-state"><span class="task-time">1d</span></span>
+          <a class="task flush" id="interventionTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">生成经营复盘时补充要求</span>
+            <span class="task-state"><span class="task-time">刚刚</span></span>
+          </a>
+          <a class="task flush" id="recoveryTask" href="#" data-scope="office" data-state="await" data-open-conversation>
+            <span class="task-name">准备下周上线的双人套餐</span>
+            <span class="task-state"><em class="tag-await">待确认</em></span>
           </a>
           <a class="task flush" id="scheduledReportTask" href="#" data-scope="office" data-task-type="scheduled" data-state="new" data-open-conversation>
             <span class="task-name">汇总门店履约周报</span>
             <span class="task-state"><svg class="task-schedule-icon" viewBox="0 0 24 24" role="img" aria-label="定时任务" title="定时任务"><path d="m5.5 5.5-2 2M18.5 5.5l2 2"/><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.8 2"/></svg><i class="dot-new" role="img" aria-label="新消息" title="新消息"></i></span>
           </a>
-          <a class="task flush" href="#" data-scope="office">
+          <a class="task flush" id="retryRecoveryTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">梳理供应链风险预案清单</span>
             <span class="task-state"><span class="task-time">3d</span></span>
           </a>
-          <a class="task flush" href="#" data-scope="office">
-            <span class="task-name">起草季度经营分析会议纪要</span>
+          <a class="task flush" id="failureRecoveryTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">把季度经营复盘做成视频</span>
             <span class="task-state"><span class="task-time">4d</span></span>
           </a>
           <a class="task flush" href="#" data-scope="office">
@@ -139,7 +146,7 @@
         </div>
 
         <div class="section-label folder-section-label">
-  <button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">文件夹</span></button>
+  <button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">项目</span></button>
   <div class="folder-section-actions">
     <button class="folder-section-action" id="toggleAllFolders" type="button" title="全部收起" aria-label="全部收起"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path class="folder-collapse-icon" d="m7 5 5 5 5-5M7 19l5-5 5 5"/><path class="folder-expand-icon" d="m7 10 5-5 5 5M7 14l5 5 5-5"/></svg></button>
     <button class="folder-section-action" id="folderSortButton" type="button" title="排序" aria-label="排序" aria-haspopup="menu" aria-expanded="false" aria-controls="folderSortMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/></svg></button>
@@ -168,18 +175,17 @@
             </button>
           </div>
           <div class="group-body">
-            <!-- 默认文件夹的前两项分别展示运行中和待确认状态。 -->
-            <a class="task" id="retailFirstConversationTask" href="#" data-state="running" data-open-conversation>
+            <a class="task" id="retailFirstConversationTask" href="#" data-open-conversation>
               <span class="task-name">AI 工具约束文件配置与校验</span>
-              <span class="task-state"><span class="spinner"></span></span>
+              <span class="task-state"><span class="task-time">2d</span></span>
             </a>
-            <a class="task" href="#" data-state="await">
+            <a class="task" href="#">
               <span class="task-name">将四种颜色添加到默认主题</span>
-              <span class="task-state"><em class="tag-await">待确认</em></span>
+              <span class="task-state"><span class="task-time">3d</span></span>
             </a>
-            <a class="task" href="#" data-state="new">
+            <a class="task" href="#">
               <span class="task-name">Hermes 记忆自更新机制</span>
-              <span class="task-state"><i class="dot-new"></i></span>
+              <span class="task-state"><span class="task-time">4d</span></span>
             </a>
             <a class="task" href="#">
               <span class="task-name">CC CLI 启动</span>
@@ -208,9 +214,9 @@
             </button>
           </div>
           <div class="group-body">
-            <a class="task" href="#" data-state="await">
+            <a class="task" href="#">
               <span class="task-name">三月份核心指标归因</span>
-              <span class="task-state"><em class="tag-await">待确认</em></span>
+              <span class="task-state"><span class="task-time">6d</span></span>
             </a>
             <a class="task" href="#">
               <span class="task-name">区域对比图表重做</span>
@@ -405,12 +411,15 @@
           </div>
         </div>
         <div class="conversation-composer-wrap">
+          <section class="conversation-queue-group" id="conversationQueueGroup" aria-label="待发送队列" hidden></section>
+          <div id="clarificationQuestionHost" hidden></div>
           <div class="conversation-composer" id="conversationComposer">
             <div class="artifact-reference-drafts" id="conversationReferences" aria-label="引用的产物内容" hidden></div>
             <div class="conversation-prompt-entry">
               <div class="composer-inline-tags">
                 <span class="composer-goal-tag" id="conversationGoalTag" hidden><button type="button" class="composer-goal-tag-clear" aria-label="取消设置目标" title="取消设置目标"><svg viewBox="0 0 24 24" class="ic composer-goal-icon" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><svg viewBox="0 0 24 24" class="ic composer-goal-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>目标</span>
                 <span class="composer-skill-tags" id="conversationSkillTags" aria-label="已选择的 Skill" hidden></span>
+                <span class="connector-tray" id="conversationConnectorTray" aria-label="已选择的连接器" hidden></span>
               </div>
               <textarea id="conversationPrompt" rows="1" placeholder="继续对话"></textarea>
             </div>
@@ -421,18 +430,23 @@
               <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
             </button>
           </div>
-          <span class="expert-chip">
-            <button class="chip-agent conversation-expert-trigger" type="button" title="切换专家" aria-label="切换专家，当前：数据分析师" aria-haspopup="menu" aria-expanded="false">
-<span class="avatar" aria-hidden="true"></span><span class="expert-name">数据分析师</span><svg viewBox="0 0 24 24" class="ic expert-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          <div class="composer-quick-add" aria-label="选择对话能力">
+            <span class="expert-chip" hidden>
+            <button class="chip-agent conversation-expert-trigger" type="button" title="切换专家" aria-label="选择专家" aria-haspopup="menu" aria-expanded="false">
+<span class="avatar" aria-hidden="true"></span><span class="expert-name">选择专家</span><svg viewBox="0 0 24 24" class="ic expert-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
 </button>
             <button class="expert-clear" type="button" title="取消选择专家" aria-label="取消选择专家"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>
           </span>
+            <button class="composer-quick-add-trigger" type="button" data-quick-add="expert" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/></svg><span>选择专家</span></button>
+            <button class="composer-quick-add-trigger" type="button" data-quick-add="skill" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>添加技能</span></button>
+            <button class="composer-quick-add-trigger" type="button" data-quick-add="mcp" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/></svg><span>选择连接器</span></button>
+            <button class="composer-quick-add-overflow-trigger" id="conversationQuickAddOverflowTrigger" type="button" title="更多对话能力" aria-label="更多对话能力" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationQuickAddOverflowMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+          </div>
           <div class="composer-capability-group" aria-label="已添加的对话能力">
-                <div class="connector-tray" id="conversationConnectorTray" aria-label="已选择的连接器" hidden></div>
               </div>
               <div class="access-picker" data-access-picker>
                 <button class="foot-item" type="button" aria-label="对话访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
-                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                  <svg viewBox="0 0 24 24" class="ic" aria-hidden="true" data-project-icon="access-full"><rect x="4" y="10" width="16" height="11" rx="3.5"/><path d="M8 10V7a4 4 0 0 1 7.7-1.5M12 14.5v2"/></svg>
                   <span data-access-label>完全访问</span>
                   <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -446,7 +460,6 @@
               </button>
             </div>
           </div>
-          <p class="conversation-note">CatPaw 可能会犯错，请核查重要信息。</p>
         </div>
       </section>
 
@@ -493,6 +506,7 @@
               <span id="promptChipText"></span>
             </div>
             <span class="composer-skill-tags" id="homeSkillTags" aria-label="已选择的 Skill" hidden></span>
+            <span class="connector-tray" id="connectorTray" aria-label="已选择的连接器" hidden></span>
             </div>
             <textarea id="prompt" class="prompt" rows="1" aria-label="描述你想完成的任务" placeholder="描述你的需求，输出专业结果"></textarea>
             <span class="prompt-hint" id="promptHint" aria-hidden="true">帮我做一份报告…</span>
@@ -506,17 +520,21 @@
                     <svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg>
                   </button>
                 </div>
-
-                <span class="expert-chip">
+                <div class="composer-quick-add" aria-label="选择对话能力">
+                  <span class="expert-chip" hidden>
                   <button class="chip-agent" type="button" title="切换专家" aria-haspopup="menu" aria-expanded="false">
                     <span class="avatar" aria-hidden="true"></span>
-                    <span class="expert-name">数据分析师</span>
+                    <span class="expert-name">选择专家</span>
                     <svg viewBox="0 0 24 24" class="ic expert-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
                   <button class="expert-clear" type="button" title="取消选择专家" aria-label="取消选择专家"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>
                 </span>
+                  <button class="composer-quick-add-trigger" type="button" data-quick-add="expert" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/></svg><span>选择专家</span></button>
+                  <button class="composer-quick-add-trigger" type="button" data-quick-add="skill" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>添加技能</span></button>
+                  <button class="composer-quick-add-trigger" type="button" data-quick-add="mcp" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/></svg><span>选择连接器</span></button>
+                  <button class="composer-quick-add-overflow-trigger" id="homeQuickAddOverflowTrigger" type="button" title="更多对话能力" aria-label="更多对话能力" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationQuickAddOverflowMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+                </div>
                 <div class="composer-capability-group" aria-label="已添加的对话能力">
-                  <div class="connector-tray" id="connectorTray" aria-label="已选择的连接器" hidden></div>
                   <button class="composer-goal-summary" type="button" title="编辑对话目标" hidden></button>
                 </div>
               </div>
@@ -547,7 +565,7 @@
 
               <div class="access-picker" data-access-picker>
                 <button class="foot-item" type="button" aria-label="主页访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
-                  <svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                  <svg viewBox="0 0 24 24" class="ic" aria-hidden="true" data-project-icon="access-full"><rect x="4" y="10" width="16" height="11" rx="3.5"/><path d="M8 10V7a4 4 0 0 1 7.7-1.5M12 14.5v2"/></svg>
                   <span data-access-label>完全访问</span>
                   <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -893,8 +911,10 @@
           <button class="file-edit-save" id="toolFileEditSave" type="button" hidden>保存</button>
           <button class="file-edit-discard" id="toolFileEditDiscard" type="button" hidden>取消</button>
           <div class="file-ppt-actions" id="toolFilePptActions" hidden>
-            <button id="toolFilePptCrop" type="button" data-reference-crop aria-pressed="false" title="框选区域"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><span class="file-ppt-action-label">框选区域</span></button>
-            <button id="toolFilePptReference" type="button" title="添加到对话"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/></svg><span class="file-ppt-action-label">添加到对话</span></button>
+            <button id="toolFilePptCrop" type="button" data-reference-crop aria-pressed="false" title="标注区域"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><span class="file-ppt-action-label">标注区域</span></button>
+          </div>
+          <div class="file-ppt-actions" id="toolFileWordActions" hidden>
+            <button id="toolFileWordComment" type="button" data-reference-crop aria-pressed="false" title="标注区域"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><span class="file-ppt-action-label">标注区域</span></button>
           </div>
           <button class="file-share-button" id="toolFileShare" type="button" title="分享产物" aria-label="分享当前产物" hidden>
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/></svg>
@@ -1056,7 +1076,7 @@
             <img class="case-dialog-artifact-icon" id="caseDialogArtifactIcon" src="assets/artifact-html.svg" alt="" aria-hidden="true"><span class="case-dialog-artifact-name" id="caseDialogArtifact"></span>
             <div class="case-dialog-skill-actions">
               <button class="case-dialog-skill-action" id="caseDialogDownload" type="button" title="下载" aria-label="下载案例预览"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3.5v10.8m-4.5-3.3 3.8 3.8a1 1 0 0 0 1.4 0l3.8-3.8"/><path d="M3 15.5v2.2a2.8 2.8 0 0 0 2.8 2.8h12.4a2.8 2.8 0 0 0 2.8-2.8v-2.2"/></svg></button>
-              <button class="case-dialog-skill-action" id="caseDialogAttach" type="button" title="添加至对话" aria-label="将案例产物添加至对话"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/></svg></button>
+              <button class="case-dialog-skill-action" id="caseDialogAttach" type="button" title="添加至对话" aria-label="将案例产物添加至对话"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/></svg></button>
             </div>
           </div>
         </div>
@@ -1185,6 +1205,9 @@
 <script src="./artifact-editing-demo.js"></script>
 <script src="./strategy-scenes.js"></script>
 <script src="./supplier-conversation-demo.js"></script>
+<script src="./conversation-queue-demo.js"></script>
+<script src="./recovery-conversation-demo.js"></script>
+<script src="./clarification-demo.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

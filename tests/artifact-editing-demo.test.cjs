@@ -8,6 +8,9 @@ class Element {
   constructor(dataset = {}) {this.dataset=dataset;this.listeners={};this.style={};this.hidden=false;this.innerHTML='';this.textContent='';this.value='';this.attributes={};this.classes=new Set();this.classList={add:x=>this.classes.add(x),remove:x=>this.classes.delete(x),toggle:(x,on)=>on?this.classes.add(x):this.classes.delete(x)};}
   addEventListener(type,fn){(this.listeners[type] ||= []).push(fn);}
   async fire(type,event={}){for(const fn of this.listeners[type]||[])await fn(event);}
+  click(){for(const fn of this.listeners.click||[])fn({});}
+  append(child){child.parent=this;}
+  remove(){this.parent=null;}
   setAttribute(name,value){this.attributes[name]=value;}
   focus(){this.focused=true;}
   getBoundingClientRect(){return {left:100,top:100,bottom:132,width:120,height:32};}
@@ -17,13 +20,23 @@ class Element {
   contains(target){return target===this;}
   scrollIntoView(){}
 }
-function setup({pptHeader=false}={}) {
+function setup({pptHeader=false,wordHeader=false,annotation=false}={}) {
   const root=new Element(),doc=new Element(),label=new Element(),button=new Element();
-  const pptCrop=new Element(),pptReference=new Element(),pptActions=[];
+  const pptCrop=new Element(),wordCrop=new Element(),pptActions=[];
   const commentButton=new Element(),commentInput=new Element(),commentEditor=new Element(),commentCancel=new Element();
+  const annotationPanel=annotation?new Element():null,annotationCanvas=annotation?new Element():null,annotationText=annotation?new Element():null;
+  const annotationButtons=annotation?['circle','rect','line','arrow','pen','text'].map(tool=>new Element({annotationTool:tool})):[];
+  const annotationCalls=[];
+  if(annotation){
+    annotationPanel.querySelectorAll=()=>annotationButtons;
+    const context=Object.fromEntries(['clearRect','drawImage','save','restore','beginPath','ellipse','stroke','strokeRect','moveTo','lineTo','fillText'].map(name=>[name,(...args)=>annotationCalls.push([name,...args])]));
+    annotationCanvas.getContext=()=>context;
+    annotationCanvas.getBoundingClientRect=()=>({left:100,top:100,width:240,height:169});
+    annotationCanvas.toDataURL=()=> 'data:image/png;base64,annotated';
+  }
   const containers={conversationReferences:new Element(),fullscreenReferences:new Element()};
   const menu=new Element();menu.offsetWidth=260;menu.offsetHeight=44;
-  menu.querySelector=selector=>({'button':button,'[data-selection-add]':button,'[data-selection-comment]':commentButton,'textarea':commentInput,'.artifact-comment-editor':commentEditor,'[data-comment-cancel]':commentCancel,'.artifact-selection-label':label}[selector]||null);
+  menu.querySelector=selector=>({'button':button,'[data-selection-add]':button,'[data-selection-comment]':commentButton,'textarea':commentInput,'.artifact-comment-editor':commentEditor,'[data-comment-cancel]':commentCancel,'.artifact-selection-label':label,'.artifact-annotation':annotationPanel,'.artifact-annotation-canvas':annotationCanvas,'.artifact-annotation-text':annotationText}[selector]||null);
   menu.contains=el=>[menu,button,commentButton,commentInput,commentEditor,commentCancel].includes(el);
   doc.createElement=()=>menu;doc.body={append(){}};doc.getElementById=id=>containers[id];
   let activeTask='review';let workspace;let focused=0;let located;
@@ -38,15 +51,25 @@ function setup({pptHeader=false}={}) {
   root.contains=el=>cells.includes(el);
   root.querySelectorAll=selector=>selector.includes('td[data-excel-row]')?cells:[];
   root.querySelector=selector=>selector.includes('data-excel-address')?address:selector.includes('data-excel-value')?value:null;
-  const controller=api.create({root,pptCropButton:pptHeader?pptCrop:undefined,pptReferenceButton:pptHeader?pptReference:undefined,getWorkspace:()=>workspace,getTask:()=>activeTask,taskForArtifact:()=> 'review',ensureTask:task=>{activeTask=task;},focusComposer:()=>focused++,renderWorkspace(){},openReference:ref=>{located=ref;},feedback(){}});
+  const controller=api.create({root,pptCropButton:pptHeader?pptCrop:undefined,wordCropButton:wordHeader?wordCrop:undefined,getWorkspace:()=>workspace,getTask:()=>activeTask,taskForArtifact:()=> 'review',ensureTask:task=>{activeTask=task;},focusComposer:()=>focused++,renderWorkspace(){},openReference:ref=>{located=ref;},feedback(){}});
   const select=async(start,end=start)=>{
     await root.fire('pointerdown',{button:0,target:start,preventDefault(){}});
     doc.elementFromPoint=()=>end;
     await doc.fire('pointermove',{clientX:120,clientY:120});
     await doc.fire('pointerup',{target:end});
   };
-  return {api,controller,cells,select,button,commentButton,commentInput,commentEditor,commentCancel,menu,root,doc,window,containers,address,value,pptCrop,pptReference,pptActions,setWorkspace:item=>workspace=item,get focused(){return focused;},setTask:task=>activeTask=task,get located(){return located;}};
+  return {api,controller,cells,select,button,commentButton,commentInput,commentEditor,commentCancel,menu,root,doc,window,containers,address,value,pptCrop,wordCrop,pptActions,annotationPanel,annotationCanvas,annotationText,annotationButtons,annotationCalls,setWorkspace:item=>workspace=item,get focused(){return focused;},setTask:task=>activeTask=task,get located(){return located;}};
 }
+test('queued references return to the draft without duplicates and remain isolated by task',async()=>{
+  const s=setup();await s.select(s.cells[0]);await s.button.fire('click');
+  const refs=s.controller.entries().slice();s.controller.clear();
+  s.controller.restoreDraft(refs);s.controller.restoreDraft(refs);
+  assert.equal(s.controller.entries().length,1);assert.equal(s.controller.entries()[0],refs[0]);
+  assert.equal(s.containers.conversationReferences.hidden,false);
+  s.setTask('another');s.controller.taskChanged();assert.equal(s.controller.entries().length,0);
+  s.setTask('review');s.controller.taskChanged();assert.equal(s.controller.entries().length,1);
+});
+
 test('three linked artifacts, five distinct PPT pages and local inline thumbnails',()=>{
   const {api}=setup();const files=api.files();
   assert.deepEqual(Array.from(files,n=>n.preview.kind),['ppt','excel','word']);
@@ -111,7 +134,10 @@ test('Word selection carries exact text and offsets, and escapes quoted content'
   const range={startContainer:textNode,endContainer:textNode,startOffset:0,toString:()=>text,getBoundingClientRect:()=>parent.getBoundingClientRect(),cloneRange:()=>({selectNodeContents(){},setEnd(){},toString:()=> '前面的内容。'})};
   s.root.contains=()=>true;s.root.querySelector=()=>({contains:()=>true});
   s.window.getSelection=()=>({rangeCount:1,isCollapsed:false,getRangeAt:()=>range,toString:()=>text});
-  await s.doc.fire('pointerup',{target:parent});await s.button.fire('click');
+  await s.doc.fire('pointerup',{target:parent});
+  s.controller.commentWordSelection();
+  assert.equal(s.commentEditor.hidden,false);
+  await s.button.fire('click');
   const ref=s.controller.entries()[0];
   assert.equal(ref.kind,'word');assert.equal(ref.text,text);assert.equal(ref.start,6);assert.equal(ref.end,6+text.length);
   assert.match(s.containers.conversationReferences.innerHTML,/&lt;待核对&gt;/);
@@ -132,14 +158,56 @@ test('PPT crop uses normalized slide coordinates and stores the actual image sna
   await s.commentButton.fire('click');s.commentInput.value='标题缩短一些，保留季度与部门';
   await s.button.fire('click');
   const ref=s.controller.entries()[0];
-  assert.equal(ref.slide,2);assert.equal(ref.image,'data:image/png;base64,cropped');assert.match(ref.label,/框选区域/);
+  assert.equal(ref.slide,2);assert.equal(ref.image,'data:image/png;base64,cropped');assert.match(ref.label,/标注区域/);
   assert.equal(ref.comment,'标题缩短一些，保留季度与部门');
   assert.match(s.controller.renderSent([ref]),/标题缩短一些，保留季度与部门/);
   assert.equal(canvas.width,480);assert.equal(canvas.height,338);
   assert.equal(drawing[0],img);assert.equal(drawing[1],80);assert.equal(drawing[2],67.5);
 });
 
-test('PPT header crop and reference controls retain their original actions',async()=>{
+test('PPT screenshot annotations are exported into the conversation reference',async()=>{
+  const s=setup({annotation:true}),node=s.api.files()[0],crop=new Element(),slide=new Element(),box=new Element();
+  const item={node,chain:[{id:'default'},node],referenceSlide:0};s.setWorkspace(item);
+  const snapshot={getContext:()=>({drawImage(){}}),toDataURL:()=> 'data:image/png;base64,cropped'};
+  s.doc.createElement=()=>snapshot;
+  s.root.querySelector=selector=>selector==='.reference-slide img'?{decode:async()=>{}}:selector==='.reference-crop-box'?box:selector==='[data-reference-crop]'?crop:slide;
+  await s.root.fire('click',{target:{closest:selector=>selector==='[data-reference-crop]'?crop:null}});
+  const slideTarget={closest:selector=>selector==='.reference-slide'?slide:null};
+  await s.root.fire('pointerdown',{button:0,target:slideTarget,clientX:110,clientY:104,preventDefault(){}});
+  await s.doc.fire('pointermove',{clientX:170,clientY:124});
+  await s.doc.fire('pointerup',{target:slideTarget});
+  assert.equal(s.annotationPanel.hidden,false);
+  assert(s.menu.classes.has('artifact-annotation-inline'));
+  assert.equal(s.annotationCanvas.parent,slide);
+  assert(Math.abs(parseFloat(s.annotationCanvas.style.left)-8.3333)<.01);
+  assert.equal(parseFloat(s.annotationCanvas.style.top),12.5);
+  const rectTool=s.annotationButtons[1];
+  await s.annotationPanel.fire('click',{target:{closest:selector=>selector==='[data-annotation-tool]'?rectTool:null}});
+  await s.annotationCanvas.fire('pointerdown',{button:0,pointerId:1,clientX:120,clientY:110,preventDefault(){}});
+  await s.annotationCanvas.fire('pointermove',{pointerId:1,clientX:180,clientY:140});
+  await s.annotationCanvas.fire('pointerup',{pointerId:1});
+  assert(s.annotationCalls.some(([name])=>name==='strokeRect'));
+  for(const [index,pointerId] of [[0,2],[2,3],[3,4],[4,5]]){
+    const tool=s.annotationButtons[index];
+    await s.annotationPanel.fire('click',{target:{closest:selector=>selector==='[data-annotation-tool]'?tool:null}});
+    await s.annotationCanvas.fire('pointerdown',{button:0,pointerId,clientX:120,clientY:110,preventDefault(){}});
+    await s.annotationCanvas.fire('pointermove',{pointerId,clientX:180,clientY:140});
+    await s.annotationCanvas.fire('pointerup',{pointerId});
+  }
+  const textTool=s.annotationButtons[5];
+  await s.annotationPanel.fire('click',{target:{closest:selector=>selector==='[data-annotation-tool]'?textTool:null}});
+  s.annotationText.value='核对数据';
+  await s.annotationCanvas.fire('pointerdown',{button:0,pointerId:6,clientX:120,clientY:110,preventDefault(){}});
+  assert(s.annotationCalls.some(([name])=>name==='ellipse'));
+  assert(s.annotationCalls.some(([name])=>name==='fillText'));
+  await s.button.fire('click');
+  assert(!s.menu.classes.has('artifact-annotation-inline'));
+  const ref=s.controller.entries()[0];
+  assert.equal(ref.image,'data:image/png;base64,annotated');
+  assert.match(s.controller.renderSent([ref]),/data:image\/png;base64,annotated/);
+});
+
+test('PPT header crop control and scripted page reference retain their actions',async()=>{
   const s=setup({pptHeader:true}),node=s.api.files()[0],item={node,chain:[{id:'default'},node],referenceSlide:0};
   s.setWorkspace(item);
   await s.pptCrop.fire('click');
@@ -149,10 +217,22 @@ test('PPT header crop and reference controls retain their original actions',asyn
   await s.pptCrop.fire('click');
   assert.equal(s.pptCrop.attributes['aria-pressed'],'false');
   assert(!s.root.classes.has('reference-cropping'));
-  await s.pptReference.fire('click');
+  s.controller.referencePptPage();
   assert.equal(s.pptActions.length,1);
   assert.equal(s.pptActions[0].item,item);
   assert.equal(s.pptActions[0].name,'reference');
+});
+test('DOCX header uses the same region annotation control as PPT',async()=>{
+  const s=setup({wordHeader:true}),node=s.api.files()[2];
+  s.setWorkspace({node,chain:[{id:'default'},node]});
+  await s.wordCrop.fire('click');
+  assert.equal(s.wordCrop.attributes['aria-pressed'],'true');
+  assert.equal(s.wordCrop.textContent,'取消框选');
+  assert(s.root.classes.has('reference-cropping'));
+  s.controller.cancel();
+  assert.equal(s.wordCrop.attributes['aria-pressed'],'false');
+  assert.equal(s.wordCrop.textContent,'标注区域');
+  assert(!s.root.classes.has('reference-cropping'));
 });
 test('crop label changes without replacing its icon',async()=>{
   const s=setup({pptHeader:true}),node=s.api.files()[0];
@@ -164,7 +244,7 @@ test('crop label changes without replacing its icon',async()=>{
   assert.equal(label.textContent,'取消框选');
   assert.match(s.pptCrop.innerHTML,/<svg/);
   s.controller.cancel();
-  assert.equal(label.textContent,'框选区域');
+  assert.equal(label.textContent,'标注区域');
   assert.match(s.pptCrop.innerHTML,/<svg/);
 });
 

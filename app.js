@@ -932,14 +932,16 @@ const thumb = summaryArtifactIcon(type);
 
   function renderWordPreview(preview, item) {
     const zoom = item.officeZoom || 100;
+    const toolsOpen = Boolean(item.wordToolsExpanded);
+    const editing = Boolean(item.wordEditing);
     const sections = preview.sections.map((section, sectionIndex) => `
       <section class="word-section" id="word-section-${sectionIndex}">
         <h2>${esc(section.heading)}</h2>
-        ${section.paragraphs.map((text, paragraphIndex) => `<p contenteditable="${preview.referenceDemo ? 'false' : 'true'}" ${preview.referenceDemo ? '' : 'role="textbox" aria-multiline="true"'}
+        ${section.paragraphs.map((text, paragraphIndex) => `<p contenteditable="${!preview.referenceDemo || editing ? 'true' : 'false'}" ${!preview.referenceDemo || editing ? 'role="textbox" aria-multiline="true"' : ''}
           aria-label="${esc(section.heading)}第 ${paragraphIndex + 1} 段" data-word-section="${sectionIndex}" data-word-paragraph="${paragraphIndex}" spellcheck="false">${esc(text)}</p>`).join('')}
       </section>`).join('');
     return `<div class="pv-office pv-word" aria-label="文档演示预览">
-      <div class="office-toolbar">${preview.referenceDemo ? '<span>划选文字后，添加到对话提出修改要求</span>' : '<span>开始</span><span>插入</span><span>布局</span><span>审阅</span>'}<span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span><div class="office-zoom"><button type="button" data-office-zoom="-10" aria-label="缩小文档">−</button><span>${zoom}%</span><button type="button" data-office-zoom="10" aria-label="放大文档">＋</button></div></div>
+      <div class="office-toolbar word-toolbar"><div class="word-toolbar-controls" role="toolbar" aria-label="文档编辑工具"><button type="button" data-word-action="undo" aria-label="撤销" title="撤销"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m8 7-4 3 4 3M4 10h10a5.5 5.5 0 1 1-1 10.9"/></svg></button><button type="button" data-word-action="redo" aria-label="重做" title="重做"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m16 7 4 3-4 3M20 10H10a5.5 5.5 0 1 0 1 10.9"/></svg></button><button type="button" class="word-tools-toggle" data-word-action="toggle-tools" aria-label="${toolsOpen ? '收起' : '展开'}编辑工具" title="${toolsOpen ? '收起' : '展开'}编辑工具" aria-expanded="${toolsOpen}" aria-controls="word-edit-drawer"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M8 7.5V5.8a2.3 2.3 0 0 1 2.3-2.3h3.4A2.3 2.3 0 0 1 16 5.8v1.7"/><rect x="3" y="7.5" width="18" height="13.5" rx="2.6"/><path d="M3 13h6.5m5 0H21"/><rect x="9.5" y="11.7" width="5" height="2.8" rx=".8"/></svg></button></div><div class="word-edit-drawer" id="word-edit-drawer" ${toolsOpen ? '' : 'hidden'} role="toolbar" aria-label="文档文字工具"><button type="button" data-word-action="edit" aria-pressed="${editing}">${editing ? '完成编辑' : '编辑文字'}</button><button type="button" data-word-action="bold" aria-label="加粗" title="加粗"><strong>B</strong></button><button type="button" data-word-action="italic" aria-label="斜体" title="斜体"><em>I</em></button><button type="button" data-word-action="underline" aria-label="下划线" title="下划线"><u>U</u></button><span class="office-status" aria-live="polite">${item.officeEdited ? '已编辑 · 当前会话' : '已保存'}</span></div><div class="office-zoom"><button type="button" data-office-zoom="-10" aria-label="缩小文档"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><span>${zoom}%</span><button type="button" data-office-zoom="10" aria-label="放大文档"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div></div>
       <div class="word-layout"><div class="word-canvas"><article class="word-page" style="--office-zoom:${zoom / 100}"><h1>${esc(preview.title)}</h1><div class="word-subtitle">${esc(preview.subtitle || '上海虹桥店 · 2026 年 9 月 21 日')}</div><hr>${sections}<footer>由 CatPaw 生成 · 演示文档</footer></article></div></div>
     </div>`;
   }
@@ -2014,7 +2016,8 @@ promptGuide = text;
       setGoalMode(prompt, false);
     }
     const skillReferences = selectedSkills.get(prompt).map(name => `skill:${name}`).join(' ');
-    console.log('[CatPaw] 提交需求：', [promptGuide + text, skillReferences].filter(Boolean).join(' '), selectedLibraryFiles.get(prompt).map(entry => entry.node.name));
+    const connectorReferences = [...selectedConnectors.get(prompt)].map(name => `MCP:${name}`).join(' ');
+    console.log('[CatPaw] 提交需求：', [promptGuide + text, skillReferences, connectorReferences].filter(Boolean).join(' '), selectedLibraryFiles.get(prompt).map(entry => entry.node.name));
     prompt.value = '';
     clearSkillTags(prompt);
     clearLibraryFileCards(prompt);
@@ -2612,7 +2615,8 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
   const toolFilePptActions = document.getElementById('toolFilePptActions');
   const toolFilePptCrop = document.getElementById('toolFilePptCrop');
-  const toolFilePptReference = document.getElementById('toolFilePptReference');
+  const toolFileWordActions = document.getElementById('toolFileWordActions');
+  const toolFileWordComment = document.getElementById('toolFileWordComment');
 const fileActions = document.getElementById('fileActions');
 const fileActionsTrigger = document.getElementById('fileActionsTrigger');
 const fileActionsMenu = document.getElementById('fileActionsMenu');
@@ -2633,7 +2637,7 @@ const fileDetailsContent = document.getElementById('fileDetailsContent');
   const WORKSPACE_META = {
     conversation: {
       title: '对话',
-      icon: '<path d="M20 11.5a8 8 0 0 1-8 8 9 9 0 0 1-4-.9L3.5 20l1.3-4A8 8 0 1 1 20 11.5Z"/>',
+      icon: '<path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/>',
     },
     files: {
       title: '文件夹',
@@ -2689,6 +2693,7 @@ const fileDetailsContent = document.getElementById('fileDetailsContent');
   let rightPanel = null;
 let workbenchExpanded = false;
 let fullscreenConversationActive = false;
+let openingFileWorkspace = false;
 
   function syncFullscreenChat() {
     const item = openWorkspaces.find((workspace) => workspace.id === activeWorkspace);
@@ -2761,7 +2766,7 @@ let fullscreenConversationActive = false;
   }
   function clampWidth(value, bounds) { return Math.round(Math.min(bounds.max, Math.max(bounds.min, value))); }
 
-  // 右面板已打开时优先保留它；双栏放不下就临时以全屏工作区呈现。
+  // 文件预览先收窄到可用宽度；只有连最小宽度都放不下时才临时全屏。
   // 窗口变宽后恢复分栏，不改写用户手动放大和拖拽的偏好。
   function syncAdaptiveLayout() {
     if (!adaptiveLayoutReady) return;
@@ -2773,8 +2778,10 @@ let fullscreenConversationActive = false;
       : Math.min(480, preferredSidebarWidth ?? parseFloat(root.getPropertyValue('--sidebar-w')));
     const panelOpen = content.classList.contains('wb-open');
     const panelDesired = panelOpen ? desiredPanelWidth(width, sidebarDesired) : 0;
+    const filePanel = rightPanel === 'tools' && (openingFileWorkspace || content.classList.contains('wb-file-workspace'));
+    const panelWidthForLayout = filePanel ? 360 : panelDesired;
     const wasFullPanel = content.classList.contains('wb-expanded');
-    const fullPanel = panelOpen && (workbenchExpanded || width - sidebarDesired - panelDesired < mainMin);
+    const fullPanel = panelOpen && (workbenchExpanded || width - sidebarDesired - panelWidthForLayout < mainMin);
     if (!fullPanel && content.classList.contains('wb-scheduled-overlay')) {
       content.classList.remove('wb-scheduled-overlay');
       queueMicrotask(() => {
@@ -3541,7 +3548,7 @@ const TREE_CONTEXT_ITEMS = [
 { act: 'modify', label: '对话修改', svg: '<path d="M4 18.5V21h2.5L18.9 8.6a2.1 2.1 0 0 0-3-3L3.5 18Z"/><path d="m13.8 7.7 3 3"/>' },
 { act: 'share', label: '分享产物', svg: '<path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/>' },
 { act: 'template', label: '存为模版', svg: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8m-8 4h8"/>' },
-{ act: 'chat', label: '添加到对话', svg: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>' },
+{ act: 'chat', label: '添加到对话', svg: '<path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/>' },
 { act: 'copy-path', label: '复制路径', divider: true, svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
 { act: 'copy-relative-path', label: '复制相对路径', svg: '<path d="M3 15.5V5.8A2.8 2.8 0 0 1 5.8 3h8.4A2.8 2.8 0 0 1 17 5.8V6M3 15.5A2.5 2.5 0 0 0 5.5 18H8"/><rect x="8" y="9" width="13" height="12" rx="3"/>' },
 { act: 'reveal', label: '在 Finder 中显示', svg: '<path d="M3 11.2V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v1.4"/><path d="M3.2 11.2h17.6c1.2 0 1.7.8 1.4 2l-.8 5c-.3 1.8-1.1 2.6-2.7 2.6H5.3c-1.6 0-2.4-.8-2.7-2.6l-.8-5c-.3-1.2.2-2 1.4-2Z"/><path d="M9.5 16h5"/>' },
@@ -3666,7 +3673,7 @@ const preview = node.preview;
 
   const FILE_ACTION_ICONS = {
     preview: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 5.5 4-5.5 4V8Z"/>',
-    chat: '<path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6.5a4.5 4.5 0 0 1-4.5 4.5h-1.7l-2.2 1.8a1 1 0 0 1-1.2 0L9.2 19H7.5A4.5 4.5 0 0 1 3 14.5V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M12 8.5v6M9 11.5h6"/>',
+    chat: '<path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/>',
     reveal: '<path d="M3 9V7.5A3.5 3.5 0 0 1 6.5 4h2.6a1.5 1.5 0 0 1 1.1.5l1.6 1.8h5.7A3.5 3.5 0 0 1 21 9.8v6.7a3.5 3.5 0 0 1-3.5 3.5h-11A3.5 3.5 0 0 1 3 16.5Z"/><path d="M3 10.5h18"/>',
     default: '<path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/>',
     open: '<rect x="3" y="4" width="18" height="16" rx="4"/><path d="M3 9h18"/>',
@@ -3723,6 +3730,7 @@ const preview = node.preview;
     toolFileEditDiscard.hidden = !editing;
     toolFileEditSave.disabled = !editing;
     toolFilePptActions.hidden = editing || !(item.node?.preview?.referenceDemo && item.node.preview.kind === 'ppt' && hasVisualPreview);
+    toolFileWordActions.hidden = editing || !(item.node?.preview?.referenceDemo && item.node.preview.kind === 'word' && hasVisualPreview);
     toolFileShare.hidden = editing || !isArtifactNode(item.node);
     setFileActionsMenu(false);
     activeFilePath = treeVisible ? item.path || null : null;
@@ -3762,7 +3770,11 @@ const preview = node.preview;
     if (item.sourceDraft === undefined) item.previewMode = options.previewMode;
     rememberRecentFile(node, chain);
 
-    if (rightPanel !== 'tools') setRightPanel('tools');
+    if (rightPanel !== 'tools') {
+      openingFileWorkspace = true;
+      try { setRightPanel('tools'); }
+      finally { openingFileWorkspace = false; }
+    }
     activateWorkspace(item.id);
     return item;
   }
@@ -3774,8 +3786,9 @@ const preview = node.preview;
     });
   }
 
-  function openArtifactPreview(node, chain) {
+  function openArtifactPreview(node, chain, { fromConversation = false } = {}) {
     // 对话产物和摘要产物都是预览入口：先关闭共享目录树，再激活文件页签。
+    if (fromConversation) workbenchExpanded = false;
     fileTreeVisible = false;
     openFileWorkspace(node, chain, {
       path: null,
@@ -3964,9 +3977,38 @@ const preview = node.preview;
     toolFilePreviewBody.querySelector('.source-editor')?.focus();
   });
 
+
+  toolFilePreviewBody.addEventListener('pointerdown', event => {
+    if (event.target.closest('[data-word-action="bold"],[data-word-action="italic"],[data-word-action="underline"],[data-word-action="undo"],[data-word-action="redo"]')) event.preventDefault();
+  });
+
   toolFilePreviewBody.addEventListener('click', (event) => {
     const item = currentFileWorkspace();
     if (!item?.node?.preview) return;
+    const wordAction = event.target.closest('[data-word-action]');
+    if (wordAction) {
+      const action = wordAction.dataset.wordAction;
+      if (action === 'toggle-tools') {
+        item.wordToolsExpanded = !item.wordToolsExpanded;
+        const drawer = toolFilePreviewBody.querySelector('.word-edit-drawer');
+        drawer.hidden = !item.wordToolsExpanded;
+        wordAction.setAttribute('aria-expanded', String(item.wordToolsExpanded));
+        wordAction.setAttribute('aria-label', `${item.wordToolsExpanded ? '收起' : '展开'}编辑工具`);
+        wordAction.title = wordAction.getAttribute('aria-label');
+      } else if (action === 'edit') {
+        item.wordEditing = !item.wordEditing;
+        wordAction.setAttribute('aria-pressed', String(item.wordEditing));
+        wordAction.textContent = item.wordEditing ? '完成编辑' : '编辑文字';
+        toolFilePreviewBody.querySelectorAll('[data-word-paragraph]').forEach(paragraph => {
+          paragraph.contentEditable = String(item.wordEditing);
+          if (item.wordEditing) { paragraph.setAttribute('role', 'textbox'); paragraph.setAttribute('aria-multiline', 'true'); }
+          else { paragraph.removeAttribute('role'); paragraph.removeAttribute('aria-multiline'); }
+        });
+      } else if (item.wordEditing && ['undo', 'redo', 'bold', 'italic', 'underline'].includes(action)) {
+        document.execCommand(action, false, null);
+      }
+      return;
+    }
     const zoom = event.target.closest('[data-office-zoom]');
     if (zoom) {
       item.officeZoom = Math.min(140, Math.max(70, (item.officeZoom || 100) + Number(zoom.dataset.officeZoom)));
@@ -4525,6 +4567,7 @@ window.addEventListener('resize', closeTreeContextMenu);
     setPromptGuide('');
     prompt.value = activeCase.prompt;
     clearSkillTags(prompt);
+    clearConnectorTags(prompt);
     addSkillTag(prompt, skill);
     attachCaseArtifact(activeCase, prompt);
     prompt.dispatchEvent(new Event('input', { bubbles: true }));
@@ -4572,6 +4615,38 @@ const mainView = document.querySelector('.main');
   const conversationPrompt = document.getElementById('conversationPrompt');
   const conversationGoalTag = document.getElementById('conversationGoalTag');
   const conversationComposer = document.getElementById('conversationComposer');
+  // Follow growing replies and composer/queue resizing only while reading the latest content.
+  // Observing geometry covers streaming, cards, files and expanded tool output alike.
+  let conversationFollowLatest = true;
+  let conversationFollowFrame = null;
+  function scheduleConversationFollow() {
+    if (conversationFollowFrame !== null) return;
+    conversationFollowFrame = requestAnimationFrame(() => {
+      conversationFollowFrame = null;
+      if (!conversationFollowLatest || !conversationScroll.clientHeight) return;
+      conversationScroll.scrollTop = conversationScroll.scrollHeight;
+    });
+  }
+  conversationScroll.addEventListener('scroll', () => {
+    conversationFollowLatest = conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight <= 4;
+  }, { passive:true });
+  // Cancel following before the next streaming frame when the reader scrolls back.
+  conversationScroll.addEventListener('wheel', event => {
+    if (event.deltaY < 0) conversationFollowLatest = false;
+  }, { passive:true });
+  let conversationTouchY = null;
+  conversationScroll.addEventListener('touchstart', event => {
+    conversationTouchY = event.touches[0]?.clientY ?? null;
+  }, { passive:true });
+  conversationScroll.addEventListener('touchmove', event => {
+    const y = event.touches[0]?.clientY;
+    if (conversationTouchY !== null && y > conversationTouchY) conversationFollowLatest = false;
+    conversationTouchY = y ?? null;
+  }, { passive:true });
+  const conversationFollowObserver = new ResizeObserver(scheduleConversationFollow);
+  conversationFollowObserver.observe(conversationThread);
+  conversationFollowObserver.observe(conversationScroll);
+  conversationFollowObserver.observe(conversationComposer.closest('.conversation-composer-wrap'));
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
   const retailConversationTask = document.getElementById('retailFirstConversationTask');
@@ -4584,7 +4659,21 @@ const mainView = document.querySelector('.main');
   ];
   const artifactEditingTask = document.getElementById('artifactEditingTask');
   const supplierComparisonTask = document.getElementById('supplierComparisonTask');
+  const interventionTask = document.getElementById('interventionTask');
+  const recoveryTask = document.getElementById('recoveryTask');
+  const retryRecoveryTask=document.getElementById('retryRecoveryTask');
+  const failureRecoveryTask=document.getElementById('failureRecoveryTask');
   const conversationExamples = new Map([
+    [retryRecoveryTask,{folderId:'default',files:[],turns:[{prompt:'对照供应商交付记录，帮我梳理供应链风险和应对预案。',reply:''}]}],
+    [failureRecoveryTask,{folderId:'default',files:[],turns:[{prompt:'把季度经营复盘材料做成一段视频，介绍经营概况、区域差异和后续行动。',reply:''}]}],
+    [recoveryTask, {
+      folderId:'default',files:[],
+      turns:[{prompt:'我们店准备下周上线一份双人套餐，帮我整理套餐搭配和上架文案。先问清楚我的需求，再准备方案。',reply:''}],
+    }],
+    [interventionTask, {
+      folderId:'default',files:[],
+      turns:[{prompt:'帮我整理本季度经营复盘，先分析各区域表现，再给出后续行动建议。',reply:''}],
+    }],
     [supplierComparisonTask, {
       folderId:'default',
       turns:[{ prompt:'对比三家供应商的报价与交期，帮我选一个合适的方案，再整理成方便讨论的采购建议。',
@@ -4593,9 +4682,9 @@ const mainView = document.querySelector('.main');
     }],
     [artifactEditingTask, {
       folderId:'default',
-      turns:[{prompt:'把季度经营数据和复盘要点整理成汇报 PPT，附上经营数据表和复盘说明，方便我继续调整。',
-        reply:'已整理好季度复盘初稿，按经营概况、区域表现和行动计划组织，共 5 页。华东区域履约率偏低，具体原因仍需核对。\n\n打开产物后，可以选择 PPT 页面或框选局部、选中表格区域、划选文档文字，再点击「添加到对话」，围绕所选内容提出修改要求。'}],
-      files:['季度经营复盘.pptx','季度经营数据.xlsx','季度经营复盘说明.docx'],
+      turns:[{prompt:'把季度经营数据和复盘要点整理成汇报 PPT，附上复盘说明，方便我继续调整。',
+        reply:'已整理好季度复盘初稿，按经营概况、区域表现和行动计划组织，共 5 页。华东区域履约率偏低，具体原因仍需核对。\n\n打开产物后，可以选择 PPT 页面或框选局部、划选文档文字，再点击「添加到对话」，围绕所选内容提出修改要求。'}],
+      files:['季度经营复盘.pptx','季度经营复盘说明.docx'],
     }],
     [conversationTask, {
       folderId: 'default',
@@ -5315,6 +5404,19 @@ const mainView = document.querySelector('.main');
   const startedConversationDemos = new Set();
   const conversationGoals = new Map();
   let activeConversationTask = null;
+  const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure']].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
+    thread:conversationThread,mode,host:document.getElementById('clarificationQuestionHost'),composer:conversationComposer,
+    onChange:phase=>{
+      if(task===recoveryTask){
+        const pending=phase!=='done';
+        if(pending)task.dataset.state='await';else delete task.dataset.state;
+        task.querySelector('.task-state').innerHTML=pending?'<em class="tag-await">待确认</em>':'';
+      }
+      if(activeConversationTask===task)conversationThreads.set(task,conversationThread.innerHTML);
+      scheduleConversationFollow();
+    },
+  })]));
+  const recoverySceneTasks={'2.3':recoveryTask,'2.3-2':retryRecoveryTask,'2.3-3':failureRecoveryTask};
   const supplierDemo = window.CatPawSupplierDemo.createController({
     container:conversationThread,
     isActive:() => activeConversationTask === supplierComparisonTask,
@@ -5332,6 +5434,76 @@ const mainView = document.querySelector('.main');
       if (activeConversationTask === supplierComparisonTask) conversationThreads.set(supplierComparisonTask, conversationThread.innerHTML);
     },
   });
+  function restoreQueuedMessage(message) {
+    if(activeConversationTask!==interventionTask||conversationPage.hidden)return false;
+    const text=message.rawText??message.text;
+    const existing=conversationPrompt.value.trim();
+    conversationPrompt.value=[text,existing].filter(Boolean).join('\n\n');
+    const files=selectedLibraryFiles.get(conversationPrompt);
+    for(const entry of message.attachments||[])if(!files.some(file=>file.node===entry.node))files.push(entry);
+    renderLibraryFileCards(conversationPrompt);
+    for(const skill of message.skills||[])addSkillTag(conversationPrompt,skill);
+    artifactSelection?.restoreDraft(message.references||[]);
+    resizeConversationPrompt();
+    conversationComposerDrafts.set(interventionTask,conversationPrompt.value);
+    conversationPrompt.focus({preventScroll:true});
+    conversationPrompt.setSelectionRange(0,text.length);
+    return true;
+  }
+  const queueDemo = window.CatPawQueueDemo.createController({
+    characterInterval:['2.2','2.2-2','2.2-3'].includes(strategyScene)?80:55,
+    container:document.getElementById('conversationQueueGroup'),thread:conversationThread,
+    onResume:message=>{
+      conversationThread.insertAdjacentHTML('beforeend',
+        (message?renderConversationTurnTime(new Date())+renderUserMessage(message.text,message.attachments,false,false,message.references):'')+
+        `<div class="conversation-message assistant-message"><div class="assistant-content">${queueDemo.initial()}</div></div>`);
+      moveConversationProgressToLatestTurn();
+      renderConversationTurnNav();
+      requestAnimationFrame(()=>{conversationScroll.scrollTop=conversationScroll.scrollHeight;});
+    },
+    onEdit:restoreQueuedMessage,
+    onChange:()=>{
+      if(activeConversationTask===interventionTask)conversationThreads.set(interventionTask,conversationThread.innerHTML);
+      syncInterventionComposer();
+    },
+  });
+  function syncInterventionComposer(){
+    const executionVisible=!conversationPage.hidden&&conversationGoalTag.hidden;
+    const isIntervention=activeConversationTask===interventionTask&&executionVisible;
+    const panel=activeConversationTask===conversationTask&&executionVisible?conversationThread.querySelector('.conversation-stage-demo'):null;
+    const paused=isIntervention?queueDemo.state.paused:Boolean(panel?.dataset.pausedAt);
+    const running=isIntervention?queueDemo.state.running:Boolean(panel&&conversationStageFrames[Number(panel.dataset.stageFrame)]?.stage!=='done');
+    const hasMessage=Boolean(conversationPrompt.value.trim()||selectedLibraryFiles.get(conversationPrompt)?.length||selectedSkills.get(conversationPrompt)?.length||artifactSelection?.entries().length);
+    const action=paused?(hasMessage?'resume':'continue'):running&&!hasMessage?'pause':'send';
+    const label=action==='pause'?'暂停当前任务':action==='continue'?'继续当前任务':action==='resume'?'发送':isIntervention&&running?'加入队列':'发送';
+    conversationSend.dataset.executionAction=action;
+    conversationSend.title=label;
+    conversationSend.setAttribute('aria-label',label);
+    conversationSend.disabled=action==='send'&&(!hasMessage||(!conversationGoalTag.hidden&&!conversationPrompt.value.trim()));
+    conversationSend.classList.toggle('is-pause',action==='pause');
+    const icon=conversationSend.querySelector('.ic');
+    const iconMarkup=action==='pause'
+      ?'<rect x="4.5" y="5" width="5.5" height="14" rx="1.4"/><rect x="14" y="5" width="5.5" height="14" rx="1.4"/>'
+      :action==='continue'
+        ?'<path d="M7 5.5a1 1 0 0 1 1.5-.85l10.4 6.4a1.1 1.1 0 0 1 0 1.9l-10.4 6.4A1 1 0 0 1 7 18.5Z"/>'
+        :'<path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/>';
+    if(icon.innerHTML!==iconMarkup)icon.innerHTML=iconMarkup;
+  }
+  function handleConversationComposerAction(){
+    syncInterventionComposer();
+    const action=conversationSend.dataset.executionAction;
+    if(action==='pause'||action==='continue'){
+      if(activeConversationTask===interventionTask){
+        if(action==='pause')queueDemo.pause();else queueDemo.resume();
+      }else if(activeConversationTask===conversationTask){
+        if(action==='pause')setConversationStagePaused(conversationThread.querySelector('.conversation-stage-demo'),true);
+        else resumeConversationStageWithMessage();
+      }
+      return;
+    }
+    sendConversationMessage();
+  }
+  window.addEventListener('pagehide',()=>queueDemo.stop());
   function updateSummaryArtifactBadge() {
     const scheduled = mainView.classList.contains('conversation-open') && scheduledRunTasks.has(activeConversationTask);
     content.classList.toggle('scheduled-conversation', scheduled);
@@ -5378,7 +5550,7 @@ const mainView = document.querySelector('.main');
       stage: 'work', planCompleted: 0, globalState: 'reading',
       progress: '正在读取趋势图、异常明细和分析文档，确认文件与字段是否齐全。',
       tool: '读取文件', toolIcon: 'file', technical: '打开趋势图、门店履约异常明细.xlsx 和门店履约分析.docx，检查订单 ID、门店及时间字段。',
-      detail: '正在读取三份资料并检查可用字段。',
+      detail: '正在读取三份资料并检查可用字段',
       call: { name: 'read_file', input: { files: ['趋势图.png', '门店履约异常明细.xlsx', '门店履约分析.docx'] } },
       completed: '已读取趋势图、异常明细和分析文档',
     },
@@ -5386,7 +5558,7 @@ const mainView = document.querySelector('.main');
       stage: 'work', planCompleted: 0, globalState: 'analyzing',
       progress: '正在按订单去重并核对接单、到店、出餐和交接时间，单列缺失记录。',
       tool: '表格分析', toolIcon: 'table', technical: '按订单 ID 去重，检查接单、到店、出餐和交接时间戳；缺失值不参与确定性归因。',
-      detail: '正在核对订单和时间字段，标出缺失记录。',
+      detail: '正在核对订单和时间字段，标出缺失记录',
       call: { name: 'python', input: { code: 'df = pd.read_excel("门店履约异常明细.xlsx")\ndf = df.drop_duplicates(subset=["订单 ID"])\ntime_fields = ["接单时间", "到店时间", "出餐时间", "交接时间"]\nmissing_records = df[df[time_fields].isna().any(axis=1)]' } },
       completed: '已核对订单口径，并标出缺失时间戳',
     },
@@ -5398,7 +5570,7 @@ const mainView = document.querySelector('.main');
       stage: 'work', planCompleted: 1, globalState: 'analyzing',
       progress: '正在比较超时时长、影响订单数和重复发生情况，筛选需要优先跟进的异常。',
       tool: '数据分析', toolIcon: 'chart', technical: '按超时时长、影响订单数和重复发生次数比较异常；缺失时间戳记录单独保留。',
-      detail: '正在比较异常持续时间、影响范围和重复发生情况。',
+      detail: '正在比较异常持续时间、影响范围和重复发生情况',
       call: { name: 'python', input: { code: 'priority = df.sort_values(\n    ["超时时长", "影响订单数", "重复发生次数"],\n    ascending=False\n).head(5)' } },
       completed: '已比较异常的影响范围和重复情况',
     },
@@ -5406,7 +5578,7 @@ const mainView = document.querySelector('.main');
       stage: 'work', planCompleted: 1, globalState: 'checking',
       progress: '正在对照筛选结果与分析文档的结论，检查优先级是否有遗漏或矛盾。',
       tool: '读取文档', toolIcon: 'document', technical: '读取门店履约分析.docx 的结论段，逐项对照异常明细中的门店、时段与订单数量。',
-      detail: '正在把筛选结果与分析文档交叉核对。',
+      detail: '正在把筛选结果与分析文档交叉核对',
       call: { name: 'read_file', input: { path: '门店履约分析.docx', section: '结论与建议' } },
       completed: '已对照分析文档复核优先级',
     },
@@ -5418,7 +5590,7 @@ const mainView = document.querySelector('.main');
       stage: 'work', planCompleted: 2, globalState: 'generating',
       progress: '正在整理优先异常的跟进顺序，并标注仍需人工确认的事项。',
       tool: '整理结果', toolIcon: 'list', technical: '汇总优先跟进的 5 条异常，列出门店侧处理顺序和待确认的责任归属。',
-      detail: '正在整理 5 条优先异常和处理建议。',
+      detail: '正在整理 5 条优先异常和处理建议',
       call: { name: 'python', input: { code: 'recommendations = priority.copy()\nrecommendations["责任归属"] = "待人工确认"\nrecommendations.to_excel("门店履约异常明细.xlsx", index=False)' } },
       completed: '已整理 5 条优先异常和处理顺序',
     },
@@ -5426,7 +5598,7 @@ const mainView = document.querySelector('.main');
       stage: 'work', planCompleted: 2, globalState: 'checking',
       progress: '正在逐项复核建议与原始记录的对应关系，避免把推测写成结论。',
       tool: '结果检查', toolIcon: 'check', technical: '检查每条建议与异常明细的对应关系；保留待确认责任方和缺失时间戳。',
-      detail: '正在复核建议与原始记录的对应关系。',
+      detail: '正在复核建议与原始记录的对应关系',
       call: { name: 'python', input: { code: 'assert recommendations["订单 ID"].isin(df["订单 ID"]).all()\nassert recommendations["责任归属"].eq("待人工确认").all()\nassert len(recommendations) == 5' } },
       completed: '已复核建议依据和待确认事项',
     },
@@ -5441,9 +5613,15 @@ const mainView = document.querySelector('.main');
     },
   ];
   const conversationStagePlan = [
-    { title: '核对资料与统计口径' },
+    { title: '核对资料口径' },
     { title: '比较门店跟进优先级' },
-    { title: '整理建议与待确认项' },
+    { title: '整理处理建议与待人工确认事项' },
+  ];
+  const conversationStageDelegations = [
+    { title: '核对超时时长', detail: '按门店汇总超时订单，找出持续时间最长的异常。' },
+    { title: '评估影响范围', detail: '统计受影响的订单数，确认哪些门店需要优先处理。' },
+    { title: '排查重复异常', detail: '核对同类问题是否反复出现，避免只看单次峰值。' },
+    { title: '复核分析结论', detail: '将筛选结果与分析文档交叉核对，标出遗漏或矛盾。' },
   ];
   const conversationGlobalStates = {
     planning: '正在制定计划',
@@ -5471,13 +5649,58 @@ const mainView = document.querySelector('.main');
   }
 
   function renderStageAcknowledgement(text) {
-    const characters = Array.from(text);
-    const fragments = [];
-    for (let index = 0; index < characters.length; index += 6) fragments.push(characters.slice(index, index + 6).join(''));
-    const interval = 1100 / Math.max(1, fragments.length - 1);
-    return fragments.map((fragment, index) => `<span class="stage-ink-fragment" style="--ink-delay:${120 + Math.round(index * interval)}ms">${esc(fragment)}</span>`).join('');
+    const segmenter = typeof Intl.Segmenter === 'function'
+      ? new Intl.Segmenter('zh-CN', { granularity: 'grapheme' })
+      : null;
+    const characters = segmenter
+      ? Array.from(segmenter.segment(text), ({ segment }) => segment)
+      : Array.from(text);
+    const interval = Math.min(52, 560 / Math.max(1, characters.length - 1));
+    return characters.map((character, index) => `<span class="stage-ink-fragment" style="--ink-delay:${120 + Math.round(index * interval)}ms">${esc(character)}</span>`).join('');
   }
 
+  function renderStageDelegations(frameIndex) {
+    if (frameIndex !== 4 && frameIndex !== 5) return '';
+    const reviewing = frameIndex === 5;
+    const rows = conversationStageDelegations.map((task, index) => {
+      const state = reviewing ? (index < 3 ? 'done' : 'running') : (index < 3 ? 'running' : 'queued');
+      const status = state === 'done' ? '已完成' : state === 'running' ? '执行中' : '等待中';
+      const icon = state === 'done'
+        ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>'
+        : state === 'running' ? '<span class="spinner" aria-hidden="true"></span>' : '';
+      return `<li class="stage-delegation-node" data-state="${state}"><details data-delegation-index="${index}"><summary aria-label="子 Agent：${esc(task.title)}，${status}，查看任务说明"><span class="stage-delegation-title">${esc(task.title)}</span><span class="stage-delegation-status">${icon}${status}</span><svg viewBox="0 0 24 24" class="ic stage-delegation-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>${esc(task.detail)}</p></details></li>`;
+    }).join('');
+    return `<section class="stage-delegation" aria-label="子 Agent 任务分派"><p class="stage-delegation-heading">${reviewing ? '4 个子 Agent 正在汇总结果' : '正在向 4 个子 Agent 分派任务'}</p><ol class="stage-delegation-list">${rows}</ol></section>`;
+  }
+
+  const stageResultHistory = [];
+  function stageResultNode() {
+    const example = conversationExamples.get(conversationTask);
+    return FOLDERS.find(folder => folder.id === example.folderId).files.find(file => file.name === '门店履约异常明细.xlsx');
+  }
+  function renderStageRevision(resultName, version) {
+    const before=stageResultHistory[stageResultHistory.length-1][0].rows;
+    const after=stageResultNode().preview.sheets[0].rows;
+    const moved=after.filter((row,index)=>JSON.stringify(row)!==JSON.stringify(before[index])).length;
+    return `<section class="stage-revision" aria-label="产物修改总结">
+      <div class="stage-revision-icon conversation-artifact-icon" aria-hidden="true"><img src="assets/artifact-${artifactIconByExtension[resultName.split('.').pop().toLowerCase()] || 'doc'}.svg" alt=""></div>
+      <div class="stage-revision-info"><span>已编辑 ${esc(resultName)}</span><small>版本 ${version} · 调整 ${moved} 行顺序</small></div>
+      <button type="button" data-stage-undo>撤销 ↶</button>
+      <details class="stage-revision-details"><summary>查看变更</summary>
+        <div class="stage-revision-comparison"><p>按超时率从高到低排序</p>
+          <table><thead><tr><th>位置</th><th>修改前</th><th>修改后</th></tr></thead>
+          <tbody>${after.map((row,index)=>`<tr><td>${index+1}</td><td>${esc(before[index].slice(0,3).join(' · '))}</td><td>${esc(row.slice(0,3).join(' · '))}</td></tr>`).join('')}</tbody></table>
+        </div>
+      </details>
+      <p class="stage-version-status" role="status" aria-live="polite"></p>
+    </section>`;
+  }
+  function renderStageResult(frame) {
+    const resultName = '门店履约异常明细.xlsx';
+    const version = stageResultHistory.length + 1;
+    const change = stageResultHistory.length ? '按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。' : '汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。';
+    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>${esc(frame.summary)}${esc(frame.caveat)}</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
+  }
   function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false, visibleFrames = null) {
     const frame = conversationStageFrames[frameIndex];
     const before = frame.stage === 'plan';
@@ -5488,25 +5711,26 @@ const mainView = document.querySelector('.main');
     const plan = conversationStagePlan.map((step, index) => {
       const state = before ? 'pending' : index < completedCount ? 'done' : index === completedCount ? 'current' : 'pending';
       const label = state === 'done' ? '已完成' : state === 'current' ? '进行中' : '待开始';
-      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${state === 'done' ? check : `<span class="stage-plan-digit">${index + 1}</span>`}</span><span class="stage-plan-title">${esc(step.title)}</span></li>`;
+      const statusIcon = state === 'done' ? check : state === 'current' ? '<span class="spinner" aria-hidden="true"></span>' : `<span class="stage-plan-digit">${index + 1}</span>`;
+      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title">${esc(step.title)}</span></li>`;
     }).join('');
     const planMarkup = `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="stagePlanBody"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${conversationStagePlan.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="stagePlanBody"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
     const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex).filter((event,index) => event.call && (!visibleFrames || visibleFrames.includes(index+1)));
     const completedItems = completedEvents.map((event, index) => `<li class="stage-completed-item${index === newCompletedIndex ? ' is-new' : ''}"><span class="stage-completed-check" aria-hidden="true">${check}</span><span class="stage-completed-text">${esc(event.completed)}</span><span class="stage-completed-tool">${esc(development ? event.call.name : event.tool)}</span></li>`).join('');
-    const completedMarkup = completedEvents.length
-      ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner"><section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
+    const completedMarkup = completedEvents.length || done
+      ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner">${done ? planMarkup : ''}<section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
       : '';
     const checkpointMarkup = conversationStageFrames.slice(0, frameIndex + 1)
       .filter(event => event.stage === 'checkpoint')
       .map(event => `<section class="stage-checkpoint" data-completed-group="${event.planCompleted}" aria-label="${esc(conversationStagePlan[event.planCompleted - 1].title)}的阶段总结"><p>${esc(event.summary)}</p></section>`).join('');
-    const currentMarkup = frame.stage !== 'work' ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${renderStageToolCall(frame, development)}</section>`;
-    const resultName = '门店履约异常明细.xlsx';
-    const resultMarkup = done ? `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>${esc(frame.summary)}${esc(frame.caveat)}</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section></div>` : '';
+    const delegationStage = frameIndex === 4 || frameIndex === 5;
+    const currentMarkup = frame.stage !== 'work' ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${delegationStage ? renderStageDelegations(frameIndex) : ''}${!delegationStage || development ? renderStageToolCall(frame, development) : ''}</section>`;
+    const resultMarkup = done ? renderStageResult(frame) : '';
     const thinkingStatus = `<strong class="stage-global-label" role="status" aria-live="polite" aria-atomic="true">${esc(conversationGlobalStates[frame.globalState])}</strong><span class="stage-elapsed" aria-label="任务累计用时">0秒</span>`;
     const thinkingMarkup = `<div class="stage-thinking" data-global-state="${esc(frame.globalState)}">${completedEvents.length
-      ? `<button class="stage-thinking-status stage-thinking-toggle" type="button" aria-expanded="${thinkingOpen}" aria-controls="stageThinkingDetails">${thinkingStatus}<svg viewBox="0 0 24 24" class="ic stage-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>${completedMarkup}`
-      : `<div class="stage-thinking-status">${thinkingStatus}</div>`}</div>`;
-    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + planMarkup + checkpointMarkup + currentMarkup + resultMarkup;
+      ? `<button class="stage-thinking-status stage-thinking-toggle" type="button" aria-expanded="${thinkingOpen}" aria-controls="stageThinkingDetails">${thinkingStatus}<svg viewBox="0 0 24 24" class="ic stage-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>`
+      : `<div class="stage-thinking-status">${thinkingStatus}</div>`}${completedMarkup}</div>`;
+    return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + (done ? '' : planMarkup) + checkpointMarkup + currentMarkup + resultMarkup;
   }
 
   function renderConversationStage(entering = false) {
@@ -5524,9 +5748,15 @@ const mainView = document.querySelector('.main');
     const elapsed = panel.querySelector('.stage-elapsed');
     if (!elapsed) return;
     const startedAt = Number(panel.dataset.startedAt) || Date.now();
-    const endedAt = Number(panel.dataset.finishedAt) || Date.now();
-    const seconds = Math.max(0, Math.floor((endedAt - startedAt) / 1000));
+    const endedAt = Number(panel.dataset.finishedAt) || Number(panel.dataset.pausedAt) || Date.now();
+    const seconds = Math.max(0, Math.floor((endedAt - startedAt - Number(panel.dataset.pausedDuration||0)) / 1000));
     elapsed.textContent = formatStageElapsed(seconds);
+    if(panel.dataset.newRoundThinking&&Number(panel.dataset.stageFrame)===0&&!panel.dataset.pausedAt){
+      const state=seconds<2?'thinking':'planning';
+      const label=panel.querySelector('.stage-global-label');
+      if(label&&label.textContent!==conversationGlobalStates[state])label.textContent=conversationGlobalStates[state];
+      const thinking=panel.querySelector('.stage-thinking');if(thinking)thinking.dataset.globalState=state;
+    }
   }
   function syncStageClock() {
     clearInterval(stageClockTimer);
@@ -5536,7 +5766,7 @@ const mainView = document.querySelector('.main');
       ? null : conversationThread.querySelector('.conversation-stage-demo');
     if (!panel) return;
     updateStageClock(panel);
-    if (conversationStageFrames[Number(panel.dataset.stageFrame)]?.stage === 'done') return;
+    if (panel.dataset.pausedAt || conversationStageFrames[Number(panel.dataset.stageFrame)]?.stage === 'done') return;
     stageClockTimer = setInterval(() => {
       if (panel.isConnected && !conversationPage.hidden && activeConversationTask === conversationTask) updateStageClock(panel);
       else syncStageClock();
@@ -5545,31 +5775,43 @@ const mainView = document.querySelector('.main');
   function scheduleStageAutoAdvance(panel) {
     clearTimeout(stageAutoTimer);
     if (strategyScene) return; // The active slide owns the presentation timeline.
-    if (!panel || panel.classList.contains('is-entering') || conversationPage.hidden || activeConversationTask !== conversationTask) return;
+    if (!panel || panel.dataset.pausedAt || panel.classList.contains('is-entering') || conversationPage.hidden || activeConversationTask !== conversationTask) return;
     const frameIndex = Number(panel.dataset.stageFrame);
     if (frameIndex >= conversationStageFrames.length - 1) return;
-    const duration = frameIndex === 0 ? 6000 : conversationStageFrames[frameIndex].stage === 'checkpoint' ? 3000 : 5000;
+    const duration = panel.dataset.autoRemaining!==undefined ? Number(panel.dataset.autoRemaining) : frameIndex === 0 ? 6000 : conversationStageFrames[frameIndex].stage === 'checkpoint' ? 3000 : 5000;
+    delete panel.dataset.autoRemaining;
+    const dueAt=String(Date.now()+duration);
+    panel.dataset.autoDueAt=dueAt;
     stageAutoTimer = setTimeout(() => {
-      if (panel.isConnected && !conversationPage.hidden && activeConversationTask === conversationTask && Number(panel.dataset.stageFrame) === frameIndex) {
+      if (panel.isConnected && panel.dataset.autoDueAt===dueAt && !panel.dataset.pausedAt && !conversationPage.hidden && activeConversationTask === conversationTask && Number(panel.dataset.stageFrame) === frameIndex) {
+        delete panel.dataset.autoDueAt;
         advanceConversationStage(panel, frameIndex + 1);
       }
     }, duration);
   }
 
   function updateConversationStage(panel, frameIndex, planOpen = frameIndex === 0, thinkingOpen = panel.querySelector('.stage-thinking-toggle')?.getAttribute('aria-expanded') === 'true') {
+    if(panel.dataset.pausedAt)return;
+    const openDelegations = [...panel.querySelectorAll('.stage-delegation-node details[open]')].map(item => item.dataset.delegationIndex);
     clearTimeout(stageAutoTimer);
+    delete panel.dataset.autoDueAt;
+    delete panel.dataset.autoRemaining;
     const followLatest = conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight < 64;
     const previousEvents = conversationStageFrames.slice(1, Number(panel.dataset.stageFrame)).filter(event => event.call).length;
     const nextEvents = conversationStageFrames.slice(1, frameIndex).filter(event => event.call).length;
     if (frameIndex === 0 && Number(panel.dataset.stageFrame) === conversationStageFrames.length - 1) {
       panel.dataset.startedAt = String(Date.now());
       delete panel.dataset.finishedAt;
+      delete panel.dataset.pausedDuration;
+      delete panel.dataset.newRoundThinking;
+      delete panel.dataset.acknowledgement;
       thinkingOpen = false;
       panel.classList.toggle('is-entering', !reducedMotion.matches);
     }
     if (conversationStageFrames[frameIndex].stage === 'done' && !panel.dataset.finishedAt) panel.dataset.finishedAt = String(Date.now());
     panel.dataset.stageFrame = String(frameIndex);
     panel.innerHTML = renderConversationStageBody(frameIndex, planOpen, nextEvents > previousEvents ? nextEvents - 1 : -1, thinkingOpen);
+    openDelegations.forEach(index => { const item = panel.querySelector(`.stage-delegation-node details[data-delegation-index="${index}"]`); if (item) item.open = true; });
     syncStageDemoControls();
     conversationThreads.set(conversationTask, conversationThread.innerHTML);
     scheduleStageAutoAdvance(panel);
@@ -5581,6 +5823,7 @@ const mainView = document.querySelector('.main');
   }
 
   function advanceConversationStage(panel, next, immediate = false) {
+    if(panel.dataset.pausedAt)return;
     clearTimeout(stageAutoTimer);
     if (stageAdvanceTimer) return;
     if (!immediate && Number(panel.dataset.stageFrame) === 0 && next === 1 && !reducedMotion.matches) {
@@ -5589,8 +5832,11 @@ const mainView = document.querySelector('.main');
       plan.querySelector('.stage-plan-toggle').setAttribute('aria-expanded', 'false');
       plan.querySelector('.stage-plan-body').inert = true;
       stageDemoAdvance.disabled = true;
+      panel.dataset.pendingStageFrame=String(next);
       stageAdvanceTimer = setTimeout(() => {
+        if(panel.dataset.pausedAt||panel.dataset.pendingStageFrame!==String(next))return;
         stageAdvanceTimer = null;
+        delete panel.dataset.pendingStageFrame;
         stageDemoAdvance.disabled = false;
         if (panel.isConnected) updateConversationStage(panel, next);
       }, 280);
@@ -5604,13 +5850,67 @@ const mainView = document.querySelector('.main');
   function syncStageDemoControls() {
     syncStageClock();
     const panel = conversationThread.querySelector('.conversation-stage-demo');
+    if(panel?.dataset.pausedAt)applyStagePausedView(panel,true);
+    syncInterventionComposer();
     stageDemoControls.hidden = conversationPage.hidden || activeConversationTask !== conversationTask || !panel || panel.classList.contains('is-entering');
     if (stageDemoControls.hidden) return;
+    stageDemoAdvance.disabled=Boolean(panel.dataset.pausedAt)||stageAdvanceTimer!==null;
     const index = Number(panel.dataset.stageFrame);
     const phase = index === 0 ? 1 : conversationStageFrames[index].stage === 'done' ? 3 : 2;
     const action = index === 0 ? '开始工作 →' : phase === 3
       ? '重播演示 ↺' : index === conversationStageFrames.length - 2 ? '查看结果 →' : conversationStageFrames[index].stage === 'checkpoint' ? '继续下一阶段 →' : '演示下一步 →';
     stageDemoAdvance.textContent = `${phase}/3 · ${action}`;
+  }
+
+  function applyStagePausedView(panel,paused){
+    panel.classList.toggle('is-paused',paused);
+    panel.querySelector('.stage-global-label').textContent=paused?'已暂停':conversationGlobalStates[conversationStageFrames[Number(panel.dataset.stageFrame)].globalState];
+  }
+
+  function setConversationStagePaused(panel,paused){
+    if(!panel?.isConnected||activeConversationTask!==conversationTask||conversationPage.hidden||conversationStageFrames[Number(panel.dataset.stageFrame)].stage==='done')return false;
+    if(paused===Boolean(panel.dataset.pausedAt))return false;
+    if(paused){
+      panel.dataset.pausedAt=String(Date.now());
+      if(panel.dataset.autoDueAt)panel.dataset.autoRemaining=String(Math.max(0,Number(panel.dataset.autoDueAt)-Date.now()));
+      delete panel.dataset.autoDueAt;
+      clearTimeout(stageAutoTimer);stageAutoTimer=null;
+      clearTimeout(stageAdvanceTimer);stageAdvanceTimer=null;
+    }else{
+      panel.dataset.pausedDuration=String(Number(panel.dataset.pausedDuration||0)+Date.now()-Number(panel.dataset.pausedAt));
+      delete panel.dataset.pausedAt;
+    }
+    applyStagePausedView(panel,paused);
+    syncStageDemoControls();
+    if(!paused){
+      if(panel.dataset.pendingStageFrame!==undefined){
+        const next=Number(panel.dataset.pendingStageFrame);delete panel.dataset.pendingStageFrame;
+        advanceConversationStage(panel,next,true);
+      }else scheduleStageAutoAdvance(panel);
+    }
+    conversationThreads.set(conversationTask,conversationThread.innerHTML);
+    return true;
+  }
+
+  function resumeConversationStageWithMessage(message){
+    const panel=activeConversationTask===conversationTask?conversationThread.querySelector('.conversation-stage-demo'):null;
+    if(!panel?.dataset.pausedAt)return false;
+    panel.className='conversation-stage-history';
+    panel.querySelector('.stage-global-label').textContent=message?'已调整':'已暂停';
+    panel.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+    panel.querySelectorAll('[aria-controls]').forEach(node=>node.removeAttribute('aria-controls'));
+    const text=message?.rawText??message?.text;
+    conversationThread.insertAdjacentHTML('beforeend',(message?renderConversationTurnTime(new Date())+renderUserMessage(message.text,message.attachments,false,false,message.references):'')+
+      `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage()}</div></div>`);
+    const nextPanel=conversationThread.querySelector('.conversation-stage-demo');
+    nextPanel.dataset.newRoundThinking='true';
+    nextPanel.dataset.acknowledgement=message?(text?`明白，接下来按你的补充要求调整：${text}`:'明白，我会结合补充的资料调整后续工作。'):'我会沿用前面已核对的内容，接着梳理优先跟进的门店和后续建议。';
+    nextPanel.querySelector('.stage-acknowledgement p').textContent=nextPanel.dataset.acknowledgement;
+    syncStageDemoControls();scheduleStageAutoAdvance(nextPanel);
+    moveConversationProgressToLatestTurn();renderConversationTurnNav();
+    conversationThreads.set(conversationTask,conversationThread.innerHTML);
+    requestAnimationFrame(()=>{conversationScroll.scrollTop=conversationScroll.scrollHeight;});
+    return true;
   }
 
   stageDemoAdvance.addEventListener('click', () => {
@@ -5619,12 +5919,33 @@ const mainView = document.querySelector('.main');
     const next = (Number(panel.dataset.stageFrame) + 1) % conversationStageFrames.length;
     advanceConversationStage(panel, next, true);
   });
+  conversationThread.addEventListener('click', event => {
+    const sort = event.target.closest('[data-stage-sort]');
+    const undo = event.target.closest('[data-stage-undo]');
+    if ((!sort && !undo) || activeConversationTask !== conversationTask) return;
+    const panel = event.target.closest('.conversation-stage-demo');
+    if (!panel || conversationStageFrames[Number(panel.dataset.stageFrame)].stage !== 'done') return;
+    const node = stageResultNode();
+    if (sort) {
+      stageResultHistory.push(structuredClone(node.preview.sheets));
+      node.preview.sheets[0].rows.sort((a,b) => Number(b[4])/Number(b[3]) - Number(a[4])/Number(a[3]));
+    } else if (stageResultHistory.length) {
+      node.preview.sheets = stageResultHistory.pop();
+    }
+    const frame = conversationStageFrames[Number(panel.dataset.stageFrame)];
+    panel.querySelector('.stage-result').outerHTML = renderStageResult(frame);
+    panel.querySelector('.stage-version-status').textContent = sort ? '' : '已撤回本轮修改，恢复上一版明细。';
+    const item = currentFileWorkspace();
+    if (item?.node === node) renderToolFileWorkspace(item);
+    conversationThreads.set(conversationTask, conversationThread.innerHTML);
+  });
+
   conversationThread.addEventListener('click', (event) => {
     const toggle = event.target.closest('.stage-thinking-toggle');
     if (!toggle) return;
     const open = toggle.getAttribute('aria-expanded') !== 'true';
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.nextElementSibling.inert = !open;
+    toggle.closest('.stage-thinking').querySelector('.stage-thinking-details').inert = !open;
     conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
   });
   conversationThread.addEventListener('click', (event) => {
@@ -5795,7 +6116,7 @@ const mainView = document.querySelector('.main');
   const artifactIconByExtension = {
     doc: 'doc', docx: 'doc', xls: 'excel', xlsx: 'excel', csv: 'excel',
     html: 'html', htm: 'html', png: 'image', jpg: 'image', jpeg: 'image',
-    gif: 'image', webp: 'image', md: 'markdown', pdf: 'pdf', ppt: 'ppt', pptx: 'ppt',
+    gif: 'image', webp: 'image', svg: 'image', md: 'markdown', pdf: 'pdf', ppt: 'ppt', pptx: 'ppt',
   };
 
   function renderConversationSubagents() {
@@ -6024,7 +6345,7 @@ const mainView = document.querySelector('.main');
       }
       activeConversationTask = task;
       conversationPrompt.value = conversationComposerDrafts.has(task) ? conversationComposerDrafts.get(task) :
-        (task === conversationTask && !startedConversationDemos.has(task) ? conversationExamples.get(task).turns.at(-1).prompt : '');
+        (task === conversationTask && !startedConversationDemos.has(task) ? conversationExamples.get(task).turns.at(-1).prompt : task === interventionTask ? window.CatPawQueueDemo.draft : '');
       resizeConversationPrompt();
       const example = conversationExamples.get(task);
       if (conversationThreads.has(task)) {
@@ -6042,6 +6363,8 @@ const mainView = document.querySelector('.main');
           }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
           (task === supplierComparisonTask && index === 0 ? supplierDemo.initial() : '') +
+          (task === interventionTask && index === 0 ? queueDemo.initial() : '') +
+          (recoveryDemos.has(task) && index === 0 ? recoveryDemos.get(task).initial() : '') +
           (example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && startedConversationDemos.has(task) && index === turns.length - 1 ? renderConversationStage() : '') +
           (reply ? renderMessageMeta('assistant') : '') +
@@ -6056,6 +6379,7 @@ const mainView = document.querySelector('.main');
           const planToggle = stage.querySelector('.stage-plan-toggle');
           const planOpen = planToggle ? planToggle.getAttribute('aria-expanded') === 'true' : frameIndex === 0;
           stage.innerHTML = renderConversationStageBody(frameIndex, planOpen);
+          if(stage.dataset.acknowledgement&&frameIndex===0)stage.querySelector('.stage-acknowledgement p').textContent=stage.dataset.acknowledgement;
         }
       }
       refreshConversationTurnTimes();
@@ -6066,6 +6390,9 @@ const mainView = document.querySelector('.main');
     artifactSelection?.taskChanged();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
+    syncExpertForContext();
+    queueDemo.activate(open && task === interventionTask);
+    recoveryDemos.forEach((demo,key)=>demo.activate(open && task===key));
     if (!open || task !== conversationTask) clearTimeout(stageAutoTimer);
     syncStageDemoControls();
     if (!open && workbenchExpanded) setWorkbenchExpanded(false);
@@ -6259,7 +6586,7 @@ const mainView = document.querySelector('.main');
 function resizeConversationPrompt() {
 conversationPrompt.style.height = 'auto';
 conversationPrompt.style.height = `${Math.min(conversationPrompt.scrollHeight, 130)}px`;
-    conversationSend.disabled = !conversationPrompt.value.trim() && ((!selectedLibraryFiles?.get(conversationPrompt)?.length && !selectedSkills?.get(conversationPrompt)?.length) || !conversationGoalTag.hidden);
+    syncInterventionComposer();
 }
 
 function beginConversationTurn(message) {
@@ -6305,11 +6632,18 @@ function beginConversationTurn(message) {
     return;
   }
     const message = {
-      text: [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`)].filter(Boolean).join(' '),
+      text: [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`), ...[...selectedConnectors.get(conversationPrompt)].map(name => `MCP:${name}`)].filter(Boolean).join(' '),
+      rawText:text,skills:[...selectedSkills.get(conversationPrompt)],connectors:[...selectedConnectors.get(conversationPrompt)],
       attachments: [...files],
       references: artifactSelection?.entries().slice() || [],
     };
-  if (activeConversationTask === conversationTask && !startedConversationDemos.has(conversationTask)) {
+  if (activeConversationTask === conversationTask && resumeConversationStageWithMessage(message)) {
+    showConversationFeedback('已按补充要求继续');
+  } else if (activeConversationTask === interventionTask && queueDemo.resume(message)) {
+    showConversationFeedback('已按补充要求继续');
+  } else if (activeConversationTask === interventionTask && queueDemo.enqueue(message)) {
+    showConversationFeedback('已加入待发送队列');
+  } else if (activeConversationTask === conversationTask && !startedConversationDemos.has(conversationTask)) {
     startedConversationDemos.add(conversationTask);
     conversationThread.insertAdjacentHTML('beforeend',
       renderConversationTurnTime(new Date()) + renderUserMessage(message.text, message.attachments, false, false, message.references) +
@@ -6367,7 +6701,7 @@ function beginConversationTurn(message) {
     e.preventDefault();
     sendConversationMessage();
   });
-  conversationSend.addEventListener('click', sendConversationMessage);
+  conversationSend.addEventListener('click', handleConversationComposerAction);
   let stopArtifactScrollAnchor = null;
   function anchorConversationToArtifact(button) {
     stopArtifactScrollAnchor?.();
@@ -6443,7 +6777,7 @@ function beginConversationTurn(message) {
     const node = folder?.files.find((file) => file.name === button.dataset.readFile);
     if (node) {
       anchorConversationToArtifact(button);
-      openArtifactPreview(node, [folder, node]);
+      openArtifactPreview(node, [folder, node], { fromConversation: true });
     }
   });
   const conversationArtifactMenu = document.createElement('div');
@@ -6547,7 +6881,7 @@ function beginConversationTurn(message) {
     if (target) {
       closeConversationArtifactMenu();
       anchorConversationToArtifact(target.card);
-      openArtifactPreview(target.node, target.chain);
+      openArtifactPreview(target.node, target.chain, { fromConversation: true });
     }
   });
 
@@ -6564,7 +6898,7 @@ function beginConversationTurn(message) {
     const { node, chain, card } = artifactMenuTarget;
     closeConversationArtifactMenu();
     if (item.dataset.artifactApp) showFileDetails('打开文件', `<p>将使用 ${esc(item.dataset.artifactApp)} 打开「${esc(node.name)}」。</p><p>当前是交互原型，尚未连接本地应用，未实际打开文件。</p>`);
-    else if (action === 'open') { anchorConversationToArtifact(card); openArtifactPreview(node, chain); }
+    else if (action === 'open') { anchorConversationToArtifact(card); openArtifactPreview(node, chain, { fromConversation: true }); }
     else if (action === 'chat') appendFileToConversation(node);
     else if (action === 'share') shareArtifact(node);
     else if (action === 'download') downloadConversationArtifact(node);
@@ -6664,7 +6998,18 @@ function beginConversationTurn(message) {
   ]);
   const selectedLibraryFiles = new Map([...libraryFileCards.keys()].map(input => [input, []]));
   const addTriggers = Array.from(document.querySelectorAll('.composer-add-trigger'));
+  const quickAddButtons = Array.from(document.querySelectorAll('.composer-quick-add-trigger'));
+  const quickAddOverflowTriggers = Array.from(document.querySelectorAll('.composer-quick-add-overflow-trigger'));
+  const quickAddOverflowMenu = document.createElement('div');
+  quickAddOverflowMenu.id = 'conversationQuickAddOverflowMenu';
+  quickAddOverflowMenu.className = 'composer-add-menu composer-quick-add-overflow-menu';
+  quickAddOverflowMenu.setAttribute('role', 'menu');
+  quickAddOverflowMenu.setAttribute('aria-label', '选择对话能力');
+  quickAddOverflowMenu.hidden = true;
+  document.body.appendChild(quickAddOverflowMenu);
+  let activeQuickAddOverflowTrigger = null;
   let activeAddTrigger = null;
+  let directAddTrigger = null;
   let addMenuPage = 'root';
   let addSubmenuTimer;
   const addLabels = { skill: '技能', expert: '专家', mcp: 'MCP' };
@@ -6680,6 +7025,12 @@ function beginConversationTurn(message) {
     const clean = String(name || '').trim().replace(/^(?:@技能:|@?skill:)/i, '');
     return legacySkillNames[clean] || clean;
   }
+  const skillDisplayNames = {
+    'data-analysis': '数据分析', docx: '文档写作', 'document-summary': '文档总结',
+    'website-development': '网页制作', pptx: '制作 PPT', 'app-development': 'App 设计与开发',
+    'code-development': '代码开发', 'visual-design': '视觉设计',
+    'product-analysis': '产品分析', pdf: 'PDF 处理', 'skill-creator': '创建技能',
+  };
   const skillTagContainers = new Map([
     [prompt, document.getElementById('homeSkillTags')],
     [conversationPrompt, document.getElementById('conversationSkillTags')],
@@ -6700,14 +7051,16 @@ function beginConversationTurn(message) {
     container.replaceChildren(...skills.map((name, index) => {
       const tag = document.createElement('span');
       tag.className = 'composer-skill-tag';
-      tag.title = `skill:${name}`;
+      const displayName = skillDisplayNames[name] || name;
+      tag.title = displayName;
       tag.innerHTML = `<button class="composer-skill-tag-clear" type="button" data-skill-remove="${index}" title="移除技能">${skillTagIcon}${skillTagClearIcon}</button><span></span>`;
-      tag.querySelector('button').setAttribute('aria-label', `移除技能：${name}`);
-      tag.querySelector('span').textContent = `skill:${name}`;
+      tag.querySelector('button').setAttribute('aria-label', `移除技能：${displayName}`);
+      tag.querySelector('span').textContent = displayName;
       return tag;
     }));
     container.hidden = !skills.length;
     syncComposerTags(input);
+    syncQuickAddButtons();
   }
   function addSkillTag(input, name) {
     const skillName = normalizeSkillName(name);
@@ -6785,8 +7138,23 @@ function beginConversationTurn(message) {
     return `<svg class="connector-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="12" fill="${look[0]}"/>${look[1]}</svg>`;
   }
   const expertTriggers = [...document.querySelectorAll('.chip-agent')];
-  let selectedExpert = '数据分析师';
+  const expertSelections = new Map();
+  let selectedExpert = null;
   let activeExpertTrigger = null;
+  function syncQuickAddButtons() {
+    quickAddButtons.forEach(button => {
+      const input = button.closest('.conversation-page') ? conversationPrompt : prompt;
+      const kind = button.dataset.quickAdd;
+      const selected = kind === 'expert' && expertSelections.has(input === prompt ? null : activeConversationTask);
+      button.hidden = selected && button !== directAddTrigger;
+      if (kind === 'mcp') {
+        const count = selectedConnectors.get(input).size;
+        button.dataset.enabled = String(count > 0);
+        button.querySelector('span').textContent = '选择连接器';
+        button.setAttribute('aria-label', count ? `选择连接器，已启用 ${count} 个` : '选择连接器，未启用');
+      }
+    });
+  }
   const expertMenu = document.createElement('div');
   expertMenu.className = 'expert-switch-menu';
   expertMenu.id = 'expertSwitchMenu';
@@ -6801,11 +7169,20 @@ function beginConversationTurn(message) {
       trigger.querySelector('.expert-name').textContent = selectedExpert || '选择专家';
       trigger.setAttribute('aria-label', selectedExpert ? `切换专家，当前：${selectedExpert}` : '选择专家');
       chip.dataset.expertSelected = String(Boolean(selectedExpert));
+      chip.hidden = !selectedExpert;
       chip.querySelector('.expert-clear').disabled = !selectedExpert;
     });
+    syncQuickAddButtons();
+  }
+  function syncExpertForContext() {
+    selectedExpert = expertSelections.get(conversationPage.hidden ? null : activeConversationTask) || null;
+    updateExpertTriggers();
   }
   function selectExpert(name) {
     selectedExpert = name;
+    const context = conversationPage.hidden ? null : activeConversationTask;
+    if (name) expertSelections.set(context, name);
+    else expertSelections.delete(context);
     updateExpertTriggers();
   }
   function closeExpertMenu(restoreFocus = false) {
@@ -6825,9 +7202,10 @@ function beginConversationTurn(message) {
   updateExpertTriggers();
   document.querySelectorAll('.expert-clear').forEach(button => button.addEventListener('click', event => {
     event.stopPropagation();
+    const addTrigger = button.closest('.conversation-composer-actions, .composer-row')?.querySelector('.composer-add-trigger');
     selectExpert(null);
     closeExpertMenu();
-    button.closest('.expert-chip').querySelector('.chip-agent').focus();
+    addTrigger?.focus();
   }));
   expertTriggers.forEach(trigger => {
     trigger.setAttribute('aria-controls', expertMenu.id);
@@ -6892,14 +7270,32 @@ function beginConversationTurn(message) {
     const tray = connectorTrays.get(input);
     const names = [...selectedConnectors.get(input)];
     tray.hidden = names.length === 0;
-    tray.innerHTML = names.map(name => `<button class="connector-token" type="button" data-connector-name="${esc(name)}" aria-label="断开${esc(name)}" title="${esc(name)} · 已连接，点击断开">${connectorAvatar(name)}<span class="connector-status-dot" aria-hidden="true"></span></button>`).join('');
+    tray.replaceChildren(...names.map(name => {
+      const tag = document.createElement('span');
+      tag.className = 'connector-token';
+      tag.innerHTML = `<button class="connector-token-clear" type="button" title="关闭连接器">${addIcon('mcp', 'connector-token-icon')}<svg viewBox="0 0 24 24" class="ic connector-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button><span></span>`;
+      tag.querySelector('button').setAttribute('aria-label', `关闭连接器：${name}`);
+      tag.querySelector('button').dataset.connectorName = name;
+      tag.querySelector('span:last-child').textContent = name;
+      return tag;
+    }));
+    syncComposerTags(input);
+    syncQuickAddButtons();
+  }
+  function clearConnectorTags(input) {
+    selectedConnectors.get(input).clear();
+    renderConnectorTray(input);
   }
   connectorTrays.forEach((tray, input) => tray.addEventListener('click', event => {
     const token = event.target.closest('[data-connector-name]');
     if (!token) return;
     selectedConnectors.get(input).delete(token.dataset.connectorName);
     renderConnectorTray(input);
-    if (activeAddTrigger && addTarget() === input && addMenuPage === 'mcp' && !addSubmenu.hidden) renderAddList(addSubmenu.querySelector('.composer-add-input')?.value.trim() || '');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    if (activeAddTrigger && addTarget() === input && addMenuPage === 'mcp' && !addSubmenu.hidden) {
+      renderAddList(addSubmenu.querySelector('.composer-add-input')?.value.trim() || '');
+    }
   }));
   function addItem(kind, label, next = false) {
     const submenuAttrs = next && kind !== 'library' ? ` aria-haspopup="menu" aria-controls="${addSubmenu.id}" aria-expanded="${addMenuPage === kind}"` : '';
@@ -6922,12 +7318,11 @@ function beginConversationTurn(message) {
     const entries = selectedLibraryFiles.get(input);
     container.hidden = entries.length === 0;
     container.innerHTML = entries.map((entry, index) => {
-const { node } = entry;
-prepareLocalImage(entry);
-const type = artifactType(node) || node.type;
-const image = /\.(?:png|jpe?g|gif|webp|svg)$/i.test(node.name) || ['image', 'png'].includes(node.type);
-const art = image && node.preview?.kind === 'image' ? node.preview.art : null;
-const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${encodeURIComponent(art)}" alt="">`) : (THUMBS[type] || THUMBS[image ? 'image' : 'doc'])();
+      const { node } = entry;
+      prepareLocalImage(entry);
+      const extension = node.name.split('.').pop().toLowerCase();
+      const icon = artifactIconByExtension[extension] || 'doc';
+      const preview = `<img src="assets/artifact-${icon}.svg" alt="">`;
       return `<div class="composer-file-card" title="${esc(node.name).replace(/"/g, '&quot;')}"><span class="composer-file-preview" aria-hidden="true">${preview}</span><span class="composer-file-name">${esc(node.name)}</span><button class="composer-file-remove" type="button" data-library-file-remove="${index}" aria-label="移除文件：${esc(node.name).replace(/"/g, '&quot;')}" title="移除文件"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button></div>`;
     }).join('');
   }
@@ -6955,21 +7350,29 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
   }
   function closeAddMenu(restoreFocus = false) {
     clearTimeout(addSubmenuTimer);
+    const focusTarget = directAddTrigger || activeAddTrigger;
     addMenu.hidden = true;
     addSubmenu.hidden = true;
     if (activeAddTrigger) activeAddTrigger.setAttribute('aria-expanded', 'false');
-    if (restoreFocus) activeAddTrigger?.focus();
+    if (directAddTrigger) directAddTrigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) focusTarget?.focus();
     activeAddTrigger = null;
+    directAddTrigger = null;
     addMenuPage = 'root';
+    syncQuickAddButtons();
   }
   function renderAddList(query = '') {
     const kind = addMenuPage;
     const list = addSubmenu.querySelector('.composer-add-list');
     if (!list || !addLabels[kind]) return;
-    const items = installedAddItems[kind].filter(name => name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
+    const choices = directAddTrigger
+      ? [...new Set([...installedAddItems[kind], ...galleryExamples[kind]])]
+      : installedAddItems[kind];
+    const items = choices.filter(name => name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
     list.innerHTML = items.length
-      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' || kind === 'expert' ? ` aria-pressed="${kind === 'expert' ? name === selectedExpert : activeConnectors().has(name)}"` : ''}>${kind === 'expert' ? expertAvatar(name) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}${kind === 'mcp' ? `<span class="composer-add-check" aria-hidden="true">${activeConnectors().has(name) ? '✓' : ''}</span>` : ''}</button>`).join('')
-      : `<p class="composer-add-empty">${query ? '没有匹配的' + addLabels[kind] : '还没有添加' + addLabels[kind]}</p>`;
+      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' ? ' composer-connector-item' : ''}${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' ? ` role="switch" aria-checked="${activeConnectors().has(name)}"` : kind === 'expert' ? ` aria-pressed="${name === selectedExpert}"` : ''}>${kind === 'expert' ? expertAvatar(name) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}${kind === 'mcp' ? '<span class="composer-connector-switch" aria-hidden="true"><span class="composer-connector-switch-thumb"></span></span>' : ''}</button>`).join('')
+      : `<p class="composer-add-empty">${query ? '没有匹配的' + label : '还没有添加' + label}</p>`;
     addSubmenu._visibleInstalled = items;
     placeAddSubmenu();
   }
@@ -6992,7 +7395,9 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
         + `<div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="library">${addIcon('library')}<span>浏览全部资料库文件</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
     } else if (addLabels[addMenuPage]) {
       const kind = addMenuPage;
-      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="搜索已添加的${addLabels[kind]}" placeholder="搜索已添加的${addLabels[kind]}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'skill' ? '管理技能' : `去广场添加更多${addLabels[kind]}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
+      const searchLabel = directAddTrigger ? `搜索${label}` : `搜索已添加的${label}`;
+      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'skill' ? '管理技能' : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
       renderAddList();
     }
     addSubmenu.hidden = false;
@@ -7007,7 +7412,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       addMenuPage = kind;
       renderAddSubmenu();
     }
-    if (focus) addSubmenu.querySelector(addLabels[kind] ? '.composer-add-input' : 'button')?.focus();
+    if (focus) addSubmenu.querySelector('button')?.focus({preventScroll:true});
   }
   function hideAddSubmenu() {
     clearTimeout(addSubmenuTimer);
@@ -7058,7 +7463,8 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     addSubmenu.hidden = true;
     renderAddDialog();
     addDialog.showModal();
-    addDialog.querySelector('.composer-dialog-search')?.focus();
+    addDialog.tabIndex = -1;
+    addDialog.focus({preventScroll:true});
   }
   function returnFromAddDialog() {
     if (slashDialogTarget) {
@@ -7069,9 +7475,11 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       return;
     }
     if (!activeAddTrigger) return;
-    addMenu.hidden = false;
-    renderAddMenu();
-    placeAddMenu();
+    if (!directAddTrigger) {
+      addMenu.hidden = false;
+      renderAddMenu();
+      placeAddMenu();
+    }
     renderAddSubmenu();
     (addSubmenu.hidden ? addMenu : addSubmenu).querySelector('.composer-add-input, button')?.focus();
   }
@@ -7100,7 +7508,9 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     }
   });
   function placeAddMenu() {
-    if (!activeAddTrigger || addMenu.hidden) return;
+    if (!activeAddTrigger) return;
+    if (directAddTrigger) { placeAddSubmenu(); return; }
+    if (addMenu.hidden) return;
     const trigger = activeAddTrigger.getBoundingClientRect();
     const bounds = win.getBoundingClientRect();
     const width = addMenu.getBoundingClientRect().width;
@@ -7110,11 +7520,17 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     placeAddSubmenu();
   }
   function placeAddSubmenu() {
-    if (!activeAddTrigger || addMenu.hidden || addSubmenu.hidden) return;
+    if (!activeAddTrigger || addSubmenu.hidden) return;
     const bounds = win.getBoundingClientRect();
-    const parent = addMenu.getBoundingClientRect();
+    const parent = (directAddTrigger || addMenu).getBoundingClientRect();
     const width = addSubmenu.getBoundingClientRect().width;
     const height = addSubmenu.getBoundingClientRect().height;
+    if (directAddTrigger) {
+      addSubmenu.style.left = `${Math.max(bounds.left + 8, Math.min(parent.left, bounds.right - width - 8))}px`;
+      addSubmenu.style.top = `${parent.top - height - 6 >= bounds.top + 8 ? parent.top - height - 6 : Math.min(parent.bottom + 6, bounds.bottom - height - 8)}px`;
+      return;
+    }
+    if (addMenu.hidden) return;
     const right = parent.right + 6;
     addSubmenu.style.left = `${right + width <= bounds.right - 8 ? right : Math.max(bounds.left + 8, parent.left - width - 6)}px`;
     addSubmenu.style.top = `${Math.max(bounds.top + 8, Math.min(parent.top, bounds.bottom - height - 8))}px`;
@@ -7134,6 +7550,91 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       addMenu.querySelector('.composer-add-input, button')?.focus();
     });
   });
+  function closeQuickAddOverflowMenu(restoreFocus = false) {
+    const trigger = activeQuickAddOverflowTrigger;
+    quickAddOverflowMenu.hidden = true;
+    trigger?.setAttribute('aria-expanded', 'false');
+    activeQuickAddOverflowTrigger = null;
+    if (restoreFocus) trigger?.focus();
+  }
+  function placeQuickAddOverflowMenu() {
+    if (quickAddOverflowMenu.hidden || !activeQuickAddOverflowTrigger) return;
+    const trigger = activeQuickAddOverflowTrigger.getBoundingClientRect();
+    const bounds = win.getBoundingClientRect();
+    const width = quickAddOverflowMenu.offsetWidth;
+    const height = quickAddOverflowMenu.offsetHeight;
+    quickAddOverflowMenu.style.left = `${Math.max(bounds.left + 8, Math.min(trigger.left, bounds.right - width - 8))}px`;
+    quickAddOverflowMenu.style.top = `${trigger.top - height - 6 >= bounds.top + 8 ? trigger.top - height - 6 : Math.min(trigger.bottom + 6, bounds.bottom - height - 8)}px`;
+  }
+  function openDirectQuickAdd(button, anchor = button) {
+    if (directAddTrigger === anchor && addMenuPage === button.dataset.quickAdd && !addSubmenu.hidden) { closeAddMenu(); return; }
+    closeAddMenu();
+    activeAddTrigger = anchor.closest('.conversation-composer-actions, .composer-row')?.querySelector('.composer-add-trigger');
+    directAddTrigger = anchor;
+    anchor.setAttribute('aria-expanded', 'true');
+    addMenuPage = button.dataset.quickAdd;
+    renderAddSubmenu();
+    placeAddSubmenu();
+    addSubmenu.querySelector('button')?.focus({preventScroll:true});
+  }
+  quickAddButtons.forEach(button => {
+    button.setAttribute('aria-controls', addSubmenu.id);
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      closeQuickAddOverflowMenu();
+      openDirectQuickAdd(button);
+    });
+  });
+  quickAddOverflowTriggers.forEach(trigger => {
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      if (activeQuickAddOverflowTrigger === trigger && !quickAddOverflowMenu.hidden) { closeQuickAddOverflowMenu(); return; }
+      closeQuickAddOverflowMenu();
+      closeAddMenu();
+      activeQuickAddOverflowTrigger = trigger;
+      quickAddOverflowMenu.innerHTML = Array.from(trigger.closest('.composer-quick-add').querySelectorAll('.composer-quick-add-trigger'))
+        .filter(button => !button.hidden)
+        .map(button => `<button class="composer-add-item" type="button" role="menuitem" data-overflow-quick-add="${button.dataset.quickAdd}">${button.innerHTML}</button>`)
+        .join('');
+      quickAddOverflowMenu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      placeQuickAddOverflowMenu();
+      quickAddOverflowMenu.querySelector('button')?.focus();
+    });
+  });
+  quickAddOverflowMenu.addEventListener('click', event => {
+    const item = event.target.closest('[data-overflow-quick-add]');
+    if (!item) return;
+    const trigger = activeQuickAddOverflowTrigger;
+    const button = Array.from(trigger?.closest('.composer-quick-add').querySelectorAll('.composer-quick-add-trigger') || [])
+      .find(candidate => candidate.dataset.quickAdd === item.dataset.overflowQuickAdd);
+    closeQuickAddOverflowMenu();
+    if (button) openDirectQuickAdd(button, trigger);
+  });
+  quickAddOverflowMenu.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    event.stopPropagation();
+    closeQuickAddOverflowMenu(true);
+  });
+  document.addEventListener('click', event => {
+    if (!quickAddOverflowMenu.hidden && !quickAddOverflowMenu.contains(event.target) && !activeQuickAddOverflowTrigger?.contains(event.target)) closeQuickAddOverflowMenu();
+  }, true);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !quickAddOverflowMenu.hidden) closeQuickAddOverflowMenu(true);
+  });
+  const quickAddOverflowObserver = new ResizeObserver(entries => {
+    entries.forEach(({ target, contentRect }) => {
+      const trigger = target.querySelector('.composer-quick-add-overflow-trigger');
+      const compact = contentRect.width <= 560;
+      if (!compact) {
+        if (activeQuickAddOverflowTrigger === trigger) closeQuickAddOverflowMenu();
+        if (directAddTrigger === trigger) closeAddMenu();
+      } else if (target.contains(directAddTrigger) && directAddTrigger !== trigger) closeAddMenu();
+    });
+  });
+  quickAddOverflowObserver.observe(document.querySelector('.conversation-composer-wrap'));
+  quickAddOverflowObserver.observe(document.querySelector('.hero .composer'));
+  window.addEventListener('resize', placeQuickAddOverflowMenu);
   addMenu.addEventListener('pointerover', event => {
     if (event.pointerType === 'touch') return;
     const item = event.target.closest('[data-add-kind]');
@@ -7154,7 +7655,10 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     if (addMenu.contains(event.relatedTarget)) return;
     clearTimeout(addSubmenuTimer);
     addSubmenuTimer = setTimeout(() => {
-      if (!addSubmenu.contains(document.activeElement)) hideAddSubmenu();
+      if (!addSubmenu.contains(document.activeElement)) {
+        if (directAddTrigger) closeAddMenu();
+        else hideAddSubmenu();
+      }
     }, 180);
   });
   addMenu.addEventListener('click', event => {
@@ -7174,6 +7678,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     const installedButton = event.target.closest('[data-add-installed]');
     if (installedButton) {
       const name = addSubmenu._visibleInstalled[Number(installedButton.dataset.addInstalled)];
+      if (name && !installedAddItems[addMenuPage].includes(name)) installedAddItems[addMenuPage].push(name);
       if (name && addMenuPage === 'mcp') toggleConnector(installedButton, addSubmenu);
       else if (name && addMenuPage === 'expert') {
         selectExpert(name);
@@ -7186,6 +7691,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
     if (kind === 'back') {
       if (addMenuPage === 'library') showAddSubmenu('file', true);
+      else if (directAddTrigger) closeAddMenu(true);
       else hideAddSubmenu();
     } else if (kind === 'local') addFileInput.click();
     else if (kind === 'library') showAddSubmenu('library', true);
@@ -7218,9 +7724,11 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     const connectors = activeConnectors();
     if (connectors.has(name)) connectors.delete(name);
     else connectors.add(name);
-    renderConnectorTray(addTarget());
-    renderAddList(menu.querySelector('.composer-add-input')?.value.trim() || '');
-    menu.querySelectorAll('[data-add-installed]')[Number(button.dataset.addInstalled)]?.focus();
+    const input = addTarget();
+    renderConnectorTray(input);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    button.classList.toggle('is-selected', connectors.has(name));
+    button.setAttribute('aria-checked', String(connectors.has(name)));
   }
   addSubmenu.addEventListener('input', event => {
     if (event.target.matches('#composerAddSearch')) renderAddList(event.target.value.trim());
@@ -7228,7 +7736,8 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
   [addMenu, addSubmenu].forEach(menu => menu.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
       event.stopPropagation();
-      if (menu === addSubmenu && addMenuPage !== 'root') {
+      if (directAddTrigger) closeAddMenu(true);
+      else if (menu === addSubmenu && addMenuPage !== 'root') {
         const kind = addMenuPage === 'library' ? 'file' : addMenuPage;
         hideAddSubmenu();
         addMenu.querySelector(`[data-add-kind="${kind}"]`)?.focus();
@@ -7238,16 +7747,17 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       if (['file', 'skill', 'expert', 'mcp'].includes(kind)) { event.preventDefault(); showAddSubmenu(kind, true); }
     } else if (menu === addSubmenu && event.key === 'ArrowLeft') {
       event.preventDefault();
+      if (directAddTrigger) { closeAddMenu(true); return; }
       const kind = addMenuPage === 'library' ? 'file' : addMenuPage;
       hideAddSubmenu();
       addMenu.querySelector(`[data-add-kind="${kind}"]`)?.focus();
     }
   }));
   document.addEventListener('click', event => {
-    if (!addMenu.hidden && !addMenu.contains(event.target) && !addSubmenu.contains(event.target) && !event.target.closest('.composer-add-trigger')) closeAddMenu();
+    if ((!addMenu.hidden || !addSubmenu.hidden) && !addMenu.contains(event.target) && !addSubmenu.contains(event.target) && !quickAddOverflowMenu.contains(event.target) && !event.target.closest('.composer-add-trigger, .composer-quick-add-trigger, .composer-quick-add-overflow-trigger')) closeAddMenu();
   });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !addMenu.hidden) closeAddMenu(true);
+    if (event.key === 'Escape' && (!addMenu.hidden || !addSubmenu.hidden)) closeAddMenu(true);
   });
   window.addEventListener('resize', placeAddMenu);
 
@@ -7787,6 +8297,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       prompt.value = `${inputHint ? `${inputHint}\n\n` : ''}${item.prompt}${references.length ? `\n\n${references.join(' ')}` : ''}`;
       setPromptGuide('');
       clearSkillTags(prompt);
+      clearConnectorTags(prompt);
       item.skills.forEach(name => addSkillTag(prompt, name));
       autoResize(); refreshSendState();
       templateDialog.close();
@@ -7836,7 +8347,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
   artifactSelection = window.ArtifactEditingDemo.create({
     root:toolFilePreviewBody,
     pptCropButton:toolFilePptCrop,
-    pptReferenceButton:toolFilePptReference,
+    wordCropButton:toolFileWordComment,
     getWorkspace:currentFileWorkspace,
     getTask:()=>activeConversationTask,
     taskForArtifact,
@@ -7913,8 +8424,10 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
         const target=document.querySelector(selector);
         const clip=target?.closest('.conversation-scroll')?.getBoundingClientRect();
         const viewport={width:window.innerWidth,height:window.innerHeight};
-        const bounds=window.CatPawStrategyScenes.spotlightBounds(target?.getBoundingClientRect(),viewport,clip);
-        const path=window.CatPawStrategyScenes.spotlightPath(viewport,bounds);
+        const rect=target?.getBoundingClientRect();
+        const focusRect=rect?{left:rect.left-8,right:rect.right+8,top:rect.top,bottom:rect.bottom}:null;
+        const bounds=window.CatPawStrategyScenes.spotlightBounds(focusRect,viewport,clip);
+        const path=window.CatPawStrategyScenes.spotlightPath(viewport,bounds,8);
         if(path!==lastBounds){
           spotlightSvg.setAttribute('viewBox',`0 0 ${viewport.width} ${viewport.height}`);
           spotlightMaskPath.setAttribute('d',path);
@@ -7947,6 +8460,27 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       cursor.classList.toggle('is-moving', Boolean(selector));
       cursor.style.setProperty('--cursor-x', `${selector === '#caseDialogPrimary' ? rect.left + rect.width / 2 - 3 : rect.left + 20}px`);
       cursor.style.setProperty('--cursor-y', `${selector ? rect.top + Math.min(rect.height / 2, 22) - 3 : rect.top - 25}px`);
+      trackCaseReuseHover();
+    }
+    function trackCaseReuseHover() {
+      cancelAnimationFrame(promptHoverFrame);
+      const box=caseDialog.querySelector('.case-dialog-prompt-box');
+      const endsAt=performance.now()+1200;
+      const tick=now=>{
+        promptHoverFrame=null;
+        if(!strategyDemoActive||!caseDialog.open||!box||!greetingDemoCursor||greetingDemoCursor.hidden){
+          box?.classList.remove('strategy-case-prompt-hover');
+          caseDialogPrimary.classList.remove('strategy-case-primary-hover');
+          return;
+        }
+        const bounds=box.getBoundingClientRect(),cursor=greetingDemoCursor.getBoundingClientRect();
+        const x=cursor.left+3,y=cursor.top+3;
+        box.classList.toggle('strategy-case-prompt-hover',x>=bounds.left&&x<=bounds.right&&y>=bounds.top&&y<=bounds.bottom);
+        const button=caseDialogPrimary.getBoundingClientRect();
+        caseDialogPrimary.classList.toggle('strategy-case-primary-hover',x>=button.left&&x<=button.right&&y>=button.top&&y<=button.bottom);
+        if(now<endsAt)promptHoverFrame=requestAnimationFrame(tick);
+      };
+      promptHoverFrame=requestAnimationFrame(tick);
     }
     function syncPromptDemoHover() {
       if (!greetingDemoCursor || greetingDemoCursor.hidden) return;
@@ -7985,11 +8519,47 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       greetingDemoCursor.style.setProperty('--cursor-x', `${x - 3}px`);
       greetingDemoCursor.style.setProperty('--cursor-y', `${y - 3}px`);
     }
+    let cancelAnnotationDrag=null;
+    function animateAnnotationDrag(target,x,y,duration,pointerId=91){
+      cancelAnnotationDrag?.();
+      const cursor=ensureStrategyDemoCursor();
+      const startX=parseFloat(cursor.style.getPropertyValue('--cursor-x'))||x;
+      const startY=parseFloat(cursor.style.getPropertyValue('--cursor-y'))||y;
+      const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      return new Promise(resolve=>{
+        let frame=null,start=null;
+        cursor.style.transition='none';
+        const finish=()=>{
+          cancelAnimationFrame(frame);
+          cursor.style.removeProperty('transition');
+          cancelAnnotationDrag=null;
+          resolve();
+        };
+        cancelAnnotationDrag=finish;
+        const tick=now=>{
+          if(!strategyDemoActive){finish();return;}
+          start??=now;
+          const progress=reduced?1:Math.min(1,(now-start)/duration);
+          const eased=progress*progress*(3-2*progress);
+          const clientX=startX+(x-startX)*eased,clientY=startY+(y-startY)*eased;
+          cursor.style.setProperty('--cursor-x',`${clientX}px`);
+          cursor.style.setProperty('--cursor-y',`${clientY}px`);
+          target.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,buttons:1,pointerId,clientX,clientY}));
+          if(progress===1)finish();else frame=requestAnimationFrame(tick);
+        };
+        frame=requestAnimationFrame(tick);
+      });
+    }
     function stopStrategyDemo() {
+      cancelAnnotationDrag?.();
+      if(recoverySceneTasks[strategyScene])recoveryDemos.get(recoverySceneTasks[strategyScene]).activate(false);
+      if(['2.2','2.2-2','2.2-3'].includes(strategyScene))queueDemo.stop();
       strategyDemoActive = false;
       stopStrategySpotlight();
       cancelAnimationFrame(promptHoverFrame);
       promptHoverFrame = null;
+      caseDialog.querySelector('.case-dialog-prompt-box')?.classList.remove('strategy-case-prompt-hover');
+      caseDialogPrimary.classList.remove('strategy-case-primary-hover','strategy-case-primary-pressed');
       clearTimeout(processPlanningTimer);
       processPlanningTimer = null;
       document.documentElement.classList.remove('strategy-demo-active');
@@ -8009,7 +8579,20 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
     }
     function resetStrategyDemo({restartTask = true} = {}) {
       strategyDemoActive = true;
-      if (strategyScene.startsWith('2.3-')) {
+      if(recoverySceneTasks[strategyScene]){
+        const task=recoverySceneTasks[strategyScene],demo=recoveryDemos.get(task);
+        demo.activate(false);
+        demo.reset();
+        conversationThreads.delete(task);
+        if(activeConversationTask===task)activeConversationTask=null;
+      }
+      if(['2.2','2.2-2','2.2-3'].includes(strategyScene)){
+        queueDemo.reset();
+        conversationThreads.delete(interventionTask);
+        conversationComposerDrafts.delete(interventionTask);
+        if(activeConversationTask===interventionTask)activeConversationTask=null;
+      }
+      if (strategyScene.startsWith('2.4-')) {
         supplierDemo.reset();
         conversationThreads.delete(supplierComparisonTask);
         conversationComposerDrafts.delete(supplierComparisonTask);
@@ -8038,6 +8621,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       if (selectedPromptCategory) setPromptCategory(selectedPromptCategory, false);
       prompt.value = '';
       clearSkillTags(prompt);
+      clearConnectorTags(prompt);
       clearLibraryFileCards(prompt);
       setPromptGuide('');
       restoreHomeGreeting();
@@ -8144,7 +8728,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
       item.pptSelection = null;
       item.pptToolsExpanded = false;
       renderToolFileWorkspace(item);
-      setCollapsed(expanded);
+      setCollapsed(expanded || strategyScene === '3.1');
       setWorkbenchExpanded(expanded);
     }
     async function presentStrategyStep(step) {
@@ -8207,15 +8791,47 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
           break;
         case 'category': selectStrategyCategory(step.category); break;
         case 'case':
-          selectStrategyCategory('analyze');
+          selectStrategyCategory(step.category || 'analyze');
           openCaseDialog(visibleCaseData(currentScope)[0]);
+          // Automatic slide playback should not leave the dialog's initial focus ring on screen.
+          caseDialogClose.blur();
           break;
+        case 'case-preview-pointer': {
+          cancelAnimationFrame(promptHoverFrame);
+          promptHoverFrame = null;
+          primaryPromptButtons.forEach(button=>button.classList.remove('strategy-prompt-hover'));
+          const target=casesEl.querySelector(`[data-case-index="${step.index}"]`);
+          const rect=target.getBoundingClientRect();
+          const cursor=ensureStrategyDemoCursor();
+          cursor.hidden=false;
+          cursor.classList.remove('is-clicking');
+          cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+rect.width*.5-3}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+rect.height*.35-3}px`);
+          break;
+        }
+        case 'case-preview-press': greetingDemoCursor?.classList.add('is-clicking'); break;
+        case 'case-preview-open': {
+          const target=casesEl.querySelector(`[data-case-index="${step.index}"]`);
+          target.click();
+          target.classList.remove('is-selected');
+          caseDialogClose.blur();
+          if(greetingDemoCursor)greetingDemoCursor.hidden=true;
+          break;
+        }
         case 'case-reuse-ready': positionCaseReuseCursor(); break;
         case 'case-reuse-pointer': positionCaseReuseCursor(step.target); break;
-        case 'case-reuse-press': greetingDemoCursor?.classList.add('is-clicking'); break;
+        case 'case-reuse-press':
+          greetingDemoCursor?.classList.add('is-clicking');
+          caseDialogPrimary.classList.add('strategy-case-primary-pressed');
+          break;
         case 'reuse':
+          cancelAnimationFrame(promptHoverFrame);
+          promptHoverFrame = null;
+          caseDialog.querySelector('.case-dialog-prompt-box')?.classList.remove('strategy-case-prompt-hover');
           ensureStrategyDemoCursor().hidden = true;
           caseDialogPrimary.click();
+          caseDialogPrimary.classList.remove('strategy-case-primary-hover','strategy-case-primary-pressed');
           document.documentElement.classList.add('strategy-reuse-arrival');
           break;
         case 'reuse-composer-pointer':
@@ -8235,11 +8851,124 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
           processPanel = showStrategyProcess(4);
           disclosureSettings.showModal();
           break;
+        case 'recovery-start':
+          setConversationOpen(true,recoverySceneTasks[strategyScene]);
+          break;
+        case 'recovery-pointer': {
+          const target=conversationPage.querySelector(step.field?`[data-clarify-field="${step.field}"]`:`[data-recovery-action="${step.target}"]`);
+          if(!target)break;
+          const cursor=ensureStrategyDemoCursor();
+          const rect=target.getBoundingClientRect();
+          cursor.hidden=false;
+          cursor.classList.remove('is-clicking');
+          cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+rect.width/2}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+rect.height/2}px`);
+          break;
+        }
+        case 'recovery-fill':
+          greetingDemoCursor?.classList.add('is-clicking');
+          recoveryDemos.get(recoverySceneTasks[strategyScene]).fill(step.field,step.value);
+          break;
+        case 'recovery-act':
+          greetingDemoCursor?.classList.add('is-clicking');
+          recoveryDemos.get(recoverySceneTasks[strategyScene]).act(step.target);
+          break;
+        case 'recovery-end':
+          if(greetingDemoCursor)greetingDemoCursor.hidden=true;
+          break;
+        case 'intervention-stream': {
+          setConversationOpen(true,interventionTask);
+          conversationPrompt.value='';
+          resizeConversationPrompt();
+          const cursor=ensureStrategyDemoCursor();
+          const rect=conversationPrompt.getBoundingClientRect();
+          cursor.hidden=false;
+          cursor.style.setProperty('--cursor-x',`${rect.left+25}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+15}px`);
+          break;
+        }
+        case 'intervention-pause':
+          greetingDemoCursor?.classList.add('is-clicking');
+          conversationSend.click();
+          break;
+        case 'intervention-resume':
+          conversationSend.click();
+          if(greetingDemoCursor)greetingDemoCursor.hidden=true;
+          break;
+        case 'intervention-draft-pointer': {
+          const cursor=ensureStrategyDemoCursor();
+          const rect=conversationPrompt.getBoundingClientRect();
+          cursor.classList.remove('is-clicking');
+          cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+35}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+15}px`);
+          break;
+        }
+        case 'intervention-draft': {
+          greetingDemoCursor?.classList.add('is-clicking');
+          conversationPrompt.focus({preventScroll:true});
+          conversationPrompt.value=window.CatPawQueueDemo.draft;
+          resizeConversationPrompt();
+          break;
+        }
+        case 'intervention-start': {
+          setConversationOpen(true,interventionTask);
+          const cursor=ensureStrategyDemoCursor();
+          const rect=conversationPrompt.getBoundingClientRect();
+          cursor.hidden=false;
+          cursor.style.setProperty('--cursor-x',`${rect.left+25}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+15}px`);
+          break;
+        }
+        case 'intervention-pointer': {
+          const cursor=ensureStrategyDemoCursor();
+          const rect=conversationSend.getBoundingClientRect();
+          cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+rect.width/2-3}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+rect.height/2-3}px`);
+          break;
+        }
+        case 'intervention-send':
+          greetingDemoCursor?.classList.add('is-clicking');
+          conversationSend.click();
+          break;
+        case 'intervention-guide-pointer': {
+          const button=document.getElementById('conversationQueueGroup').querySelector('[data-queue-action="send"]');
+          if(!button)break;
+          const cursor=ensureStrategyDemoCursor(),rect=button.getBoundingClientRect();
+          cursor.classList.remove('is-clicking');cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+rect.width/2-3}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+rect.height/2-3}px`);
+          break;
+        }
+        case 'intervention-guide':
+          document.getElementById('conversationQueueGroup').querySelector('[data-queue-action="send"]')?.click();
+          if(greetingDemoCursor)greetingDemoCursor.hidden=true;
+          break;
         case 'development':
           disclosureSettings.close();
           disclosureMode = 'development'; // This scene does not persist a user setting.
           disclosureSettings.querySelector('[value="development"]').checked = true;
           processPanel = showStrategyProcess(step.frame);
+          break;
+        case 'revision-start': {
+          if(stageResultHistory.length)stageResultNode().preview.sheets=stageResultHistory[0];
+          stageResultHistory.length=0;
+          showStrategyProcess(10);
+          conversationThread.querySelector('[data-stage-sort]')?.click();
+          conversationThread.querySelector('.stage-result')?.scrollIntoView({block:'center'});
+          break;
+        }
+        case 'revision-compare': {
+          const details=conversationThread.querySelector('.stage-revision-details');
+          if(details)details.open=true;
+          conversationThread.querySelector('.stage-revision')?.scrollIntoView({block:'center'});
+          break;
+        }
+        case 'revision-undo':
+          conversationThread.querySelector('[data-stage-undo]')?.click();
+          conversationThread.querySelector('.stage-result')?.scrollIntoView({block:'center'});
           break;
         case 'result-file': {
           const example = conversationExamples.get(conversationTask);
@@ -8272,19 +9001,84 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
         case 'artifact-conversation': setConversationOpen(true, artifactEditingTask); break;
         case 'artifact-side': showStrategyArtifact(step.kind); break;
         case 'artifact-full': showStrategyArtifact(step.kind, true); break;
+        case 'annotation-pointer': {
+          const target=document.querySelector(step.target);
+          if(!target)break;
+          const rect=target.getBoundingClientRect(),cursor=ensureStrategyDemoCursor();
+          cursor.hidden=false;cursor.classList.remove('is-clicking');cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${rect.left+rect.width*(step.x??.5)}px`);
+          cursor.style.setProperty('--cursor-y',`${rect.top+rect.height*(step.y??.5)}px`);
+          break;
+        }
+        case 'annotation-click':
+          greetingDemoCursor?.classList.add('is-clicking');
+          document.querySelector(step.target)?.click();
+          break;
+        case 'annotation-draw': {
+          const canvas=document.querySelector('.artifact-annotation-canvas');
+          if(!canvas)break;
+          const rect=canvas.getBoundingClientRect();
+          const x=rect.left+rect.width*step.x,y=rect.top+rect.height*step.y;
+          if(step.event==='pointermove'){
+            await animateAnnotationDrag(canvas,x,y,1000);
+            break;
+          }
+          greetingDemoCursor.style.setProperty('--cursor-x',`${x}px`);
+          greetingDemoCursor.style.setProperty('--cursor-y',`${y}px`);
+          canvas.dispatchEvent(new PointerEvent(step.event,{bubbles:true,button:0,buttons:step.event==='pointerup'?0:1,pointerId:91,clientX:x,clientY:y}));
+          break;
+        }
+        case 'annotation-chat':
+          fullscreenChatInput.focus({preventScroll:true});
+          fullscreenChatInput.value=step.text;
+          fullscreenChatInput.dispatchEvent(new Event('input',{bubbles:true}));
+          break;
+        case 'annotation-crop-start': {
+          const slide=toolFilePreviewBody.querySelector('.reference-slide');
+          const rect=slide.getBoundingClientRect();
+          const x=rect.left+rect.width*.18,y=rect.top+rect.height*.25;
+          const cursor=ensureStrategyDemoCursor();
+          cursor.hidden=false;cursor.classList.add('is-moving');
+          cursor.style.setProperty('--cursor-x',`${x}px`);
+          cursor.style.setProperty('--cursor-y',`${y}px`);
+          slide.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,clientX:x,clientY:y}));
+          break;
+        }
+        case 'annotation-crop-drag': {
+          const rect=toolFilePreviewBody.querySelector('.reference-slide').getBoundingClientRect();
+          const x=rect.left+rect.width*step.x,y=rect.top+rect.height*step.y;
+          await animateAnnotationDrag(document,x,y,1100);
+          break;
+        }
+        case 'annotation-crop-end':
+          document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,button:0}));
+          break;
+        case 'annotation-comment': {
+          document.querySelector('[data-selection-comment]')?.click();
+          const input=document.querySelector('.artifact-comment-editor textarea');
+          if(input){input.value=step.text;input.dispatchEvent(new Event('input',{bubbles:true}));}
+          break;
+        }
+        case 'annotation-add':
+          document.querySelector('[data-selection-add]')?.click();
+          break;
         case 'select-page':
           showStrategyArtifact('ppt', true);
           toolFilePreviewBody.querySelector('.reference-slide').click();
           break;
+        case 'edit-artifact-text':
+          showStrategyArtifact('ppt', true);
+          toolFilePreviewBody.querySelector('.ppt-element-hit')?.click();
+          break;
         case 'reference-page':
           showStrategyArtifact('ppt', true);
-          toolFilePptReference.click();
+          artifactSelection.referencePptPage();
           fullscreenChatInput.value = '请把这一页的区域差异讲得更清楚，保留原始数据。';
           fullscreenChatInput.dispatchEvent(new Event('input', {bubbles:true}));
           break;
         case 'reference-another':
           toolFilePreviewBody.querySelector('[data-reference-slide="4"]').click();
-          toolFilePptReference.click();
+          artifactSelection.referencePptPage();
           fullscreenChatInput.value = '第 3 页突出区域差异，第 5 页补充对应行动，保留原始数据。';
           fullscreenChatInput.dispatchEvent(new Event('input', {bubbles:true}));
           break;
@@ -8299,7 +9093,7 @@ const preview = art ? (entry.localFile ? art : `<img src="data:image/svg+xml,${e
           if(bounds.top<clip.top+18||bounds.bottom>clip.bottom-18)conversationScroll.scrollTop+=bounds.top-clip.top-18;
         }
       }
-      if (strategyScene.startsWith('2.3-') && step.focus) {
+      if (strategyScene.startsWith('2.4-') && step.focus) {
         const target = conversationThread.querySelector(step.focus);
         if (target) conversationScroll.scrollTop += target.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 22;
       }

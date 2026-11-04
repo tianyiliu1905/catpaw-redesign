@@ -42,7 +42,7 @@ test('desktop scene embeds the shared wallpaper, a meeting and a separate bottom
   assert.equal((html.match(/class="meeting-tile\b/g)||[]).length,6);
   assert.match(css,/\.meeting-window\{[^}]*left:50%/);
   assert.match(css,/\.desktop-pet-corner\{[^}]*right:28px;bottom:34px/);
-  assert.ok(slides.includes('data-scene="3.1-2" src="./desktop-pet-demo.html"'));
+  assert.ok(slides.includes("frame==='pet'?'./desktop-pet-demo.html'"));
   assert.doesNotMatch(slides,/桌面上的其他工作/);
   for(const asset of ['assets/desktop-cat.svg','assets/demo-wallpaper.png'])assert.ok(fs.existsSync(asset));
   for(const relative of [...html.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(match=>match[1]))assert.ok(fs.existsSync(path.resolve(relative)),relative);
