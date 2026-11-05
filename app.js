@@ -1977,7 +1977,7 @@ safeHouseToggle.addEventListener('click', toggleSafeHouse);
   }
 
   function refreshSendState() {
-    sendBtn.disabled = prompt.value.trim().length === 0 && (homeGoalTag.hidden ? !promptGuide && !selectedLibraryFiles?.get(prompt)?.length && !selectedSkills?.get(prompt)?.length : true);
+    sendBtn.disabled = prompt.value.trim().length === 0 && (homeGoalTag.hidden ? !promptGuide && !selectedLibraryFiles?.get(prompt)?.length && !selectedSkills?.get(prompt)?.length && !prompt.knowledgeBases?.length : true);
   }
 
 function setPromptGuide(text = '', label = text, iconMarkup = '') {
@@ -2009,15 +2009,16 @@ promptGuide = text;
 
   function submit() {
     const text = prompt.value.trim();
-    if (!text && (!promptGuide || !homeGoalTag.hidden) && !selectedLibraryFiles.get(prompt).length && !selectedSkills.get(prompt).length) return;
+    if (!text && (!promptGuide || !homeGoalTag.hidden) && !selectedLibraryFiles.get(prompt).length && !selectedSkills.get(prompt).length && !prompt.knowledgeBases?.length) return;
     if (!homeGoalTag.hidden) {
       if (!text) return;
       updateGoal(prompt, text);
       setGoalMode(prompt, false);
     }
     const skillReferences = selectedSkills.get(prompt).map(name => `skill:${name}`).join(' ');
+    const knowledgeReferences = (prompt.knowledgeBases || []).map(name => `知识库:${name}`).join(' ');
     const connectorReferences = [...selectedConnectors.get(prompt)].map(name => `MCP:${name}`).join(' ');
-    console.log('[CatPaw] 提交需求：', [promptGuide + text, skillReferences, connectorReferences].filter(Boolean).join(' '), selectedLibraryFiles.get(prompt).map(entry => entry.node.name));
+    console.log('[CatPaw] 提交需求：', [promptGuide + text, knowledgeReferences, skillReferences, connectorReferences].filter(Boolean).join(' '), selectedLibraryFiles.get(prompt).map(entry => entry.node.name));
     prompt.value = '';
     clearSkillTags(prompt);
     clearLibraryFileCards(prompt);
@@ -4746,15 +4747,15 @@ const mainView = document.querySelector('.main');
           reply: '建议先联系涉及重复超时的门店核对交接记录，再与配送侧复盘晚高峰到店时间；随后排查两家出餐延迟门店的备餐排班。每项问题都可以在明细表中补充负责人和跟进状态。',
         },
         {
-          prompt: '好，做成看板、异常明细表和一份分析文档，我要方便继续跟进。',
-          reply: '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。看板展示整体分布，明细表列出优先级与跟进信息，分析文档汇总原因及处理建议。',
+          prompt: strategyScene ? '好，做成看板、异常明细表和一份分析文档，我要方便继续跟进。' : '好，做成一个 HTML 看板，把异常和跟进建议放进去。',
+          reply: strategyScene ? '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。看板展示整体分布，明细表列出优先级与跟进信息，分析文档汇总原因及处理建议。' : '已完成整理。本周共发现 18 条履约异常，其中 5 条需要优先处理，主要集中在配送超时和商家出餐延迟。HTML 看板汇总整体分布、优先跟进异常与处理建议。',
         },
         {
           prompt: '结合前面发的趋势图和异常明细文件，确认哪些门店需要优先跟进。',
           reply: '',
         },
       ],
-      files: ['门店履约异常看板.html', '门店履约异常明细.xlsx', '门店履约分析.docx'],
+      files: strategyScene ? ['门店履约异常看板.html', '门店履约异常明细.xlsx', '门店履约分析.docx'] : ['门店履约异常看板.html'],
     }],
     [membershipResearchTask, {
       folderId: 'default',
@@ -5443,6 +5444,7 @@ const mainView = document.querySelector('.main');
     for(const entry of message.attachments||[])if(!files.some(file=>file.node===entry.node))files.push(entry);
     renderLibraryFileCards(conversationPrompt);
     for(const skill of message.skills||[])addSkillTag(conversationPrompt,skill);
+    for(const name of message.knowledge||[])addKnowledgeTag(conversationPrompt,name);
     artifactSelection?.restoreDraft(message.references||[]);
     resizeConversationPrompt();
     conversationComposerDrafts.set(interventionTask,conversationPrompt.value);
@@ -5473,7 +5475,7 @@ const mainView = document.querySelector('.main');
     const panel=activeConversationTask===conversationTask&&executionVisible?conversationThread.querySelector('.conversation-stage-demo'):null;
     const paused=isIntervention?queueDemo.state.paused:Boolean(panel?.dataset.pausedAt);
     const running=isIntervention?queueDemo.state.running:Boolean(panel&&conversationStageFrames[Number(panel.dataset.stageFrame)]?.stage!=='done');
-    const hasMessage=Boolean(conversationPrompt.value.trim()||selectedLibraryFiles.get(conversationPrompt)?.length||selectedSkills.get(conversationPrompt)?.length||artifactSelection?.entries().length);
+    const hasMessage=Boolean(conversationPrompt.value.trim()||selectedLibraryFiles.get(conversationPrompt)?.length||selectedSkills.get(conversationPrompt)?.length||conversationPrompt.knowledgeBases?.length||artifactSelection?.entries().length);
     const action=paused?(hasMessage?'resume':'continue'):running&&!hasMessage?'pause':'send';
     const label=action==='pause'?'暂停当前任务':action==='continue'?'继续当前任务':action==='resume'?'发送':isIntervention&&running?'加入队列':'发送';
     conversationSend.dataset.executionAction=action;
@@ -5698,10 +5700,23 @@ const mainView = document.querySelector('.main');
     </section>`;
   }
   function renderStageResult(frame) {
+    const example = conversationExamples.get(conversationTask);
+    if (example.files.length === 1 && /\.html?$/i.test(example.files[0])) {
+      const name = example.files[0];
+      return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p><p>已生成 HTML 看板，汇总异常分布、处理优先级与跟进建议；缺失的时间戳及责任归属保留为待确认项。</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(name, 0)}</div></section></div>`;
+    }
     const resultName = '门店履约异常明细.xlsx';
     const version = stageResultHistory.length + 1;
+    const summaryRows = [
+      ['已完成', '核对资料与统计口径，复核异常及处理优先级。'],
+      ['交付内容', '异常明细表，包含异常记录、处理顺序与跟进建议。'],
+      ['待确认', '缺失的时间戳与责任归属已单列，需人工核实。']
+    ];
+    const summary = document.documentElement.classList.contains('strategy-process-panel')
+      ? `<table class="stage-result-summary-table" aria-label="生成结果总结"><tbody>${summaryRows.map(([label,body])=>`<tr><th scope="row">${label}</th><td>${body}</td></tr>`).join('')}</tbody></table>`
+      : `<dl class="stage-result-summary">${summaryRows.map(([label,body])=>`<div><dt>${label}</dt><dd>${body}</dd></div>`).join('')}</dl>`;
     const change = stageResultHistory.length ? '按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。' : '汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。';
-    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p><dl class="stage-result-summary"><div><dt>已完成</dt><dd>核对资料与统计口径，复核异常及处理优先级。</dd></div><div><dt>交付内容</dt><dd>异常明细表，包含异常记录、处理顺序与跟进建议。</dd></div><div><dt>待确认</dt><dd>缺失的时间戳与责任归属已单列，需人工核实。</dd></div></dl></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
+    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${summary}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
   }
   function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false, visibleFrames = null) {
     const frame = conversationStageFrames[frameIndex];
@@ -5725,7 +5740,7 @@ const mainView = document.querySelector('.main');
     const completedMarkup = completedEvents.length || done
       ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner">${done ? planMarkup + checkpointMarkup : ''}<section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
       : '';
-    const delegationStage = frameIndex === 4 || frameIndex === 5;
+    const delegationStage = !visibleFrames && (frameIndex === 4 || frameIndex === 5);
     const currentMarkup = frame.stage !== 'work' ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${delegationStage ? renderStageDelegations(frameIndex) : ''}${!delegationStage || development ? renderStageToolCall(frame, development) : ''}</section>`;
     const resultMarkup = done ? renderStageResult(frame) : '';
     const thinkingStatus = `<strong class="stage-global-label" role="status" aria-live="polite" aria-atomic="true">${esc(conversationGlobalStates[frame.globalState])}</strong><span class="stage-elapsed" aria-label="任务累计用时">0秒</span>`;
@@ -5921,11 +5936,12 @@ const mainView = document.querySelector('.main');
     const next = (Number(panel.dataset.stageFrame) + 1) % conversationStageFrames.length;
     advanceConversationStage(panel, next, true);
   });
-  conversationThread.addEventListener('click', event => {
+  document.addEventListener('click', event => {
     const sort = event.target.closest('[data-stage-sort]');
     const undo = event.target.closest('[data-stage-undo]');
-    if ((!sort && !undo) || activeConversationTask !== conversationTask) return;
+    if (!sort && !undo) return;
     const panel = event.target.closest('.conversation-stage-demo');
+    if (panel?.id !== 'strategyProcessPanel' && activeConversationTask !== conversationTask) return;
     if (!panel || conversationStageFrames[Number(panel.dataset.stageFrame)].stage !== 'done') return;
     const node = stageResultNode();
     if (sort) {
@@ -6618,7 +6634,7 @@ function beginConversationTurn(message) {
   function sendConversationMessage() {
   const text = conversationPrompt.value.trim();
   const files = selectedLibraryFiles.get(conversationPrompt);
-    if (!text && !files.length && !selectedSkills.get(conversationPrompt).length && !artifactSelection?.entries().length) return;
+    if (!text && !files.length && !selectedSkills.get(conversationPrompt).length && !conversationPrompt.knowledgeBases?.length && !artifactSelection?.entries().length) return;
   if (!conversationGoalTag.hidden) {
     if (!text) return;
     updateGoal(conversationPrompt, text);
@@ -6634,8 +6650,8 @@ function beginConversationTurn(message) {
     return;
   }
     const message = {
-      text: [text, ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`), ...[...selectedConnectors.get(conversationPrompt)].map(name => `MCP:${name}`)].filter(Boolean).join(' '),
-      rawText:text,skills:[...selectedSkills.get(conversationPrompt)],connectors:[...selectedConnectors.get(conversationPrompt)],
+      text: [text, ...(conversationPrompt.knowledgeBases || []).map(name => `知识库:${name}`), ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`), ...[...selectedConnectors.get(conversationPrompt)].map(name => `MCP:${name}`)].filter(Boolean).join(' '),
+      rawText:text,knowledge:[...(conversationPrompt.knowledgeBases || [])],skills:[...selectedSkills.get(conversationPrompt)],connectors:[...selectedConnectors.get(conversationPrompt)],
       attachments: [...files],
       references: artifactSelection?.entries().slice() || [],
     };
@@ -7014,9 +7030,9 @@ function beginConversationTurn(message) {
   let directAddTrigger = null;
   let addMenuPage = 'root';
   let addSubmenuTimer;
-  const addLabels = { skill: '技能', expert: '专家', mcp: 'MCP' };
+  const addLabels = { skill: '技能', expert: '专家', knowledge: '知识库', mcp: 'MCP' };
   // 原型没有实际广场接口：专家和 MCP 预置已添加示例，新增项保留在当前会话状态中。
-  const installedAddItems = { skill: [], expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'], mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'] };
+  const installedAddItems = { knowledge: ['产品知识库', '项目知识库', '团队知识库'], skill: [], expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'], mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'] };
   const legacySkillNames = {
     '数据分析': 'data-analysis', '文档写作': 'docx', '文档总结': 'document-summary',
     '网页制作': 'website-development', 'PPT 制作': 'pptx', 'App 设计与开发': 'app-development',
@@ -7038,6 +7054,39 @@ function beginConversationTurn(message) {
     [conversationPrompt, document.getElementById('conversationSkillTags')],
   ]);
   const selectedSkills = new Map([...skillTagContainers.keys()].map(input => [input, []]));
+  const knowledgeTagContainers = new Map([
+    [prompt, document.getElementById('homeKnowledgeTags')],
+    [conversationPrompt, document.getElementById('conversationKnowledgeTags')],
+  ]);
+  knowledgeTagContainers.forEach((_, input) => { input.knowledgeBases = []; });
+  function renderKnowledgeTags(input) {
+    const container = knowledgeTagContainers.get(input);
+    const names = input.knowledgeBases || [];
+    container.replaceChildren(...names.map((name, index) => {
+      const tag = document.createElement('span');
+      tag.className = 'composer-skill-tag composer-knowledge-tag';
+      tag.title = name;
+      tag.innerHTML = `<button class="composer-skill-tag-clear" type="button" data-knowledge-remove="${index}" title="移除知识库">${addIcon('knowledge', 'composer-skill-icon')}${skillTagClearIcon}</button><span></span>`;
+      tag.querySelector('button').setAttribute('aria-label', `移除知识库：${name}`);
+      tag.querySelector('span').textContent = name;
+      return tag;
+    }));
+    container.hidden = !names.length;
+    syncComposerTags(input);
+  }
+  function addKnowledgeTag(input, name) {
+    if (!name || input.knowledgeBases.includes(name)) return;
+    input.knowledgeBases.push(name);
+    renderKnowledgeTags(input);
+  }
+  knowledgeTagContainers.forEach((container, input) => container.addEventListener('click', event => {
+    const button = event.target.closest('[data-knowledge-remove]');
+    if (!button) return;
+    input.knowledgeBases.splice(Number(button.dataset.knowledgeRemove), 1);
+    renderKnowledgeTags(input);
+    input.dispatchEvent(new Event('input', { bubbles:true }));
+    input.focus();
+  }));
   const skillTagIcon = '<svg viewBox="0 0 24 24" class="ic composer-skill-icon" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg>';
   const skillTagClearIcon = '<svg viewBox="0 0 24 24" class="ic composer-skill-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>';
   function syncComposerTags(input) {
@@ -7072,6 +7121,9 @@ function beginConversationTurn(message) {
   }
   function clearSkillTags(input) {
     selectedSkills.get(input).length = 0;
+    // Sending or replacing a draft clears its selected knowledge references too.
+    input.knowledgeBases = [];
+    renderKnowledgeTags(input);
     renderSkillTags(input);
   }
   window.addEventListener('resize', () => skillTagContainers.forEach((_, input) => syncComposerTags(input)));
@@ -7092,6 +7144,7 @@ function beginConversationTurn(message) {
     return selectedConnectors.get(addTarget()) || selectedConnectors.get(prompt);
   }
   const galleryExamples = {
+    knowledge: [],
     skill: ['document-summary', 'data-analysis', 'website-development'],
     expert: ['设计顾问', '内容策划', '自动化工程师'],
     mcp: ['知识库连接器', '项目管理连接器', '数据库连接器'],
@@ -7152,8 +7205,8 @@ function beginConversationTurn(message) {
       if (kind === 'mcp') {
         const count = selectedConnectors.get(input).size;
         button.dataset.enabled = String(count > 0);
-        button.querySelector('span').textContent = '选择连接器';
-        button.setAttribute('aria-label', count ? `选择连接器，已启用 ${count} 个` : '选择连接器，未启用');
+        button.querySelector('span').textContent = '连接器';
+        button.setAttribute('aria-label', count ? `连接器，已启用 ${count} 个` : '连接器，未启用');
       }
     });
   }
@@ -7265,6 +7318,7 @@ function beginConversationTurn(message) {
     back: '<path d="m11 5-7 7 7 7M4 12h16"/>',
     chevron: '<path d="m9 6 6 6-6 6"/>',
   };
+  addIcons.knowledge = addIcons.library;
   function addIcon(kind, extraClass = '') {
     return `<svg viewBox="0 0 24 24" class="ic ${extraClass}" aria-hidden="true">${addIcons[kind]}</svg>`;
   }
@@ -7310,6 +7364,7 @@ function beginConversationTurn(message) {
     const input = addTarget();
     if (!input) return;
     if (label.startsWith('skill:')) addSkillTag(input, label.slice(6));
+    else if (label.startsWith('知识库:')) addKnowledgeTag(input, label.slice(4));
     else input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${label} `;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     closeAddMenu();
@@ -7399,7 +7454,7 @@ function beginConversationTurn(message) {
       const kind = addMenuPage;
       const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
       const searchLabel = directAddTrigger ? `搜索${label}` : `搜索已添加的${label}`;
-      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'skill' ? '管理技能' : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${['skill', 'knowledge'].includes(kind) ? `管理${label}` : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
       renderAddList();
     }
     addSubmenu.hidden = false;
@@ -7682,6 +7737,7 @@ function beginConversationTurn(message) {
       const name = addSubmenu._visibleInstalled[Number(installedButton.dataset.addInstalled)];
       if (name && !installedAddItems[addMenuPage].includes(name)) installedAddItems[addMenuPage].push(name);
       if (name && addMenuPage === 'mcp') toggleConnector(installedButton, addSubmenu);
+      else if (name && addMenuPage === 'knowledge') appendAddReference(`知识库:${name}`);
       else if (name && addMenuPage === 'expert') {
         selectExpert(name);
         closeAddMenu();
@@ -7980,6 +8036,21 @@ function beginConversationTurn(message) {
     setGoalMode(input, false);
     input.focus();
   }));
+  function handleComposerTagDelete(event) {
+    if (event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.ctrlKey || event.altKey || event.metaKey) return;
+    const input = event.currentTarget;
+    if (input.selectionStart !== 0 || input.selectionEnd !== 0) return;
+    if (event.key !== 'Backspace' && !(event.key === 'Delete' && input.value.length === 0)) return;
+    const tags = input.parentElement.querySelector('.composer-inline-tags');
+    const remove = Array.from(tags.querySelectorAll('.prompt-chip-clear, .composer-goal-tag-clear, [data-knowledge-remove], [data-skill-remove], [data-connector-name]'))
+      .filter(button => !button.disabled && button.getClientRects().length > 0).at(-1);
+    if (!remove) return;
+    event.preventDefault();
+    remove.click();
+    input.focus();
+  }
+  [prompt, conversationPrompt].forEach(input => input.addEventListener('keydown', handleComposerTagDelete));
+
   function updateGoal(input, value) {
     if (input === conversationPrompt && activeConversationTask) {
       conversationGoals.set(activeConversationTask, value || null);
@@ -8688,6 +8759,17 @@ function beginConversationTurn(message) {
         if (conversationStageFrames[frameIndex].stage === 'done' && !panel.dataset.finishedAt) panel.dataset.finishedAt = String(Date.now());
         if (!panel.dataset.finishedAt) stageClockTimer = setInterval(()=>{if(strategyDemoActive && panel.isConnected)updateStageClock(panel)},1000);
       }
+      // Show the same real revision card as the version-history demo after completion.
+      if (conversationStageFrames[frameIndex].stage === 'done') {
+        if (!stageResultHistory.length) {
+          const node = stageResultNode();
+          stageResultHistory.push(structuredClone(node.preview.sheets));
+          node.preview.sheets[0].rows.sort((a,b) => Number(b[4])/Number(b[3]) - Number(a[4])/Number(a[3]));
+        }
+      } else if (stageResultHistory.length) {
+        stageResultNode().preview.sheets = stageResultHistory[0];
+        stageResultHistory.length = 0;
+      }
       panel.dataset.stageFrame = String(frameIndex);
       panel.innerHTML = renderConversationStageBody(frameIndex, frameIndex === 0, -1, false, processVisibleFrames);
       panel.classList.toggle('is-entering', frameIndex === 0 && !reducedMotion.matches);
@@ -9135,4 +9217,44 @@ function beginConversationTurn(message) {
     report('catpaw:scene-ready');
     if (window.parent === window) player.activate();
   }
+  // Third rail entry: capability marketplace, sharing the composer's installed lists.
+  window.CatPawCapabilityMarket?.create({
+    host:win,
+    onOpen() { setScheduledPageMode(false); setConversationOpen(false); setRightPanel(null); },
+    getOwned(kind) { return installedAddItems[kind] || []; },
+    onInstall(item) {
+      const list=installedAddItems[item.kind];
+      if(list&&!list.includes(item.name))list.push(item.name);
+    },
+    getOtherItems(kind) {
+      const names=[...new Set([...(installedAddItems[kind]||[]),...(galleryExamples[kind]||[])])];
+      return names.map(name=>({kind,name,category:kind==='mcp'?'开发工具':'内容创作',status:installedAddItems[kind].includes(name)?'已添加':'可添加',tags:[],description:kind==='mcp'?'连接工作资料与常用工具，在对话中按需启用。':'添加技能，在对话中复用专业工作方法。',avatar:kind==='mcp'?connectorAvatar(name):addIcon('skill')}));
+    },
+    onUse(item) {
+      document.getElementById('homeNav').click();
+      if(item.kind==='expert')selectExpert(item.name);
+      else if(item.kind==='skill')addSkillTag(prompt,item.name);
+      else if(item.kind==='mcp'){selectedConnectors.get(prompt).add(item.name);renderConnectorTray(prompt);}
+      if(item.example)prompt.value=item.example;
+      prompt.dispatchEvent(new Event('input',{bubbles:true}));
+      prompt.focus();
+    },
+  });
+  // Fifth rail entry: NoCode websites and applications.
+  window.CatPawNoCodePage?.create({
+    host:win,
+    onOpen() { setScheduledPageMode(false); setConversationOpen(false); setRightPanel(null); },
+    onCreate() {
+      document.getElementById('homeNav').click();
+      prompt.value='帮我创建一个网站或应用，';
+      prompt.dispatchEvent(new Event('input',{bubbles:true}));
+      prompt.focus();
+      prompt.setSelectionRange(prompt.value.length,prompt.value.length);
+    },
+  });
+  // Fourth rail entry: file library; the third capability marketplace remains available.
+  window.CatPawLibraryPage?.create({
+    host:win,
+    onOpen() { setScheduledPageMode(false); setConversationOpen(false); setRightPanel(null); },
+  });
 })();

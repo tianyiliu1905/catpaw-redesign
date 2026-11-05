@@ -134,7 +134,8 @@
     .process-map-tools{min-height:126px;flex-direction:column;gap:5px}
     .process-map-tools small{font-size:9.9px;font-weight:400}
     .process-map-folded{height:14px;padding:0;background:#f3f3f3}
-    .process-map-result{min-height:180px}
+    .process-map-result{min-height:64px}
+    .process-map-column[data-phase="after"] .process-map-body{gap:12px}
     .process-map-column.is-current .process-map-tools::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 20%,#ffffff99 50%,transparent 80%);transform:translateX(-100%);animation:processMapSweep 2s ease-in-out infinite}
     .process-map-column.is-current .process-map-result{animation:processMapResult .5s ease-out both}
     .process-map-caption{min-width:0;width:100%;margin:0;font-size:12.6px;line-height:1.5;color:var(--gray)}
@@ -356,20 +357,19 @@
     .scene-flow-connector .arrow:after{content:"";position:absolute;right:0;top:-5px;width:10px;height:10px;border-top:0.5px solid var(--black);border-right:0.5px solid var(--black);transform:rotate(45deg)}
     .scene-flow-connector span:last-child{font-size:9.9px;line-height:1.3;text-align:center}
     .catalog-slide .story-kicker{margin-top:24px}
-    .catalog-slide h1{margin-top:9px;font-size:32.4px}
-    .catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;flex:1;min-height:0;margin-top:22px}
-    .catalog-column{min-width:0;border-top:0.5px solid var(--black);padding-top:12px}
-    .catalog-column>.scene{display:block;color:var(--muted);font-size:10.8px}
-    .catalog-column>h2{margin-top:5px;font-size:15.3px;line-height:1.3}
-    .catalog-point{margin-top:12px}
-    .catalog-point-heading{display:flex;align-items:baseline;gap:8px;font-size:12.6px;line-height:1.35}
-    .catalog-point-heading span{flex:none;color:var(--muted);font-size:10.8px;font-variant-numeric:tabular-nums}
-    .catalog-point-heading strong{font-weight:650}
-    .catalog-point-heading>strong{flex:none}
-    .catalog-point-concern{flex:1;min-width:0;margin-left:8px;color:var(--gray);font-size:10.8px;font-weight:400;line-height:1.45}
-    .catalog-point-concern .concern-label{margin-right:6px;color:var(--muted);font-size:10.8px}
-    .catalog-point ol{margin:5px 0 0;padding:0;list-style:none}
-    .catalog-point li{display:grid;grid-template-columns:45px minmax(0,1fr);gap:5px;padding:2px 0;color:var(--gray);font-size:10.8px;line-height:1.35}
+    .catalog-slide h1{margin-top:14px;font-size:36px}
+    .catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px;flex:1;min-height:0;margin-top:28px}
+    .catalog-column{min-width:0;border-top:0.5px solid var(--black);padding-top:14px}
+    .catalog-column>.scene{display:block;color:var(--muted);font-size:11.7px}
+    .catalog-column>h2{margin-top:8px;font-size:15.3px;line-height:1.5}
+    .catalog-column>h2+.catalog-point{margin-top:12px}
+    .catalog-point{margin-top:16px}
+    .catalog-point-heading{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:baseline;column-gap:8px;row-gap:5px;font-size:14.4px;line-height:1.4}
+    .catalog-point-heading>span{color:var(--muted);font-size:11.7px;font-variant-numeric:tabular-nums}
+    .catalog-point-heading strong{font-weight:400}
+    .catalog-point-concern{grid-column:2;min-width:0;color:var(--muted);font-size:11.7px;font-weight:400;line-height:1.5}
+    .catalog-point ol{margin:7px 0 0 36px;padding:0;list-style:none}
+    .catalog-point li{display:grid;grid-template-columns:38px minmax(0,1fr);gap:6px;padding:2px 0;color:var(--gray);font-size:11.7px;line-height:1.5}
     .catalog-point li span:first-child{color:var(--muted);font-variant-numeric:tabular-nums}
     .recovery-analysis h1{font-size:30.6px;margin-top:18px}
     .recovery-analysis-intro{font-size:14.4px;line-height:1.5;color:var(--gray);margin-top:12px}
@@ -478,7 +478,8 @@
     .toolbar-context-preview img{width:18px;height:18px;object-fit:contain}
     .toolbar-context-preview .toolbar-separator{height:22px;width:1px;background:var(--line)}
     .toolbar-comparison-caption{font-size:11.7px;color:var(--gray);line-height:1.5;margin-top:8px}
-    #slide-3\.2 .demo-slot-body{border-radius:10px}
+    #slide-3\.2 .design-slot{box-shadow:none}
+    #slide-3\.2 .demo-slot-body{border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.025),0 8px 24px rgba(0,0,0,.045)}
     .slide .design-slot,
     .slide .phase-demo-card .demo-viewport{box-shadow:0 2px 6px rgba(0,0,0,.025),0 8px 24px rgba(0,0,0,.045)}
     .interruption-action-slide .left-content{position:absolute;top:150px;left:48px;width:544px;padding:0;display:grid;grid-template-columns:180px minmax(0,1fr);gap:24px}
@@ -536,8 +537,8 @@
         context:'看过案例之后，用户需要可借用、可改写的起点；直接输入时，也需要轻量接话，逐步补充目标、材料和要求。',
         actions:[
           ['交代做法，提供可改写的起点','鼠标依次指向案例中的 Skill 与原始 Prompt，再点击“做同款”。案例预览、Skill 与 Prompt 一起带回输入区，成为用户可继续改写的起点。'],
-          ['聚焦时主动问候','聚焦输入框时，标题切换为亲切的问候语，邀请用户先说一个方向。'],
-          ['选任务标签后接具体话题','选择“设计与创作”后，欢迎语随任务方向变化；进一步选择“制作汇报 PPT”等标签，欢迎语聚焦具体话题，帮助用户表达需求。']
+          ['主动搭话，让用户轻松开口','用户聚焦输入框时，Agent 用一句亲切的问候主动破冰，邀请用户先聊一个想法。通过情感化设计营造“有人接话”的感受，缓解面对空白输入框的开场压力。'],
+          ['顺着任务接话，让用户感到被回应','用户选择任务方向或具体标签后，Agent 顺势接一句与任务相关的话。让选择得到自然回应，以情感化的开场邀请用户继续聊，把大概想法逐步说成具体需求。']
         ], check:'用户不必先写出完整 Prompt，也能顺利发起第一轮任务。'
       },
       {
@@ -654,8 +655,8 @@
       ],
       '1.3':[
           '“这个和我要做的很像，但我要怎么做出来？”',
-        '“第一次用，不知道怎么开口，能先跟我聊两句吗？”',
-        '“我只有个大概想法，能边聊边帮我理清吗？”'
+        '“还没想好怎么开口，能先跟我搭个话吗？”',
+        '“我选了想做的事，能顺着这个话题跟我聊聊吗？”'
       ],
       '2.1':[
         '“发出去了，它明白我要的是什么了吗？”',
@@ -870,7 +871,7 @@
           <div class="process-map-columns">
             <div class="process-map-column is-current" data-phase="before" id="process-map-before" role="tabpanel" aria-labelledby="process-tab-before"><div class="process-map-body"><div class="process-map-block process-map-intent">意图理解</div><div class="process-map-block process-map-plan">任务规划</div></div></div>
             <div class="process-map-column" data-phase="working" id="process-map-working" role="tabpanel" aria-labelledby="process-tab-working" hidden><div class="process-map-body"><div class="process-map-block process-map-plan-compact">弱化任务规划</div><div class="process-map-block process-map-tools">工具调用<small data-process-tool>突出当前执行</small></div></div></div>
-            <div class="process-map-column" data-phase="after" id="process-map-after" role="tabpanel" aria-labelledby="process-tab-after" hidden><div class="process-map-body"><div class="process-map-block process-map-result">文字总结<br>产物<br>本轮变化 · 撤回修改</div></div></div>
+            <div class="process-map-column" data-phase="after" id="process-map-after" role="tabpanel" aria-labelledby="process-tab-after" hidden><div class="process-map-body"><div class="process-map-block process-map-result">总结</div><div class="process-map-block process-map-result">成果</div><div class="process-map-block process-map-result">本轮变化</div></div></div>
           </div>
         </div>
       </figure>
@@ -993,7 +994,7 @@
           ${topline(index)}
           <div class="story-kicker">全局索引 / 3 个场景 · ${pointSlides.length} 个策略点 · ${pointSlides.reduce((total,point)=>total+point.actions.length,0)} 个设计动作</div>
           <h1>${escapeHtml(slide.title)}</h1>
-          <div class="catalog-grid">${[1,2,3].map(chapter=>`<div class="catalog-column"><span class="scene">场景 0${chapter} / ${escapeHtml(chapters[chapter].label.split(' / ')[1])}</span><h2>${escapeHtml(pointSlides.find(point=>Number(point.no.split('.')[0])===chapter).strategy)}</h2>${pointSlides.filter(point=>Number(point.no.split('.')[0])===chapter).map(point=>`<div class="catalog-point"><div class="catalog-point-heading"><span>${escapeHtml(point.no)}</span><strong>${escapeHtml(pageView[point.no][0])}</strong><p class="catalog-point-concern"><span class="concern-label">用户关注点</span>${escapeHtml(catalogConcerns[point.no])}</p></div><ol>${point.actions.map((action,actionIndex)=>`<li><span>${escapeHtml(`${point.no}.${actionIndex+1}`)}</span><span>${escapeHtml(action[0])}</span></li>`).join('')}</ol></div>`).join('')}</div>`).join('')}</div>
+          <div class="catalog-grid">${[1,2,3].map(chapter=>`<div class="catalog-column"><span class="scene">场景 0${chapter} / ${escapeHtml(chapters[chapter].label.split(' / ')[1])}</span><h2>${escapeHtml(pointSlides.find(point=>Number(point.no.split('.')[0])===chapter).strategy)}</h2>${pointSlides.filter(point=>Number(point.no.split('.')[0])===chapter).map(point=>`<div class="catalog-point"><div class="catalog-point-heading"><span>${escapeHtml(point.no)}</span><strong>${escapeHtml(pageView[point.no][0])}</strong><p class="catalog-point-concern">${escapeHtml(catalogConcerns[point.no])}</p></div><ol>${point.actions.map((action,actionIndex)=>`<li><span>${escapeHtml(`${point.no}.${actionIndex+1}`)}</span><span>${escapeHtml(action[0])}</span></li>`).join('')}</ol></div>`).join('')}</div>`).join('')}</div>
         </section>`;
       if(slide.kind==='chapter')return `
         <section class="slide story-slide chapter-slide" id="slide-${escapeHtml(slide.no)}" aria-label="${escapeHtml(slide.label+'：'+slide.title)}">

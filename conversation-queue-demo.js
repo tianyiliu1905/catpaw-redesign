@@ -13,7 +13,7 @@
         if(!state.running||state.paused)return false;
         const text=String(message.text??'').trim(),attachments=[...(message.attachments||[])],references=[...(message.references||[])];
         if(!text&&!attachments.length&&!references.length)return false;
-        state.prompts.push({id:++serial,text,rawText:message.rawText??text,skills:[...(message.skills||[])],connectors:[...(message.connectors||[])],attachments,references});return true;
+        state.prompts.push({id:++serial,text,rawText:message.rawText??text,skills:[...(message.skills||[])],knowledge:[...(message.knowledge||[])],connectors:[...(message.connectors||[])],attachments,references});return true;
       },
       take(id){const index=state.prompts.findIndex(p=>p.id===id);return index<0?null:state.prompts.splice(index,1)[0];},
       move(id,targetId,after=false){

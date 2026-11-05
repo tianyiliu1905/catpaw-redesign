@@ -12,6 +12,9 @@
 </script>
 <title>CatPaw</title>
 <link rel="stylesheet" href="./styles.css" />
+<link rel="stylesheet" href="./capability-market.css">
+<link rel="stylesheet" href="./nocode-page.css">
+<link rel="stylesheet" href="./library-page.css">
 <link rel="stylesheet" href="./artifact-editing-demo.css">
 <link rel="stylesheet" href="./ppt-workbar.css">
 <link rel="stylesheet" href="./supplier-conversation-demo.css">
@@ -66,11 +69,11 @@
       <nav class="sidebar-rail" id="nav" aria-label="主要入口">
         <a class="rail-brand" id="railBrand" href="#" title="返回首页" aria-label="返回首页"><img src="assets/logo.png" alt="" aria-hidden="true"></a>
         <div class="rail-primary">
-          <a class="nav-item home-nav" id="homeNav" href="#" title="首页" aria-label="首页" aria-current="page"><img class="rail-icon" src="assets/figma-rail-home.svg" alt="" aria-hidden="true"><span>首页</span></a>
-          <a class="nav-item" id="scheduledPageNav" href="#" title="定时任务" aria-label="定时任务"><img class="rail-icon" src="assets/figma-rail-clock.svg" alt="" aria-hidden="true"><span>定时任务</span></a>
-          <a class="nav-item" href="#" data-scope="all" title="专家 · 技能" aria-label="专家 · 技能"><img class="rail-icon" src="assets/figma-rail-chart.svg" alt="" aria-hidden="true"><span>专家 · 技能</span></a>
-          <a class="nav-item" href="#" data-scope="office" title="资料库" aria-label="资料库"><img class="rail-icon" src="assets/figma-rail-library.svg" alt="" aria-hidden="true"><span>资料库</span></a>
-          <a class="nav-item" href="#" data-scope="dev" title="应用" aria-label="应用"><img class="rail-icon" src="assets/figma-rail-nocode.svg" alt="" aria-hidden="true"><span>应用</span></a>
+          <a class="nav-item home-nav" id="homeNav" href="#" title="首页" aria-label="首页" aria-current="page"><img class="rail-icon" src="assets/figma-rail-home.svg" alt="" aria-hidden="true"><img class="rail-icon rail-icon-selected" src="assets/figma-rail-home-selected.svg" alt="" aria-hidden="true"><span>首页</span></a>
+          <a class="nav-item" id="scheduledPageNav" href="#" title="定时任务" aria-label="定时任务"><img class="rail-icon" src="assets/figma-rail-clock.svg" alt="" aria-hidden="true"><img class="rail-icon rail-icon-selected" src="assets/figma-rail-clock-selected.svg" alt="" aria-hidden="true"><span>定时任务</span></a>
+          <a class="nav-item" id="capabilityPageNav" href="#" data-scope="all" title="专家 · 技能" aria-label="专家 · 技能"><img class="rail-icon" src="assets/figma-rail-chart.svg" alt="" aria-hidden="true"><img class="rail-icon rail-icon-selected" src="assets/figma-rail-chart-selected.svg" alt="" aria-hidden="true"><span>专家 · 技能</span></a>
+          <a class="nav-item" id="libraryPageNav" href="#" data-scope="office" title="资料库" aria-label="资料库"><img class="rail-icon" src="assets/figma-rail-library.svg" alt="" aria-hidden="true"><img class="rail-icon rail-icon-selected" src="assets/figma-rail-library-selected.svg" alt="" aria-hidden="true"><span>资料库</span></a>
+          <a class="nav-item" id="nocodePageNav" href="#" data-scope="dev" title="应用" aria-label="应用"><img class="rail-icon" src="assets/figma-rail-nocode.svg" alt="" aria-hidden="true"><img class="rail-icon rail-icon-selected" src="assets/figma-rail-nocode-selected.svg" alt="" aria-hidden="true"><span>应用</span></a>
         </div>
         <div class="rail-bottom">
           <a class="nav-item" id="railTasksNav" href="#" title="任务列表" aria-label="任务列表"><img class="rail-icon" src="assets/figma-rail-phone.svg" alt="" aria-hidden="true"><span>任务列表</span></a>
@@ -418,7 +421,8 @@
             <div class="conversation-prompt-entry">
               <div class="composer-inline-tags">
                 <span class="composer-goal-tag" id="conversationGoalTag" hidden><button type="button" class="composer-goal-tag-clear" aria-label="取消设置目标" title="取消设置目标"><svg viewBox="0 0 24 24" class="ic composer-goal-icon" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><svg viewBox="0 0 24 24" class="ic composer-goal-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>目标</span>
-                <span class="composer-skill-tags" id="conversationSkillTags" aria-label="已选择的 Skill" hidden></span>
+                <span class="composer-skill-tags composer-knowledge-tags" id="conversationKnowledgeTags" aria-label="已选择的知识库" hidden></span>
+            <span class="composer-skill-tags" id="conversationSkillTags" aria-label="已选择的 Skill" hidden></span>
                 <span class="connector-tray" id="conversationConnectorTray" aria-label="已选择的连接器" hidden></span>
               </div>
               <textarea id="conversationPrompt" rows="1" placeholder="继续对话"></textarea>
@@ -438,8 +442,9 @@
             <button class="expert-clear" type="button" title="取消选择专家" aria-label="取消选择专家"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>
           </span>
             <button class="composer-quick-add-trigger" type="button" data-quick-add="expert" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/></svg><span>选择专家</span></button>
-            <button class="composer-quick-add-trigger" type="button" data-quick-add="skill" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>添加技能</span></button>
-            <button class="composer-quick-add-trigger" type="button" data-quick-add="mcp" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/></svg><span>选择连接器</span></button>
+            <button class="composer-quick-add-trigger" type="button" data-quick-add="knowledge" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/></svg><span>知识库</span></button>
+            <button class="composer-quick-add-trigger" type="button" data-quick-add="skill" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>技能</span></button>
+            <button class="composer-quick-add-trigger" type="button" data-quick-add="mcp" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/></svg><span>连接器</span></button>
             <button class="composer-quick-add-overflow-trigger" id="conversationQuickAddOverflowTrigger" type="button" title="更多对话能力" aria-label="更多对话能力" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationQuickAddOverflowMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
           </div>
           <div class="composer-capability-group" aria-label="已添加的对话能力">
@@ -505,6 +510,7 @@
               </button>
               <span id="promptChipText"></span>
             </div>
+            <span class="composer-skill-tags composer-knowledge-tags" id="homeKnowledgeTags" aria-label="已选择的知识库" hidden></span>
             <span class="composer-skill-tags" id="homeSkillTags" aria-label="已选择的 Skill" hidden></span>
             <span class="connector-tray" id="connectorTray" aria-label="已选择的连接器" hidden></span>
             </div>
@@ -530,8 +536,9 @@
                   <button class="expert-clear" type="button" title="取消选择专家" aria-label="取消选择专家"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button>
                 </span>
                   <button class="composer-quick-add-trigger" type="button" data-quick-add="expert" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.1c-1.5-2.5-5.4-2.8-6.8.2-.5 1-.5 2.1-.1 3.1-1.8 1.7-2 4.2-.5 6-.2 2.7 1.6 4.7 4 4.7 1.7 0 2.8-1.1 3.4-2.5.6 1.4 1.7 2.5 3.4 2.5 2.4 0 4.2-2 4-4.7 1.5-1.8 1.3-4.3-.5-6 .4-1 .4-2.1-.1-3.1-1.4-3-5.3-2.7-6.8-.2Z"/><path d="M12 6.1v11.5M8.9 14.2q1.55-2 3.1 0 1.55-2 3.1 0"/></svg><span>选择专家</span></button>
-                  <button class="composer-quick-add-trigger" type="button" data-quick-add="skill" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>添加技能</span></button>
-                  <button class="composer-quick-add-trigger" type="button" data-quick-add="mcp" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/></svg><span>选择连接器</span></button>
+                  <button class="composer-quick-add-trigger" type="button" data-quick-add="knowledge" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 6.3c-2.1-1.5-4.7-1.8-7.4-1.2A2.1 2.1 0 0 0 3 7.2v11.2c0 .7.7 1.2 1.4 1 2.8-.7 5.5-.3 7.6 1.1 2.1-1.4 4.8-1.8 7.6-1.1.7.2 1.4-.3 1.4-1V7.2a2.1 2.1 0 0 0-1.6-2.1c-2.7-.6-5.3-.3-7.4 1.2Z"/><path d="M12 6.3v14.2M6 9.3c.8-.1 1.6 0 2.4.2M6 12.6c.8-.1 1.6 0 2.4.2"/></svg><span>知识库</span></button>
+                  <button class="composer-quick-add-trigger" type="button" data-quick-add="skill" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="5.5"/><path d="M7.6 8v8M11.6 8v8M15.6 8l1.6 8"/></svg><span>技能</span></button>
+                  <button class="composer-quick-add-trigger" type="button" data-quick-add="mcp" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M2.6 11.3 10.8 3.2a3.54 3.54 0 0 1 5 5L11 13"/><path d="m13.2 5.7-5.4 5.4a3.5 3.5 0 0 0 4.9 4.9l5.3-5.3"/><path d="M15.8 8.2a3.54 3.54 0 0 1 5 5l-7.7 7.7 1.7 1.7"/></svg><span>连接器</span></button>
                   <button class="composer-quick-add-overflow-trigger" id="homeQuickAddOverflowTrigger" type="button" title="更多对话能力" aria-label="更多对话能力" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationQuickAddOverflowMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
                 </div>
                 <div class="composer-capability-group" aria-label="已添加的对话能力">
@@ -1208,6 +1215,9 @@
 <script src="./conversation-queue-demo.js"></script>
 <script src="./recovery-conversation-demo.js"></script>
 <script src="./clarification-demo.js"></script>
+<script src="./capability-market.js"></script>
+<script src="./nocode-page.js"></script>
+<script src="./library-page.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>
