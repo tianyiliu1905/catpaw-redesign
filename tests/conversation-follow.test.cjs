@@ -58,3 +58,15 @@ test('touch scrolling cancels an already scheduled follow', () => {
   s.flush();
   assert.equal(s.scroll.scrollTop, 400);
 });
+
+
+test('shrinking output or a taller viewport does not pull an already positioned reader backward', () => {
+  const s = setup();
+  s.scroll.scrollTop = 280;
+  s.scroll.scrollHeight -= 80;
+  s.resize(); s.flush();
+  assert.equal(s.scroll.scrollTop, 280);
+  s.scroll.clientHeight += 60;
+  s.resize(); s.flush();
+  assert.equal(s.scroll.scrollTop, 280);
+});

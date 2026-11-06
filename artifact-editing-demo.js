@@ -34,7 +34,7 @@
     const menu = document.createElement('div');
     menu.className = 'artifact-selection-menu';
     menu.setAttribute('role','dialog'); menu.setAttribute('aria-label','引用所选内容'); menu.hidden = true;
-    menu.innerHTML = '<div class="artifact-selection-toolbar"><span class="artifact-selection-label"></span><button type="button" data-selection-comment aria-expanded="false" aria-controls="artifactCommentEditor"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/></svg>添加批注</button><button type="button" data-selection-add><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/></svg>添加到对话 <span aria-hidden="true">↵</span></button></div><div class="artifact-annotation" hidden><div class="artifact-annotation-tools" role="toolbar" aria-label="截图标注工具"><button type="button" data-annotation-tool="circle" aria-label="画圆形" title="画圆形"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg></button><button type="button" data-annotation-tool="rect" aria-label="画矩形" title="画矩形"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"/></svg></button><button type="button" data-annotation-tool="line" aria-label="画直线" title="画直线"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 19 20 5"/></svg></button><button type="button" data-annotation-tool="arrow" aria-label="画箭头" title="画箭头"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 19 20 5m-7 0h7v7"/></svg></button><button type="button" data-annotation-tool="pen" aria-label="画笔" title="画笔"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m4 20 4.5-1 10-10-3.5-3.5-10 10L4 20Zm9-13 3.5 3.5M4 20l5-1"/></svg></button><button type="button" data-annotation-tool="text" aria-label="文本" title="文本"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 6h16M12 6v13m-4 0h8"/></svg></button></div><input class="artifact-annotation-text" type="text" aria-label="标注文字" placeholder="输入文字，再点击原位置放置" hidden><div class="artifact-annotation-preview"><canvas class="artifact-annotation-canvas" aria-label="原幻灯片选区，可使用上方工具标注"></canvas></div></div><div class="artifact-comment-editor" id="artifactCommentEditor" hidden><textarea rows="3" aria-label="所选内容的批注" placeholder="这块内容希望怎么改？"></textarea><div class="artifact-comment-footer"><span>批注会随选区一起带入对话</span><button type="button" data-comment-cancel>取消批注</button></div></div>';
+    menu.innerHTML = '<div class="artifact-selection-toolbar"><span class="artifact-selection-label"></span><button type="button" data-selection-comment aria-expanded="false" aria-controls="artifactCommentEditor"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/></svg>添加批注</button><button type="button" data-selection-add><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3C7 3 3 6.8 3 11.5c0 1.5.42 2.92 1.15 4.15L3.57 19q-.27 1.55 1.16 1.13l3.97-.71c1.04.38 2.15.58 3.3.58 5 0 9-3.8 9-8.5S17 3 12 3Z"/><path d="M12 8.5v6M9 11.5h6"/></svg>添加到对话</button></div><div class="artifact-annotation" hidden><div class="artifact-annotation-tools" role="toolbar" aria-label="截图标注工具"><button type="button" data-annotation-tool="circle" aria-label="画圆形" title="画圆形"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg></button><button type="button" data-annotation-tool="rect" aria-label="画矩形" title="画矩形"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"/></svg></button><button type="button" data-annotation-tool="line" aria-label="画直线" title="画直线"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 19 20 5"/></svg></button><button type="button" data-annotation-tool="arrow" aria-label="画箭头" title="画箭头"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 19 20 5m-7 0h7v7"/></svg></button><button type="button" data-annotation-tool="pen" aria-label="画笔" title="画笔"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m4 20 4.5-1 10-10-3.5-3.5-10 10L4 20Zm9-13 3.5 3.5M4 20l5-1"/></svg></button><button type="button" data-annotation-tool="text" aria-label="文本" title="文本"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 6h16M12 6v13m-4 0h8"/></svg></button></div><input class="artifact-annotation-text" type="text" aria-label="标注文字" placeholder="输入文字，再点击原位置放置" hidden><div class="artifact-annotation-preview"><canvas class="artifact-annotation-canvas" aria-label="原产物选区，可使用上方工具标注"></canvas></div></div><div class="artifact-comment-editor" id="artifactCommentEditor" hidden><textarea rows="3" aria-label="所选内容的批注" placeholder="这块内容希望怎么改？"></textarea><div class="artifact-comment-footer"><span>批注会随选区一起带入对话</span><button type="button" data-comment-cancel>取消批注</button></div></div>';
     document.body.append(menu);
     const commentButton=menu.querySelector('[data-selection-comment]');
     const addButton=menu.querySelector('[data-selection-add]');
@@ -56,7 +56,7 @@
     function cancel() {
       const previous=activeCropButton;
       hide(true);drag=null;cropMode=false;activeCropButton=null;root.classList.remove('reference-cropping');
-      [...new Set([options.pptCropButton,options.wordCropButton,previous].filter(Boolean))].forEach(button=>{
+      [...new Set([options.pptCropButton,options.wordCropButton,options.htmlCropButton,previous].filter(Boolean))].forEach(button=>{
         button.setAttribute('aria-pressed','false');
         const label=button.querySelector('.file-ppt-action-label');
         if(label)label.textContent='标注区域';else button.textContent='标注区域';
@@ -66,7 +66,7 @@
     function toggleCrop(crop){
       const next=activeCropButton!==crop||!cropMode;
       hide(true);
-      [...new Set([options.pptCropButton,options.wordCropButton,activeCropButton].filter(Boolean))].forEach(button=>{
+      [...new Set([options.pptCropButton,options.wordCropButton,options.htmlCropButton,activeCropButton].filter(Boolean))].forEach(button=>{
         button.setAttribute('aria-pressed','false');
         const label=button.querySelector('.file-ppt-action-label');
         if(label)label.textContent='标注区域';
@@ -160,7 +160,7 @@
     }
     function startAnnotation(snapshot) {
       if(!annotationCanvas||!annotationPanel)return;
-      const host=root.querySelector(pending?.kind==='word-region'?'.word-page':'.reference-slide');
+      const host=root.querySelector(pending?.kind==='html-region'?'.reference-html':pending?.kind==='word-region'?'.word-page':'.reference-slide');
       if(!host||!pending?.box)return;
       annotationBase=snapshot;annotationShapes=[];annotationDraft=null;annotationTool='pen';annotationPointer=null;
       annotationCanvas.width=snapshot.width;annotationCanvas.height=snapshot.height;
@@ -272,6 +272,13 @@
       if(ref.kind==='excel'){item.officeSheet=ref.sheet;item.officeFilter='';options.renderWorkspace(item);}
       requestAnimationFrame(()=>{
         if(ref.kind==='word')restoreWord(ref);
+        if(ref.kind==='html-region'){
+          const host=root.querySelector('.reference-html'),frame=host?.querySelector('iframe');
+          const restoreScroll=()=>frame?.contentWindow?.scrollTo(ref.scrollX||0,ref.scrollY||0);
+          frame?.addEventListener('load',restoreScroll,{once:true});
+          restoreScroll();
+          if(host&&ref.box)drawBox(ref.box,host);
+        }
         if(ref.kind==='word-region'){
           const page=root.querySelector('.word-page');
           page?.scrollIntoView({block:'center'});
@@ -300,20 +307,20 @@
       if(!el){el=document.createElement('div');el.className='reference-crop-box';host.append(el);}
       el.hidden=false;el.style.left=`${box.x*100}%`;el.style.top=`${box.y*100}%`;el.style.width=`${box.w*100}%`;el.style.height=`${box.h*100}%`;
     }
-    async function captureWordRegion(page,box){
-      const width=Math.round(page.getBoundingClientRect().width),height=Math.round(page.getBoundingClientRect().height);
+    async function captureWordRegion(page,box,viewport=null){
+      const width=Math.round(viewport?.width||page.getBoundingClientRect().width),height=Math.round(viewport?.height||page.getBoundingClientRect().height);
       const source=page.cloneNode(true);
       const originals=[page,...page.querySelectorAll('*')],copies=[source,...source.querySelectorAll('*')];
       originals.forEach((node,index)=>{
-        const style=getComputedStyle(node),copy=copies[index];
+        const style=page.ownerDocument?.defaultView?.getComputedStyle(node)||getComputedStyle(node),copy=copies[index];
         if(!copy)return;
         for(const key of style)copy.style.setProperty(key,style.getPropertyValue(key),style.getPropertyPriority(key));
       });
       source.querySelectorAll('.reference-crop-box,.artifact-annotation-canvas').forEach(node=>node.remove());
-      source.style.margin='0';source.style.width=`${width}px`;source.style.height=`${height}px`;
+      source.style.margin='0';source.style.width=`${width}px`;if(!viewport)source.style.height=`${height}px`;
       source.setAttribute('xmlns','http://www.w3.org/1999/xhtml');
       const markup=new XMLSerializer().serializeToString(source);
-      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><foreignObject width="100%" height="100%">${markup}</foreignObject></svg>`;
+      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><foreignObject x="${-(viewport?.scrollX||0)}" y="${-(viewport?.scrollY||0)}" width="${viewport?Math.max(width,page.scrollWidth):width}" height="${viewport?Math.max(height,page.scrollHeight):height}">${markup}</foreignObject></svg>`;
       const image=new Image();image.src=`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;await image.decode();
       const canvas=document.createElement('canvas');
       canvas.width=Math.max(1,Math.round(box.w*width));canvas.height=Math.max(1,Math.round(box.h*height));
@@ -337,11 +344,16 @@
       const item=getWorkspace();
       if(item?.node?.preview?.kind==='word'&&item.node.preview.referenceDemo)toggleCrop(options.wordCropButton);
     });
+    options.htmlCropButton?.addEventListener('click',()=>{
+      if(getWorkspace()?.node?.preview?.kind==='html')toggleCrop(options.htmlCropButton);
+    });
     root.addEventListener('pointerdown',event=>{
       if(event.button!==0)return;
-      const item=getWorkspace();if(!item?.node?.preview?.referenceDemo)return;
+      const item=getWorkspace();if(!item?.node?.preview?.referenceDemo&&item?.node?.preview?.kind!=='html')return;
       const cell=event.target.closest('td[data-excel-row]');
       if(cell){event.preventDefault();hide(true);const start={r:Number(cell.dataset.excelRow),c:Number(cell.dataset.excelColumn)};drag={kind:'excel',item,start,end:start,cell};markCells(start,start);return;}
+      const html=event.target.closest('.reference-html');
+      if(html&&cropMode&&event.target!==annotationCanvas){event.preventDefault();hide(true);const rect=html.getBoundingClientRect();drag={kind:'html-region',item,host:html,rect,start:point(event,rect)};return;}
       const slide=event.target.closest('.reference-slide');
       if(slide&&cropMode&&event.target!==annotationCanvas){event.preventDefault();hide(true);const rect=slide.getBoundingClientRect();drag={kind:'ppt',item,host:slide,rect,start:point(event,rect)};return;}
       const page=event.target.closest('.word-page');
@@ -364,6 +376,17 @@
       const {box,item,rect}=selection;
       const cropGeneration=generation;
       if(!box||box.w*rect.width<8||box.h*rect.height<8){hide(true);return;}
+      if(selection.kind==='html-region'){
+        try{
+          const frame=selection.host.querySelector('iframe'),page=frame.contentDocument.documentElement;
+          const scrollX=frame.contentWindow.scrollX,scrollY=frame.contentWindow.scrollY;
+          const canvas=await captureWordRegion(page,box,{width:frame.clientWidth,height:frame.clientHeight,scrollX,scrollY});
+          if(generation!==cropGeneration||getWorkspace()!==item)return;
+          show({...base(item,'html-region','标注区域'),box,scrollX,scrollY,image:canvas.toDataURL('image/png'),annotationScreenshot:true,text:'网页局部截图'},{left:rect.left+box.x*rect.width,top:rect.top+box.y*rect.height,bottom:rect.top+(box.y+box.h)*rect.height});
+          startAnnotation(canvas);
+        }catch{options.feedback('截图未完成，请等待网页加载后重新框选。');}
+        return;
+      }
       if(selection.kind==='word-region'){
         try{
           const canvas=await captureWordRegion(selection.host,box);

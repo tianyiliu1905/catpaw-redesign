@@ -223,10 +223,31 @@ setFolderStorageOpen(false);
 folderStorageBtn.focus();
 });
 
+  const sectionMotions = new WeakMap();
   function setSectionExpanded(button, content, expanded) {
+    const fromHeight = content.hidden ? 0 : content.getBoundingClientRect().height;
+    sectionMotions.get(content)?.cancel();
+    sectionMotions.delete(content);
     button.setAttribute('aria-expanded', String(expanded));
-    content.hidden = !expanded;
-    requestAnimationFrame(refreshClipped);
+    content.inert = !expanded;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || typeof content.animate !== 'function') {
+      content.hidden = !expanded;
+      requestAnimationFrame(refreshClipped);
+      return;
+    }
+    content.hidden = false;
+    const targetHeight = expanded ? content.getBoundingClientRect().height : 0;
+    const animation = content.animate([
+      {height:`${fromHeight}px`,opacity:fromHeight ? 1 : 0,overflow:'hidden'},
+      {height:`${targetHeight}px`,opacity:expanded ? 1 : 0,overflow:'hidden'}
+    ],{duration:360,easing:'cubic-bezier(.22,.68,0,1)'});
+    sectionMotions.set(content,animation);
+    animation.onfinish = () => {
+      if (sectionMotions.get(content) !== animation) return;
+      sectionMotions.delete(content);
+      content.hidden = !expanded;
+      requestAnimationFrame(refreshClipped);
+    };
   }
 
   toggleTasksSection.addEventListener('click', () => {
@@ -237,7 +258,7 @@ folderStorageBtn.focus();
     requestAnimationFrame(refreshClipped);
   });
   toggleFoldersSection.addEventListener('click', () => {
-    setSectionExpanded(toggleFoldersSection, folderGroupsEl, folderGroupsEl.hidden);
+    setSectionExpanded(toggleFoldersSection, folderGroupsEl, toggleFoldersSection.getAttribute('aria-expanded') !== 'true');
     syncFolderStorage();
   });
   syncFolderStorage();
@@ -1009,8 +1030,8 @@ const thumb = summaryArtifactIcon(type);
        sandbox 留空值：默认即禁用脚本、表单与顶层跳转。
        预览是「看一眼产物」，不该让这份文档反过来操纵宿主页面。 */
     html: (p) =>
-      `<iframe class="pv-frame" sandbox srcdoc="${esc(p.html).replace(/"/g, '&quot;')}"` +
-      ` title="网页预览"></iframe>`,
+      `<div class="reference-html"><iframe class="pv-frame" sandbox="allow-same-origin" srcdoc="${esc(p.html).replace(/"/g, '&quot;')}"` +
+      ` title="网页预览"></iframe></div>`,
   };
 
   /* 没有 preview 数据的文件：给一句说明，而不是留白。
@@ -1325,7 +1346,7 @@ else if (folder) renderFileGrid(folder);
             folderStorage = 'cloud';
             syncFolderStorage();
           }
-          if (folderGroupsEl.hidden) toggleFoldersSection.click();
+          if (toggleFoldersSection.getAttribute('aria-expanded') !== 'true') toggleFoldersSection.click();
           if (folderLayout === 'time' || (!isFolder && !showAllFolderTasks)) {
             folderLayout = 'project';
             if (!isFolder) showAllFolderTasks = true;
@@ -2542,6 +2563,11 @@ promptGuide = text;
     ];
   }
 
+  function renderCaseThumbnail(item) {
+    const kind = ['web', 'app', 'deck', 'article', 'dashboard', 'code', 'visual'].includes(item.kind) ? item.kind : 'article';
+    return `<span class="cthumb"><span class="case-mockup case-mockup-${kind}" aria-hidden="true"><span class="case-mockup-object">${caseArtifact(item, true)}</span></span></span>`;
+  }
+
   function renderCases(scope) {
     const casesEl = document.getElementById('cases');
     if (!casesEl) return;
@@ -2556,7 +2582,7 @@ promptGuide = text;
         `<button class="case" data-case-index="${i}" aria-label="查看案例：${c.title}"` +
         // 错峰入场：与导航项的场景切换动画同一手法
         ` style="animation-delay:${i * 70}ms">` +
-        `<span class="cthumb">${caseArtifact(c, true)}</span>` +
+        renderCaseThumbnail(c) +
         `<span class="cmeta">` +
         `<span class="ctype"><img src="assets/artifact-${iconByKind[c.kind] || 'doc'}.svg" alt="" aria-hidden="true">${c.type}</span>` +
         `<span class="ctitle">${c.title}</span>` +
@@ -2615,6 +2641,7 @@ const fileCloseSave = document.getElementById('fileCloseSave');
   const toolFilePreviewTitle = document.getElementById('toolFilePreviewTitle');
   const toolFilePreviewBody = document.getElementById('toolFilePreviewBody');
   const toolFilePptActions = document.getElementById('toolFilePptActions');
+  const toolFileHtmlCrop = document.getElementById('toolFileHtmlCrop');
   const toolFilePptCrop = document.getElementById('toolFilePptCrop');
   const toolFileWordActions = document.getElementById('toolFileWordActions');
   const toolFileWordComment = document.getElementById('toolFileWordComment');
@@ -3725,6 +3752,7 @@ const preview = node.preview;
     requestAnimationFrame(syncResizeLayout);
     syncFileTreeToggle();
     const editing = canToggleMode && item.previewMode === 'source';
+    toolFileHtmlCrop.hidden = editing || item.node?.preview?.kind !== 'html';
     toolFileModeToggle.hidden = !canToggleMode || editing;
     toolFileModeToggle.textContent = '编辑代码';
     toolFileEditSave.hidden = !editing;
@@ -4620,12 +4648,17 @@ const mainView = document.querySelector('.main');
   // Observing geometry covers streaming, cards, files and expanded tool output alike.
   let conversationFollowLatest = true;
   let conversationFollowFrame = null;
+  let conversationFollowSize = {height:conversationScroll.scrollHeight, viewport:conversationScroll.clientHeight};
   function scheduleConversationFollow() {
     if (conversationFollowFrame !== null) return;
     conversationFollowFrame = requestAnimationFrame(() => {
       conversationFollowFrame = null;
-      if (!conversationFollowLatest || !conversationScroll.clientHeight) return;
-      conversationScroll.scrollTop = conversationScroll.scrollHeight;
+      const height = conversationScroll.scrollHeight;
+      const viewport = conversationScroll.clientHeight;
+      const needsFollow = height > conversationFollowSize.height || viewport < conversationFollowSize.viewport;
+      conversationFollowSize = {height, viewport};
+      if (!conversationFollowLatest || !viewport || !needsFollow) return;
+      conversationScroll.scrollTop = height;
     });
   }
   conversationScroll.addEventListener('scroll', () => {
@@ -5631,11 +5664,12 @@ const mainView = document.querySelector('.main');
     generating: '生成中', checking: '检查中', summarizing: '整理中', done: '已完成',
   };
   const stageToolIcons = {
+    agent: '<rect x="4" y="6" width="16" height="16" rx="4"/><path d="M12 2v4M1 12v5m22-5v5M9 17h6"/><circle cx="9" cy="12" r=".8"/><circle cx="15" cy="12" r=".8"/>',
     code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',
-    file: '<path d="M7 3h7l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/>',
+    file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
     table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M15 9v11M3 14h18"/>',
     chart: '<path d="M4 19V5M4 19h17M8 15l4-4 3 2 5-7"/><path d="M17 6h3v3"/>',
-    document: '<path d="M7 3h7l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 12h8M8 16h8"/>',
+    document: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
     list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="m4 6 1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2"/>',
     check: '<circle cx="11" cy="11" r="7"/><path d="m8 11 2 2 4-4m2.3 7.3L21 21"/>',
   };
@@ -5644,10 +5678,26 @@ const mainView = document.querySelector('.main');
     return frame.planCompleted;
   }
 
+  function renderStageCallDetails(frame, completed = false) {
+    const input = frame.call.input;
+    const code = typeof input.code === 'string' ? input.code : JSON.stringify(input, null, 2);
+    const language = frame.call.name === 'python' ? 'Python' : frame.call.name;
+    return `<div class="stage-call-details"><div class="stage-tool-code-block"><span class="stage-tool-code-label">${esc(language)}</span><pre><code>${esc(code)}</code></pre>${completed ? `<div class="stage-tool-code-result">${esc(frame.completed)}</div>` : ''}</div></div>`;
+  }
+
+  function renderCompletedStageCall(event, index, development, isNew) {
+    const icon = stageToolIcons[development && event.call.name === 'python' ? 'code' : event.toolIcon];
+    return `<li class="stage-completed-item${isNew ? ' is-new' : ''}"><details class="stage-completed-call" data-stage-completed-call="${index}"><summary aria-label="${esc(event.completed)}，展开查看工具信息"><span class="stage-completed-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg></span><span class="stage-completed-text">${esc(event.completed)}</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>${renderStageCallDetails(event, true)}</details></li>`;
+  }
+
+  function renderCompletedAgentCall() {
+    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子 Agent，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${stageToolIcons.agent}</svg></span><span class="stage-completed-text">已调取 4 个子 Agent，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
+  }
+
   function renderStageToolCall(frame, development) {
     const name = development ? frame.call.name : frame.tool;
     const icon = stageToolIcons[development && frame.call.name === 'python' ? 'code' : frame.toolIcon];
-    return `<details class="stage-tool-call" data-tool-state="running"${development ? ' open' : ''}><summary aria-label="${esc(name)}，运行中，展开查看工具调用"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg><svg viewBox="0 0 24 24" class="ic stage-tool-shine">${icon}</svg></span><span class="stage-tool-copy"><strong>${esc(name)}</strong><span class="stage-tool-description">${esc(frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details"><p>${esc(frame.technical)}</p><span class="stage-call-label">工具：${esc(frame.call.name)} · 调用参数</span><pre><code>${esc(JSON.stringify(frame.call.input, null, 2))}</code></pre></div></details>`;
+    return `<details class="stage-tool-call" data-tool-state="running"${development ? ' open' : ''}><summary aria-label="${esc(development ? name : frame.detail)}，运行中，展开查看工具调用"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg><svg viewBox="0 0 24 24" class="ic stage-tool-shine">${icon}</svg></span><span class="stage-tool-copy">${development ? `<strong>${esc(name)}</strong>` : ''}<span class="stage-tool-description">${esc(frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>${renderStageCallDetails(frame)}</details>`;
   }
 
   function renderStageAcknowledgement(text) {
@@ -5661,19 +5711,93 @@ const mainView = document.querySelector('.main');
     return characters.map((character, index) => `<span class="stage-ink-fragment" style="--ink-delay:${120 + Math.round(index * interval)}ms">${esc(character)}</span>`).join('');
   }
 
-  function renderStageDelegations(frameIndex) {
+  function renderStageDelegations(frameIndex, completed = false) {
     if (frameIndex !== 4 && frameIndex !== 5) return '';
     const reviewing = frameIndex === 5;
     const rows = conversationStageDelegations.map((task, index) => {
-      const state = reviewing ? (index < 3 ? 'done' : 'running') : (index < 3 ? 'running' : 'queued');
+      const state = completed ? 'done' : reviewing ? (index < 3 ? 'done' : 'running') : (index < 3 ? 'running' : 'queued');
       const status = state === 'done' ? '已完成' : state === 'running' ? '执行中' : '等待中';
-      const icon = state === 'done'
-        ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>'
-        : state === 'running' ? '<span class="spinner" aria-hidden="true"></span>' : '';
-      return `<li class="stage-delegation-node" data-state="${state}"><details data-delegation-index="${index}"><summary aria-label="子 Agent：${esc(task.title)}，${status}，查看任务说明"><span class="stage-delegation-title">${esc(task.title)}</span><span class="stage-delegation-status">${icon}${status}</span><svg viewBox="0 0 24 24" class="ic stage-delegation-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>${esc(task.detail)}</p></details></li>`;
+      return `<li class="stage-delegation-node" data-state="${state}"><details data-delegation-index="${index}"><summary aria-label="子 Agent：${esc(task.title)}，${status}，查看任务说明"><span class="stage-delegation-title">${esc(task.title)}</span><svg viewBox="0 0 24 24" class="ic stage-delegation-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>${esc(task.detail)}</p></details></li>`;
     }).join('');
-    return `<section class="stage-delegation" aria-label="子 Agent 任务分派"><p class="stage-delegation-heading">${reviewing ? '4 个子 Agent 正在汇总结果' : '正在向 4 个子 Agent 分派任务'}</p><ol class="stage-delegation-list">${rows}</ol></section>`;
+    const tree = `<div class="stage-delegation-tree"><ol class="stage-delegation-list">${rows}</ol><svg class="stage-delegation-flow" aria-hidden="true" focusable="false"></svg></div>`;
+    if (completed) return `<section class="stage-delegation" aria-label="已调取的子 Agent">${tree}</section>`;
+    return `<section class="stage-delegation" aria-label="子 Agent 任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${stageToolIcons.agent}</svg></span><span>${reviewing ? '正在调取子 Agent，汇总异常分析结果' : '正在调取子 Agent，并行分析门店异常'}</span></p>${tree}</section>`;
   }
+
+  const agentTransmissionStates = new WeakMap();
+  function syncAgentTransmissionPaths(panel) {
+    if (!panel) return;
+    panel.querySelectorAll('.stage-delegation-tree').forEach(tree => {
+      const svg = tree.querySelector('.stage-delegation-flow');
+      if (!svg) return;
+      const paused = Boolean(tree.closest('.conversation-stage-demo')?.dataset.pausedAt);
+      const running = paused || reducedMotion.matches ? [] : [...tree.querySelectorAll('.stage-delegation-node[data-state="running"]')];
+      const old = agentTransmissionStates.get(tree);
+      if (!running.length) {
+        old?.cancel();
+        agentTransmissionStates.delete(tree);
+        svg.replaceChildren();
+        return;
+      }
+      const width = tree.clientWidth, height = tree.clientHeight;
+      if (!width || !height) return;
+      const section = tree.closest('.stage-delegation');
+      const heading = section.querySelector('.stage-delegation-heading');
+      const icon = heading?.querySelector('.stage-delegation-icon');
+      const startY = icon ? heading.offsetTop + icon.offsetTop + icon.offsetHeight - tree.offsetTop : 0;
+      const x = tree.querySelector('.stage-delegation-list').offsetLeft + .5;
+      const routes = running.map(node => {
+        const endY = node.offsetTop + 14.5;
+        return `M${x} ${startY}V${Math.max(startY,endY-8)}Q${x} ${endY} ${x+8} ${endY}H${x+15.5}`;
+      });
+      const signature = JSON.stringify([width,height,x,startY,routes]);
+      if (old?.signature === signature) {
+        if (!old.animations.length) old.play();
+        return;
+      }
+      old?.cancel();
+      svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+      svg.replaceChildren();
+      if (startY < 0) {
+        const stem = document.createElementNS('http://www.w3.org/2000/svg','path');
+        stem.setAttribute('class','stage-delegation-stem');
+        stem.setAttribute('d',`M${x} ${startY}V0`);
+        svg.append(stem);
+      }
+      const packets = routes.map(d => {
+        const packet = document.createElementNS('http://www.w3.org/2000/svg','path');
+        packet.setAttribute('class','stage-agent-packet');
+        packet.setAttribute('d',d);
+        svg.append(packet);
+        const length = packet.getTotalLength();
+        packet.style.strokeDasharray = `18 ${length+40}`;
+        return {packet,length};
+      });
+      const state = {signature,animations:[],play:null,cancel(){this.animations.forEach(animation => animation.cancel());this.animations=[];}};
+      state.play = () => {
+        if (!tree.isConnected || agentTransmissionStates.get(tree) !== state) return;
+        const duration = Math.max(1100,Math.min(2600,(Math.max(...packets.map(item => item.length))+40)*14));
+        const epoch = document.timeline?.currentTime;
+        state.animations = packets.map(({packet,length}) => {
+          const animation = packet.animate([
+            {strokeDashoffset:20,opacity:0,offset:0},
+            {opacity:1,offset:.06},
+            {opacity:1,offset:.94},
+            {strokeDashoffset:-length-20,opacity:0,offset:1}
+          ],{duration,easing:'linear',iterations:Infinity});
+          // One epoch keeps every active route simultaneous, including all later repetitions.
+          if (typeof epoch === 'number') animation.startTime = epoch;
+          return animation;
+        });
+      };
+      agentTransmissionStates.set(tree,state);
+      state.play();
+    });
+  }
+  conversationThread.addEventListener('toggle',event => {
+    if (event.target.closest('.stage-delegation')) requestAnimationFrame(() => syncAgentTransmissionPaths(conversationThread));
+  },true);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => syncAgentTransmissionPaths(conversationThread)).observe(conversationThread);
 
   const stageResultHistory = [];
   function stageResultNode() {
@@ -5699,22 +5823,23 @@ const mainView = document.querySelector('.main');
       <p class="stage-version-status" role="status" aria-live="polite"></p>
     </section>`;
   }
+  function renderStageResultSummary(htmlOnly) {
+    const rows = [
+      ['已完成', '核对资料与统计口径，整理出 5 条优先跟进异常。'],
+      ['交付内容', htmlOnly ? 'HTML 看板，包含异常分布、处理优先级与跟进建议。' : '异常明细表，包含异常记录、处理顺序与跟进建议。'],
+      ['待确认', '缺失的时间戳与责任归属已单列，需人工核实。']
+    ];
+    return `<div class="stage-result-summary-wrap"><table class="stage-result-summary-table" aria-label="生成结果总结"><thead><tr><th scope="col">总结项</th><th scope="col">内容</th></tr></thead><tbody>${rows.map(([label, body]) => `<tr><th scope="row">${esc(label)}</th><td>${esc(body)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
   function renderStageResult(frame) {
     const example = conversationExamples.get(conversationTask);
     if (example.files.length === 1 && /\.html?$/i.test(example.files[0])) {
       const name = example.files[0];
-      return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p><p>已生成 HTML 看板，汇总异常分布、处理优先级与跟进建议；缺失的时间戳及责任归属保留为待确认项。</p></section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(name, 0)}</div></section></div>`;
+      return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${renderStageResultSummary(true)}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(name, 0)}</div></section></div>`;
     }
     const resultName = '门店履约异常明细.xlsx';
     const version = stageResultHistory.length + 1;
-    const summaryRows = [
-      ['已完成', '核对资料与统计口径，复核异常及处理优先级。'],
-      ['交付内容', '异常明细表，包含异常记录、处理顺序与跟进建议。'],
-      ['待确认', '缺失的时间戳与责任归属已单列，需人工核实。']
-    ];
-    const summary = document.documentElement.classList.contains('strategy-process-panel')
-      ? `<table class="stage-result-summary-table" aria-label="生成结果总结"><tbody>${summaryRows.map(([label,body])=>`<tr><th scope="row">${label}</th><td>${body}</td></tr>`).join('')}</tbody></table>`
-      : `<dl class="stage-result-summary">${summaryRows.map(([label,body])=>`<div><dt>${label}</dt><dd>${body}</dd></div>`).join('')}</dl>`;
+    const summary = renderStageResultSummary(false);
     const change = stageResultHistory.length ? '按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。' : '汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。';
     return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${summary}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
   }
@@ -5726,14 +5851,14 @@ const mainView = document.querySelector('.main');
     const completedCount = completedStageCount(frame);
     const check = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
     const plan = conversationStagePlan.map((step, index) => {
-      const state = before ? 'pending' : index < completedCount ? 'done' : index === completedCount ? 'current' : 'pending';
+      const state = before ? (index === 0 ? 'current' : 'pending') : index < completedCount ? 'done' : index === completedCount ? 'current' : 'pending';
       const label = state === 'done' ? '已完成' : state === 'current' ? '进行中' : '待开始';
-      const statusIcon = state === 'done' ? check : state === 'current' ? '<span class="spinner" aria-hidden="true"></span>' : `<span class="stage-plan-digit">${index + 1}</span>`;
-      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title">${esc(step.title)}</span></li>`;
+      const statusIcon = state === 'current' ? '<span class="spinner" aria-hidden="true"></span>' : `<span class="stage-plan-digit">${index + 1}</span>`;
+      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title"><span class="stage-plan-title-text">${esc(step.title)}</span></span></li>`;
     }).join('');
     const planMarkup = `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="stagePlanBody"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${conversationStagePlan.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="stagePlanBody"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
     const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex).filter((event,index) => event.call && (!visibleFrames || visibleFrames.includes(index+1)));
-    const completedItems = completedEvents.map((event, index) => `<li class="stage-completed-item${index === newCompletedIndex ? ' is-new' : ''}"><span class="stage-completed-check" aria-hidden="true">${check}</span><span class="stage-completed-text">${esc(event.completed)}</span><span class="stage-completed-tool">${esc(development ? event.call.name : event.tool)}</span></li>`).join('');
+    const completedItems = completedEvents.map((event, index) => renderCompletedStageCall(event, index, development, index === newCompletedIndex) + (!visibleFrames && event === conversationStageFrames[5] ? renderCompletedAgentCall() : '')).join('');
     const checkpointMarkup = conversationStageFrames.slice(0, frameIndex + 1)
       .filter(event => event.stage === 'checkpoint')
       .map(event => `<section class="stage-checkpoint" data-completed-group="${event.planCompleted}" aria-label="${esc(conversationStagePlan[event.planCompleted - 1].title)}的阶段总结"><p>${esc(event.summary)}</p></section>`).join('');
@@ -5795,7 +5920,7 @@ const mainView = document.querySelector('.main');
     if (!panel || panel.dataset.pausedAt || panel.classList.contains('is-entering') || conversationPage.hidden || activeConversationTask !== conversationTask) return;
     const frameIndex = Number(panel.dataset.stageFrame);
     if (frameIndex >= conversationStageFrames.length - 1) return;
-    const duration = panel.dataset.autoRemaining!==undefined ? Number(panel.dataset.autoRemaining) : frameIndex === 0 ? 6000 : conversationStageFrames[frameIndex].stage === 'checkpoint' ? 3000 : 5000;
+    const duration = panel.dataset.autoRemaining!==undefined ? Number(panel.dataset.autoRemaining) : frameIndex === 0 ? 6000 : frameIndex === 4 ? 10000 : frameIndex === 5 ? 8000 : conversationStageFrames[frameIndex].stage === 'checkpoint' ? 3000 : 5000;
     delete panel.dataset.autoRemaining;
     const dueAt=String(Date.now()+duration);
     panel.dataset.autoDueAt=dueAt;
@@ -5807,13 +5932,97 @@ const mainView = document.querySelector('.main');
     }, duration);
   }
 
+  function stageContentKey(node) {
+    if (node.nodeType !== 1) return `node-${node.nodeType}`;
+    return `${node.tagName}:${node.id || node.getAttribute('data-completed-group') || node.classList[0] || ''}`;
+  }
+
+  function reconcileStageContent(parent, next) {
+    let cursor = parent.firstChild;
+    for (const incoming of [...next.childNodes]) {
+      const key = stageContentKey(incoming);
+      let existing = cursor;
+      while (existing && stageContentKey(existing) !== key) existing = existing.nextSibling;
+      if (!existing) {
+        parent.insertBefore(incoming, cursor);
+        continue;
+      }
+      if (existing !== cursor) parent.insertBefore(existing, cursor);
+      if (incoming.nodeType === 1 && existing.getAttribute('class') === 'stage-delegation-flow') {
+        // Keep generated paths and their live animation timeline during progress updates.
+      } else if (incoming.nodeType === 1) {
+        for (const attr of [...existing.attributes]) if (!incoming.hasAttribute(attr.name)) existing.removeAttribute(attr.name);
+        for (const attr of [...incoming.attributes]) if (existing.getAttribute(attr.name) !== attr.value) existing.setAttribute(attr.name, attr.value);
+        reconcileStageContent(existing, incoming);
+      } else if (existing.nodeValue !== incoming.nodeValue) existing.nodeValue = incoming.nodeValue;
+      cursor = existing.nextSibling;
+    }
+    while (cursor) {
+      const nextSibling = cursor.nextSibling;
+      cursor.remove();
+      cursor = nextSibling;
+    }
+  }
+
+  function replaceStageContent(panel, markup, allowMotion = true) {
+    const animate = allowMotion && !reducedMotion.matches && !strategyScene && !panel.classList.contains('is-entering') && typeof panel.animate === 'function';
+    const hadDelegation = Boolean(panel.querySelector('.stage-current > .stage-delegation'));
+    const oldHeight = animate ? panel.getBoundingClientRect().height : 0;
+    panel.stageLayoutAnimation?.cancel();
+    const positions = new Map([...panel.children].map(node => [stageContentKey(node), {top: node.getBoundingClientRect().top, text: node.textContent}]));
+    const template = document.createElement('template');
+    template.innerHTML = markup;
+    reconcileStageContent(panel, template.content);
+    syncAgentTransmissionPaths(panel);
+    if (!animate) return;
+    const duration = 420, easing = 'cubic-bezier(.22,.68,0,1)';
+    const current = panel.querySelector('.stage-current');
+    const delegation = current?.querySelector('.stage-delegation');
+    const delegationEntering = Boolean(delegation && !hadDelegation);
+    // Measure the final layout before starting any animations, avoiding alternating reads and writes.
+    const newHeight = panel.getBoundingClientRect().height;
+    const currentHeight = delegationEntering ? current.getBoundingClientRect().height : 0;
+    const movements = [...panel.children].map(node => {
+      const previous = positions.get(stageContentKey(node));
+      return {node,previous,delta:previous ? previous.top - node.getBoundingClientRect().top : 0};
+    });
+    if (delegationEntering) {
+      // Expand the new work area itself. Animating the whole panel clipped the Agent list as it appeared.
+      current.animate([{height:'0px',overflow:'clip'},{height:`${currentHeight}px`,overflow:'clip'}],{duration:480,easing});
+      [current.querySelector(':scope > p'),delegation.querySelector('.stage-delegation-heading'),...delegation.querySelectorAll('.stage-delegation-node')].filter(Boolean).forEach((node,index) => {
+        node.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,delay:index*35,easing,fill:'backwards'});
+      });
+    } else {
+      panel.querySelector('.stage-current > .stage-tool-call')?.animate([{opacity:0,transform:'translateX(8px)'},{opacity:1,transform:'translateX(0)'}],{duration:320,easing});
+      if (Math.abs(newHeight - oldHeight) > 1) panel.stageLayoutAnimation = panel.animate([{height:`${oldHeight}px`,overflow:'clip'},{height:`${newHeight}px`,overflow:'clip'}], {duration,easing});
+    }
+    for (const {node,previous,delta} of movements) {
+      if (Math.abs(delta) > 1 && !(delegationEntering && node === current)) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
+      if (!(delegationEntering && node === current) && (!previous || previous.text !== node.textContent) && node.matches('.stage-checkpoint,.stage-result,.stage-current:not(:has(> .stage-tool-call))')) {
+        node.animate([{opacity:0},{opacity:1}], {duration:320,easing});
+      }
+    }
+  }
+
+  function preserveConversationScrollRange() {
+    if (conversationScroll.scrollTop <= 0) return;
+    // Keep enough trailing space while a stage collapses so the browser cannot clamp scrollTop.
+    const height = conversationThread.offsetHeight;
+    if (height) conversationThread.style.minHeight = `${Math.max(height, parseFloat(conversationThread.style.minHeight) || 0)}px`;
+  }
+
   function updateConversationStage(panel, frameIndex, planOpen = frameIndex === 0, thinkingOpen = panel.querySelector('.stage-thinking-toggle')?.getAttribute('aria-expanded') === 'true') {
     if(panel.dataset.pausedAt)return;
+    if (panel.dataset.planExpanded !== undefined) planOpen = panel.dataset.planExpanded === 'true';
+    if (planOpen && panel.dataset.planExpanded === 'true' && conversationStageFrames[frameIndex].stage === 'done') thinkingOpen = true;
+    const openToolCalls = [...panel.querySelectorAll('.stage-completed-call[open]')].map(item => item.dataset.stageCompletedCall);
     const openDelegations = [...panel.querySelectorAll('.stage-delegation-node details[open]')].map(item => item.dataset.delegationIndex);
     clearTimeout(stageAutoTimer);
     delete panel.dataset.autoDueAt;
     delete panel.dataset.autoRemaining;
-    const followLatest = conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight < 64;
+    const followLatest = conversationFollowLatest && conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight < 64;
+    const previousScrollHeight = conversationScroll.scrollHeight;
+    preserveConversationScrollRange();
     const previousEvents = conversationStageFrames.slice(1, Number(panel.dataset.stageFrame)).filter(event => event.call).length;
     const nextEvents = conversationStageFrames.slice(1, frameIndex).filter(event => event.call).length;
     if (frameIndex === 0 && Number(panel.dataset.stageFrame) === conversationStageFrames.length - 1) {
@@ -5827,13 +6036,16 @@ const mainView = document.querySelector('.main');
     }
     if (conversationStageFrames[frameIndex].stage === 'done' && !panel.dataset.finishedAt) panel.dataset.finishedAt = String(Date.now());
     panel.dataset.stageFrame = String(frameIndex);
-    panel.innerHTML = renderConversationStageBody(frameIndex, planOpen, nextEvents > previousEvents ? nextEvents - 1 : -1, thinkingOpen);
+    panel.classList.toggle('is-advancing', false);
+    panel.classList.toggle('is-tool-exiting', false);
+    replaceStageContent(panel, renderConversationStageBody(frameIndex, planOpen, nextEvents > previousEvents ? nextEvents - 1 : -1, thinkingOpen), frameIndex > 1);
     openDelegations.forEach(index => { const item = panel.querySelector(`.stage-delegation-node details[data-delegation-index="${index}"]`); if (item) item.open = true; });
+    openToolCalls.forEach(index => { const item = panel.querySelector(`.stage-completed-call[data-stage-completed-call="${index}"]`); if (item) item.open = true; });
     syncStageDemoControls();
     conversationThreads.set(conversationTask, conversationThread.innerHTML);
     scheduleStageAutoAdvance(panel);
     if (followLatest) requestAnimationFrame(() => {
-      if (panel.isConnected && Number(panel.dataset.stageFrame) === frameIndex && activeConversationTask === conversationTask) {
+      if (panel.isConnected && Number(panel.dataset.stageFrame) === frameIndex && activeConversationTask === conversationTask && conversationScroll.scrollHeight > previousScrollHeight) {
         conversationScroll.scrollTop = conversationScroll.scrollHeight;
       }
     });
@@ -5844,10 +6056,19 @@ const mainView = document.querySelector('.main');
     clearTimeout(stageAutoTimer);
     if (stageAdvanceTimer) return;
     if (!immediate && Number(panel.dataset.stageFrame) === 0 && next === 1 && !reducedMotion.matches) {
+      preserveConversationScrollRange();
+      const acknowledgement = panel.querySelector('.stage-acknowledgement');
+      if (acknowledgement) {
+        acknowledgement.style.height = `${acknowledgement.getBoundingClientRect().height}px`;
+        void acknowledgement.offsetHeight;
+      }
+      panel.classList.toggle('is-advancing', true);
       const plan = panel.querySelector('.stage-plan');
-      plan.dataset.collapsed = 'true';
-      plan.querySelector('.stage-plan-toggle').setAttribute('aria-expanded', 'false');
-      plan.querySelector('.stage-plan-body').inert = true;
+      if (panel.dataset.planExpanded !== 'true') {
+        plan.dataset.collapsed = 'true';
+        plan.querySelector('.stage-plan-toggle').setAttribute('aria-expanded', 'false');
+        plan.querySelector('.stage-plan-body').inert = true;
+      }
       stageDemoAdvance.disabled = true;
       panel.dataset.pendingStageFrame=String(next);
       stageAdvanceTimer = setTimeout(() => {
@@ -5856,7 +6077,21 @@ const mainView = document.querySelector('.main');
         delete panel.dataset.pendingStageFrame;
         stageDemoAdvance.disabled = false;
         if (panel.isConnected) updateConversationStage(panel, next);
-      }, 280);
+      }, 420);
+      return;
+    }
+    if (!immediate && Number(panel.dataset.stageFrame) > 0 && !reducedMotion.matches && panel.querySelector('.stage-current > .stage-tool-call')) {
+      preserveConversationScrollRange();
+      panel.classList.toggle('is-tool-exiting', true);
+      stageDemoAdvance.disabled = true;
+      panel.dataset.pendingStageFrame = String(next);
+      stageAdvanceTimer = setTimeout(() => {
+        if (panel.dataset.pausedAt || panel.dataset.pendingStageFrame !== String(next)) return;
+        stageAdvanceTimer = null;
+        delete panel.dataset.pendingStageFrame;
+        stageDemoAdvance.disabled = false;
+        if (panel.isConnected) updateConversationStage(panel, next);
+      }, 260);
       return;
     }
     updateConversationStage(panel, next);
@@ -5867,16 +6102,19 @@ const mainView = document.querySelector('.main');
   function syncStageDemoControls() {
     syncStageClock();
     const panel = conversationThread.querySelector('.conversation-stage-demo');
+    syncAgentTransmissionPaths(panel);
     if(panel?.dataset.pausedAt)applyStagePausedView(panel,true);
     syncInterventionComposer();
     stageDemoControls.hidden = conversationPage.hidden || activeConversationTask !== conversationTask || !panel || panel.classList.contains('is-entering');
     if (stageDemoControls.hidden) return;
     stageDemoAdvance.disabled=Boolean(panel.dataset.pausedAt)||stageAdvanceTimer!==null;
     const index = Number(panel.dataset.stageFrame);
-    const phase = index === 0 ? 1 : conversationStageFrames[index].stage === 'done' ? 3 : 2;
-    const action = index === 0 ? '开始工作 →' : phase === 3
-      ? '重播演示 ↺' : index === conversationStageFrames.length - 2 ? '查看结果 →' : conversationStageFrames[index].stage === 'checkpoint' ? '继续下一阶段 →' : '演示下一步 →';
-    stageDemoAdvance.textContent = `${phase}/3 · ${action}`;
+    const phase = index === 0 ? 1 : index < 4 ? 2 : index < 7 ? 3 : 4;
+    const done = conversationStageFrames[index].stage === 'done';
+    const agentActions = {3:'调取子 Agent →',4:'子 Agent 汇总 →',5:'查看 Agent 结果 →',6:'整理处理建议 →'};
+    const action = index === 0 ? '开始工作 →' : done ? '重播演示 ↺' : agentActions[index]
+      || (index === conversationStageFrames.length - 2 ? '查看结果 →' : conversationStageFrames[index].stage === 'checkpoint' ? '继续下一阶段 →' : '演示下一步 →');
+    stageDemoAdvance.textContent = `${phase}/4 · ${action}`;
   }
 
   function applyStagePausedView(panel,paused){
@@ -5966,11 +6204,51 @@ const mainView = document.querySelector('.main');
     toggle.closest('.stage-thinking').querySelector('.stage-thinking-details').inert = !open;
     conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
   });
+  const completedToolMotions = new WeakMap();
+  function toggleCompletedToolDetails(details) {
+    const previous = completedToolMotions.get(details);
+    const opening = previous ? !previous.opening : !details.open;
+    const fromHeight = details.getBoundingClientRect().height;
+    previous?.height.cancel();
+    previous?.fade?.cancel();
+    if (!opening) preserveConversationScrollRange();
+    if (reducedMotion.matches || typeof details.animate !== 'function') {
+      details.open = opening;
+      completedToolMotions.delete(details);
+      conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+      return;
+    }
+    details.open = true;
+    const content = details.querySelector('.stage-call-details');
+    const targetHeight = opening ? details.getBoundingClientRect().height : details.querySelector('summary').getBoundingClientRect().height;
+    const options = {duration:360,easing:'cubic-bezier(.22,.68,0,1)'};
+    const height = details.animate([{height:`${fromHeight}px`,overflow:'hidden'},{height:`${targetHeight}px`,overflow:'hidden'}],options);
+    const fade = content?.animate([{opacity:opening?0:1,transform:opening?'translateY(-4px)':'translateY(0)'},{opacity:opening?1:0,transform:opening?'translateY(0)':'translateY(-4px)'}],options);
+    const motion = {opening,height,fade};
+    completedToolMotions.set(details,motion);
+    details.classList.toggle('is-closing',!opening);
+    height.onfinish = () => {
+      if (completedToolMotions.get(details) !== motion) return;
+      details.open = opening;
+      details.classList.remove('is-closing');
+      completedToolMotions.delete(details);
+      conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+    };
+  }
+  conversationThread.addEventListener('click', (event) => {
+    const summary = event.target.closest('.stage-completed-call > summary');
+    if (!summary) return;
+    event.preventDefault();
+    toggleCompletedToolDetails(summary.parentElement);
+  });
+
   conversationThread.addEventListener('click', (event) => {
     const toggle = event.target.closest('.stage-plan-toggle');
     if (!toggle) return;
     const plan = toggle.closest('.stage-plan');
     const open = toggle.getAttribute('aria-expanded') !== 'true';
+    const panel = plan.closest('.conversation-stage-demo, .conversation-stage-history');
+    if (panel) panel.dataset.planExpanded = String(open);
     toggle.setAttribute('aria-expanded', String(open));
     plan.dataset.collapsed = String(!open);
     plan.querySelector('.stage-plan-body').inert = !open;
@@ -6356,6 +6634,7 @@ const mainView = document.querySelector('.main');
     closeConversationArtifactMenu();
     if (!open) closeConversationTaskMenu();
     if (open && activeConversationTask !== task) {
+      conversationThread.style.minHeight = '';
       if (activeConversationTask) setGoalMode(conversationPrompt, false);
       if (activeConversationTask) {
         conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
@@ -6395,8 +6674,9 @@ const mainView = document.querySelector('.main');
           stage.classList.remove('is-entering');
           const frameIndex = Number(stage.dataset.stageFrame);
           const planToggle = stage.querySelector('.stage-plan-toggle');
-          const planOpen = planToggle ? planToggle.getAttribute('aria-expanded') === 'true' : frameIndex === 0;
-          stage.innerHTML = renderConversationStageBody(frameIndex, planOpen);
+          const planOpen = stage.dataset.planExpanded !== undefined ? stage.dataset.planExpanded === 'true' : planToggle ? planToggle.getAttribute('aria-expanded') === 'true' : frameIndex === 0;
+          const thinkingOpen = stage.querySelector('.stage-thinking-toggle')?.getAttribute('aria-expanded') === 'true' || (stage.dataset.planExpanded === 'true' && conversationStageFrames[frameIndex].stage === 'done');
+          stage.innerHTML = renderConversationStageBody(frameIndex, planOpen, -1, thinkingOpen);
           if(stage.dataset.acknowledgement&&frameIndex===0)stage.querySelector('.stage-acknowledgement p').textContent=stage.dataset.acknowledgement;
         }
       }
@@ -7171,9 +7451,9 @@ function beginConversationTurn(message) {
   function expertOptionCopy(name) {
     return `<span class="expert-option-copy"><strong>${esc(name)}</strong><small title="${esc(expertDescriptions[name] || '协助完成专业任务')}">${esc(expertDescriptions[name] || '协助完成专业任务')}</small></span>`;
   }
-  function expertAvatar(name) {
+  function expertAvatar(name, rounded = false) {
     const palette = expertLooks[name] || expertLooks['数据开发'];
-    return `<svg class="expert-avatar" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="12" fill="var(--expert-${palette}-background)"/><path d="M4.2 24V12.3c0-3.4 1-6.5 2.8-8.9l2 3.4a8.5 8.5 0 0 1 6.4-.5l1.3-2.9c2 2.8 3.3 5.6 3.3 8.9 0 3.2-1.2 5.3-3.2 6.1-.5.2-.6.5-.6 1V24Z" fill="var(--expert-${palette}-face)"/><circle cx="10.6" cy="11.7" r="1" fill="var(--expert-${palette}-accent)"/><circle cx="15.8" cy="11.4" r="1" fill="var(--expert-${palette}-accent)"/></svg>`;
+    return `<svg class="expert-avatar${rounded ? ' expert-avatar-rounded' : ''}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${rounded ? `<rect width="24" height="24" rx="6" fill="var(--expert-${palette}-background)"/>` : `<circle cx="12" cy="12" r="12" fill="var(--expert-${palette}-background)"/>`}<path d="M4.2 24V12.3c0-3.4 1-6.5 2.8-8.9l2 3.4a8.5 8.5 0 0 1 6.4-.5l1.3-2.9c2 2.8 3.3 5.6 3.3 8.9 0 3.2-1.2 5.3-3.2 6.1-.5.2-.6.5-.6 1V24Z" fill="var(--expert-${palette}-face)"/><circle cx="10.6" cy="11.7" r="1" fill="var(--expert-${palette}-accent)"/><circle cx="15.8" cy="11.4" r="1" fill="var(--expert-${palette}-accent)"/></svg>`;
   }
   // 连接器使用各自的服务头像，不把所有 MCP 都画成同一个通用插头。
   const connectorLooks = {
@@ -7220,7 +7500,7 @@ function beginConversationTurn(message) {
   function updateExpertTriggers() {
     expertTriggers.forEach(trigger => {
       const chip = trigger.closest('.expert-chip');
-      trigger.querySelector('.avatar').innerHTML = selectedExpert ? expertAvatar(selectedExpert) : '';
+      trigger.querySelector('.avatar').innerHTML = selectedExpert ? expertAvatar(selectedExpert, true) : '';
       trigger.querySelector('.expert-name').textContent = selectedExpert || '选择专家';
       trigger.setAttribute('aria-label', selectedExpert ? `切换专家，当前：${selectedExpert}` : '选择专家');
       chip.dataset.expertSelected = String(Boolean(selectedExpert));
@@ -8420,6 +8700,7 @@ function beginConversationTurn(message) {
   artifactSelection = window.ArtifactEditingDemo.create({
     root:toolFilePreviewBody,
     pptCropButton:toolFilePptCrop,
+    htmlCropButton:toolFileHtmlCrop,
     wordCropButton:toolFileWordComment,
     getWorkspace:currentFileWorkspace,
     getTask:()=>activeConversationTask,

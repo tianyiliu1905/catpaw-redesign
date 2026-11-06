@@ -149,7 +149,7 @@
         </div>
 
         <div class="section-label folder-section-label">
-  <button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">项目</span></button>
+  <button class="section-toggle" id="toggleFoldersSection" type="button" aria-controls="folderGroups" aria-expanded="true"><span id="labelFolders">项目</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
   <div class="folder-section-actions">
     <button class="folder-section-action" id="toggleAllFolders" type="button" title="全部收起" aria-label="全部收起"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path class="folder-collapse-icon" d="m7 5 5 5 5-5M7 19l5-5 5 5"/><path class="folder-expand-icon" d="m7 10 5-5 5 5M7 14l5 5 5-5"/></svg></button>
     <button class="folder-section-action" id="folderSortButton" type="button" title="排序" aria-label="排序" aria-haspopup="menu" aria-expanded="false" aria-controls="folderSortMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/></svg></button>
@@ -914,14 +914,15 @@
         <header class="tool-file-preview-head">
           <svg viewBox="0 0 24 24" class="ic"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>
           <span id="toolFilePreviewTitle">选择文件</span>
+          <button class="file-region-button" id="toolFileHtmlCrop" type="button" data-reference-crop aria-pressed="false" hidden><span class="file-ppt-action-label">标注区域</span></button>
           <button class="file-mode-toggle" id="toolFileModeToggle" type="button" hidden>编辑代码</button>
           <button class="file-edit-save" id="toolFileEditSave" type="button" hidden>保存</button>
           <button class="file-edit-discard" id="toolFileEditDiscard" type="button" hidden>取消</button>
           <div class="file-ppt-actions" id="toolFilePptActions" hidden>
-            <button id="toolFilePptCrop" type="button" data-reference-crop aria-pressed="false" title="标注区域"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><span class="file-ppt-action-label">标注区域</span></button>
+            <button class="file-region-button" id="toolFilePptCrop" type="button" data-reference-crop aria-pressed="false" title="标注区域"><span class="file-ppt-action-label">标注区域</span></button>
           </div>
           <div class="file-ppt-actions" id="toolFileWordActions" hidden>
-            <button id="toolFileWordComment" type="button" data-reference-crop aria-pressed="false" title="标注区域"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.7"/><path d="M12 2.2V6m0 12v3.8M2.2 12H6m12 0h3.8"/></svg><span class="file-ppt-action-label">标注区域</span></button>
+            <button class="file-region-button" id="toolFileWordComment" type="button" data-reference-crop aria-pressed="false" title="标注区域"><span class="file-ppt-action-label">标注区域</span></button>
           </div>
           <button class="file-share-button" id="toolFileShare" type="button" title="分享产物" aria-label="分享当前产物" hidden>
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/></svg>

@@ -20,9 +20,9 @@ class Element {
   contains(target){return target===this;}
   scrollIntoView(){}
 }
-function setup({pptHeader=false,wordHeader=false,annotation=false}={}) {
+function setup({pptHeader=false,wordHeader=false,htmlHeader=false,annotation=false}={}) {
   const root=new Element(),doc=new Element(),label=new Element(),button=new Element();
-  const pptCrop=new Element(),wordCrop=new Element(),pptActions=[];
+  const pptCrop=new Element(),wordCrop=new Element(),htmlCrop=new Element(),pptActions=[];
   const commentButton=new Element(),commentInput=new Element(),commentEditor=new Element(),commentCancel=new Element();
   const annotationPanel=annotation?new Element():null,annotationCanvas=annotation?new Element():null,annotationText=annotation?new Element():null;
   const annotationButtons=annotation?['circle','rect','line','arrow','pen','text'].map(tool=>new Element({annotationTool:tool})):[];
@@ -51,14 +51,14 @@ function setup({pptHeader=false,wordHeader=false,annotation=false}={}) {
   root.contains=el=>cells.includes(el);
   root.querySelectorAll=selector=>selector.includes('td[data-excel-row]')?cells:[];
   root.querySelector=selector=>selector.includes('data-excel-address')?address:selector.includes('data-excel-value')?value:null;
-  const controller=api.create({root,pptCropButton:pptHeader?pptCrop:undefined,wordCropButton:wordHeader?wordCrop:undefined,getWorkspace:()=>workspace,getTask:()=>activeTask,taskForArtifact:()=> 'review',ensureTask:task=>{activeTask=task;},focusComposer:()=>focused++,renderWorkspace(){},openReference:ref=>{located=ref;},feedback(){}});
+  const controller=api.create({root,htmlCropButton:htmlHeader?htmlCrop:undefined,pptCropButton:pptHeader?pptCrop:undefined,wordCropButton:wordHeader?wordCrop:undefined,getWorkspace:()=>workspace,getTask:()=>activeTask,taskForArtifact:()=> 'review',ensureTask:task=>{activeTask=task;},focusComposer:()=>focused++,renderWorkspace(){},openReference:ref=>{located=ref;},feedback(){}});
   const select=async(start,end=start)=>{
     await root.fire('pointerdown',{button:0,target:start,preventDefault(){}});
     doc.elementFromPoint=()=>end;
     await doc.fire('pointermove',{clientX:120,clientY:120});
     await doc.fire('pointerup',{target:end});
   };
-  return {api,controller,cells,select,button,commentButton,commentInput,commentEditor,commentCancel,menu,root,doc,window,containers,address,value,pptCrop,wordCrop,pptActions,annotationPanel,annotationCanvas,annotationText,annotationButtons,annotationCalls,setWorkspace:item=>workspace=item,get focused(){return focused;},setTask:task=>activeTask=task,get located(){return located;}};
+  return {context,htmlCrop,api,controller,cells,select,button,commentButton,commentInput,commentEditor,commentCancel,menu,root,doc,window,containers,address,value,pptCrop,wordCrop,pptActions,annotationPanel,annotationCanvas,annotationText,annotationButtons,annotationCalls,setWorkspace:item=>workspace=item,get focused(){return focused;},setTask:task=>activeTask=task,get located(){return located;}};
 }
 test('queued references return to the draft without duplicates and remain isolated by task',async()=>{
   const s=setup();await s.select(s.cells[0]);await s.button.fire('click');
@@ -293,4 +293,31 @@ test('fullscreen conversation can send an annotated selection without requiring 
   vm.runInNewContext(code+';sendFullscreenFileRequest();',context);
   assert.equal(message.text,'');assert.equal(message.references[0].comment,'补充华东区域的跟进建议');
   assert.equal(message.attachments.length,0);assert.equal(s.controller.entries().length,0);
+});
+
+test('HTML crop captures scrolled content and shares annotations, comments and return navigation',async()=>{
+ const s=setup({htmlHeader:true,annotation:true});
+ const node={name:'看板.html',preview:{kind:'html'}},item={node,chain:[{id:'default'},node]};s.setWorkspace(item);
+ const host=new Element(),box=new Element(),clone={style:{setProperty(){}},querySelectorAll:()=>[],setAttribute(){}};
+ const page={scrollWidth:120,scrollHeight:300,cloneNode:()=>clone,querySelectorAll:()=>[]};
+ let restored,svg;const frame={addEventListener(){},clientWidth:120,clientHeight:32,contentDocument:{documentElement:page},contentWindow:{scrollX:0,scrollY:80,scrollTo:(...args)=>restored=args}};
+ host.querySelector=selector=>selector==='iframe'?frame:box;
+ s.root.querySelector=selector=>selector==='.reference-html'?host:selector==='.reference-slide'?null:box;
+ s.context.getComputedStyle=()=>[];s.context.XMLSerializer=class{serializeToString(){return '<html><body>看板</body></html>'}};
+ s.context.Image=class{set src(value){svg=decodeURIComponent(value)}async decode(){}};
+ s.doc.createElement=()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'data:image/png;base64,html-crop'});
+ await s.htmlCrop.fire('click');assert.equal(s.htmlCrop.attributes['aria-pressed'],'true');
+ const target={closest:selector=>selector==='.reference-html'?host:null};
+ await s.root.fire('pointerdown',{button:0,target,clientX:110,clientY:104,preventDefault(){}});
+ await s.doc.fire('pointermove',{clientX:170,clientY:124});await s.doc.fire('pointerup',{target});
+ assert.equal(s.annotationCanvas.parent,host);assert.equal(s.annotationPanel.hidden,false);assert.match(svg,/y="-80"/);
+ for(const tool of s.annotationButtons){
+  await s.annotationPanel.fire('click',{target:{closest:()=>tool}});s.annotationText.value='调整这里';
+  await s.annotationCanvas.fire('pointerdown',{button:0,pointerId:1,clientX:120,clientY:110,preventDefault(){}});
+  await s.annotationCanvas.fire('pointermove',{pointerId:1,clientX:180,clientY:140});await s.annotationCanvas.fire('pointerup',{pointerId:1});
+ }
+ await s.commentButton.fire('click');s.commentInput.value='突出优先处理项';await s.button.fire('click');
+ const ref=s.controller.entries()[0];assert.equal(ref.kind,'html-region');assert.equal(ref.image,'data:image/png;base64,annotated');assert.equal(ref.comment,'突出优先处理项');assert.equal(ref.scrollY,80);
+ await s.doc.fire('click',{target:{closest:selector=>selector==='[data-artifact-reference]'?{dataset:{artifactReference:ref.id}}:null}});
+ assert.equal(s.located,ref);assert.deepEqual(restored,[0,80]);assert.equal(box.hidden,false);assert.equal(s.htmlCrop.attributes['aria-pressed'],'false');
 });
