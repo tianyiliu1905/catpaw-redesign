@@ -7497,6 +7497,14 @@ function beginConversationTurn(message) {
   expertMenu.setAttribute('aria-label', '选择专家');
   expertMenu.hidden = true;
   document.body.appendChild(expertMenu);
+  function expertSwitchOptions(query = '') {
+    const search = query.trim().toLocaleLowerCase();
+    const items = installedAddItems.expert.map((name,index) => ({name,index})).filter(({name}) => `${name} ${expertDescriptions[name] || ''}`.toLocaleLowerCase().includes(search));
+    return items.length ? items.map(({name,index}) => `<button class="expert-switch-item" type="button" role="menuitemradio" aria-checked="${name === selectedExpert}" data-expert-index="${index}">${expertAvatar(name, true)}${expertOptionCopy(name)}${name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}</button>`).join('') : '<p class="composer-add-empty" role="status">没有匹配的专家</p>';
+  }
+  function renderExpertSwitchMenu() {
+    expertMenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input expert-switch-search" type="search" aria-label="搜索专家" placeholder="搜索专家" autocomplete="off"></label><div class="expert-switch-list">${expertSwitchOptions()}</div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-expert-market>${addIcon('expert')}<span>专家市场</span>${addIcon('chevron','composer-add-chevron')}</button>`;
+  }
   function updateExpertTriggers() {
     expertTriggers.forEach(trigger => {
       const chip = trigger.closest('.expert-chip');
@@ -7552,13 +7560,19 @@ function beginConversationTurn(message) {
       closeExpertMenu();
       activeExpertTrigger = trigger;
       trigger.setAttribute('aria-expanded', 'true');
-      expertMenu.innerHTML = installedAddItems.expert.map((name, index) => `<button class="expert-switch-item" type="button" role="menuitemradio" aria-checked="${name === selectedExpert}" data-expert-index="${index}">${expertAvatar(name)}${expertOptionCopy(name)}${name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}</button>`).join('');
+      renderExpertSwitchMenu();
       expertMenu.hidden = false;
       placeExpertMenu();
-      (expertMenu.querySelector('[aria-checked="true"]') || expertMenu.querySelector('.expert-switch-item'))?.focus();
+      expertMenu.querySelector('.expert-switch-search')?.focus();
     });
   });
+  expertMenu.addEventListener('input', event => {
+    if (!event.target.matches('.expert-switch-search')) return;
+    expertMenu.querySelector('.expert-switch-list').innerHTML = expertSwitchOptions(event.target.value);
+    placeExpertMenu();
+  });
   expertMenu.addEventListener('click', event => {
+    if (event.target.closest('[data-expert-market]')) { closeExpertMenu(); openAddDialog('expert'); return; }
     const option = event.target.closest('[data-expert-index]');
     if (!option) return;
     selectExpert(installedAddItems.expert[Number(option.dataset.expertIndex)]);
@@ -7570,9 +7584,11 @@ function beginConversationTurn(message) {
   expertMenu.addEventListener('keydown', event => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeExpertMenu(true); }
     if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    if (event.target.matches('.expert-switch-search') && ['Home','End'].includes(event.key)) return;
     event.preventDefault();
-    const options = [...expertMenu.querySelectorAll('[data-expert-index]')];
-    const index = options.indexOf(document.activeElement);
+    const options = [...expertMenu.querySelectorAll('[data-expert-index],[data-expert-market]')];
+    const focused = options.indexOf(document.activeElement);
+    const index = focused < 0 && event.key === 'ArrowUp' ? 0 : focused;
     const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1
       : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
     options[next]?.focus();
@@ -7708,7 +7724,7 @@ function beginConversationTurn(message) {
       : installedAddItems[kind];
     const items = choices.filter(name => name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
     list.innerHTML = items.length
-      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' ? ' composer-connector-item' : ''}${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' ? ` role="switch" aria-checked="${activeConnectors().has(name)}"` : kind === 'expert' ? ` aria-pressed="${name === selectedExpert}"` : ''}>${kind === 'expert' ? expertAvatar(name) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}${kind === 'mcp' ? '<span class="composer-connector-switch" aria-hidden="true"><span class="composer-connector-switch-thumb"></span></span>' : ''}</button>`).join('')
+      ? items.map((name, index) => `<button class="composer-add-item${kind === 'mcp' ? ' composer-connector-item' : ''}${kind === 'mcp' && activeConnectors().has(name) ? ' is-selected' : ''}" type="button" data-add-installed="${index}"${kind === 'mcp' ? ` role="switch" aria-checked="${activeConnectors().has(name)}"` : kind === 'expert' ? ` aria-pressed="${name === selectedExpert}"` : ''}>${kind === 'expert' ? expertAvatar(name, true) : kind === 'mcp' ? connectorAvatar(name) : addIcon(kind)}${kind === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}${kind === 'expert' && name === selectedExpert ? '<span class="expert-selected-label">已选</span>' : ''}${kind === 'mcp' ? '<span class="composer-connector-switch" aria-hidden="true"><span class="composer-connector-switch-thumb"></span></span>' : ''}</button>`).join('')
       : `<p class="composer-add-empty">${query ? '没有匹配的' + label : '还没有添加' + label}</p>`;
     addSubmenu._visibleInstalled = items;
     placeAddSubmenu();
@@ -7734,7 +7750,7 @@ function beginConversationTurn(message) {
       const kind = addMenuPage;
       const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
       const searchLabel = directAddTrigger ? `搜索${label}` : `搜索已添加的${label}`;
-      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${['skill', 'knowledge'].includes(kind) ? `管理${label}` : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'expert' ? '专家市场' : kind === 'mcp' ? '管理连接器' : ['skill', 'knowledge'].includes(kind) ? `管理${label}` : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
       renderAddList();
     }
     addSubmenu.hidden = false;
@@ -7789,7 +7805,7 @@ function beginConversationTurn(message) {
       addDialog._libraryEntries = all;
     } else {
       const examples = galleryExamples[dialogPage].filter(name => name.toLocaleLowerCase().includes(dialogQuery.toLocaleLowerCase()));
-      container.innerHTML = examples.length ? examples.map(name => `<div class="composer-dialog-row">${dialogPage === 'expert' ? expertAvatar(name) : dialogPage === 'mcp' ? connectorAvatar(name) : addIcon(dialogPage)}${dialogPage === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}<button type="button" class="composer-dialog-install" data-dialog-install="${esc(name)}" ${installedAddItems[dialogPage].includes(name) ? 'disabled' : ''}>${installedAddItems[dialogPage].includes(name) ? '已添加' : '添加'}</button></div>`).join('') : '<p class="composer-add-empty">没有匹配的结果</p>';
+      container.innerHTML = examples.length ? examples.map(name => `<div class="composer-dialog-row">${dialogPage === 'expert' ? expertAvatar(name, true) : dialogPage === 'mcp' ? connectorAvatar(name) : addIcon(dialogPage)}${dialogPage === 'expert' ? expertOptionCopy(name) : `<span>${esc(name)}</span>`}<button type="button" class="composer-dialog-install" data-dialog-install="${esc(name)}" ${installedAddItems[dialogPage].includes(name) ? 'disabled' : ''}>${installedAddItems[dialogPage].includes(name) ? '已添加' : '添加'}</button></div>`).join('') : '<p class="composer-add-empty">没有匹配的结果</p>';
     }
   }
   function openAddDialog(page) {

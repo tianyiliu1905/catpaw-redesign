@@ -7678,3 +7678,10 @@ font-weight:var(--weight-emphasis);
 .stage-delegation-node .stage-delegation-chevron{opacity:0;pointer-events:none;transition:opacity .15s ease,transform .18s ease}
 .stage-delegation-node summary:hover .stage-delegation-chevron,.stage-delegation-node summary:focus-visible .stage-delegation-chevron{opacity:1;pointer-events:auto}
 .stage-delegation-node[data-state="queued"] .stage-delegation-title{color:var(--text-4)}
+
+.expert-switch-menu .composer-search-field{margin:4px 7px 8px;flex:none}
+.expert-switch-menu .expert-switch-search{width:100%;min-height:36px;margin:0;padding:7px 10px 7px 32px;background:var(--surface-bg);color:var(--text-1)}
+.expert-switch-list{display:flex;flex-direction:column;gap:4px;max-height:240px;min-height:0;overflow:auto;scrollbar-width:none}
+.expert-switch-list::-webkit-scrollbar{display:none}
+.expert-switch-menu>.composer-add-divider{flex:none;margin:3px 7px}
+.expert-switch-menu>.composer-add-more{flex:none;gap:8px;min-height:34px;padding:5px 8px}
