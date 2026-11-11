@@ -54,7 +54,7 @@
 .ppt-element-hit:hover{outline-color:#4bcc7a88}
 .ppt-element-hit.is-selected{outline:2px solid #4bcc7a}
 .ppt-element-hit:focus-visible{outline:2px solid var(--brand-green)}
-.ppt-resize-handle{position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;padding:0;border:1px solid #28884d;background:#fff;cursor:nwse-resize}
+.ppt-resize-handle{position:absolute;right:-5px;bottom:-5px;width:10px;height:10px;padding:0;border:1px solid var(--ds-primary-6);background:#fff;cursor:nwse-resize}
 .reference-cropping .ppt-element-hit{pointer-events:none;outline:0}
 .reference-cropping .ppt-selection-tools{visibility:hidden}
 .ppt-selection-tools{position:fixed;z-index:250;display:flex;align-items:center;gap:10px;width:max-content;min-height:42px;margin:0;padding:10px 16px;border:1px solid rgba(216,216,216,.6);border-radius:10px;background:var(--surface-bg);box-shadow:0 0 4px rgba(0,0,0,.06);color:var(--text-1);font-size:12px;line-height:20px}
@@ -73,7 +73,7 @@
 .ppt-text-tool img{display:block;flex:none}
 .ppt-text-tool:hover,.ppt-text-tool[aria-pressed=true]{background:var(--hover)}
 .ppt-text-menu-wrap{position:relative;flex:none}
-.ppt-text-menu-trigger:has(>span){justify-content:space-between;min-width:55px;padding:2px 4px;background:#f6f6f7}
+.ppt-text-menu-trigger:has(>span){justify-content:space-between;min-width:55px;padding:2px 4px;background:var(--ds-fill-2)}
 .ppt-text-color-tool{overflow:hidden}
 .ppt-text-color-tool input{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;opacity:0;cursor:pointer}
 .ppt-text-color-tool:has(input[data-ppt-property=highlight]) img{mask-image:url('assets/ppt-text-toolbar/highlight-mask.svg');mask-position:-2.08px -1.2px;mask-size:21.25px 21.25px;mask-repeat:no-repeat}

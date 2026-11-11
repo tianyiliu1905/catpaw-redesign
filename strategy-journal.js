@@ -62,17 +62,30 @@
     const select=doc.createElement('select');select.setAttribute('aria-label','跳转到设计内容');
     slides.forEach((slide,i)=>{
       const option=doc.createElement('option');option.value=String(i);
-      option.textContent=slide.kind==='action'?`${slide.pointNo} · ${slide.action[0]}`:(slide.title||pages[i].getAttribute('aria-label')||slide.no);
+      option.textContent=slide.supplementary ? pages[i].querySelector('h1').textContent : slide.kind==='action'?`${slide.pointNo} · ${slide.action[0]}`:(slide.title||pages[i].getAttribute('aria-label')||slide.no);
       select.append(option);
     });
     indexLabel.append(select);footer.append(indexLabel);
     const hint=doc.createElement('span');hint.className='journal-hint';hint.textContent='左右 / 上下滑动翻页　→';footer.append(hint);
     stage.before(header);stage.after(footer);
     stage.setAttribute('aria-label','CatPaw 设计策略 · 滑动翻页');stage.tabIndex=0;
+    const regularIndices = slides.map((slide, index) => slide.supplementary ? -1 : index).filter(index => index >= 0);
+    const researchIndices = slides.map((slide, index) => slide.supplementary ? index : -1).filter(index => index >= 0);
+    function step(direction) {
+      const route = slides[current]?.supplementary ? researchIndices : regularIndices;
+      const position = route.indexOf(current) + direction;
+      if (slides[current]?.supplementary && (position < 0 || position >= route.length)) {
+        seek(slides.findIndex(slide => slide.no === (direction < 0 ? '2.4' : '2.4-cases')));
+        return;
+      }
+      seek(route[clamp(position, 0, route.length - 1)]);
+    }
     function update(){
       if(current<0)return;
-      select.value=String(current);count.textContent=`${String(current+1).padStart(2,'0')} / ${slides.length}`;
-      footer.style.setProperty('--reading-progress',(current+1)/slides.length);
+      const route = slides[current].supplementary ? researchIndices : regularIndices;
+      for (const option of select.options) option.hidden = !route.includes(Number(option.value));
+      select.value=String(current);count.textContent=`${slides[current].supplementary ? '补充研究 ' : ''}${String(route.indexOf(current)+1).padStart(2,'0')} / ${route.length}`;
+      footer.style.setProperty('--reading-progress',(route.indexOf(current)+1)/route.length);
       const chapter=ranges.findIndex(range=>current>=range.start&&current<range.end);
       pointNav.hidden=chapter<0||!pointButtons.length;
       pointColumns.forEach(({group},i)=>group.setAttribute('data-current',String(i===chapter)));
@@ -160,7 +173,7 @@
       transitionTimer=win.setTimeout(finishTransition,textFade.duration);
     }
     stage.addEventListener('wheel',event=>{
-      if(event.ctrlKey||event.target.closest('select,input,textarea,[contenteditable=true]'))return;
+      if(event.ctrlKey||event.target.closest('.wvc-deck-panel,select,input,textarea,[contenteditable=true]'))return;
       event.preventDefault();
       win.clearTimeout(wheelTimer);
       wheelTimer=win.setTimeout(()=>{wheelAmount=0;wheelLatched=false;},200);
@@ -169,22 +182,22 @@
       const delta=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*(event.deltaMode===1?16:event.deltaMode===2?stage.clientHeight:1);
       if(Math.sign(delta)!==Math.sign(wheelAmount))wheelAmount=0;
       wheelAmount+=delta;
-      if(Math.abs(wheelAmount)>=45){wheelLatched=true;seek(current+Math.sign(wheelAmount));}
+      if(Math.abs(wheelAmount)>=45){wheelLatched=true;step(Math.sign(wheelAmount));}
     },{passive:false});
     stage.addEventListener('touchstart',event=>{
-      touchStart=event.touches.length===1&&!event.target.closest('select,input,textarea,button,a,[contenteditable=true]')?{x:event.touches[0].clientX,y:event.touches[0].clientY}:null;
+      touchStart=event.touches.length===1&&!event.target.closest('.wvc-deck-panel,select,input,textarea,button,a,[contenteditable=true]')?{x:event.touches[0].clientX,y:event.touches[0].clientY}:null;
     },{passive:true});
     stage.addEventListener('touchmove',event=>{if(touchStart&&event.touches.length===1)event.preventDefault();else touchStart=null;},{passive:false});
     stage.addEventListener('touchend',event=>{
       if(!touchStart||transitioning){touchStart=null;return;}
       const touch=event.changedTouches[0];
-      if(touch){const dx=touchStart.x-touch.clientX,dy=touchStart.y-touch.clientY,delta=Math.abs(dx)>Math.abs(dy)?dx:dy;if(Math.abs(delta)>=45)seek(current+Math.sign(delta));}
+      if(touch){const dx=touchStart.x-touch.clientX,dy=touchStart.y-touch.clientY,delta=Math.abs(dx)>Math.abs(dy)?dx:dy;if(Math.abs(delta)>=45)step(Math.sign(delta));}
       touchStart=null;
     });
     stage.addEventListener('touchcancel',()=>{touchStart=null;});
     brand.addEventListener('click',()=>seek(0));select.addEventListener('change',()=>seek(Number(select.value)));
     win.addEventListener('resize',()=>{win.cancelAnimationFrame(resizeFrame);resizeFrame=win.requestAnimationFrame(fit);});
-    return {fit,seek,update};
+    return {fit,seek,step,update};
   }
   const api={create};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

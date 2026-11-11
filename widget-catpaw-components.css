@@ -1,0 +1,106 @@
+/* Shared CatPaw palette and component contract for demo Widgets. */
+:is(.quote-ui, .wvc-widget) {
+  --catpaw-text-primary: var(--ds-text-2);
+  --catpaw-text-secondary: var(--ds-text-3);
+  --catpaw-bg-card: var(--ds-background-2);
+  --catpaw-bg-secondary: var(--ds-background-3);
+  --widget-surface-canvas: var(--ds-background-2);
+  --widget-surface-card: var(--ds-background-2);
+  --widget-surface-subtle: var(--ds-background-3);
+  --widget-surface-card-hover: var(--ds-border-2);
+  --widget-surface-dialog: var(--ds-border-3);
+  --widget-surface-inset: var(--ds-border-4);
+  --widget-text-user: var(--ds-text-1);
+  --widget-text-primary: var(--ds-text-2);
+  --widget-text-secondary: var(--ds-text-3);
+  --widget-text-muted: var(--ds-text-4);
+  --widget-text-tertiary: var(--ds-text-5);
+  --widget-text-placeholder: var(--ds-border-4);
+  --widget-text-on-action: var(--ds-border-1);
+  --widget-text-on-solid: var(--ds-border-1);
+  --widget-control-bg: var(--ds-border-2);
+  --widget-control-hover: var(--ds-border-2);
+  --widget-control-pressed: var(--ds-border-3);
+  --widget-icon-secondary: var(--ds-text-3);
+  --widget-icon-primary: var(--ds-fill-7);
+  --widget-action-hover: var(--ds-fill-8);
+  --widget-action-bg: var(--ds-text-1);
+  --widget-border-subtle: var(--ds-border-2);
+  --widget-border-default: var(--ds-border-3);
+  --widget-border-strong: var(--ds-border-4);
+  --widget-brand-subtle: var(--ds-primary-1);
+  --widget-brand-selected: var(--ds-primary-2);
+  --widget-brand-default: var(--ds-primary-3);
+  --widget-brand-hover: var(--ds-primary-4);
+  --widget-brand-pressed: var(--ds-primary-5);
+  --widget-brand-text: var(--ds-primary-6);
+  --widget-success-1: var(--ds-success-1);
+  --widget-success-2: var(--ds-success-2);
+  --widget-success-3: var(--ds-success-3);
+  --widget-success-4: var(--ds-success-4);
+  --widget-success-5: var(--ds-success-5);
+  --widget-success-6: var(--ds-success-6);
+  --widget-success-bg: var(--ds-success-1);
+  --widget-success-border: var(--ds-success-3);
+  --widget-success-text: var(--ds-success-6);
+  --widget-warning-1: var(--ds-warning-1);
+  --widget-warning-2: var(--ds-warning-2);
+  --widget-warning-3: var(--ds-warning-3);
+  --widget-warning-4: var(--ds-warning-4);
+  --widget-warning-5: var(--ds-warning-5);
+  --widget-warning-6: var(--ds-warning-6);
+  --widget-warning-bg: var(--ds-warning-1);
+  --widget-warning-border: var(--ds-warning-3);
+  --widget-warning-text: var(--ds-warning-6);
+  --widget-danger-1: var(--ds-danger-1);
+  --widget-danger-2: var(--ds-danger-2);
+  --widget-danger-3: var(--ds-danger-3);
+  --widget-danger-4: var(--ds-danger-4);
+  --widget-danger-5: var(--ds-danger-5);
+  --widget-danger-6: var(--ds-danger-6);
+  --widget-danger-bg: var(--ds-danger-1);
+  --widget-danger-border: var(--ds-danger-3);
+  --widget-danger-text: var(--ds-danger-6);
+  --widget-link-1: var(--ds-link-1);
+  --widget-link-2: var(--ds-link-2);
+  --widget-link-3: var(--ds-link-3);
+  --widget-link-4: var(--ds-link-4);
+  --widget-link-5: var(--ds-link-5);
+  --widget-link-6: var(--ds-link-6);
+  --widget-link-bg: var(--ds-link-1);
+  --widget-link-border: var(--ds-link-3);
+  --widget-link-text: var(--ds-link-6);
+  --widget-series-1: var(--ds-primary-3);
+  --widget-series-2: var(--ds-link-4);
+  --widget-selection-border: var(--ds-text-5);
+  --widget-series-1: var(--ds-primary-3);
+  --widget-series-2: var(--ds-link-4);
+  --widget-series-3: var(--ds-warning-4);
+  --catpaw-bg-view-canvas: var(--ds-background-3);
+  --widget-surface-dialog: var(--ds-background-2);
+}
+/* Action buttons share the design-system default: 32px / 14px, 12px text padding. */
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button) {
+  box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center;
+  height:32px; min-height:32px; gap:6px; padding:0 12px;
+  border:1px solid var(--ds-border-3); border-radius:8px;
+  font:400 14px/20px var(--font-sans); color:var(--ds-text-2); background:transparent;
+  white-space:nowrap; cursor:pointer; transition:background .15s,border-color .15s,transform .15s;
+}
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button):hover:not(:disabled) {background:var(--ds-fill-3);border-color:var(--ds-border-4)}
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button):active:not(:disabled) {transform:translateY(1px)}
+:is(.wvc-widget button[data-variant="primary"], .quote-ui .quote-button.quote-primary) {background:var(--ds-fill-10);border-color:var(--ds-fill-10);color:var(--ds-text-7)}
+:is(.wvc-widget button[data-variant="primary"], .quote-ui .quote-button.quote-primary):hover:not(:disabled) {background:var(--ds-fill-8);border-color:var(--ds-fill-8)}
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button):focus-visible {outline:2px solid var(--ds-primary-6);outline-offset:3px}
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button):disabled {opacity:1;cursor:not-allowed;color:var(--ds-text-6);background:transparent;transform:none}
+:is(.wvc-widget button[data-variant="primary"], .quote-ui .quote-button.quote-primary):disabled {background:var(--ds-text-5);border-color:var(--ds-text-5);color:var(--ds-text-7)}
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button):has(>svg:first-child) {padding-left:10px;padding-right:16px}
+:is(.wvc-widget button:not(.widget-card), .quote-ui .quote-button)>svg {width:16px;height:16px;flex:none}
+/* Selection cards keep their content layout; they are not action buttons. */
+.wvc-widget .widget-card[data-selected="true"] {border:1px solid var(--ds-border-4);background:var(--ds-background-3)}
+.wvc-widget .widget-badge[data-status="success"] {background:var(--ds-success-1);color:var(--ds-success-6)}
+.wvc-widget .widget-badge[data-status="warning"] {background:var(--ds-warning-1);color:var(--ds-warning-6)}
+.wvc-widget .widget-badge[data-status="danger"] {background:var(--ds-danger-1);color:var(--ds-danger-6)}
+.wvc-widget input[type="range"]::-webkit-slider-thumb {background:var(--ds-fill-1);border-color:var(--ds-border-4)}
+.wvc-widget input[type="range"]::-webkit-slider-runnable-track {background:var(--ds-border-3)}
+@media(prefers-reduced-motion:reduce){:is(.wvc-widget button,.quote-ui .quote-button){transition:none}}

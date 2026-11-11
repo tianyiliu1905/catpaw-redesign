@@ -11,7 +11,7 @@
 .nocode-tools button{display:flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--text-2);font:14px/22px var(--font);cursor:pointer}
 .nocode-control-icon{display:block;flex:none;width:16px;height:16px}
 .nocode-tools button:hover{background:var(--hover)}
-.nocode-tools .nocode-create{background:var(--text-1);color:var(--on-solid)}
+.nocode-tools .nocode-create{background:var(--ds-fill-10);color:var(--on-solid)}
 .nocode-tools .nocode-import{padding:4px;width:28px;border:1px solid var(--gray-5)}
 .nocode-tools>i{display:block;flex:none;width:1px;height:16px;background:var(--gray-5)}
 .nocode-search{display:flex;align-items:center;gap:6px;width:220px;height:28px;padding:0 12px;border:1px solid var(--gray-5);border-radius:6px}

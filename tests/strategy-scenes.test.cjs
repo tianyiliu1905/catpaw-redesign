@@ -894,10 +894,10 @@ test('visual replies have one scene analysis followed by exactly two numbered de
   };
   assert.ok(!canvas.innerHTML.includes('协作可续'));
   assert.ok(sectionFor('2.3-analysis').includes('异常可恢复'));
-  for(const [id,number] of [['2.3',1],['2.3-2',2],['2.3-3',3]]){
+  for(const [id,number] of [['2.3',1],['2.3-2',2],['2.3-3',3],['2.3-4',4],['2.3-5',5],['2.3-6',6]]){
     const recovery=sectionFor(id);
     assert.ok(recovery.includes(`设计动作 2.3.${number}`));
-    assert.ok(recovery.includes(`data-scene="${id}"`));
+    assert.ok(recovery.includes(number>=3 && number<=5 ? 'class="recovery-example"' : `data-scene="${id}"`));
   }
   const analysis=sectionFor('2.4');
   assert.ok(analysis.includes('场景分析'));

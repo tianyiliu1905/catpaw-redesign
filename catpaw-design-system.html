@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CatPaw Design System</title>
+<style>
+:root{
+  /* Figma Catpaw Design System：语义色（亮色）。 */
+  --ds-background-1:#ffffff; --ds-background-2:#ffffff; --ds-background-3:#f9f9f9;
+  --ds-background-4:#f2f2f2; --ds-background-5:#e5e5e5; --ds-background-6:#d4d4d4;
+  --ds-background-7:rgba(0,0,0,.5);
+  --ds-fill-1:#ffffff; --ds-fill-2:#f2f2f2; --ds-fill-3:#f2f2f2;
+  --ds-fill-4:#e5e5e5; --ds-fill-5:#e5e5e5; --ds-fill-6:#505050; --ds-fill-7:#3b3b3b;
+  --ds-fill-8:#313131; --ds-fill-9:#000000; --ds-fill-10:#000000;
+  --ds-text-1:#000000; --ds-text-2:#2b2b2b; --ds-text-3:#505050;
+  --ds-text-4:#737373; --ds-text-5:#a6a6a6; --ds-text-6:#d4d4d4;
+  --ds-text-7:#ffffff; --ds-text-8:#ffffff;
+  --ds-border-1:#ffffff; --ds-border-2:#f2f2f2;
+  --ds-border-3:#e5e5e5; --ds-border-4:#d4d4d4;
+  --ds-primary-1:#ecf7ef; --ds-primary-2:#a8f1bb; --ds-primary-3:#4bcc7a;
+  --ds-primary-4:#3bb96b; --ds-primary-5:#30a55d; --ds-primary-6:#2c8f52;
+
+
+  /* 功能色独立于品牌色，按提供的设计色板定义。 */
+  --ds-success-1:#d7fad9; --ds-success-2:#a8e7ac; --ds-success-3:#6cc375; --ds-success-4:#2ea043; --ds-success-5:#0d892e; --ds-success-6:#016d21;
+  --ds-warning-1:#ffeddf; --ds-warning-2:#ffd9be; --ds-warning-3:#ffc69c; --ds-warning-4:#fd8c11; --ds-warning-5:#d97500; --ds-warning-6:#ae5d00;
+  --ds-danger-1:#ffebe9; --ds-danger-2:#ffd7d1; --ds-danger-3:#ff998d; --ds-danger-4:#f85149; --ds-danger-5:#db3733; --ds-danger-6:#b12825;
+  --ds-link-1:#e8f2ff; --ds-link-2:#bbd9ff; --ds-link-3:#70afff; --ds-link-4:#0285ff; --ds-link-5:#0070d9; --ds-link-6:#0759ac;
+
+  /* 旧组件别名统一指向语义色，避免侧栏、卡片、对话页各自使用不同灰阶。 */
+  --gray-0:var(--ds-background-1);
+  --gray-1:var(--ds-background-2);
+  --gray-2:var(--ds-background-3);
+  --gray-3:var(--ds-background-4);
+  --gray-4:var(--ds-border-2);
+  --gray-5:var(--ds-border-3);
+  --gray-6:var(--ds-border-4);
+  --gray-7:var(--ds-text-5);
+  --artifact-preview-bg:#fafafa;
+  --stage-bg: var(--gray-6);
+  --surface-bg: var(--gray-0);
+  --composer-input-bg:#ffffff;
+  --on-solid: #ffffff;
+  --code-text: #24292f;
+  --code-hover: #f5f7f9;
+  --info-bg: var(--ds-link-1);
+  --info-border: var(--ds-link-3);
+  --info-text: var(--ds-link-6);
+  --info-muted: var(--ds-link-5);
+  --success-bg: var(--ds-success-1);
+  --skill-bg: #f2ecff;
+  --skill-text: #7044b0;
+  --success-text: var(--ds-success-6);
+  --success-border: var(--ds-success-3);
+  --warning-bg: var(--ds-warning-1);
+  --warning-text: var(--ds-warning-6);
+  --floating-bg: var(--ds-background-2);
+  --soft-shadow: 0 12px 36px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.06);
+
+  --sidebar-bg:      var(--gray-0);
+  --rail-bg:         linear-gradient(180deg, #ebf2f3 0%, #eff4f4 40%, #edf3f3 50%, #d9ece9 55.5%, #cde3d9 61%, #cdddd1 67%, #cddbd1 78%, #ccd1cf 100%);
+  --sidebar-border:  var(--ds-border-3);
+  --main-bg:         var(--gray-0);
+
+  --text-1:var(--ds-text-2); /* 正文与标题 */
+  --text-2:var(--ds-text-3); /* 次级信息 */
+  --text-3:var(--ds-text-4); /* 辅助信息 */
+  --text-4:var(--ds-text-5); /* 占位与时间戳 */
+
+  --hover:var(--ds-fill-3);
+  --active:var(--ds-fill-4);
+  --scheduled-run-hover-bg:#f1f1f1;
+
+  --card-bg:     var(--gray-1);
+  --card-border: var(--ds-border-3);
+  --pill-border: var(--gray-5);
+
+  --accent-blue:  #2f7cf6;
+  --accent-amber: #f5a623;
+
+  /* 绿色色板：浅底 / 描边 / 状态标记 / 浅底文字；标记色也供轮次刻度使用。 */
+  --brand-green:var(--ds-primary-3);
+  --brand-green-strong:var(--ds-primary-6);
+  --green-action:var(--ds-primary-6);
+  --resize-guide:linear-gradient(to bottom, transparent, var(--brand-green) 50%, transparent);
+
+  /* 主区装饰仍沿用原有语义色；左侧能力入口统一使用中性灰。 */
+  --scene-office: #3b72e8;
+  --scene-dev:    #1fbb8c;
+  --scene-design: #ea4c89;
+  --prompt-icon-create: #df5960;
+  --prompt-icon-research: #805dcb;
+
+  /* 专家头像：高饱和背景、浅色猫脸和同色系五官，明暗主题保持身份色一致。 */
+  --expert-data-background: #267fce;
+  --expert-data-face: #dff2ff;
+  --expert-data-accent: #185b93;
+  --expert-product-background: #ee8546;
+  --expert-product-face: #fff0e1;
+  --expert-product-accent: #995027;
+  --expert-analysis-background: #795acb;
+  --expert-analysis-face: #efe9ff;
+  --expert-analysis-accent: #533a95;
+  --expert-frontend-background: #35a77a;
+  --expert-frontend-face: #e0f7eb;
+  --expert-frontend-accent: #256f52;
+  --expert-design-background: #d86092;
+  --expert-design-face: #ffedf4;
+  --expert-design-accent: #974064;
+  --expert-content-background: #d09638;
+  --expert-content-face: #fff3d9;
+  --expert-content-accent: #865c22;
+  --expert-automation-background: #438fa5;
+  --expert-automation-face: #e1f3f8;
+  --expert-automation-accent: #2c6676;
+
+  /* Figma 中文字级：22/32、18/28、15/26、14/22、12/20、10/18。 */
+  --type-title-xl:22px;
+  --type-title:18px;
+  --type-sm: 12px;
+  --type-md: 14px;
+  --type-lg: 15px;
+  --line-sm:20px;
+  --line-md:22px;
+  --line-lg:26px;
+  --line-title:28px;
+  --line-title-xl:32px;
+  --weight-body:450;
+  --weight-emphasis:500;
+
+  /* ---- 4px 间距节奏 ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* 控件保持紧凑；菜单、卡片和大型面板依次增大圆角。 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-panel: 24px;
+  --radius-pill: 999px;
+
+  /* 浮动菜单分为内容型大面板和操作型小面板。 */
+  --menu-bg: var(--ds-background-2);
+  --menu-text: var(--ds-text-1);
+  --menu-radius: 16px;
+  --menu-shadow: 0 0 0 .5px rgba(0,0,0,.07),
+                 0 8px 28px rgba(0,0,0,.14),
+                 0 2px 6px rgba(0,0,0,.06);
+  --menu-large-padding: 6px;
+  --menu-large-border: 1px solid var(--gray-5);
+  --menu-large-shadow: 0 12px 32px rgba(0,0,0,.14);
+  --menu-small-padding: var(--space-1);
+
+  /* macOS 窗口作为最大容器，比内部面板再圆润一档。 */
+  --radius-window: 28px;
+
+  --sidebar-rail-w: 80px;
+  /* 80px 导航栏 + Figma 中 240px 的任务面板；拖拽宽度仍由 JS 覆盖。 */
+  --sidebar-w: 320px;
+  --task-panel-text:var(--ds-text-2);
+  --task-panel-active:var(--ds-fill-5);
+  --workbench-w: 500px;
+  --workbench-landing-w: 500px;
+  --workbench-folder-w: 720px;
+  --workbench-tree-w: min(calc(var(--workbench-folder-w) * .40), 24.8%);
+  --workbench-tree-only-w: 360px;
+
+  --font:"SF Pro Text", "PingFang SC", "Segoe UI", "Microsoft YaHei", -apple-system,
+         BlinkMacSystemFont, sans-serif;
+  --font-code:"SF Mono", Consolas, Menlo, "Liberation Mono", monospace;
+  color-scheme: light;
+}
+:root[data-theme="dark"]{
+  --task-panel-text:#f9f9f9;
+  --task-panel-active:#282828;
+  --ds-background-1:#070707; --ds-background-2:#3b3b3b; --ds-background-3:#181818;
+  --ds-background-4:#3b3b3b; --ds-background-5:#282828; --ds-background-6:#3b3b3b;
+  --ds-fill-2:#3b3b3b; --ds-fill-3:#282828; --ds-fill-4:#3b3b3b;
+  --ds-fill-6:#a6a6a6; --ds-fill-7:#f9f9f9; --ds-fill-8:#d6d6d6;
+  --ds-fill-9:#ffffff;
+  --ds-text-1:#ffffff; --ds-text-2:#f9f9f9; --ds-text-3:#a6a6a6;
+  --ds-text-4:#737373; --ds-text-5:#737373; --ds-text-6:#a6a6a6;
+  --ds-text-7:#000000;
+  --ds-border-2:#181818; --ds-border-3:#2b2b2b; --ds-border-4:#505050;
+  --ds-primary-1:#163620; --ds-primary-2:#184829; --ds-primary-3:#5ed586;
+  --ds-primary-4:#6dde92; --ds-primary-5:#4bcc7a; --ds-primary-6:#85e5a1;
+  --gray-0:var(--ds-background-1);
+  --gray-1:var(--ds-background-2);
+  --gray-2:var(--ds-background-3);
+  --gray-3:var(--ds-background-5);
+  --gray-4:var(--ds-border-2);
+  --gray-5:var(--ds-border-3);
+  --gray-6:var(--ds-border-4);
+  --gray-7:var(--ds-text-5);
+  --stage-bg:var(--ds-background-3);
+  --surface-bg:var(--ds-background-2);
+  --composer-input-bg:var(--ds-background-2);
+  --hover:var(--ds-fill-3);
+  --active:var(--ds-fill-4);
+  --scheduled-run-hover-bg:var(--ds-fill-3);
+  --accent-blue: #78aaff;
+  --accent-amber: #f6bb64;
+  --scene-office: #83a9ff;
+  --scene-dev: #5ad2ae;
+  --scene-design: #f57cac;
+  --prompt-icon-create: #f17980;
+  --prompt-icon-research: #ae8af0;
+  --menu-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 14px 38px rgba(0,0,0,.5);
+  --on-solid: #fff;
+  --code-text: #d7dce4;
+  --code-hover: #2b3037;
+  --info-bg: #193456;
+  --info-border: #4274a8;
+  --info-text: #b8d9ff;
+  --info-muted: #87b9ee;
+  --skill-bg: #362a46;
+  --skill-text: #d6b7ff;
+  --warning-bg: #433421;
+  --warning-text: #f6cd86;
+  --floating-bg:var(--ds-background-2);
+  --rail-bg:var(--ds-background-3);
+  --soft-shadow: 0 12px 36px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.2);
+  color-scheme: dark;
+}
+.icon-btn{
+  width:26px; height:26px;
+  display:grid; place-items:center;
+  border:none;
+  background:transparent;
+  color: var(--text-3);
+  border-radius: var(--radius-sm);
+  cursor:pointer;
+  transition: background .13s ease, color .13s ease;
+}
+.icon-btn:hover{ background: var(--hover); color: var(--text-2); }
+.icon-btn:active{ background: var(--active); }
+.task .row-acts{ right:var(--space-2); z-index:1; background:inherit; border-radius:var(--radius-sm); }
+.task:focus-within .task-state{ display:none; }
+.task{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  height:32px;
+  flex:none;
+  padding:4px 8px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--task-panel-text);
+  font-size:var(--type-md);
+  line-height:var(--line-md);
+  cursor:pointer;
+  transition:background .13s ease;
+}
+.task:hover{ background: var(--hover); }
+.task[aria-current="page"]{
+  background:var(--task-panel-active);
+  color:var(--task-panel-text);
+}
+.task[aria-current="page"] .task-name{ font-weight:var(--weight-emphasis); }
+.task[hidden]{ display:none; }
+.task[data-state="running"] .task-time{ display:none; }
+.task-name{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.task .task-state:has(> .task-time){ display:none; }
+.stage-plan-toggle{ display:flex; align-items:center; gap:6px; width:100%; min-height:44px; padding:8px 0; border:0; background:transparent; color:var(--text-1); text-align:left; font:inherit; cursor:pointer; }
+.stage-plan-toggle strong{ font-weight:var(--weight-emphasis); }
+.stage-plan-toggle > span{ color:var(--text-3); }
+.stage-plan-step{ display:grid; grid-template-columns:18px minmax(0,1fr); align-items:center; gap:7px; min-height:30px; padding:4px 0; border-radius:var(--radius-sm); color:var(--text-3); font-size:inherit; line-height:inherit; }
+.stage-plan-step[data-state="current"]{ background:transparent; color:var(--text-1); }
+.stage-plan-number{ display:flex; align-items:center; justify-content:center; justify-self:center; width:16px; height:16px; border:.6px solid var(--text-4); border-radius:50%; color:inherit; font-size:10px; line-height:1; font-variant-numeric:tabular-nums; }
+.stage-plan-number .ic{ width:16px; height:16px; }
+.stage-plan-step[data-state="done"] .stage-plan-number{ border-color:var(--text-4); color:inherit; }
+.stage-plan-step[data-state="done"] .stage-plan-number .ic{width:12px;height:12px}
+.stage-plan-step[data-state="current"] .stage-plan-number{ border:0; color:var(--text-1); }
+.stage-plan-step[data-state="current"] .stage-plan-number .spinner{flex:0 0 16px;width:16px;height:16px;aspect-ratio:1;border-radius:50%;border-width:2px;border-color:var(--gray-5);border-top-color:var(--text-1);animation:spin 1.2s cubic-bezier(.4,.05,.6,.95) infinite}
+.stage-plan-title{ flex:1; min-width:0; }
+.stage-plan-step[data-state="done"] .stage-plan-title-text{background-size:100% 1px}
+.composer-quick-add-trigger{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:28px;
+  padding:0 6px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:var(--text-3);
+  font:var(--weight-body) var(--type-md) var(--font);
+  white-space:nowrap;
+  cursor:pointer;
+}
+.composer-quick-add-trigger[data-quick-add="knowledge"]{ position:relative; margin-left:8px; }
+.composer-quick-add-trigger[data-quick-add="knowledge"]::before{
+  content:"";
+  position:absolute;
+  left:-7px;
+  width:1px;
+  height:18px;
+  background:var(--gray-4);
+  pointer-events:none;
+}
+.composer-quick-add-trigger[hidden]{ display:none; }
+.composer-quick-add-trigger[aria-expanded="true"]{ background:var(--hover); color:var(--text-1); }
+.composer-quick-add-trigger:focus-visible{ outline:2px solid var(--text-3); outline-offset:1px; }
+.composer-quick-add-trigger .ic{ width:20px; height:20px; flex:none; }
+.round-btn{
+  width:28px; height:28px;
+  display:grid; place-items:center;
+  border:none;
+  background:transparent;
+  color: var(--text-2);
+  border-radius:50%;
+  cursor:pointer;
+  transition: background .13s ease;
+}
+.round-btn:hover{ background: var(--hover); }
+.round-btn .ic{ width:17px; height:17px; }
+.send-btn{
+  width:30px;
+  height:30px;
+}
+.send-btn{
+  display:grid; place-items:center;
+  border:none;
+  border-radius:50%;
+  background: var(--gray-5);
+  color: var(--gray-0);
+  cursor:pointer;
+  transition: background .16s ease, transform .1s ease;
+}
+.send-btn .ic{ width:16px; height:16px; stroke-width:2; }
+.send-btn:disabled{ cursor:default; }
+.send-btn:not(:disabled){ background: var(--ds-fill-10); }
+.send-btn:not(:disabled):hover{ background:var(--ds-fill-8); }
+.send-btn:not(:disabled):active{ transform: scale(.94); }
+.icon-btn:disabled{
+  color: var(--gray-7);
+  cursor: default;
+  pointer-events: none;
+}
+:root{color-scheme:light;--paper:#fff;--canvas:#f7f8f7;--ink:var(--ds-text-2);--muted:var(--ds-text-4);--line:var(--ds-border-3);--accent:var(--ds-primary-6)}
+:root[data-theme=dark]{color-scheme:dark;--paper:var(--ds-background-2);--canvas:#141714;--ink:var(--ds-text-2);--muted:var(--ds-text-3);--line:var(--ds-border-3);--accent:var(--ds-primary-6)}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.55 var(--font,system-ui,sans-serif)}
+a{color:var(--accent)}button,input,select,textarea{font:inherit}h1,h2,h3,p{margin:0}h1{font-size:clamp(40px,7vw,76px);line-height:1.04;letter-spacing:-.055em}h2{font-size:27px;letter-spacing:-.03em}h3{font-size:16px}small,code{font-size:12px}code{overflow-wrap:anywhere}
+header{position:sticky;top:0;z-index:2;border-bottom:1px solid var(--line);background:var(--paper)}
+.bar{max-width:1240px;margin:auto;padding:12px 24px;display:flex;gap:18px;align-items:center;justify-content:space-between}
+.wordmark{font-weight:700;white-space:nowrap}.wordmark b{color:var(--accent)}nav{display:flex;gap:14px;flex-wrap:wrap}nav a{text-decoration:none;font-size:13px}
+.theme{border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--ink);background:var(--canvas);cursor:pointer;white-space:nowrap}
+main{max-width:1160px;margin:auto;padding:36px 24px 80px}.hero{padding:40px clamp(20px,6vw,68px);background:var(--paper);border:1px solid var(--line);border-radius:24px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;inset:0 0 0 65%;background:radial-gradient(circle,var(--line) 1px,transparent 1px) 0 0/12px 12px;pointer-events:none}
+.hero>*{position:relative;z-index:1}.kicker{color:var(--accent);font:600 12px/20px ui-monospace,monospace;letter-spacing:.12em;margin-bottom:14px}.hero p{margin-top:14px;color:var(--muted)}
+section[id]{scroll-margin-top:82px;margin-top:40px}.lead{color:var(--muted);margin:5px 0 16px}.panel,.example{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}.panel+.panel{margin-top:12px}.panel h3,.example h3{margin-bottom:10px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}.swatch{min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px;display:grid;gap:3px}.paint{height:32px;border:1px solid var(--line);border-radius:4px}.swatch code,.swatch small{color:var(--muted);font-size:10px}
+.ramp{display:grid;grid-template-columns:65px 1fr;gap:8px;align-items:center;margin-top:10px}.ramp>div,.scale{display:flex;gap:8px;flex-wrap:wrap}.ramp i{display:block;height:22px;border-radius:3px;border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}.sample{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0}.sample label{display:grid;gap:3px}.sample input:not([type=range]),.sample select,.sample textarea{max-width:100%}.sample textarea{width:100%}.stack{display:grid;gap:8px}.sample .ic{width:16px;height:16px}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}tr:last-child td,tr:last-child th{border-bottom:0}
+.scale>div{display:grid;gap:4px;justify-items:center;min-width:26px}.scale i{display:block;height:9px;background:var(--accent)}.scale.radius i{width:30px;height:24px;background:var(--canvas);border:1px solid var(--accent)}
+.example>small,.panel>small{display:block;color:var(--muted);margin-top:6px}.specimen-list{display:grid;gap:3px}.specimen-list .task{width:100%;min-height:36px;border:0;text-align:left;font:inherit}.plan-demo{display:grid;gap:4px}.plan-demo[hidden]{display:none}.plan-demo .stage-plan-step{padding-inline:4px}.preview-search{background:var(--composer-input-bg);color:var(--text-1);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:6px 9px;width:100%}
+.demo-shell{background:var(--ds-background-1);color:var(--text-1);padding:10px;border-radius:8px;border:1px solid var(--ds-border-3)}
+.compose{border:1px solid var(--ds-border-3);border-radius:16px;padding:10px;display:grid;gap:8px}.compose textarea{border:0;background:transparent;color:var(--text-1);min-height:48px;resize:vertical}.compose div{display:flex;justify-content:space-between;align-items:center}.compose .send-btn .ic{width:16px;height:16px}
+section#sources ul{padding-inline-start:20px}.source-link{display:inline-block;margin-top:8px}footer{margin-top:30px;color:var(--muted)}[role=status]:empty{display:none}
+@media(max-width:680px){.bar{flex-wrap:wrap;gap:6px;padding-inline:14px}.bar nav{order:3;width:100%;gap:10px}main{padding:16px 12px 42px}.hero{padding:26px 16px}section[id]{scroll-margin-top:122px}}
+
+:root{--button-height:32px;--button-height-xs:24px;--button-height-compact:28px;--button-height-large:40px;--button-padding-x:16px;--button-radius:8px;--button-font-size:14px;--button-gap:8px}
+.ds-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--button-height);padding:0 var(--button-padding-x);border:1px solid var(--line);border-radius:var(--button-radius);background:transparent;color:var(--ink);font-size:var(--button-font-size);font-weight:400;line-height:20px;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.ds-button:hover:not(:disabled){background:var(--ds-fill-3);border-color:var(--ds-border-4)}
+.ds-button:active:not(:disabled){transform:translateY(1px)}
+.ds-button.primary{background:var(--ds-fill-10);border-color:var(--ds-fill-10);color:var(--ds-text-7)}
+.ds-button.primary:hover:not(:disabled){background:var(--ds-fill-8);border-color:var(--ds-fill-8)}
+.ds-button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.ds-button:disabled{cursor:not-allowed;color:var(--ds-text-6);opacity:1}
+.ds-button.primary:disabled{background:var(--ds-text-5);border-color:var(--ds-text-5);color:var(--ds-text-7)}
+.ds-button.xs{--button-padding-x:8px;height:var(--button-height-xs);padding-inline:8px;font-size:12px;line-height:16px;border-radius:6px}
+.ds-button.compact{--button-padding-x:12px;height:var(--button-height-compact);padding-inline:12px;font-size:12px;line-height:16px;border-radius:6px}
+.ds-button.secondary{background:var(--ds-fill-2);border-color:transparent}
+.ds-button.secondary:hover:not(:disabled){background:var(--ds-fill-4);border-color:transparent}
+.ds-button.ghost,.ds-button.link{border-color:transparent;background:transparent}
+.ds-button.ghost:hover:not(:disabled){border-color:transparent;background:var(--ds-fill-3)}
+.ds-button.link{color:var(--ds-link-6);text-decoration:none}
+.ds-button.link:hover:not(:disabled){border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:3px}
+.ds-button.destructive{color:var(--ds-danger-6);background:var(--ds-danger-1);border-color:transparent}
+.ds-button.destructive:hover:not(:disabled){background:var(--ds-danger-2);border-color:transparent}
+.ds-button.icon-only{width:var(--button-height);padding:0;flex-shrink:0}
+.ds-button.icon-only.xs{width:var(--button-height-xs)}
+.ds-button.icon-only.compact{width:var(--button-height-compact)}
+.ds-button.icon-only.large{width:var(--button-height-large)}
+.ds-button svg{width:16px;height:16px;flex-shrink:0}
+.ds-button.xs svg{width:14px;height:14px}
+.ds-button .button-spinner{border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;width:14px;height:14px;animation:button-spin .8s linear infinite}
+@keyframes button-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.ds-button{transition:none}.ds-button .button-spinner{animation:none}}
+.button-variants{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:16px}
+.button-variants>div{display:grid;justify-items:start;gap:8px}
+.ds-button.large{height:var(--button-height-large);font-size:16px;line-height:24px}
+.ds-button.large svg{width:18px;height:18px}
+.ds-button:not(.icon-only):has(> svg:first-child, > .button-spinner:first-child){padding-left:max(4px, calc(var(--button-padding-x) - 6px))}
+.ds-button:not(.icon-only):not(:has(> svg, > .button-spinner)){padding-inline:calc(var(--button-padding-x) - 2px)}
+.ds-button:not(.xs):not(.compact):not(.large):not(.icon-only):not(:has(> svg, > .button-spinner)){padding-inline:12px}
+.button-rule-list{padding-left:20px;margin:12px 0}.button-rule-list li{margin:6px 0}
+.button-table{overflow-x:auto}.button-table table{min-width:520px}
+</style></head>
+<body>
+<header><div class="bar"><div class="wordmark"><b>●</b> CatPaw Design System</div><nav aria-label="目录"><a href="#colors">色板</a><a href="#foundations">字体与尺寸</a><a href="#buttons">按钮规范</a><a href="#controls">控件</a><a href="#patterns">组合示例</a><a href="#sources">来源</a></nav><button type="button" class="theme" aria-pressed="false">切换深色</button></div></header>
+<main>
+<div class="hero"><div class="kicker">CATPAW / UI REFERENCE</div><h1>CatPaw<br>Design System</h1><p>桌面交互 Demo · 视觉规范与控件</p><p>2026-11-10 色板与按钮规范</p></div>
+<section id="colors"><h2>色板</h2><p class="lead">浅色规范按设计稿色值定义，品牌色与功能色独立使用。页面底色保持不变；深色模式为现有 Demo 映射。</p>
+<div class="panel"><h3>品牌色</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-primary-6)"></div><strong>Primary–6</strong><small data-value="--ds-primary-6"></small><small>品牌文字</small><code>--ds-primary-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-primary-5)"></div><strong>Primary–5</strong><small data-value="--ds-primary-5"></small><small>按压</small><code>--ds-primary-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-primary-4)"></div><strong>Primary–4</strong><small data-value="--ds-primary-4"></small><small>悬停</small><code>--ds-primary-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-primary-3)"></div><strong>Primary–3</strong><small data-value="--ds-primary-3"></small><small>常规</small><code>--ds-primary-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-primary-2)"></div><strong>Primary–2</strong><small data-value="--ds-primary-2"></small><small>选中底 / 徽章底</small><code>--ds-primary-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-primary-1)"></div><strong>Primary–1</strong><small data-value="--ds-primary-1"></small><small>背景色</small><code>--ds-primary-1</code></div></div></div>
+<div class="panel"><h3>中性色 · 线条</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-border-4)"></div><strong>Border–4</strong><small data-value="--ds-border-4"></small><small>强边框</small><code>--ds-border-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-border-3)"></div><strong>Border–3</strong><small data-value="--ds-border-3"></small><small>分割线 / 主边框</small><code>--ds-border-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-border-2)"></div><strong>Border–2</strong><small data-value="--ds-border-2"></small><small>弱分割线</small><code>--ds-border-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-border-1)"></div><strong>Border–1</strong><small data-value="--ds-border-1"></small><small>纯白分割线</small><code>--ds-border-1</code></div></div></div>
+<div class="panel"><h3>中性色 · 填充色</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-fill-10)"></div><strong>Fill–10</strong><small data-value="--ds-fill-10"></small><small>主按钮</small><code>--ds-fill-10</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-9)"></div><strong>Fill–9</strong><small data-value="--ds-fill-9"></small><small>纯黑</small><code>--ds-fill-9</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-8)"></div><strong>Fill–8</strong><small data-value="--ds-fill-8"></small><small>主按钮悬停</small><code>--ds-fill-8</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-7)"></div><strong>Fill–7</strong><small data-value="--ds-fill-7"></small><small>目录图标</small><code>--ds-fill-7</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-6)"></div><strong>Fill–6</strong><small data-value="--ds-fill-6"></small><small>操作图标</small><code>--ds-fill-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-5)"></div><strong>Fill–5</strong><small data-value="--ds-fill-5"></small><small>选中</small><code>--ds-fill-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-4)"></div><strong>Fill–4</strong><small data-value="--ds-fill-4"></small><small>按压</small><code>--ds-fill-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-3)"></div><strong>Fill–3</strong><small data-value="--ds-fill-3"></small><small>悬停</small><code>--ds-fill-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-2)"></div><strong>Fill–2</strong><small data-value="--ds-fill-2"></small><small>常规</small><code>--ds-fill-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-fill-1)"></div><strong>Fill–1</strong><small data-value="--ds-fill-1"></small><small>纯白</small><code>--ds-fill-1</code></div></div></div>
+<div class="panel"><h3>中性色 · 文案</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-text-1)"></div><strong>Text–1</strong><small data-value="--ds-text-1"></small><small>纯黑文字</small><code>--ds-text-1</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-2)"></div><strong>Text–2</strong><small data-value="--ds-text-2"></small><small>主文字</small><code>--ds-text-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-3)"></div><strong>Text–3</strong><small data-value="--ds-text-3"></small><small>次要文字</small><code>--ds-text-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-4)"></div><strong>Text–4</strong><small data-value="--ds-text-4"></small><small>弱化文字</small><code>--ds-text-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-5)"></div><strong>Text–5</strong><small data-value="--ds-text-5"></small><small>三级文字</small><code>--ds-text-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-6)"></div><strong>Text–6</strong><small data-value="--ds-text-6"></small><small>占位符</small><code>--ds-text-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-7)"></div><strong>Text–7</strong><small data-value="--ds-text-7"></small><small>主按钮文字</small><code>--ds-text-7</code></div><div class="swatch"><div class="paint" style="background:var(--ds-text-8)"></div><strong>Text–8</strong><small data-value="--ds-text-8"></small><small>纯白文字</small><code>--ds-text-8</code></div></div></div>
+<div class="panel"><h3>中性色 · 背景</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-background-7)"></div><strong>Background–7</strong><small data-value="--ds-background-7"></small><small>遮罩</small><code>--ds-background-7</code></div><div class="swatch"><div class="paint" style="background:var(--ds-background-6)"></div><strong>Background–6</strong><small data-value="--ds-background-6"></small><small>嵌入区域</small><code>--ds-background-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-background-5)"></div><strong>Background–5</strong><small data-value="--ds-background-5"></small><small>弹窗</small><code>--ds-background-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-background-4)"></div><strong>Background–4</strong><small data-value="--ds-background-4"></small><small>卡片悬停</small><code>--ds-background-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-background-3)"></div><strong>Background–3</strong><small data-value="--ds-background-3"></small><small>SDK 容器 / 底衬</small><code>--ds-background-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-background-2)"></div><strong>Background–2</strong><small data-value="--ds-background-2"></small><small>卡片 / 浮层 / 编辑器</small><code>--ds-background-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-background-1)"></div><strong>Background–1</strong><small data-value="--ds-background-1"></small><small>画布</small><code>--ds-background-1</code></div></div></div>
+<div class="panel"><h3>功能色 · 成功</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-success-6)"></div><strong>Success–6</strong><small data-value="--ds-success-6"></small><small>按压 / 文字</small><code>--ds-success-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-success-5)"></div><strong>Success–5</strong><small data-value="--ds-success-5"></small><small>悬停</small><code>--ds-success-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-success-4)"></div><strong>Success–4</strong><small data-value="--ds-success-4"></small><small>常规</small><code>--ds-success-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-success-3)"></div><strong>Success–3</strong><small data-value="--ds-success-3"></small><small>描边</small><code>--ds-success-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-success-2)"></div><strong>Success–2</strong><small data-value="--ds-success-2"></small><small>浅底</small><code>--ds-success-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-success-1)"></div><strong>Success–1</strong><small data-value="--ds-success-1"></small><small>淡底</small><code>--ds-success-1</code></div></div></div>
+<div class="panel"><h3>功能色 · 警告 / 提醒</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-warning-6)"></div><strong>Warning–6</strong><small data-value="--ds-warning-6"></small><small>按压 / 文字</small><code>--ds-warning-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-warning-5)"></div><strong>Warning–5</strong><small data-value="--ds-warning-5"></small><small>悬停</small><code>--ds-warning-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-warning-4)"></div><strong>Warning–4</strong><small data-value="--ds-warning-4"></small><small>常规</small><code>--ds-warning-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-warning-3)"></div><strong>Warning–3</strong><small data-value="--ds-warning-3"></small><small>描边</small><code>--ds-warning-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-warning-2)"></div><strong>Warning–2</strong><small data-value="--ds-warning-2"></small><small>浅底</small><code>--ds-warning-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-warning-1)"></div><strong>Warning–1</strong><small data-value="--ds-warning-1"></small><small>淡底</small><code>--ds-warning-1</code></div></div></div>
+<div class="panel"><h3>功能色 · 错误</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-danger-6)"></div><strong>Danger–6</strong><small data-value="--ds-danger-6"></small><small>按压 / 文字</small><code>--ds-danger-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-danger-5)"></div><strong>Danger–5</strong><small data-value="--ds-danger-5"></small><small>悬停</small><code>--ds-danger-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-danger-4)"></div><strong>Danger–4</strong><small data-value="--ds-danger-4"></small><small>常规</small><code>--ds-danger-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-danger-3)"></div><strong>Danger–3</strong><small data-value="--ds-danger-3"></small><small>描边</small><code>--ds-danger-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-danger-2)"></div><strong>Danger–2</strong><small data-value="--ds-danger-2"></small><small>浅底</small><code>--ds-danger-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-danger-1)"></div><strong>Danger–1</strong><small data-value="--ds-danger-1"></small><small>淡底</small><code>--ds-danger-1</code></div></div></div>
+<div class="panel"><h3>功能色 · 链接</h3><div class="swatches"><div class="swatch"><div class="paint" style="background:var(--ds-link-6)"></div><strong>Link–6</strong><small data-value="--ds-link-6"></small><small>按压 / 文字</small><code>--ds-link-6</code></div><div class="swatch"><div class="paint" style="background:var(--ds-link-5)"></div><strong>Link–5</strong><small data-value="--ds-link-5"></small><small>悬停</small><code>--ds-link-5</code></div><div class="swatch"><div class="paint" style="background:var(--ds-link-4)"></div><strong>Link–4</strong><small data-value="--ds-link-4"></small><small>常规</small><code>--ds-link-4</code></div><div class="swatch"><div class="paint" style="background:var(--ds-link-3)"></div><strong>Link–3</strong><small data-value="--ds-link-3"></small><small>描边</small><code>--ds-link-3</code></div><div class="swatch"><div class="paint" style="background:var(--ds-link-2)"></div><strong>Link–2</strong><small data-value="--ds-link-2"></small><small>浅底</small><code>--ds-link-2</code></div><div class="swatch"><div class="paint" style="background:var(--ds-link-1)"></div><strong>Link–1</strong><small data-value="--ds-link-1"></small><small>淡底</small><code>--ds-link-1</code></div></div></div>
+</section>
+<section id="foundations"><h2>字体与尺寸</h2><p class="lead">Demo 的标题、正文和控件按用途区分字级。</p><div class="grid">
+<div class="panel"><h3>字级</h3><table><thead><tr><th>用途</th><th>示例</th><th>字号 / 行高</th><th>字重</th></tr></thead><tbody><tr><th scope="row">页面大标题（Demo）</th><td><span style="font:600 22px/32px var(--font)">查看任务进展</span></td><td>22 / 32px</td><td>600</td></tr><tr><th scope="row">对话标题</th><td><span style="font:600 18px/28px var(--font)">查看任务进展</span></td><td>18 / 28px</td><td>600</td></tr><tr><th scope="row">对话正文</th><td><span style="font:450 15px/26px var(--font)">查看任务进展</span></td><td>15 / 26px</td><td>450</td></tr><tr><th scope="row">控件文字</th><td><span style="font:400 14px/22px var(--font)">查看任务进展</span></td><td>14 / 22px</td><td>400</td></tr><tr><th scope="row">辅助说明</th><td><span style="font:400 12px/20px var(--font)">查看任务进展</span></td><td>12 / 20px</td><td>400</td></tr></tbody></table></div>
+<div class="panel"><h3>间距节奏</h3><div class="scale"><div><i style="width:4px"></i><code>4</code></div><div><i style="width:8px"></i><code>8</code></div><div><i style="width:12px"></i><code>12</code></div><div><i style="width:16px"></i><code>16</code></div><div><i style="width:24px"></i><code>24</code></div><div><i style="width:32px"></i><code>32</code></div></div><h3 style="margin-top:22px">控件与容器圆角</h3><div class="scale radius"><div><i style="border-radius:8px"></i><code>8px</code></div><div><i style="border-radius:12px"></i><code>12px</code></div><div><i style="border-radius:20px"></i><code>20px</code></div><div><i style="border-radius:24px"></i><code>24px</code></div><div><i style="border-radius:28px"></i><code>28px</code></div></div><small>8px 用于紧凑控件，12px 用于卡片等容器，24px 与 28px 用于较大的面板和窗口。</small></div></div></section>
+<section id="buttons"><h2>按钮 · 统一约束</h2><p class="lead">适用于对话中的选择、授权、问卷与恢复操作。默认使用同一尺寸，同组按钮保持等高。</p>
+<div class="panel button-table"><table><thead><tr><th>尺寸</th><th>高度</th><th>字号 / 行高</th><th>纯文字左右内边距</th><th>适用场景</th></tr></thead><tbody>
+<tr><td>XS · 超小</td><td>24px</td><td>12px / 16px</td><td>6px</td><td>行内操作、紧凑工具条</td></tr>
+<tr><td>SM · 小号</td><td>28px</td><td>12px / 16px</td><td>10px</td><td>工具调用、密集卡片辅助操作</td></tr>
+<tr><td>默认</td><td>32px</td><td>14px / 20px</td><td>12px</td><td>下一步、授权、替代方案、重新尝试</td></tr>
+<tr><td>LG · 大号</td><td>40px</td><td>16px / 24px</td><td>14px</td><td>独立页面的突出操作</td></tr></tbody></table>
+<ul class="button-rule-list"><li>默认与大号圆角 8px，XS 与 SM 圆角 6px；描边 1px；使用固定高度和 border-box，禁止靠不同的上下 padding 拼出高度。</li><li>每个操作组最多一个实心主按钮。主操作放右侧；“暂不处理”“跳过本题”使用线框按钮，放左侧。</li><li>并列的替代方案使用线框按钮，不预设用户选择；按钮间距 8px，空间不足时换行。</li><li>文字使用常规字重，图标 16px、图文间距 6px；带前置图标（含加载图标）时在基础内边距上左侧减少 6px（最小 4px），右侧不变；默认纯文字按钮左右内边距为 12px，其他尺寸在基础内边距上左右各减少 2px；纯图标按钮保持居中。不单独缩小某个按钮的字号。</li><li>禁用按钮不可点击；键盘聚焦必须可见。图标按钮使用 24 / 28 / 32 / 40px 正方形，必须有可访问名称；圆形发送按钮保留专用形态。</li></ul><small>本页定义后续统一标准；现有 Demo 中的历史按钮尚未全部迁移。</small></div>
+<div class="grid" style="margin-top:12px"><article class="example"><h3>主次操作 · 默认尺寸</h3><div class="sample"><button class="ds-button">暂不处理</button><button class="ds-button primary">去授权</button></div><div class="sample"><button class="ds-button">跳过本题</button><button class="ds-button primary">下一步</button></div><small>32px 高 · 左右 12px · 间距 8px</small></article>
+<article class="example"><h3>替代方案 · 同级选择</h3><div class="sample"><button class="ds-button">整理分镜和解说稿</button><button class="ds-button">只写解说稿</button><button class="ds-button">先暂停</button></div><small>所有选项同样大小、同样权重。</small></article>
+<article class="example"><h3>状态</h3><div class="sample"><button class="ds-button">重新尝试</button><button class="ds-button" disabled>暂不可用</button><button class="ds-button primary" disabled>下一步</button></div><small>悬停、按下和 Tab 键聚焦均可在此预览。</small></article>
+<article class="example"><h3>尺寸对照</h3><div class="sample"><button class="ds-button  xs">XS · 24</button><button class="ds-button  compact">SM · 28</button><button class="ds-button  ">默认 · 32</button><button class="ds-button  large">LG · 40</button></div><div class="sample"><button class="ds-button primary xs">XS · 24</button><button class="ds-button primary compact">SM · 28</button><button class="ds-button primary ">默认 · 32</button><button class="ds-button primary large">LG · 40</button></div><div class="sample"><button class="ds-button icon-only xs" aria-label="添加 · 24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="ds-button icon-only compact" aria-label="添加 · 28px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="ds-button icon-only " aria-label="添加 · 32px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="ds-button icon-only large" aria-label="添加 · 40px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><small>上方为尺寸对照；实际操作组内保持等高。XS / SM 用于桌面密集场景，触屏操作需扩大点击区域。</small></article></div><div class="panel" style="margin-top:12px"><h3>按钮类型 · 与尺寸独立组合</h3><div class="button-variants"><div><button class="ds-button primary">主按钮</button><small>Primary · 当前最重要的操作</small></div><div><button class="ds-button ">线框按钮</button><small>Outline · 取消、跳过、同级选择</small></div><div><button class="ds-button secondary">次级按钮</button><small>Secondary · 浅灰底辅助操作</small></div><div><button class="ds-button ghost">幽灵按钮</button><small>Ghost · 工具栏低强调操作</small></div><div><button class="ds-button destructive">删除</button><small>Destructive · 删除等破坏性操作</small></div><div><a class="ds-button link" href="#sources">查看来源</a><small>Link · 跳转使用链接语义</small></div></div></div>
+<div class="panel"><h3>带图标与加载状态</h3><div class="sample"><button class="ds-button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新建任务</button><button class="ds-button primary" disabled aria-busy="true"><span class="button-spinner" aria-hidden="true"></span>处理中</button></div><small>加载时保留按钮尺寸并阻止重复提交；不只依赖旋转图标表达状态。</small></div>
+<p class="lead" style="margin-top:16px">类型与尺寸分离参考 <a href="https://ui.shadcn.com/docs/components/base/button" target="_blank" rel="noopener">shadcn Button</a>；上述像素值为 CatPaw 自身规范，默认保持 32px。</p>
+</section>
+<section id="controls"><h2>控件</h2><p class="lead">以下示例取自 Demo 侧栏、任务对话和输入栏。可以悬停、按下或用 Tab 查看状态。</p>
+<div class="grid">
+<article class="example"><h3>发送按钮</h3><div class="sample demo-shell"><button class="send-btn" aria-label="发送"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button><button class="send-btn" aria-label="不可发送" disabled><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div><small>任务对话的圆形主操作。空输入时禁用。</small></article>
+<article class="example"><h3>图标按钮</h3><div class="sample demo-shell"><button class="icon-btn" aria-label="搜索项目"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4"/></svg></button><button class="round-btn" aria-label="添加信息"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button></div><small>侧栏搜索、输入栏添加。紧凑操作使用图标和可访问名称。</small></article>
+<article class="example"><h3>能力入口</h3><div class="sample demo-shell"><button class="composer-quick-add-trigger">专家</button><button class="composer-quick-add-trigger">知识库</button><button class="composer-quick-add-trigger">技能</button></div><small>输入栏内的次级操作。示例展示入口外观。</small></article>
+<article class="example"><h3>任务列表项</h3><div class="demo-shell specimen-list" id="task-samples"><button class="task" aria-current="page"><span class="task-name">整理本周门店履约异常明细</span></button><button class="task"><span class="task-name">把季度复盘要点汇总成幻灯片</span></button></div><small>点击可切换当前项，查看侧栏选中底色。</small></article>
+</div></section>
+<section id="patterns"><h2>组合示例</h2><p class="lead">两种在任务对话里实际使用的组合。</p>
+<div class="grid"><article class="example"><h3>任务对话输入栏</h3><div class="demo-shell compose"><textarea id="compose-input" aria-label="任务" placeholder="描述你要完成的任务"></textarea><div><button class="round-btn" aria-label="添加信息"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button class="send-btn" aria-label="演示发送" disabled><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div><small role="status" id="compose-status"></small><small>输入后可试按钮状态，点击在本页反馈。</small></article>
+<article class="example"><h3>待办进度</h3><div class="demo-shell"><button class="stage-plan-toggle" aria-expanded="true" aria-controls="plan-demo"><strong>待办任务</strong><span>已完成 1/3</span></button><div class="plan-demo" id="plan-demo"><div class="stage-plan-step" data-state="done"><span class="stage-plan-number">✓</span><span class="stage-plan-title-text">核对资料口径</span></div><div class="stage-plan-step" data-state="current"><span class="stage-plan-number">2</span><span>比较门店跟进优先级</span></div><div class="stage-plan-step"><span class="stage-plan-number">3</span><span>整理处理建议</span></div></div></div><small>点击标题可展开和收起。三行分别示意已完成、进行中、待开始。</small></article></div></section>
+<section id="sources" class="panel"><h2>来源</h2><ul><li>颜色依据提供的设计色板；页面底色保留。字级、间距、圆角和控件结构参考 Demo 的 <code>styles.css</code>。</li><li>按钮、输入栏、侧栏任务和进度示例参考 <code>index.html</code> 与 <code>app.js</code>。</li></ul><a href="http://127.0.0.1:8000/index.html">打开原型 ↗</a></section>
+</main>
+<script>
+const root = document.documentElement;
+const theme = document.querySelector('.theme');
+function updateColors() {
+  document.querySelectorAll('[data-value]').forEach(node => {
+    const token = node.dataset.value;
+    const raw = getComputedStyle(node).getPropertyValue(token).trim();
+    node.textContent = raw || '—';
+  });
+}
+theme.addEventListener('click', () => {
+  const dark = root.dataset.theme !== 'dark';
+  root.dataset.theme = dark ? 'dark' : 'light';
+  theme.setAttribute('aria-pressed', String(dark));
+  theme.textContent = dark ? '切换浅色' : '切换深色';
+  updateColors();
+});
+updateColors();
+const tasks = document.querySelector('#task-samples');
+tasks.addEventListener('click', event => {
+  const selected = event.target.closest('button');
+  if (!selected) return;
+  tasks.querySelector('[aria-current]')?.removeAttribute('aria-current');
+  selected.setAttribute('aria-current', 'page');
+});
+const plan = document.querySelector('#plan-demo');
+const toggle = document.querySelector('[aria-controls="plan-demo"]');
+toggle.addEventListener('click', () => {
+  plan.hidden = !plan.hidden;
+  toggle.setAttribute('aria-expanded', String(!plan.hidden));
+});
+const composer = document.querySelector('.compose');
+const input = composer.querySelector('textarea');
+const send = composer.querySelector('.send-btn');
+input.addEventListener('input', () => { send.disabled = !input.value.trim(); });
+send.addEventListener('click', () => { document.querySelector('#compose-status').textContent = '已触发演示发送'; });
+</script></body></html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>异常恢复设计 · CatPaw</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;--ink:#192823;--muted:#55645d;--line:#cbd4ce;--accent:#166b46}
+body{margin:0;background:#f8f9f6;color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:1280px;margin:auto;padding:52px clamp(20px,5vw,72px) 64px}
+header{border-bottom:1px solid var(--ink);padding-bottom:30px}
+small,.num{color:var(--accent);font-size:13px;letter-spacing:.05em}
+h1{font-size:clamp(30px,4vw,52px);line-height:1.2;margin:16px 0}
+p{margin:0} header p{max-width:58em;color:var(--muted)}
+nav{display:flex;flex-wrap:wrap;gap:8px 24px;padding:18px 0}
+a{color:var(--accent);text-underline-offset:4px}
+.row,.head{display:grid;grid-template-columns:1fr 1.45fr 1.35fr;gap:clamp(18px,3vw,44px)}
+.head{margin-top:18px;padding:10px 0;border-bottom:1px solid var(--ink);color:var(--muted);font-size:13px}
+.row{padding:25px 0;border-bottom:.5px solid var(--line);align-items:start;scroll-margin-top:16px}
+h2{font-size:21px;line-height:1.4;font-weight:500;margin:4px 0 8px}
+.row p{font-size:15px}.lead{color:var(--muted)}
+.sample{padding:14px 18px;background:#fff;border-left:2px solid #90b7a0}
+.sample span{display:block;color:var(--accent);font-size:13px;margin-bottom:4px}
+footer{margin-top:28px;max-width:65em;color:var(--muted)}
+@media(max-width:760px){main{padding-top:25px}.head{display:none}.row{grid-template-columns:1fr;gap:12px}.row:first-of-type{border-top:1px solid var(--line)}nav{gap:6px 16px}}
+@media print{main{padding:0}nav{display:none}.row{break-inside:avoid}.sample{border:.5px solid var(--line)}}
+</style>
+<main>
+<header><small>CATPAW ／ 策略二 · 2.3 异常可恢复</small>
+<h1>任务受阻后，继续需要什么？</h1>
+<p>按「下一步成立所需的条件」区分六种情况。Agent 能自行满足条件时，在执行处显示进度；需要用户提供信息、亲手操作或改变交付目标时，在中断处说明原因并给出对应入口。</p></header>
+<nav aria-label="跳转到场景"><a href="#input">任务信息</a><a href="#network">读取连接</a><a href="#service">服务可用性</a><a href="#receipt">提交回执</a><a href="#identity">本人授权</a><a href="#goal">交付目标</a></nav>
+<div class="head" aria-hidden="true"><span>继续需要的条件</span><span>如何判断与处理</span><span>界面示例</span></div>
+<section class="row" id="input"><div><span class="num">2.3.1</span><h2>补齐任务信息</h2><p class="lead">缺少会影响结果的范围、材料或偏好。</p></div><p>Agent 指出具体缺口，只问影响下一步的问题。在对话底部按需给出单选、文本、范围输入或摘要确认。用户补齐后，沿用已有要求继续。</p><div class="sample"><span>对话底部 · 等待补充</span><p>门店明细已读完。这次要按门店逐项核对，还是按区域汇总？</p><p>按门店　／　按区域</p></div></section>
+<section class="row" id="network"><div><span class="num">2.3.2</span><h2>恢复读取连接</h2><p class="lead">读取途中超时，或已确认设备离线。</p></div><p>短超时只重试当前文件，在工具行显示进度。确认设备离线时显示全局提示，联网后从中断处续读。达到重试次数或等待上限时暂停，并保留稍后继续的入口。</p><div class="sample"><span>工具行 · 已暂停重试</span><p>前两份资料已保留。第 3 份连续读取超时，你可以稍后从这份继续。</p><p>继续读取第 3 份</p></div></section>
+<section class="row" id="service"><div><span class="num">2.3.3</span><h2>等服务或额度恢复</h2><p class="lead">请求已到达服务端，服务反馈繁忙或额度耗尽。</p></div><p>服务繁忙时，在工具行说明等待时间并有限次重试。确认额度耗尽时停止自动尝试，保留已有结果。服务提供重置时刻时，直接写明用户何时可以继续。</p><div class="sample"><span>工具行 · 两种服务反馈</span><p>服务繁忙，30 秒后再读取第 3 家门店的账单。</p><p>本次额度已用完，14:00 重置。你可以先查看前两家门店的明细。</p></div></section>
+<section class="row" id="receipt"><div><span class="num">2.3.4</span><h2>确认操作是否生效</h2><p class="lead">写入请求已发出，回执缺失，重复提交可能产生两条记录。</p></div><p>Agent 先按原申请编号查询。查到回执就展示单号；结果仍未知时保留「待核实」，提供目标系统的核对入口。只有用户了解重复风险并确认后，才再次提交。</p><div class="sample"><span>提交记录 · 待核实</span><p>采购申请已发出，暂未收到审批单号。请先查看「我发起的审批」，以免生成两张单。</p><p>核对审批记录</p></div></section>
+<section class="row" id="identity"><div><span class="num">2.3.5</span><h2>由本人完成授权</h2><p class="lead">任务要求已明确，下一步需要本人登录、扫码或授权。</p></div><p>在中断处说明要访问哪个系统、要做什么，给出直达入口。检测到对应权限后，Agent 回到同一任务，从需要授权的步骤继续。</p><div class="sample"><span>对话内操作卡 · 等待本人登录</span><p>请登录财务系统，授权读取本月对账单。完成后我会接着和门店明细核对。</p><p>前往财务系统</p></div></section>
+<section class="row" id="goal"><div><span class="num">2.3.6</span><h2>重新确定交付目标</h2><p class="lead">已确认按现有能力或约定期限无法交付原成果。</p></div><p>说明已完成的工作、缺失的产物，以及替代方案能交付什么。让用户决定接受部分成果、调整交付方式或结束任务，再按选择执行。</p><div class="sample"><span>对话内选择 · 等待决定</span><p>季度复盘材料已整理。当前工具无法生成视频，可以先交付分镜和解说稿，供后续制作使用。</p><p>改为交付分镜和解说稿　／　结束任务</p></div></section>
+<footer>读取超时达到上限时，先停在 2.3.2，保留续读位置。只有确认缺失的资料会导致原定交付无法完成时，才进入 2.3.6。提交后缺少回执则保持 2.3.4 的「待核实」，等待时间本身无法证明提交失败。</footer>
+</main></html>

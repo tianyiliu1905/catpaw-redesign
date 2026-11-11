@@ -59,13 +59,9 @@
       { action: 'process-focus', focus: '.stage-plan' },
     ],
     '2.1-3': [
-      { action: 'process', frame: 1, focus: '.stage-thinking', hold: 2500 },
-      { action: 'process-focus', focus: '.stage-tool-call', hold: 3500 },
-      { action: 'process', frame: 2, focus: '.stage-current', hold: 4000 },
-      { action: 'process', frame: 3, focus: '.stage-checkpoint', hold: 4000 },
-      { action: 'process', frame: 4, focus: '.stage-current', hold: 5000 },
-      { action: 'process', frame: 6, focus: '.stage-checkpoint:last-of-type', hold: 4000 },
-      { action: 'process', frame: 7, focus: '.stage-current' },
+      { action: 'process', frame: 1, focus: '.stage-tool-call > summary', hold: 4000 },
+      { action: 'process', frame: 2, focus: '.stage-tool-call > summary', hold: 4000 },
+      { action: 'process', frame: 7, focus: '.stage-tool-call > summary' },
     ],
     '2.1-4': [{ action: 'process', frame: 10, focus: '.stage-result' }],
     '2.2': [
@@ -92,7 +88,7 @@
       {action:'intervention-guide'},
     ],
     '2.3': [
-      {action:'recovery-start',hold:3000},
+      {action:'recovery-start',hold:5200},
       {action:'recovery-pointer',target:'pick-1',hold:1200},
       {action:'recovery-act',target:'pick-1',hold:3000},
       {action:'recovery-pointer',target:'next',hold:1200},
@@ -115,20 +111,11 @@
       {action:'recovery-start',hold:10000},
       {action:'recovery-end'},
     ],
-    '2.3-3': [
+    '2.3-6': [
       {action:'recovery-start',hold:5000},
       {action:'recovery-pointer',target:'fallback',hold:1200},
       {action:'recovery-act',target:'fallback',hold:4500},
       {action:'recovery-end'},
-    ],
-    '2.4-3': [
-      { action: 'supplier-start', focus: '.quote-conditions', hold: 3500 },
-      { action: 'supplier-confirm', hold: 1200 },
-      { action: 'supplier-pick', format: 'compare', focus: '.quote-formats', hold: 3500 },
-      { action: 'supplier-follow-up', focus: '.quote-follow-ups', hold: 3000 },
-      { action: 'supplier-generate', focus: '.assistant-message:last-child .quote-report', hold: 4000 },
-      { action: 'supplier-note', focus: '.quote-follow-up', hold: 3000 },
-      { action: 'supplier-update', focus: '.assistant-message:last-child .quote-report' },
     ],
     '3.1': [
       { action: 'artifact-conversation', frame: 0, hold: 5000 },

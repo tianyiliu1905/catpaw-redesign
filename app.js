@@ -77,7 +77,49 @@
     sidebarResizer.setAttribute('aria-valuenow', String(width));
   }
 
+  // Reveal labels just after the panel starts opening, with a small stagger.
+  // Keep the motion on the text so icons and row hit areas stay steady.
+  const sidebarTextMotions = new Map();
+  function cancelSidebarTextMotion() {
+    for (const animation of sidebarTextMotions.values()) animation.cancel();
+    sidebarTextMotions.clear();
+  }
+
+  function revealSidebarText() {
+    cancelSidebarTextMotion();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const sidebar = document.getElementById('sidebar');
+    const bounds = sidebar.getBoundingClientRect();
+    const labels = Array.from(sidebar.querySelectorAll(
+      '.project-title, .sidebar-pinned .nav-item > span, .sidebar-scroll .section-toggle > span, ' +
+      '.sidebar-scroll .task-name, .sidebar-scroll .group-name, .sidebar-scroll .expand-btn, ' +
+      '.scheduled-sidebar-pinned .nav-item > span, .scheduled-sidebar-title, .scheduled-sidebar-schedule'
+    )).filter((label) => {
+      const rect = label.getBoundingClientRect();
+      return rect.height > 0 && rect.bottom > bounds.top && rect.top < bounds.bottom &&
+        !label.closest('.group.folded .group-body');
+    });
+    labels.forEach((label, index) => {
+      if (typeof label.animate !== 'function') return;
+      const animation = label.animate([
+        {opacity:0, transform:'translateX(-8px)', filter:'blur(2px)'},
+        {opacity:1, transform:'translateX(0)', filter:'blur(0px)'}
+      ], {
+        duration:340, delay:80 + Math.min(index * 14, 180),
+        easing:'cubic-bezier(.22,.68,0,1)', fill:'backwards'
+      });
+      sidebarTextMotions.set(label, animation);
+      const release = () => {
+        if (sidebarTextMotions.get(label) === animation) sidebarTextMotions.delete(label);
+      };
+      animation.onfinish = release;
+      animation.oncancel = release;
+    });
+  }
+
   function setCollapsed(collapsed) {
+    const wasCollapsed = win.classList.contains('collapsed');
+    if (collapsed) cancelSidebarTextMotion();
     win.classList.toggle('collapsed', collapsed);
     collapseBtn.setAttribute('aria-expanded', String(!collapsed));
     collapseBtn.title = collapsed ? '展开侧边栏' : '折叠侧边栏';
@@ -86,6 +128,7 @@
     conversationExpandBtn.setAttribute('aria-expanded', String(!collapsed));
     if (adaptiveLayoutReady) syncAdaptiveLayout();
     else if (!collapsed) syncSidebarWidth();
+    if (wasCollapsed && !collapsed) revealSidebarText();
   }
 
   function finishSidebarResize(event) {
@@ -4693,11 +4736,21 @@ const mainView = document.querySelector('.main');
   ];
   const artifactEditingTask = document.getElementById('artifactEditingTask');
   const supplierComparisonTask = document.getElementById('supplierComparisonTask');
-  const interventionTask = document.getElementById('interventionTask');
+  // Detached scenario target: retained only for the slide's intervention animation.
+  const interventionTask = document.createElement('a');
+  interventionTask.innerHTML = '<span class="task-name">生成经营复盘时补充要求</span>';
+  interventionTask.dataset.scope = 'office';
   const recoveryTask = document.getElementById('recoveryTask');
   const retryRecoveryTask=document.getElementById('retryRecoveryTask');
   const failureRecoveryTask=document.getElementById('failureRecoveryTask');
+  const extraRecoveryCases = [
+    {task:document.getElementById('authRecoveryTask'), mode:'auth', prompt:'读取门店巡检规范，结合本月问题更新标准作业流程。'},
+    {task:document.getElementById('exhaustedRecoveryTask'), mode:'exhausted', prompt:'结合三月份销售、客流和营销数据，分析核心指标变化。'}
+  ];
+  const widgetCases = new Map(window.CatPawWidgetCases.cases.map(item => [document.getElementById('widgetCase-' + item.id), item]));
   const conversationExamples = new Map([
+    ...extraRecoveryCases.map(({task,prompt})=>[task,{folderId:task.closest('[data-folder]')?.dataset.folder || 'default',files:[],turns:[{prompt,reply:''}]}]),
+    ...[...widgetCases].map(([task, item]) => [task, {folderId:'default', files:[], turns:[{prompt:item.prompt, reply:''}]}]),
     [retryRecoveryTask,{folderId:'default',files:[],turns:[{prompt:'对照供应商交付记录，帮我梳理供应链风险和应对预案。',reply:''}]}],
     [failureRecoveryTask,{folderId:'default',files:[],turns:[{prompt:'把季度经营复盘材料做成一段视频，介绍经营概况、区域差异和后续行动。',reply:''}]}],
     [recoveryTask, {
@@ -4707,12 +4760,6 @@ const mainView = document.querySelector('.main');
     [interventionTask, {
       folderId:'default',files:[],
       turns:[{prompt:'帮我整理本季度经营复盘，先分析各区域表现，再给出后续行动建议。',reply:''}],
-    }],
-    [supplierComparisonTask, {
-      folderId:'default',
-      turns:[{ prompt:'对比三家供应商的报价与交期，帮我选一个合适的方案，再整理成方便讨论的采购建议。',
-        reply:'我会把三家供应商放在同一口径下比较。先确认数量、预算和到货要求，再看看报价与交期的取舍。' }],
-      files:[],
     }],
     [artifactEditingTask, {
       folderId:'default',
@@ -5438,19 +5485,64 @@ const mainView = document.querySelector('.main');
   const startedConversationDemos = new Set();
   const conversationGoals = new Map();
   let activeConversationTask = null;
-  const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure']].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
-    thread:conversationThread,mode,host:document.getElementById('clarificationQuestionHost'),composer:conversationComposer,
-    onChange:phase=>{
-      if(task===recoveryTask){
-        const pending=phase!=='done';
+  const stepMotion = {
+    exit(text, tool, textChanges) {
+      if (reducedMotion.matches || strategyScene) return null;
+      const out = [{opacity:1,transform:'translateX(0)'},{offset:.35,opacity:.9,transform:'translateX(-3px)'},{opacity:0,transform:'translateX(-14px)'}];
+      const animations = [
+        textChanges && text?.animate(out, {duration:240,easing:'ease-in',fill:'forwards'}),
+        tool?.animate(out, {duration:260,delay:textChanges && text ? 240 : 0,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'})
+      ].filter(Boolean);
+      if (!animations.length) return null;
+      return {
+        finished: Promise.allSettled(animations.map(animation => animation.finished)),
+        cancel: () => animations.forEach(animation => animation.cancel())
+      };
+    },
+    enter(text, tool) {
+      if (reducedMotion.matches || strategyScene) return;
+      const easing = 'cubic-bezier(.22,.68,0,1)';
+      text?.animate([{opacity:0,transform:'translateX(6px)'},{opacity:1,transform:'translateX(0)'}], {duration:220,easing});
+      tool?.animate([{opacity:0,transform:'translateX(8px)'},{opacity:1,transform:'translateX(0)'}], {duration:260,delay:text ? 70 : 0,easing,fill:'backwards'});
+    }
+  };
+  const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure'],...extraRecoveryCases.map(({task,mode})=>[task,mode])].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
+    renderPlan:state=>renderConversationPlan(clarificationPlan.map(title=>({title})),state.phase==='done'?1:0,state.open,false,state.phase!=='done','clarificationPlanBody'),
+    renderExecution:renderClarificationExecution,
+    async waitForRequestReady(){
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const panel=conversationThread.querySelector('.clarify-reply');
+      const animations=panel?.getAnimations({subtree:true}).filter(animation=>animation.effect?.getTiming().iterations!==Infinity)||[];
+      await Promise.allSettled(animations.map(animation=>animation.finished));
+    },
+    replaceExecution:(panel,markup,animate)=>replaceStageContent(panel,markup,animate),
+    replaceReply(panel,markup){
+      const template=document.createElement('template');template.innerHTML=markup;
+      const next=template.content.firstElementChild;panel.dataset.recoveryStage=next.dataset.recoveryStage;panel.dataset.introStep=next.dataset.introStep;
+      replaceStageContent(panel,next.innerHTML,false);
+    },
+    appendTurn(text,html){
+      conversationThread.insertAdjacentHTML('beforeend',renderConversationTurnTime(new Date())+renderUserMessage(text,[])+`<div class="conversation-message assistant-message"><div class="assistant-content">${html}${renderMessageMeta('assistant')}</div></div>`);
+      moveConversationProgressToLatestTurn();renderConversationTurnNav();
+      requestAnimationFrame(()=>{conversationScroll.scrollTop=conversationScroll.scrollHeight;});
+    },
+    thread:conversationThread,mode,stepMotion,systemHost:['retry','exhausted'].includes(mode)?document.getElementById('recoverySystemHost'):null,actionHost:mode==='auth'?document.getElementById('recoveryActionHost'):null,host:document.getElementById('clarificationQuestionHost'),composer:conversationComposer,
+    onChange:(phase,execution={})=>{
+      if(mode==='auth'){
+        const pending=['blocked','handoff','deferred'].includes(phase);
         if(pending)task.dataset.state='await';else delete task.dataset.state;
-        task.querySelector('.task-state').innerHTML=pending?'<em class="tag-await">待确认</em>':'';
+        task.querySelector('.task-state').innerHTML=pending?'<em class="tag-await">待授权</em>':'';
+      }
+      if(task===recoveryTask){
+        const pending=['asking','closed'].includes(phase),running=phase==='reading'||execution.submitted&&!execution.complete;
+        if(pending)task.dataset.state='await';else if(running)task.dataset.state='running';else delete task.dataset.state;
+        task.querySelector('.task-state').innerHTML=pending?'<em class="tag-await">待确认</em>':running?'<i class="spinner" aria-label="执行中"></i>':'';
       }
       if(activeConversationTask===task)conversationThreads.set(task,conversationThread.innerHTML);
       scheduleConversationFollow();
     },
   })]));
-  const recoverySceneTasks={'2.3':recoveryTask,'2.3-2':retryRecoveryTask,'2.3-3':failureRecoveryTask};
+  const recoverySceneTasks={'2.3':recoveryTask,'2.3-2':retryRecoveryTask,'2.3-6':failureRecoveryTask};
   const supplierDemo = window.CatPawSupplierDemo.createController({
     container:conversationThread,
     isActive:() => activeConversationTask === supplierComparisonTask,
@@ -5583,7 +5675,7 @@ const mainView = document.querySelector('.main');
     },
     {
       stage: 'work', planCompleted: 0, globalState: 'reading',
-      progress: '正在读取趋势图、异常明细和分析文档，确认文件与字段是否齐全。',
+      progress: '我会先读三份资料，再核对订单口径和时间字段。',
       tool: '读取文件', toolIcon: 'file', technical: '打开趋势图、门店履约异常明细.xlsx 和门店履约分析.docx，检查订单 ID、门店及时间字段。',
       detail: '正在读取三份资料并检查可用字段',
       call: { name: 'read_file', input: { files: ['趋势图.png', '门店履约异常明细.xlsx', '门店履约分析.docx'] } },
@@ -5591,15 +5683,19 @@ const mainView = document.querySelector('.main');
     },
     {
       stage: 'work', planCompleted: 0, globalState: 'analyzing',
-      progress: '正在按订单去重并核对接单、到店、出餐和交接时间，单列缺失记录。',
+      progress: '我会先读三份资料，再核对订单口径和时间字段。',
       tool: '表格分析', toolIcon: 'table', technical: '按订单 ID 去重，检查接单、到店、出餐和交接时间戳；缺失值不参与确定性归因。',
       detail: '正在核对订单和时间字段，标出缺失记录',
       call: { name: 'python', input: { code: 'df = pd.read_excel("门店履约异常明细.xlsx")\ndf = df.drop_duplicates(subset=["订单 ID"])\ntime_fields = ["接单时间", "到店时间", "出餐时间", "交接时间"]\nmissing_records = df[df[time_fields].isna().any(axis=1)]' } },
       completed: '已核对订单口径，并标出缺失时间戳',
     },
     {
-      stage: 'checkpoint', planCompleted: 1, globalState: 'summarizing',
-      summary: '资料和统计口径已核对，缺失时间戳已单列待核实。接下来比较异常的影响范围，确定优先跟进的门店。',
+      stage: 'work', planCompleted: 1, globalState: 'analyzing',
+      progress: '资料和统计口径已核对。接下来按门店汇总异常，看看哪些需要优先跟进。',
+      tool: '汇总门店数据', toolIcon: 'table',
+      detail: '正在统计各门店的异常订单数',
+      call: { name: 'python', input: { code: 'store_counts = df.groupby("门店")["订单 ID"].nunique()' } },
+      completed: '已汇总各门店的异常订单数',
     },
     {
       stage: 'work', planCompleted: 1, globalState: 'analyzing',
@@ -5748,7 +5844,7 @@ const mainView = document.querySelector('.main');
       const x = tree.querySelector('.stage-delegation-list').offsetLeft + .5;
       const routes = running.map(node => {
         const endY = node.offsetTop + 14.5;
-        return `M${x} ${startY}V${Math.max(startY,endY-8)}Q${x} ${endY} ${x+8} ${endY}H${x+15.5}`;
+        return `M${x} ${startY}V${Math.max(startY,endY-8)}Q${x} ${endY} ${x+8} ${endY}H${x+9.5}`;
       });
       const signature = JSON.stringify([width,height,x,startY,routes]);
       if (old?.signature === signature) {
@@ -5843,36 +5939,83 @@ const mainView = document.querySelector('.main');
     const change = stageResultHistory.length ? '按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。' : '汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。';
     return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${summary}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
   }
-  function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false, visibleFrames = null) {
-    const frame = conversationStageFrames[frameIndex];
+  function renderConversationPlan(planSteps, completedCount, planOpen, before=false, waiting=false, bodyId="stagePlanBody") {
+    const plan = planSteps.map((step, index) => {
+      const state = before ? (index === 0 ? 'current' : 'pending') : index < completedCount ? 'done' : index === completedCount ? (waiting ? 'waiting' : 'current') : 'pending';
+      const label = state === 'done' ? '已完成' : state === 'current' ? '进行中' : state === 'waiting' ? '等待补充' : '待开始';
+      const statusIcon = state === 'current' ? '<span class="spinner" aria-hidden="true"></span>' : `<span class="stage-plan-digit">${index + 1}</span>`;
+      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title"><span class="stage-plan-title-text">${esc(step.title)}</span></span></li>`;
+    }).join('');
+    return `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="${bodyId}"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${planSteps.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="${bodyId}"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
+  }
+
+  function renderConversationStageBody(frameIndex, planOpen = frameIndex === 0, newCompletedIndex = -1, thinkingOpen = false, visibleFrames = null, scenario = null) {
+    const { frames = conversationStageFrames, planSteps = conversationStagePlan } = scenario || {};
+    const frame = frames[frameIndex];
     const before = frame.stage === 'plan';
     const done = frame.stage === 'done';
     const development = disclosureMode === 'development';
     const completedCount = completedStageCount(frame);
-    const check = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg>';
-    const plan = conversationStagePlan.map((step, index) => {
-      const state = before ? (index === 0 ? 'current' : 'pending') : index < completedCount ? 'done' : index === completedCount ? 'current' : 'pending';
-      const label = state === 'done' ? '已完成' : state === 'current' ? '进行中' : '待开始';
-      const statusIcon = state === 'current' ? '<span class="spinner" aria-hidden="true"></span>' : `<span class="stage-plan-digit">${index + 1}</span>`;
-      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title"><span class="stage-plan-title-text">${esc(step.title)}</span></span></li>`;
-    }).join('');
-    const planMarkup = `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="stagePlanBody"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${conversationStagePlan.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="stagePlanBody"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
-    const completedEvents = before ? [] : conversationStageFrames.slice(1, frameIndex).filter((event,index) => event.call && (!visibleFrames || visibleFrames.includes(index+1)));
-    const completedItems = completedEvents.map((event, index) => renderCompletedStageCall(event, index, development, index === newCompletedIndex) + (!visibleFrames && event === conversationStageFrames[5] ? renderCompletedAgentCall() : '')).join('');
-    const checkpointMarkup = conversationStageFrames.slice(0, frameIndex + 1)
+    const planMarkup = renderConversationPlan(planSteps, completedCount, planOpen, before);
+    const completedEvents = before ? [] : frames.slice(1, frameIndex).filter((event,index) => event.call && (!visibleFrames || visibleFrames.includes(index+1)));
+    const completedItems = completedEvents.map((event, index) => renderCompletedStageCall(event, index, development, index === newCompletedIndex) + (!scenario && !visibleFrames && event === conversationStageFrames[5] ? renderCompletedAgentCall() : '')).join('');
+    const checkpointMarkup = frames.slice(0, frameIndex + 1)
       .filter(event => event.stage === 'checkpoint')
-      .map(event => `<section class="stage-checkpoint" data-completed-group="${event.planCompleted}" aria-label="${esc(conversationStagePlan[event.planCompleted - 1].title)}的阶段总结"><p>${esc(event.summary)}</p></section>`).join('');
+      .map(event => `<section class="stage-checkpoint" data-completed-group="${event.planCompleted}" aria-label="${esc(planSteps[event.planCompleted - 1].title)}的阶段总结"><p>${esc(event.summary)}</p></section>`).join('');
     const completedMarkup = completedEvents.length || done
       ? `<div class="stage-thinking-details" id="stageThinkingDetails"${thinkingOpen ? '' : ' inert'}><div class="stage-thinking-details-inner">${done ? planMarkup + checkpointMarkup : ''}<section class="stage-completed" aria-label="已完成的过程"><ol>${completedItems}</ol></section></div></div>`
       : '';
-    const delegationStage = !visibleFrames && (frameIndex === 4 || frameIndex === 5);
+    const delegationStage = !scenario && !visibleFrames && (frameIndex === 4 || frameIndex === 5);
     const currentMarkup = frame.stage !== 'work' ? '' : `<section class="stage-current" role="status" aria-live="polite" aria-atomic="true"><p>${esc(frame.progress)}</p>${delegationStage ? renderStageDelegations(frameIndex) : ''}${!delegationStage || development ? renderStageToolCall(frame, development) : ''}</section>`;
-    const resultMarkup = done ? renderStageResult(frame) : '';
-    const thinkingStatus = `<strong class="stage-global-label" role="status" aria-live="polite" aria-atomic="true">${esc(conversationGlobalStates[frame.globalState])}</strong><span class="stage-elapsed" aria-label="任务累计用时">0秒</span>`;
+    const resultMarkup = done && !scenario ? renderStageResult(frame) : '';
+    const thinkingStatus = `<span class="global-status-paw" aria-hidden="true"></span><strong class="stage-global-label" role="status" aria-live="polite" aria-atomic="true">${esc(conversationGlobalStates[frame.globalState])}</strong><span class="stage-elapsed" aria-label="任务累计用时">${scenario ? formatStageElapsed(scenario.elapsed) : "0秒"}</span>`;
     const thinkingMarkup = `<div class="stage-thinking" data-global-state="${esc(frame.globalState)}">${completedEvents.length
       ? `<button class="stage-thinking-status stage-thinking-toggle" type="button" aria-expanded="${thinkingOpen}" aria-controls="stageThinkingDetails">${thinkingStatus}<svg viewBox="0 0 24 24" class="ic stage-thinking-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>`
       : `<div class="stage-thinking-status">${thinkingStatus}</div>`}${completedMarkup}</div>`;
     return thinkingMarkup + (before ? `<article class="md conversation-reply stage-acknowledgement"><p>${renderStageAcknowledgement(frame.acknowledgement)}</p></article>` : '') + (done ? '' : planMarkup) + (done ? '' : checkpointMarkup) + currentMarkup + resultMarkup;
+  }
+
+  const clarificationPlan = ['确认套餐上线要求', '整理双人套餐搭配', '撰写上架文案并复核'];
+  function renderClarificationExecution(answers, frameIndex, state) {
+    const values = {goal:answers[0] || '待确认', dishes:answers[1] || '待补充', price:answers[2] || '待确认'};
+    const frames = [
+      {stage:'plan',globalState:'planning',planCompleted:0,acknowledgement:'收到，我会沿用你确认的要求整理套餐搭配和上架文案；未补充的内容保留待确认。'},
+      {stage:'work',globalState:'analyzing',planCompleted:1,progress:'已整理经营目标和已提供的条件，接下来准备双人套餐搭配。',tool:'整理套餐搭配',detail:'根据已确认要求整理双人套餐搭配',toolIcon:'list',call:{name:'draft_meal_plan',input:values},completed:'已整理双人套餐搭配建议'},
+      {stage:'work',globalState:'generating',planCompleted:2,progress:'套餐搭配建议已整理，接下来撰写上架文案，并标出需要你核对的条件。',tool:'撰写上架文案',detail:'撰写上架文案并复核待确认项',toolIcon:'document',call:{name:'draft_listing_copy',input:values},completed:'已整理上架文案草稿与待确认项'},
+      {stage:'done',globalState:'done',planCompleted:3}
+    ];
+    const body = renderConversationStageBody(frameIndex, state.planOpen, -1, frameIndex===3&&state.planOpen ? true : state.thinkingOpen, null,
+      {frames,planSteps:clarificationPlan.map(title=>({title})),elapsed:Math.floor((Date.now()-state.startedAt)/1000)});
+    if(frameIndex!==3)return body;
+    return body + `<div class="stage-result"><section class="stage-summary"><p>已按确认的要求整理套餐搭配建议和上架文案草稿。${answers[1]&&answers[2]?'发布前请核对菜品份量、最终售价和使用规则。':'尚未补充的菜品或售价保留待确认。'}</p></section>
+      <article class="md conversation-reply clarify-result"><h3>套餐搭配建议</h3><ul><li>经营目标：${esc(values.goal)}</li><li>可用菜品与限制：${esc(values.dishes)}</li><li>套餐售价：${esc(values.price)}</li></ul>
+      <p>${answers[1]?'以你提供的菜品为范围，核对是否足够两人分享，并明确饮品、小食与主菜的份量。':'建议按双人主菜、分享小食与饮品组织搭配；具体菜品和份量需要补充后确定。'}</p>
+      <h3>上架文案草稿</h3><p>双人共享，好好吃一餐。${answers[1]?'搭配范围：'+esc(answers[1])+'。':'具体菜品待确认。'}${answers[2]?'售价参考：'+esc(answers[2])+'，最终上架价格待核对。':'售价待确认。'}</p>
+      <p>以上为待核对草稿，本次确认不会直接发布套餐。</p></article></div>`;
+  }
+
+  function renderWidgetStage(root, phase, description) {
+    const { acknowledgement, task, tool, title, modules, plainText = false } = description;
+    const planSteps = (plainText ? [task, '列明所需资料与核查方法'] : [task, '读取 Widget 生成规范', tool]).map(title => ({ title }));
+    const frames = plainText ? [
+      { stage:'plan', globalState:'planning', planCompleted:0, acknowledgement },
+      { stage:'work', globalState:'generating', planCompleted:1, progress:'正在整理已选核查项，并列明所需资料和核查方法。' },
+      { stage:'work', globalState:'generating', planCompleted:1, progress:'正在整理已选核查项，并列明所需资料和核查方法。' },
+      { stage:'done', globalState:'done', planCompleted:2 },
+    ] : [
+      { stage:'plan', globalState:'planning', planCompleted:0, acknowledgement },
+      { stage:'work', globalState:'reading', planCompleted:1, progress:'我会先读取生成规范，再' + tool + '。',
+        tool:'读取生成规范', detail:'读取 Widget 生成规范', toolIcon:'file',
+        call:{ name:'read_me', input:{ modules } }, completed:'已读取 Widget 生成规范' },
+      { stage:'work', globalState:'generating', planCompleted:2, progress:'我会先读取生成规范，再' + tool + '。',
+        tool:'生成 Widget', detail:tool, toolIcon:'chart',
+        call:{ name:'show_widget', input:{ title } }, completed:'已' + tool },
+      { stage:'done', globalState:'done', planCompleted:3 },
+    ];
+    const planOpen = phase === 0 || (phase < 3 && root.dataset.planExpanded === 'true');
+    const thinkingOpen = phase !== 0 && root.querySelector('.stage-thinking-toggle')?.getAttribute('aria-expanded') === 'true';
+    const elapsed = Math.floor((Date.now() - Number(root.dataset.startedAt)) / 1000);
+    return renderConversationStageBody(phase, planOpen, -1, thinkingOpen, null, { frames, planSteps, elapsed });
   }
 
   function renderConversationStage(entering = false) {
@@ -5966,7 +6109,10 @@ const mainView = document.querySelector('.main');
 
   function replaceStageContent(panel, markup, allowMotion = true) {
     const animate = allowMotion && !reducedMotion.matches && !strategyScene && !panel.classList.contains('is-entering') && typeof panel.animate === 'function';
-    const hadDelegation = Boolean(panel.querySelector('.stage-current > .stage-delegation'));
+    const previousCurrent = panel.querySelector('.stage-current');
+    const hadDelegation = Boolean(previousCurrent?.querySelector(':scope > .stage-delegation'));
+    const previousProgress = previousCurrent?.querySelector(':scope > p')?.textContent;
+    const previousCurrentHeight = animate ? previousCurrent?.getBoundingClientRect().height ?? 0 : 0;
     const oldHeight = animate ? panel.getBoundingClientRect().height : 0;
     panel.stageLayoutAnimation?.cancel();
     const positions = new Map([...panel.children].map(node => [stageContentKey(node), {top: node.getBoundingClientRect().top, text: node.textContent}]));
@@ -5987,17 +6133,24 @@ const mainView = document.querySelector('.main');
       return {node,previous,delta:previous ? previous.top - node.getBoundingClientRect().top : 0};
     });
     if (delegationEntering) {
-      // Expand the new work area itself. Animating the whole panel clipped the Agent list as it appeared.
-      current.animate([{height:'0px',overflow:'clip'},{height:`${currentHeight}px`,overflow:'clip'}],{duration:480,easing});
-      [current.querySelector(':scope > p'),delegation.querySelector('.stage-delegation-heading'),...delegation.querySelectorAll('.stage-delegation-node')].filter(Boolean).forEach((node,index) => {
-        node.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,delay:index*35,easing,fill:'backwards'});
-      });
+      current.animate([{height:`${previousCurrentHeight}px`,overflow:'clip'},{height:`${currentHeight}px`,overflow:'clip'}],{duration:420,easing});
+      current.querySelector(':scope > p')?.animate(
+        [{opacity:0,transform:'translateX(6px)'},{opacity:1,transform:'translateX(0)'}],
+        {duration:220,easing}
+      );
+      delegation.animate(
+        [{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],
+        {duration:300,delay:70,easing,fill:'backwards'}
+      );
     } else {
-      panel.querySelector('.stage-current > .stage-tool-call')?.animate([{opacity:0,transform:'translateX(8px)'},{opacity:1,transform:'translateX(0)'}],{duration:320,easing});
+      const progress = current?.querySelector(':scope > p');
+      const tool = current?.querySelector(':scope > .stage-tool-call');
+      const newProgress = progress && progress.textContent !== previousProgress;
+      if (tool) stepMotion.enter(newProgress ? progress : null, tool);
       if (Math.abs(newHeight - oldHeight) > 1) panel.stageLayoutAnimation = panel.animate([{height:`${oldHeight}px`,overflow:'clip'},{height:`${newHeight}px`,overflow:'clip'}], {duration,easing});
     }
     for (const {node,previous,delta} of movements) {
-      if (Math.abs(delta) > 1 && !(delegationEntering && node === current)) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
+      if (Math.abs(delta) > 1) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
       if (!(delegationEntering && node === current) && (!previous || previous.text !== node.textContent) && node.matches('.stage-checkpoint,.stage-result,.stage-current:not(:has(> .stage-tool-call))')) {
         node.animate([{opacity:0},{opacity:1}], {duration:320,easing});
       }
@@ -6038,6 +6191,7 @@ const mainView = document.querySelector('.main');
     panel.dataset.stageFrame = String(frameIndex);
     panel.classList.toggle('is-advancing', false);
     panel.classList.toggle('is-tool-exiting', false);
+    panel.classList.toggle('is-progress-exiting', false);
     replaceStageContent(panel, renderConversationStageBody(frameIndex, planOpen, nextEvents > previousEvents ? nextEvents - 1 : -1, thinkingOpen), frameIndex > 1);
     openDelegations.forEach(index => { const item = panel.querySelector(`.stage-delegation-node details[data-delegation-index="${index}"]`); if (item) item.open = true; });
     openToolCalls.forEach(index => { const item = panel.querySelector(`.stage-completed-call[data-stage-completed-call="${index}"]`); if (item) item.open = true; });
@@ -6082,7 +6236,10 @@ const mainView = document.querySelector('.main');
     }
     if (!immediate && Number(panel.dataset.stageFrame) > 0 && !reducedMotion.matches && panel.querySelector('.stage-current > .stage-tool-call')) {
       preserveConversationScrollRange();
+      const current = conversationStageFrames[Number(panel.dataset.stageFrame)];
+      const progressChanges = current.progress !== conversationStageFrames[next].progress;
       panel.classList.toggle('is-tool-exiting', true);
+      panel.classList.toggle('is-progress-exiting', progressChanges);
       stageDemoAdvance.disabled = true;
       panel.dataset.pendingStageFrame = String(next);
       stageAdvanceTimer = setTimeout(() => {
@@ -6091,7 +6248,7 @@ const mainView = document.querySelector('.main');
         delete panel.dataset.pendingStageFrame;
         stageDemoAdvance.disabled = false;
         if (panel.isConnected) updateConversationStage(panel, next);
-      }, 260);
+      }, progressChanges ? 500 : 260);
       return;
     }
     updateConversationStage(panel, next);
@@ -6172,7 +6329,7 @@ const mainView = document.querySelector('.main');
     const panel = conversationThread.querySelector('.conversation-stage-demo');
     if (!panel || activeConversationTask !== conversationTask) return;
     const next = (Number(panel.dataset.stageFrame) + 1) % conversationStageFrames.length;
-    advanceConversationStage(panel, next, true);
+    advanceConversationStage(panel, next);
   });
   document.addEventListener('click', event => {
     const sort = event.target.closest('[data-stage-sort]');
@@ -6197,6 +6354,14 @@ const mainView = document.querySelector('.main');
   });
 
   conversationThread.addEventListener('click', (event) => {
+    const replay = event.target.closest('[data-wvc-replay]');
+    if (!replay) return;
+    const root = replay.closest('[data-wvc-reply]');
+    window.CatPawWidgetCases.playReply(root, renderWidgetStage, {replay:true, stepMotion});
+    root.scrollIntoView({ block:'nearest' });
+  });
+
+  conversationThread.addEventListener('click', (event) => {
     const toggle = event.target.closest('.stage-thinking-toggle');
     if (!toggle) return;
     const open = toggle.getAttribute('aria-expanded') !== 'true';
@@ -6209,6 +6374,9 @@ const mainView = document.querySelector('.main');
     const previous = completedToolMotions.get(details);
     const opening = previous ? !previous.opening : !details.open;
     const fromHeight = details.getBoundingClientRect().height;
+    const content = details.querySelector(':scope > .stage-call-details, :scope > p');
+    const fromOpacity = content ? getComputedStyle(content).opacity : '1';
+    const fromTransform = content ? getComputedStyle(content).transform : 'none';
     previous?.height.cancel();
     previous?.fade?.cancel();
     if (!opening) preserveConversationScrollRange();
@@ -6219,11 +6387,10 @@ const mainView = document.querySelector('.main');
       return;
     }
     details.open = true;
-    const content = details.querySelector('.stage-call-details');
     const targetHeight = opening ? details.getBoundingClientRect().height : details.querySelector('summary').getBoundingClientRect().height;
     const options = {duration:360,easing:'cubic-bezier(.22,.68,0,1)'};
     const height = details.animate([{height:`${fromHeight}px`,overflow:'hidden'},{height:`${targetHeight}px`,overflow:'hidden'}],options);
-    const fade = content?.animate([{opacity:opening?0:1,transform:opening?'translateY(-4px)':'translateY(0)'},{opacity:opening?1:0,transform:opening?'translateY(0)':'translateY(-4px)'}],options);
+    const fade = content?.animate([{opacity:previous?fromOpacity:opening?0:1,transform:previous?fromTransform:opening?'translateY(-4px)':'translateY(0)'},{opacity:opening?1:0,transform:opening?'translateY(0)':'translateY(-4px)'}],options);
     const motion = {opening,height,fade};
     completedToolMotions.set(details,motion);
     details.classList.toggle('is-closing',!opening);
@@ -6236,7 +6403,7 @@ const mainView = document.querySelector('.main');
     };
   }
   conversationThread.addEventListener('click', (event) => {
-    const summary = event.target.closest('.stage-completed-call > summary');
+    const summary = event.target.closest('.stage-completed-call > summary, .stage-delegation-node details > summary');
     if (!summary) return;
     event.preventDefault();
     toggleCompletedToolDetails(summary.parentElement);
@@ -6247,7 +6414,7 @@ const mainView = document.querySelector('.main');
     if (!toggle) return;
     const plan = toggle.closest('.stage-plan');
     const open = toggle.getAttribute('aria-expanded') !== 'true';
-    const panel = plan.closest('.conversation-stage-demo, .conversation-stage-history');
+    const panel = plan.closest('.conversation-stage-demo, .conversation-stage-history, [data-wvc-reply], .clarify-reply, .clarify-execution');
     if (panel) panel.dataset.planExpanded = String(open);
     toggle.setAttribute('aria-expanded', String(open));
     plan.dataset.collapsed = String(!open);
@@ -6660,6 +6827,7 @@ const mainView = document.querySelector('.main');
           }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
           (task === supplierComparisonTask && index === 0 ? supplierDemo.initial() : '') +
+          (widgetCases.has(task) && index === 0 ? window.CatPawWidgetCases.renderReply(widgetCases.get(task).id) : '') +
           (task === interventionTask && index === 0 ? queueDemo.initial() : '') +
           (recoveryDemos.has(task) && index === 0 ? recoveryDemos.get(task).initial() : '') +
           (example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
@@ -6688,6 +6856,7 @@ const mainView = document.querySelector('.main');
     artifactSelection?.taskChanged();
     mainView.classList.toggle('conversation-open', open);
     conversationPage.hidden = !open;
+    window.CatPawWidgetCases?.syncControls();
     syncExpertForContext();
     queueDemo.activate(open && task === interventionTask);
     recoveryDemos.forEach((demo,key)=>demo.activate(open && task===key));
@@ -6722,6 +6891,7 @@ const mainView = document.querySelector('.main');
     if (!summaryPopover.hidden || isScheduledPanelOpen()) renderSummaryContents();
     if (open) {
       if (task === conversationTask) scheduleStageAutoAdvance(conversationThread.querySelector('.conversation-stage-demo'));
+      if (widgetCases.has(task)) conversationThread.querySelectorAll('[data-wvc-reply]').forEach(root => window.CatPawWidgetCases.playReply(root, renderWidgetStage, {stepMotion}));
       const keepScheduledPanel = scheduledRunTasks.has(task) &&
         (rightPanel === 'scheduled' && !content.classList.contains('wb-expanded') ||
           rightPanel === 'tools' && content.classList.contains('wb-scheduled-overlay'));
@@ -6910,6 +7080,45 @@ function beginConversationTurn(message) {
   renderConversationTurnNav();
   requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
 }
+
+  const positionedSupplierReplies = new WeakSet();
+  window.CatPawWidgetCases.connectConversation({
+    submitInvestigation(items, card) {
+      if (widgetCases.get(activeConversationTask)?.id !== 'diagnose' || !conversationThread.contains(card)) return false;
+      const text = '请根据刚才的履约分析，生成以下核查清单：\n' + items.map((item, index) => `${index + 1}. ${item}`).join('\n');
+      conversationThread.insertAdjacentHTML('beforeend',
+        renderConversationTurnTime(new Date()) + renderUserMessage(text, []) +
+        `<div class="conversation-message assistant-message"><div class="assistant-content">${window.CatPawWidgetCases.renderInvestigationReply(items)}${renderMessageMeta('assistant')}</div></div>`);
+      const root = Array.from(conversationThread.querySelectorAll('[data-wvc-reply]')).at(-1);
+      window.CatPawWidgetCases.playReply(root, renderWidgetStage, {stepMotion});
+      conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+      moveConversationProgressToLatestTurn();
+      renderConversationTurnNav();
+      requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
+      return true;
+    },
+    replyChanged(root) {
+      if (widgetCases.has(activeConversationTask) && conversationThread.contains(root)) {
+        conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
+        if (root.dataset.wvcReply === 'compare') {
+          if (root.dataset.wvcPhase !== '3') positionedSupplierReplies.delete(root);
+          else if (!positionedSupplierReplies.has(root)) {
+            positionedSupplierReplies.add(root);
+            requestAnimationFrame(async () => {
+              await Promise.allSettled(root.getAnimations({subtree:true})
+                .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+                .map(animation => animation.finished));
+              if (!root.isConnected || conversationPage.hidden || widgetCases.get(activeConversationTask)?.id !== 'compare') return;
+              const widget = root.querySelector('[data-wvc-case="compare"]');
+              if (!widget) return;
+              const distance = Math.min(80, widget.getBoundingClientRect().top - conversationScroll.getBoundingClientRect().top - 24);
+              if (distance > 0) conversationScroll.scrollTo({top:conversationScroll.scrollTop + distance,behavior:reducedMotion.matches?'instant':'smooth'});
+            });
+          }
+        }
+      }
+    }
+  });
 
   function sendConversationMessage() {
   const text = conversationPrompt.value.trim();
@@ -9554,4 +9763,8 @@ function beginConversationTurn(message) {
     host:win,
     onOpen() { setScheduledPageMode(false); setConversationOpen(false); setRightPanel(null); },
   });
+  const linkedRecovery = extraRecoveryCases.find(item=>item.mode===new URLSearchParams(location.search).get('recoveryCase'));
+  if(linkedRecovery)setConversationOpen(true,linkedRecovery.task);
+  const linkedWidgetCase = document.getElementById('widgetCase-' + new URLSearchParams(location.search).get('widgetCase'));
+  if (linkedWidgetCase && widgetCases.has(linkedWidgetCase)) setConversationOpen(true, linkedWidgetCase);
 })();

@@ -24,7 +24,7 @@
 .market-featured{padding:0 0 24px}
 .market-featured[hidden]{display:none}
 .market-featured-heading{display:flex;align-items:center;justify-content:space-between;height:14px;margin-bottom:16px}
-.market-featured-heading h2{display:flex;align-items:center;gap:4px;font:var(--weight-emphasis) 14px/14px var(--font);color:#142d1b}
+.market-featured-heading h2{display:flex;align-items:center;gap:4px;font:var(--weight-emphasis) 14px/14px var(--font);color:var(--ds-text-2)}
 .market-wheat{width:8.544px;height:14.5188px}
 .market-wheat-right{transform:scaleX(-1)}
 .market-featured-heading>div{display:flex;gap:10px}
@@ -46,9 +46,9 @@
 .market-feature-card>button>span{flex:1;min-width:0;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;text-align:left}
 .market-badges{display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap}
 .market-badge{display:inline-flex;align-items:center;flex:none;gap:1px;border-radius:3px;background:var(--gray-3);padding:1px 4px;color:var(--text-3);font:10px/14px var(--font)}
-.market-badge.free{background:#e5fbeb;color:#00a72d;font-weight:var(--weight-emphasis);padding-left:2px}
-.market-badge.paid{background:#fff2df;color:#dc8200}
-.market-badge.expiring{background:#fff0ee;color:#ff4d3e}
+.market-badge.free{background:var(--ds-success-1);color:var(--ds-success-6);font-weight:var(--weight-emphasis);padding-left:2px}
+.market-badge.paid{background:var(--ds-warning-1);color:var(--ds-warning-6)}
+.market-badge.expiring{background:var(--ds-danger-1);color:var(--ds-danger-6)}
 .market-badge-icon{display:block;flex:none;width:10px;height:10px}
 .market-badge-divider{display:block;height:9px;width:1px;background:var(--gray-5);margin:0 4px;flex:none}
 .market-ownership{display:flex;align-items:center;gap:24px;height:32px;margin-bottom:16px}

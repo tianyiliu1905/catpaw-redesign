@@ -84,7 +84,7 @@
 .reference-crop-box[hidden]{display:none}
 .excel-grid td.reference-cell-selected{background:var(--success-bg)!important;outline:1px solid var(--brand-green);outline-offset:-1px}
 .excel-grid:has(.reference-cell-selected){user-select:none}
-::highlight(artifact-word-selection){background:#ccefd7;color:#173f2b}
+::highlight(artifact-word-selection){background:var(--ds-primary-2);color:var(--ds-primary-6)}
 @media(max-width:850px){.reference-ppt-pages{width:84px}.reference-ppt-canvas{padding:16px 12px 100px}.reference-toolbar{padding:8px;gap:8px}.artifact-selection-label{max-width:130px}}
 @media(max-width:380px){.artifact-selection-menu.artifact-annotation-inline:not([hidden]){grid-template-columns:1fr}.artifact-annotation-inline .artifact-selection-toolbar{grid-column:1;grid-row:2}}
 @media(max-width:420px){.artifact-selection-toolbar{flex-wrap:wrap;justify-content:flex-end}.artifact-selection-label{flex-basis:100%;max-width:none}.artifact-comment-footer{align-items:flex-start}.artifact-comment-footer>span{flex:1}}
