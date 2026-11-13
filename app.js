@@ -1240,14 +1240,29 @@ const processList = document.getElementById('summaryProcessesList');
 processList.replaceChildren();
 if (backgroundProcesses.length) {
  for (const backgroundProcess of backgroundProcesses) {
+  const entry = document.createElement('div');
+  entry.className = 'summary-process-entry';
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'summary-agent-row summary-process-row';
-  button.dataset.agentStatus = backgroundProcess.dataset.agentStatus;
-  button.innerHTML = '<svg viewBox="0 0 24 24" class="ic summary-process-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/></svg><span class="summary-agent-name">' + esc(backgroundProcess.dataset.backgroundTitle) + '</span>' + (backgroundProcess.dataset.agentStatus === '已完成' ? '' : '<small class="summary-agent-status">运行中</small>');
-  button.innerHTML += '<img class="summary-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true">';
+  button.dataset.processTitle = backgroundProcess.dataset.backgroundTitle;
+  button.innerHTML = '<svg viewBox="0 0 24 24" class="ic summary-process-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/></svg><span class="summary-agent-name">' + esc(backgroundProcess.dataset.backgroundTitle) + '</span><img class="summary-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true">';
   button.addEventListener('click', () => {setSummaryOpen(false);backgroundProcess.click();});
-  processList.append(button);
+  entry.append(button);
+  if (backgroundProcess.dataset.agentStatus === '执行中') {
+    const stop = document.createElement('button');
+    stop.type = 'button';
+    stop.className = 'summary-process-stop';
+    stop.setAttribute('aria-label','终止：' + backgroundProcess.dataset.backgroundTitle);
+    stop.innerHTML = '<span class="summary-process-stop-icon" aria-hidden="true"><img src="assets/process-stop-figma.svg" width="24" height="24" alt=""></span><span>终止</span>';
+    stop.addEventListener('click', () => {
+      const title = backgroundProcess.dataset.backgroundTitle;
+      backgroundProcess.dispatchEvent(new Event('background-terminate'));
+      [...processList.querySelectorAll('.summary-process-row')].find(row=>row.dataset.processTitle===title)?.focus({preventScroll:true});
+    });
+    entry.append(stop);
+  }
+  processList.append(entry);
  }
 } else if (!processSection.hidden) {
   const folder = FOLDERS.find(entry => entry.id === conversationExamples.get(conversationTask).folderId);
@@ -7174,6 +7189,7 @@ const mainView = document.querySelector('.main');
   const backgroundDemoCounts = new Map();
   const backgroundDemoCompleted = new Map();
   const backgroundDemoFollowups = new Map();
+  const backgroundDemoTerminated = new Map();
   const backgroundDemoScripts = new Map();
   const backgroundAgentItems = [
     ['交叉核查门店履约明细', '比对订单明细与门店记录，检查缺失时间戳和异常归属。'],
@@ -7187,6 +7203,7 @@ const mainView = document.querySelector('.main');
     ['检查缺失订单记录', '检查缺失订单记录.py']
   ];
   function setBackgroundDemoState(task, state) {
+    if (state === 'running' || state === 'complete') backgroundDemoTerminated.delete(task);
     if (state === 'running') {
       backgroundDemoCompleted.delete(task);
       backgroundDemoFollowups.delete(task);
@@ -7196,6 +7213,14 @@ const mainView = document.querySelector('.main');
     if (state === 'complete') {
       if (!backgroundDemoCompleted.has(task)) backgroundDemoCompleted.set(task, new Date());
     } else backgroundDemoCompleted.delete(task);
+  }
+  function terminateBackgroundDemoProcess(task, title) {
+    if (backgroundDemoCompleted.has(task)) return false;
+    let stopped = backgroundDemoTerminated.get(task);
+    if (!stopped) {stopped = new Set();backgroundDemoTerminated.set(task, stopped);}
+    if (stopped.has(title)) return false;
+    stopped.add(title);
+    return true;
   }
   function renderBackgroundFollowup(process, sentAt, workCompleted) {
     const prompt = process
@@ -7207,7 +7232,37 @@ const mainView = document.querySelector('.main');
     return renderConversationTurnTime(sentAt) + renderUserMessage(prompt) +
       `<div class="conversation-message assistant-message"><div class="assistant-content">${workCompleted ? '' : '<div class="stage-thinking" data-global-state="done"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>已完成</strong></div></div>'}<article class="md conversation-reply"><p>可以，下面这段可以直接使用：</p><p>${reply}</p></article></div></div>`;
   }
+  function wireBackgroundDisclosure(disclosure, aggregate, popup) {
+    const setExpanded = expanded => {
+      disclosure.classList.toggle('is-open', expanded);
+      aggregate.setAttribute('aria-expanded', String(expanded));
+      popup.inert = !expanded;
+    };
+    aggregate.addEventListener('click', () => {
+      const expanded = aggregate.getAttribute('aria-expanded') !== 'true';
+      setExpanded(expanded);
+      if (expanded) popup.querySelector('button')?.focus({preventScroll:true});
+    });
+    disclosure.addEventListener('focusout', event => {
+      if (!disclosure.contains(event.relatedTarget)) setExpanded(false);
+    });
+    disclosure.addEventListener('background-close', () => setExpanded(false));
+    disclosure.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        setExpanded(false);
+        aggregate.focus({preventScroll:true});
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+    return setExpanded;
+  }
   const backgroundQueueRemoved = new Set();
+  document.addEventListener('click', event => {
+    document.querySelectorAll('.background-agent-disclosure.is-open').forEach(disclosure => {
+      if (!disclosure.contains(event.target)) disclosure.dispatchEvent(new Event('background-close'));
+    });
+  });
   function syncBackgroundAgentDemo(open, task) {
     clearTimeout(backgroundAgentTimer);
     document.getElementById('backgroundAgentQueue')?.remove();
@@ -7277,7 +7332,12 @@ const mainView = document.querySelector('.main');
         group.className = 'background-work-group' + (inline ? ' background-work-group-inline' : '') + (workCompleted ? ' is-complete' : '');
         group.hidden = textLink || (workCompleted && !inline);
         const items = (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count);
+        const stoppedProcesses = backgroundDemoTerminated.get(task) || new Set();
+        const allStopped = process && !workCompleted && items.every(([title])=>stoppedProcesses.has(title));
+        if (allStopped) group.classList.add('is-complete');
         for (const [title, detail] of items) {
+        const stopped = process && stoppedProcesses.has(title);
+        const stateCopy = stopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中';
         const capsule = document.createElement('button');
         capsule.className = 'background-agent-capsule' + (inline ? ' background-agent-capsule-inline' : '');
         capsule.type = 'button';
@@ -7286,13 +7346,17 @@ const mainView = document.querySelector('.main');
           : '<svg class="background-running-icon background-running-agent-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 5.33333V2.66667H5.33333" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M4 5.33333H12C12.7364 5.33333 13.3333 5.93029 13.3333 6.66667V12C13.3333 12.7364 12.7364 13.3333 12 13.3333H4C3.26362 13.3333 2.66667 12.7364 2.66667 12V6.66667C2.66667 5.93029 3.26362 5.33333 4 5.33333Z" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M1.33333 9.33333H2.66667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M13.3333 9.33333H14.6667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M10 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M6 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg>';
         const runningArrow = '<span class="background-running-arrow" aria-hidden="true"><img src="assets/arrow-up-right-figma.svg" alt="" width="24" height="24"></span>';
         capsule.innerHTML = inline
-          ? '<span class="background-artifact-icon' + (process ? ' background-process-icon' : '') + '" aria-hidden="true">' + backgroundIcon + '</span><span class="background-artifact-info"><strong class="background-running-label">' + esc(title) + '</strong><small class="background-artifact-state">' + (workCompleted ? '运行完成' : '后台运行中') + '</small></span>' + runningArrow
-          : backgroundIcon + '<span class="background-running-label">' + esc(title) + (workCompleted ? ' 运行完成' : ' 后台运行中') + '</span>' + runningArrow;
+          ? '<span class="background-artifact-icon' + (process ? ' background-process-icon' : '') + '" aria-hidden="true">' + backgroundIcon + '</span><span class="background-artifact-info"><strong class="background-running-label">' + esc(title) + '</strong><small class="background-artifact-state">' + stateCopy + '</small></span>' + runningArrow
+          : backgroundIcon + '<span class="background-running-label">' + esc(title) + (' ' + stateCopy) + '</span>' + runningArrow;
         capsule.dataset.backgroundKind = process ? 'process' : 'agent';
         capsule.dataset.backgroundTitle = title;
         capsule.dataset.summaryAgent = title;
         capsule.dataset.agentDetail = detail;
-        capsule.dataset.agentStatus = workCompleted ? '已完成' : '执行中';
+        capsule.dataset.agentStatus = stopped ? '已终止' : workCompleted ? '已完成' : '执行中';
+        capsule.classList.toggle('is-terminated',stopped);
+        if (process) capsule.addEventListener('background-terminate', () => {
+          if (terminateBackgroundDemoProcess(task,title)) paint();
+        });
         capsule.addEventListener('click', () => {
           if (!process) return openSubagentConversation(capsule);
           const folder = FOLDERS.find(entry => entry.id === 'default');
@@ -7315,7 +7379,10 @@ const mainView = document.querySelector('.main');
           const aggregate = group.firstElementChild.cloneNode(true);
           aggregate.hidden = false;
           for (const key of Object.keys(aggregate.dataset)) delete aggregate.dataset[key];
-          aggregate.querySelector('.background-running-label').textContent = `${count}个${process ? '后台进程' : '子智能体'}${inline ? '' : workCompleted ? '运行完成' : '后台运行中'}`;
+          aggregate.classList.toggle('is-terminated',allStopped);
+          aggregate.querySelector('.background-running-label').textContent = `${count}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中'}`;
+          const aggregateState = aggregate.querySelector('.background-artifact-state');
+          if (aggregateState) aggregateState.textContent = allStopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中';
           {
             const disclosure = document.createElement('div');
             disclosure.className = 'background-agent-disclosure';
@@ -7326,7 +7393,7 @@ const mainView = document.querySelector('.main');
             popup.inert = true;
             aggregate.setAttribute('aria-controls', popup.id);
             aggregate.setAttribute('aria-expanded', 'false');
-            aggregate.querySelector('.background-running-arrow').textContent = inline ? '⌄' : '⌃';
+            aggregate.querySelector('.background-running-arrow').innerHTML = '<img class="background-disclosure-chevron" src="assets/chevron-down-figma.svg" width="24" height="24" alt="" aria-hidden="true">';
             for (const source of [...group.children]) {
               const row = document.createElement('button');
               row.type = 'button';
@@ -7334,43 +7401,20 @@ const mainView = document.querySelector('.main');
               const icon = source.querySelector('.background-running-icon').outerHTML;
               row.innerHTML = (process ? icon : '<span class="stage-agent-icon" aria-hidden="true">' + icon + '</span>') +
                 '<span class="background-agent-choice-name">' + esc(source.dataset.summaryAgent) + '</span>' +
-                '<span class="background-agent-choice-status"><small>' + (workCompleted ? '已完成' : '运行中') + '</small><img class="background-agent-choice-arrow" src="assets/arrow-up-right-figma.svg" alt="" aria-hidden="true" width="18" height="18"></span>';
+                '<span class="background-agent-choice-status"><small>' + (source.dataset.agentStatus === '执行中' ? '运行中' : source.dataset.agentStatus) + '</small><img class="background-agent-choice-arrow" src="assets/arrow-up-right-figma.svg" alt="" aria-hidden="true" width="18" height="18"></span>';
               row.addEventListener('click', () => {setExpanded(false); source.click();});
               popup.append(row);
             }
-            let closeTimer;
-            const setExpanded = expanded => {
-              clearTimeout(closeTimer);
-              disclosure.classList.toggle('is-open', expanded);
-              aggregate.setAttribute('aria-expanded', String(expanded));
-              popup.inert = !expanded;
-            };
-            disclosure.addEventListener('pointerenter', () => setExpanded(true));
-            disclosure.addEventListener('pointerleave', () => {
-              closeTimer = setTimeout(() => {
-                if (!disclosure.contains(document.activeElement)) setExpanded(false);
-              }, 140);
-            });
-            disclosure.addEventListener('focusin', () => setExpanded(true));
-            disclosure.addEventListener('focusout', event => {
-              if (!disclosure.contains(event.relatedTarget)) setExpanded(false);
-            });
-            aggregate.addEventListener('click', () => {
-              setExpanded(true);
-              popup.querySelector('button').focus({preventScroll:true});
-            });
-            disclosure.addEventListener('keydown', event => {
-              if (event.key === 'Escape') {
-                aggregate.focus({preventScroll:true});
-                setExpanded(false);
-                event.stopPropagation();
-              }
-            });
+            const setExpanded = wireBackgroundDisclosure(disclosure, aggregate, popup);
             disclosure.append(aggregate, popup);
             group.append(disclosure);
             requestAnimationFrame(() => {
               if (!disclosure.isConnected) return;
-              disclosure.style.setProperty('--capsule-closed-width', `${Math.ceil(aggregate.getBoundingClientRect().width)}px`);
+              if (!inline) {
+                disclosure.classList.add('is-measuring-capsule');
+                disclosure.style.setProperty('--capsule-closed-width', `${Math.ceil(aggregate.getBoundingClientRect().width)}px`);
+                disclosure.classList.remove('is-measuring-capsule');
+              }
               disclosure.style.setProperty('--capsule-list-height', `${popup.scrollHeight}px`);
             });
           }
@@ -7387,7 +7431,7 @@ const mainView = document.querySelector('.main');
         if (textLink) {
           const paragraph = document.createElement('p');
           paragraph.className = 'background-process-links';
-          paragraph.append(workCompleted ? '后台进程已完成，你可以查看：' : '导出仍在后台继续，你可以查看：');
+          paragraph.append(allStopped ? '后台进程已终止，你可以查看：' : workCompleted ? '后台进程已完成，你可以查看：' : '导出仍在后台继续，你可以查看：');
           [...group.querySelectorAll('.background-agent-capsule[data-background-kind="process"]')].forEach((source,index) => {
             if (index) paragraph.append('、');
             const link = document.createElement('a');

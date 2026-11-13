@@ -3,6 +3,7 @@
    ============================================================ */
 
 :root{
+  --conversation-card-hover-shadow:0 3px 12px rgba(0,0,0,.03);
   /* Figma Catpaw Design System：语义色（亮色）。 */
   --ds-background-1:#fefefe; --ds-background-2:#ffffff; --ds-background-3:#f9f9f9;
   --ds-background-4:#f2f2f2; --ds-background-5:#e5e5e5; --ds-background-6:#d4d4d4;
@@ -1985,7 +1986,7 @@ pointer-events:none;
 .conversation-artifact:hover,
 .conversation-artifact:focus-within{
   border-color:var(--gray-6);
-  box-shadow:0 5px 18px rgba(0,0,0,.06);
+  box-shadow:var(--conversation-card-hover-shadow);
 }
 .conversation-artifact-open{
   display:flex;
@@ -7782,9 +7783,9 @@ font-weight:var(--weight-emphasis);
 .background-agent-chevron{width:14px;height:14px;transition:transform .2s ease}
 .background-agent-delegation details[open] .background-agent-chevron{transform:rotate(180deg)}
 
-#backgroundAgentQueue{background:var(--ds-background-3);color:var(--text-2);font-size:15px;font-weight:400}
+#backgroundAgentQueue{background:var(--ds-background-3);color:var(--text-2);font-size:var(--type-md);font-weight:400}
 #backgroundAgentQueue .conversation-queue-actions{gap:6px}
-#backgroundAgentQueue .conversation-queue-text{line-height:26px}
+#backgroundAgentQueue .conversation-queue-text{line-height:var(--line-md)}
 #backgroundAgentQueue .conversation-queue-handle{cursor:default}
 .background-queue-grip{transform:rotate(-90deg)}
 .background-queue-guide{transform:rotate(180deg) scaleY(-1)}
@@ -7898,7 +7899,7 @@ font-weight:var(--weight-emphasis);
 /* In-conversation background work shares the artifact card's dimensions and typography. */
 .background-work-group-inline{width:100%;gap:var(--space-3)}
 .background-work-group-inline .background-agent-capsule-inline{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:68px;padding:var(--space-2) var(--space-2) var(--space-2) var(--space-3);border:1px solid var(--gray-5);border-radius:var(--radius-lg);background:var(--surface-bg);color:var(--text-1);text-align:left;box-shadow:none;transition:border-color .15s ease,box-shadow .15s ease}
-.background-work-group-inline .background-agent-capsule-inline:hover,.background-work-group-inline .background-agent-capsule-inline:focus-visible{border-color:var(--gray-6);box-shadow:0 5px 18px rgba(0,0,0,.06)}
+.background-work-group-inline .background-agent-capsule-inline:hover,.background-work-group-inline .background-agent-capsule-inline:focus-visible{border-color:var(--gray-6);box-shadow:var(--conversation-card-hover-shadow)}
 .background-artifact-icon{position:relative;display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;background:transparent;color:var(--text-3)}
 .background-artifact-icon::before{content:"";position:absolute;width:32px;height:32px;border-radius:8px;background:var(--ds-fill-2)}
 .background-artifact-icon .background-running-icon{position:relative;width:22px;height:22px;flex:none}
@@ -7909,10 +7910,10 @@ font-weight:var(--weight-emphasis);
 .background-work-group-inline .background-agent-disclosure{width:100%;height:68px}
 .background-work-group-inline .background-agent-disclosure::before{height:68px;border-radius:var(--radius-lg);background:var(--surface-bg);box-shadow:none}
 .background-work-group-inline .background-agent-disclosure>.background-agent-capsule{height:68px;min-height:68px;background:transparent;border-color:transparent;box-shadow:none}
-.background-work-group-inline .background-agent-choices{top:68px}
+.background-work-group-inline .background-agent-choices{top:64px;padding-top:0}
 .background-work-group-inline .background-agent-disclosure.is-open{height:68px}
-.background-work-group-inline .background-agent-disclosure.is-open::before{height:calc(68px + var(--capsule-list-height,160px))}
-.background-work-group-inline .background-agent-disclosure:hover::before,.background-work-group-inline .background-agent-disclosure:focus-within::before{border-color:var(--gray-6);box-shadow:0 5px 18px rgba(0,0,0,.06)}
+.background-work-group-inline .background-agent-disclosure.is-open::before{height:calc(64px + var(--capsule-list-height,160px))}
+.background-work-group-inline .background-agent-disclosure:hover::before,.background-work-group-inline .background-agent-disclosure:focus-within::before{border-color:var(--gray-6);box-shadow:var(--conversation-card-hover-shadow)}
 :root[data-theme="dark"] .background-work-group-inline .background-agent-capsule-inline,:root[data-theme="dark"] .background-work-group-inline .background-agent-disclosure::before{background:var(--main-bg)}
 
 /* Running text in inline artifact cards retains the shared background-work sweep. */
@@ -7928,8 +7929,8 @@ font-weight:var(--weight-emphasis);
 
 /* Delegated tasks open their workspace directly rather than expanding inline. */
 .stage-agent-open{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;min-height:36px;margin:0;padding:4px var(--delegation-row-inset);border:0;border-radius:var(--radius-sm);background:transparent;color:var(--text-2);font:inherit;font-size:var(--type-md);line-height:var(--line-md);text-align:left;cursor:pointer}
-.stage-agent-open-arrow{display:block;flex:0 0 16px;width:16px;height:16px;opacity:0}
-.stage-agent-open:hover,.stage-agent-open:focus-visible{background:var(--ds-border-2)}
+.stage-agent-open-arrow{display:block;flex:0 0 16px;width:16px;height:16px;margin-left:-4px;opacity:0}
+.stage-agent-open:hover,.stage-agent-open:focus-visible{background:transparent}
 .stage-agent-open:hover .stage-agent-open-arrow,.stage-agent-open:focus-visible .stage-agent-open-arrow{opacity:.55}
 .stage-agent-open:focus-visible{outline:2px solid var(--text-3);outline-offset:1px}
 
@@ -7948,3 +7949,37 @@ font-weight:var(--weight-emphasis);
 .summary-agent-open-arrow{display:none;position:absolute;right:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;opacity:.55;pointer-events:none}
 .summary-agent-row:is(:hover,:focus-visible) > .summary-agent-status{visibility:hidden}
 .summary-agent-row:is(:hover,:focus-visible) > .summary-agent-open-arrow{display:block}
+
+/* Design system 172:24668: retain its 24px SVG canvas in the shared 16px icon slot. */
+.background-agent-disclosure .background-running-arrow{position:relative;display:grid;place-items:center}
+.background-agent-disclosure .background-running-arrow > img.background-disclosure-chevron{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%) scale(.6666667);transform-origin:center;transition:transform 160ms ease}
+.background-work-group-inline .background-agent-capsule-inline[aria-expanded="true"] > .background-running-arrow > img.background-disclosure-chevron{transform:translate(-50%,-50%) scale(.6666667) rotate(180deg)}
+.background-work-group:not(.background-work-group-inline) .background-agent-capsule[aria-expanded="false"] > .background-running-arrow > img.background-disclosure-chevron{transform:translate(-50%,-50%) scale(.6666667) rotate(180deg)}
+@media(prefers-reduced-motion:reduce){.background-agent-disclosure .background-running-arrow > img.background-disclosure-chevron{transition:none}}
+
+
+/* Summary background processes expose an independent terminate action. */
+.summary-process-entry{display:flex;align-items:center;gap:4px;border-radius:var(--radius-sm)}
+.summary-process-entry:hover,.summary-process-entry:focus-within{background:var(--hover)}
+.summary-process-entry > .summary-process-row{flex:1;min-width:0;width:auto}
+.summary-process-entry > .summary-process-row:hover{background:transparent}
+.summary-process-stop{display:flex;align-items:center;justify-content:center;gap:4px;flex:none;height:28px;margin-right:7px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:var(--text-3);font:400 var(--type-sm)/var(--line-sm) var(--font);cursor:pointer}
+.summary-process-stop:hover{background:var(--ds-border-2);color:var(--text-1)}
+.summary-process-stop:focus-visible{outline:2px solid var(--text-3);outline-offset:1px}
+.summary-process-stop-icon{position:relative;display:block;width:16px;height:16px;flex:none}
+.summary-process-stop-icon img{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%) scale(.6666667);opacity:.55}
+.background-agent-capsule.is-terminated .background-running-label,.background-work-group-inline .background-agent-capsule.is-terminated .background-artifact-state{background:none;color:var(--text-3);-webkit-text-fill-color:currentColor;animation:none}
+
+/* Single tasks keep their navigation arrow visible without resizing on hover. */
+.background-work-group > .background-agent-capsule > .background-running-arrow{opacity:1}
+.background-work-group:not(.background-work-group-inline) > .background-agent-capsule > .background-running-arrow{width:16px;margin-left:0}
+/* Multi-task floating capsules gain a 16px chevron plus the shared 8px gap. */
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure:is(:hover,:focus-within,.is-open){width:calc(var(--capsule-closed-width) + 24px)}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure:is(:hover,:focus-within,.is-open) .background-running-arrow{width:16px;margin-left:0;opacity:1}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure.is-measuring-capsule{width:max-content}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure.is-measuring-capsule > .background-agent-capsule{width:max-content}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure.is-measuring-capsule .background-running-arrow{width:0;margin-left:-8px;opacity:0}
+
+/* Single floating tasks respond to hover without changing their geometry. */
+.background-work-group:not(.background-work-group-inline) > .background-agent-capsule{transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.background-work-group:not(.background-work-group-inline) > .background-agent-capsule:hover,.background-work-group:not(.background-work-group-inline) > .background-agent-capsule:focus-visible{background:var(--ds-fill-2);border-color:var(--gray-6);box-shadow:var(--conversation-card-hover-shadow)}

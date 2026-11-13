@@ -10,12 +10,14 @@
 <header class="topbar"><a class="wordmark" href="index.html">CatPaw <span>Motion Lab</span></a><nav aria-label="Test pages"><a href="index.html">Text & tools</a><a href="agent-motion.html" aria-current="page">Subagent motion ↗</a></nav></header>
 <main>
 <section class="toolbar" aria-label="Playback controls">
-<div class="control-group"><button id="play" class="primary">Pause</button><button id="replay">Replay</button></div>
+<div class="control-group"><button id="play" class="primary">Pause</button><button id="advance">Advance progress</button><button id="complete">Complete first agent</button><button id="replay">Replay</button></div>
 <div class="control-group"><label>Speed <select id="speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select></label></div>
 </section>
 <div class="comparisons">
 <section class="comparison panel" data-mode="current"><div class="conversation"><div class="demo"></div></div><h2 class="case-caption">A · Continuous dispatch</h2></section>
-<section class="comparison panel" data-mode="aligned"><div class="conversation"><div class="demo"></div></div><h2 class="case-caption">B · Branch along the stem</h2></section>
+<section class="comparison panel" data-mode="cards"><div class="conversation"><div class="demo agent-cards-demo"></div></div><h2 class="case-caption">B · Agent cards / Current action</h2></section>
+<section class="comparison panel" data-mode="capsules"><div class="conversation"><div class="demo agent-capsules-demo"></div></div><h2 class="case-caption">C · Agent capsules</h2></section>
+<section class="comparison panel" data-mode="activity"><div class="conversation"><div class="demo agent-activity-demo"></div></div><h2 class="case-caption">D · Collaboration constellation</h2></section>
 </div>
 </main>
 <script src="agent-motion.js"></script>
