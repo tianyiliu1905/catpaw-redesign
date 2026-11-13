@@ -1253,18 +1253,9 @@
   </div>
 </dialog>
 
-<script src="./ppt-workbar.js"></script>
-<script src="./artifact-editing-demo.js"></script>
-<script src="./strategy-scenes.js"></script>
-<script src="./supplier-conversation-demo.js?v=ds003"></script>
-<script src="./conversation-queue-demo.js"></script>
-<script src="./recovery-conversation-demo.js?v=20261110-continuous-retry"></script>
-<script src="./clarification-demo.js?v=20261110-question-icon"></script>
-<script src="./capability-market.js"></script>
-<script src="./nocode-page.js"></script>
-<script src="./library-page.js"></script>
-<script src="./widget-value-cases.js?v=20261110-current"></script>
-<script src="./app.js?v=20261110-remove-budget-conversation"></script>
-<script src="./credits-demo.js"></script>
+<!-- 云同步层：初始化云客户端、WorkBuddy 登录与四类本地数据的云端同步；成功后按原顺序注入下方应用脚本 -->
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script src="./catpaw-cloud-config.js"></script>
+<script src="./catpaw-cloud.js"></script>
 </body>
 </html>
