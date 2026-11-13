@@ -1,12 +1,12 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('app.js','utf8');
 function extract(a,b){const start=source.indexOf(a);return source.slice(start,source.indexOf(b,start));}
-test('first transition collapses acknowledgement and plan together before replacing content',()=>{
+test('first transition fades the introduction without collapsing the layout before replacement',()=>{
  let timer,updated=0,preserved=0;const classes=new Set(),ack={style:{},offsetHeight:40,getBoundingClientRect:()=>({height:40})},body={},toggle={setAttribute(k,v){this[k]=v}},plan={dataset:{},querySelector:s=>s==='.stage-plan-body'?body:toggle};
  const panel={dataset:{stageFrame:'0'},isConnected:true,classList:{toggle:(k,on)=>on?classes.add(k):classes.delete(k)},querySelector:s=>s==='.stage-plan'?plan:ack};
- const ctx={stageAutoTimer:null,stageAdvanceTimer:null,reducedMotion:{matches:false},stageDemoAdvance:{disabled:false},clearTimeout(){},preserveConversationScrollRange(){preserved++},setTimeout(fn,ms){assert.equal(ms,420);timer=fn;return 1},updateConversationStage(){updated++}};
+ const ctx={stageAutoTimer:null,stageAdvanceTimer:null,reducedMotion:{matches:false},stageDemoAdvance:{disabled:false},clearTimeout(){},preserveConversationScrollRange(){preserved++},setTimeout(fn,ms){assert.equal(ms,140);timer=fn;return 1},updateConversationStage(){updated++}};
  vm.createContext(ctx);vm.runInContext(extract('  function advanceConversationStage(',"  const stageDemoControls ="),ctx);ctx.advanceConversationStage(panel,1);
- assert.equal(updated,0);assert.equal(preserved,1);assert.equal(ack.style.height,'40px');assert.ok(classes.has('is-advancing'));assert.equal(plan.dataset.collapsed,'true');assert.equal(toggle['aria-expanded'],'false');assert.equal(body.inert,true);
+ assert.equal(updated,0);assert.equal(preserved,1);assert.equal(ack.style.height,undefined);assert.ok(classes.has('is-advancing'));assert.equal(plan.dataset.collapsed,undefined);assert.equal(toggle['aria-expanded'],undefined);assert.equal(body.inert,undefined);
  timer();assert.equal(updated,1);
 });
 test('stage updates reserve scroll range and avoid bottom-snapping on shrink or manual reading',()=>{
@@ -65,4 +65,53 @@ test('progress updates keep existing DOM nodes and insert checkpoints without re
  assert.equal(parent.childNodes[0],thinking);assert.equal(parent.childNodes[1],plan);assert.equal(parent.childNodes[3],current);assert.equal(current.firstChild.nodeValue,'比较优先级');assert.equal(thinking.firstChild.nodeValue,'整理中');
  const final=element('fragment');final.insertBefore(element('stage-thinking','已完成'),null);final.insertBefore(element('stage-result','结果'),null);ctx.reconcileStageContent(parent,final);
  assert.equal(parent.childNodes.length,2);assert.equal(parent.firstChild,thinking);assert.equal(current.parent,null);
+});
+
+test('the final work frame exits left before replacing it with the result',()=>{
+ let timer,updated=0;const classes=new Set();
+ const panel={dataset:{stageFrame:'2'},isConnected:true,classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)},querySelector:selector=>selector==='.stage-current'?{}:null};
+ const ctx={stageAutoTimer:null,stageAdvanceTimer:null,reducedMotion:{matches:false},strategyScene:null,conversationStageFrames:[{},{},{stage:'work'},{stage:'done'}],stageDemoAdvance:{disabled:false},clearTimeout(){},preserveConversationScrollRange(){},setTimeout(fn,ms){assert.equal(ms,260);timer=fn;return 1},updateConversationStage(p,next){assert.equal(p,panel);assert.equal(next,3);updated++}};
+ vm.createContext(ctx);vm.runInContext(extract('  function advanceConversationStage(', '  const stageDemoControls ='),ctx);
+ ctx.advanceConversationStage(panel,3);
+ assert.equal(updated,0);assert.ok(classes.has('is-result-exiting'));assert.equal(panel.dataset.pendingStageFrame,'3');assert.equal(ctx.stageDemoAdvance.disabled,true);
+ timer();assert.equal(updated,1);assert.equal(ctx.stageDemoAdvance.disabled,false);
+});
+
+test('analysis and tool calls accumulate within their todo task and reset at task boundaries',()=>{
+ const calls=[];
+ const ctx={esc:s=>String(s),renderStageToolCall:(event,development,completed)=>{calls.push({event,completed});return `<details class="stage-tool-call">${completed?event.completed:event.detail}</details>`},renderStageDelegations:index=>`<div data-delegation="${index}"></div>`};
+ vm.createContext(ctx);
+ vm.runInContext(extract('  const conversationStageFrames =', '  const conversationStagePlan =')+'\nglobalThis.frames=conversationStageFrames;',ctx);
+ vm.runInContext(extract('  function renderStageTaskGroup(', '  function renderConversationStageBody('),ctx);
+ let html=ctx.renderStageTaskGroup(ctx.frames,2,false);
+ assert.ok(html.includes('data-stage-entry="1"'));assert.ok(html.includes('data-stage-entry="2"'));
+ assert.equal(calls.length,2);assert.equal(calls[0].completed,true);assert.equal(calls[1].completed,false);
+ assert.equal((html.match(/我会先读三份资料，再核对订单口径和时间字段。/g)||[]).length,1);
+ html=ctx.renderStageTaskGroup(ctx.frames,4,false);
+ assert.ok(html.includes('data-stage-entry="3"'));assert.ok(html.includes('data-stage-entry="4"'));assert.ok(!html.includes('data-stage-entry="2"'));
+ html=ctx.renderStageTaskGroup(ctx.frames,5,false);
+ assert.ok(html.includes('data-stage-entry="3"'));assert.ok(html.includes('data-stage-entry="5"'));
+ assert.equal((html.match(/data-delegation=/g)||[]).length,1);assert.ok(html.includes('data-delegation="5"'));
+ html=ctx.renderStageTaskGroup(ctx.frames,8,false);
+ assert.ok(html.includes('data-stage-entry="7"'));assert.ok(html.includes('data-stage-entry="8"'));assert.ok(!html.includes('data-stage-entry="5"'));
+});
+
+test('appending a step in the same task never plays the exit transition',()=>{
+ let updated=0;
+ const panel={dataset:{stageFrame:'1'},querySelector:s=>s==='.stage-current[data-task-group]'?{}:null};
+ const ctx={stageAutoTimer:null,stageAdvanceTimer:null,conversationStageFrames:[{stage:'plan'},{stage:'work',planCompleted:0},{stage:'work',planCompleted:0}],clearTimeout(){},updateConversationStage(p,next){assert.equal(p,panel);assert.equal(next,2);updated++},setTimeout(){throw Error('same-task append must not wait for exit')}};
+ vm.createContext(ctx);vm.runInContext(extract('  function advanceConversationStage(', '  const stageDemoControls ='),ctx);
+ ctx.advanceConversationStage(panel,2);assert.equal(updated,1);
+});
+
+test('previous step cancels a pending transition and removes the completion timestamp',()=>{
+ const cleared=[];let updated;
+ const ctx={stageAutoTimer:10,stageAdvanceTimer:20,clearTimeout:id=>cleared.push(id),updateConversationStage:(panel,index)=>updated=index};
+ vm.createContext(ctx);vm.runInContext(extract('  function previousConversationStage(', '  const stageDemoControls ='),ctx);
+ const panel={dataset:{stageFrame:'10',finishedAt:'1234',pendingStageFrame:'0'}};
+ assert.equal(ctx.previousConversationStage(panel),true);assert.equal(updated,9);
+ assert.deepEqual(cleared,[10,20]);assert.equal(ctx.stageAdvanceTimer,null);
+ assert.equal(panel.dataset.finishedAt,undefined);assert.equal(panel.dataset.pendingStageFrame,undefined);
+ updated=undefined;panel.dataset.stageFrame='0';assert.equal(ctx.previousConversationStage(panel),false);assert.equal(updated,undefined);
+ panel.dataset.stageFrame='2';panel.dataset.pausedAt='500';assert.equal(ctx.previousConversationStage(panel),false);
 });

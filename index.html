@@ -38,6 +38,7 @@
 </div>
 
 <div class="stage-demo-controls" id="stageDemoControls" role="group" aria-label="原型演示控制" hidden>
+  <button type="button" id="stageDemoPrevious" title="回到上一个预置工作阶段" disabled>← 上一步</button>
   <button type="button" id="stageDemoAdvance" title="切换预置进展，仅用于交互演示">1/3 · 开始工作 →</button>
 </div>
 
@@ -107,6 +108,21 @@
           <a class="task flush" id="demoConversationTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">整理本周门店履约异常明细</span>
             <span class="task-state"></span>
+          </a>
+          <a class="task flush" id="backgroundAgentTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">主对话完成，子智能体 后台核查</span><span class="task-state"></span>
+          </a>
+          <a class="task flush" id="backgroundAgentInlineTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">子智能体后台核查 · 回复结尾提示</span><span class="task-state"></span>
+          </a>
+          <a class="task flush" id="backgroundProcessTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">后台进程 · 悬浮提示</span><span class="task-state"></span>
+          </a>
+          <a class="task flush" id="backgroundProcessInlineTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">后台进程 · 回复结尾提示</span><span class="task-state"></span>
+          </a>
+          <a class="task flush" id="backgroundProcessTextTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">后台进程 · 正文链接</span><span class="task-state"></span>
           </a>
           <a class="task flush" id="artifactEditingTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">把季度复盘要点汇总成幻灯片</span>
@@ -374,7 +390,6 @@
 <path id="Vector_4" d="M8.74995 12.75H16.2499" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
 </g>
 </svg>
-        <span class="summary-artifact-badge" id="summaryArtifactBadge" aria-hidden="true" hidden></span>
       </button>
     </div>
     <div class="scheduled-toggle-slot">
@@ -475,16 +490,11 @@
           </div>
           <div class="composer-capability-group" aria-label="已添加的对话能力">
               </div>
-              <div class="access-picker" data-access-picker>
-                <button class="foot-item" type="button" aria-label="对话访问模式：完全访问" aria-haspopup="menu" aria-expanded="false">
-                  <svg viewBox="0 0 24 24" class="ic" aria-hidden="true" data-project-icon="access-full"><rect x="4" y="10" width="16" height="11" rx="3.5"/><path d="M8 10V7a4 4 0 0 1 7.7-1.5M12 14.5v2"/></svg>
-                  <span data-access-label>完全访问</span>
-                  <svg viewBox="0 0 24 24" class="ic chev"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                <div class="access-menu" role="menu" aria-label="选择对话访问模式" hidden>
-                  <button type="button" role="menuitemradio" data-access-mode="full" aria-checked="true">完全访问</button>
-                  <button type="button" role="menuitemradio" data-access-mode="confirm" aria-checked="false">按需确认</button>
-                </div>
+              <div class="conversation-model-picker">
+                <select class="model-btn" id="conversationModel" aria-label="选择对话模型">
+                  <option value="glm-5.2">GLM–5.2</option>
+                  <option value="auto">自动选择</option>
+                </select>
               </div>
               <button class="conversation-send" id="conversationSend" type="button" title="发送" aria-label="发送" disabled>
                 <svg viewBox="0 0 24 24" class="ic"><path d="m5.5 11.5 6.5-6.5 6.5 6.5M12 5v14"/></svg>
@@ -805,11 +815,19 @@
     <!-- 常规摘要悬浮于内容区；定时任务信息在右侧工作区展开。 -->
 <section class="summary-popover" id="summaryPopover" role="dialog" aria-label="摘要" hidden>
 <div class="standard-summary" id="standardSummary">
+<div class="summary-section" id="summaryAgentsSection" hidden>
+  <header class="summary-section-head"><button type="button" class="summary-section-toggle" aria-controls="summaryAgentsList" aria-expanded="true"><span>子智能体</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></header>
+  <div id="summaryAgentsList" class="summary-agent-list"></div>
+</div>
 <div class="summary-section" id="summaryArtifactsSection">
         <header class="summary-section-head">
-          <span id="summaryArtifactsTitle">当前任务产物</span>
+          <button type="button" class="summary-section-toggle" aria-controls="fileGrid" aria-expanded="true"><span id="summaryArtifactsTitle">当前任务产物</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
         </header>
         <div class="summary-file-list" id="fileGrid"></div>
+      </div>
+      <div class="summary-section" id="summaryProcessesSection" hidden>
+        <header class="summary-section-head"><button type="button" class="summary-section-toggle" aria-controls="summaryProcessesList" aria-expanded="false"><span>后台进程</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></header>
+        <div id="summaryProcessesList" class="summary-agent-list" hidden></div>
       </div>
       </div>
     </section>
