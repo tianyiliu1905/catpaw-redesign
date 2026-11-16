@@ -1,10 +1,12 @@
 const ns='http://www.w3.org/2000/svg', animations=[];let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const names=['Check delay duration','Assess impact','Investigate recurring issues','Review findings'];
+const agentAssets=['003','002','001','007'];
+const agentAvatar=index=>`<img src="../assets/generated-subagents/subagent-${agentAssets[index]}.svg" alt="" draggable="false">`;
 
-let firstAgentCompleted=false, firstProgress=0, selectedCapsule=0, selectedConstellation=0;
+let firstAgentCompleted=false, firstProgress=0, selectedCapsule=0;
 const packets=[];
 for(const panel of document.querySelectorAll('.panel[data-mode="current"]')){
-const demo=panel.querySelector('.demo');demo.innerHTML='<div class="heading"><img src="assets/subagent-figma.svg" alt=""><span class="heading-copy">Calling subagents to analyze store exceptions</span></div><div class="rows">'+names.map(n=>`<div class="row"><span class="agent-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 5.33333V2.66667H5.33333" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M4 5.33333H12C12.7364 5.33333 13.3333 5.93029 13.3333 6.66667V12C13.3333 12.7364 12.7364 13.3333 12 13.3333H4C3.26362 13.3333 2.66667 12.7364 2.66667 12V6.66667C2.66667 5.93029 3.26362 5.33333 4 5.33333Z" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M1.33333 9.33333H2.66667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M13.3333 9.33333H14.6667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M10 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M6 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg></span><span>${n}</span></div>`).join('')+'</div>';
+const demo=panel.querySelector('.demo');demo.innerHTML='<div class="heading"><img src="assets/subagent-figma.svg" alt=""><span class="heading-copy">Calling subagents to analyze store exceptions</span></div><div class="rows">'+names.map((n,i)=>`<div class="row"><span class="agent-icon" aria-hidden="true">${agentAvatar(i)}</span><span>${n}</span></div>`).join('')+'</div>';
 const svg=document.createElementNS(ns,'svg');demo.append(svg);
 const syncStemTop=()=>{svg.style.top=`${demo.querySelector('.heading').offsetHeight+4}px`;};
 syncStemTop();
@@ -13,7 +15,7 @@ const defs=document.createElementNS(ns,'defs'),baseLayer=document.createElementN
 const svgTop=svg.getBoundingClientRect().top;
 const routes=[...demo.querySelectorAll('.row')].map(row=>{const rect=row.getBoundingClientRect();const y=rect.top+rect.height/2-svgTop;const endX=row.querySelector('.agent-icon').getBoundingClientRect().left-svg.getBoundingClientRect().left;return `M9.5 0V${y-8}Q9.5 ${y} 17.5 ${y}H${endX}`;});
 routes.forEach((d,i)=>{
- const base=document.createElementNS(ns,'path');base.setAttribute('d',d);base.setAttribute('class','base');baseLayer.append(base);
+ const base=document.createElementNS(ns,'path');base.setAttribute('d',d);base.setAttribute('class',i===3?'base base-queued':'base');baseLayer.append(base);
  if(i===3)return;
  const length=base.getTotalLength();
  for(let group=0;group<2;group++){
@@ -35,10 +37,9 @@ const taskDescriptions=[
  'Find recurring exceptions and compare their common causes.',
  'Cross-check the findings after the other agents complete their analysis.'
 ];
-const agentIcon=document.querySelector('.row .agent-icon').innerHTML;
 cardDemo.innerHTML='<div class="heading"><img src="assets/subagent-figma.svg" alt=""><span class="heading-copy">Calling subagents to analyze store exceptions</span></div><div class="agent-card-grid">'+names.map((name,i)=>`
  <button class="agent-card" type="button" data-agent-index="${i}" data-state="${i===3?'queued':'running'}" aria-expanded="false" aria-controls="agentCardDetail">
-  <span class="agent-card-top"><span class="agent-icon" aria-hidden="true">${agentIcon}</span><span class="agent-card-state"><span class="agent-state-copy">${i===3?'Waiting':'Running'}</span><svg class="agent-card-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></span>
+  <span class="agent-card-top"><span class="agent-icon" aria-hidden="true">${agentAvatar(i)}</span><span class="agent-card-state"><span class="agent-state-copy">${i===3?'Waiting':'Running'}</span><svg class="agent-card-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></span>
   <span class="agent-card-name">${name}</span><span class="agent-card-action"></span>
  </button>`).join('')+'</div><section class="agent-card-detail" id="agentCardDetail" aria-label="Agent task details" hidden><div class="agent-detail-top"><strong></strong><button class="agent-detail-close" type="button" aria-label="Close task details">×</button></div><p></p><span class="agent-detail-status"></span></section>';
 const detail=cardDemo.querySelector('.agent-card-detail');
@@ -73,36 +74,30 @@ const stageActions=[
 ];
 const headingMarkup='<div class="heading"><img src="assets/subagent-figma.svg" alt=""><span class="heading-copy">Calling subagents to analyze store exceptions</span></div>';
 const capsulesDemo=document.querySelector('.agent-capsules-demo');
-const activityDemo=document.querySelector('.agent-activity-demo');
-capsulesDemo.innerHTML=headingMarkup+'<div class="agent-capsules" aria-label="Select an agent">'+names.map((name,i)=>`<button type="button" class="agent-chip" data-agent-index="${i}" aria-pressed="${i===0}"><span class="agent-icon" aria-hidden="true">${agentIcon}</span><span>${name}</span><span class="chip-done" aria-hidden="true" hidden>✓</span></button>`).join('')+'</div>';
-const constellationPaths=['M50 50C30 50 12 40 12 16','M50 50C70 50 88 40 88 16','M50 50C30 50 12 60 12 84','M50 50C70 50 88 60 88 84'];
-const constellationLabels=['Delay check','Impact','Recurring issues','Review'];
-activityDemo.innerHTML=headingMarkup+`<div class="agent-constellation"><svg class="constellation-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${constellationPaths.map((d,i)=>`<path class="constellation-wire" data-agent-index="${i}" d="${d}"/><path class="constellation-signal" data-agent-index="${i}" pathLength="100" d="${d}"/>`).join('')}</svg><div class="constellation-hub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H6V3h1m7 0v5h4M9 12h6m-6 4h4"/></svg><strong>Store exceptions</strong><span class="hub-result">Collecting findings</span></div>${names.map((name,i)=>`<button class="constellation-agent" data-agent-index="${i}" type="button" aria-pressed="${i===0}" aria-label="${name}" aria-controls="constellationReadout"><span class="agent-icon" aria-hidden="true">${agentIcon}</span><span class="constellation-agent-name">${constellationLabels[i]}</span><span class="constellation-agent-state"></span></button>`).join('')}</div><div class="constellation-readout" id="constellationReadout" aria-live="polite"><span class="readout-mark" aria-hidden="true"></span><span><strong></strong><span class="readout-action"></span></span></div>`;
-activityDemo.querySelector('.agent-constellation').addEventListener('click',event=>{
- const agent=event.target.closest('.constellation-agent');if(!agent)return;
- selectedConstellation=Number(agent.dataset.agentIndex);syncProgressDisplays();
-});
+capsulesDemo.innerHTML=headingMarkup+'<div class="agent-capsules" aria-label="Select an agent">'+names.map((name,i)=>`<button type="button" class="agent-chip" data-agent-index="${i}" aria-pressed="${i===0}"><span class="agent-icon" aria-hidden="true">${agentAvatar(i)}</span><span>${name}</span><span class="chip-done" aria-hidden="true" hidden>✓</span></button>`).join('')+'</div>';
+const ganttDemo=document.querySelector('.agent-gantt-demo');
+let selectedGantt=0;
+ganttDemo.innerHTML=headingMarkup+'<div class="agent-progress-list">'+names.map((name,i)=>`<div class="agent-progress-row" data-agent-index="${i}"><span class="agent-icon" aria-hidden="true">${agentAvatar(i)}</span><span class="agent-progress-name">${name}</span><span class="agent-progress-track" role="progressbar" aria-label="${name}" aria-valuemin="0" aria-valuemax="100"><span class="agent-progress-fill"></span></span><span class="agent-progress-value"></span></div>`).join('')+'</div>';
+function syncGantt(){
+ const progress=firstAgentCompleted?100:[36,60,82][firstProgress];
+ ganttDemo.querySelectorAll('.agent-progress-row').forEach((row,i)=>{
+  const value=i===0?progress:i===1?52:i===2?28:0;
+  row.dataset.state=i===3?'queued':i===0&&firstAgentCompleted?'done':'running';
+  row.querySelector('.agent-progress-fill').style.transform=`scaleX(${value/100})`;
+  row.querySelector('.agent-progress-track').setAttribute('aria-valuenow',String(value));
+  row.querySelector('.agent-progress-value').textContent=i===3?'Waiting':`${value}%`;
+ });
+}
 function agentProgress(i){return i===0?(firstAgentCompleted?3:firstProgress):i===1?1:i===2?0:-1;}
 function currentAction(i){const phase=agentProgress(i);return stageActions[i][Math.max(0,phase)];}
 function syncProgressDisplays(){
+ syncGantt();
  cardDemo.querySelectorAll('.agent-card').forEach((card,i)=>{card.querySelector('.agent-card-action').textContent=currentAction(i);});
  capsulesDemo.querySelectorAll('.agent-chip').forEach((chip,i)=>{
   chip.setAttribute('aria-pressed',String(i===selectedCapsule));
   chip.dataset.state=i===3?'queued':agentProgress(i)===3?'done':'running';
   chip.querySelector('.chip-done').hidden=agentProgress(i)!==3;
  });
- activityDemo.querySelectorAll('.constellation-agent').forEach((agent,i)=>{
-  const state=agentProgress(i)<0?'queued':agentProgress(i)===3?'done':'running';
-  agent.dataset.state=state;agent.setAttribute('aria-pressed',String(i===selectedConstellation));
-  agent.querySelector('.constellation-agent-state').textContent=state==='done'?'Findings ready':state==='queued'?'Waiting':'Working';
-  for(const path of activityDemo.querySelectorAll(`.constellation-wires [data-agent-index="${i}"]`))path.dataset.state=state;
- });
- const readout=activityDemo.querySelector('.constellation-readout');
- readout.querySelector('strong').textContent=names[selectedConstellation];
- readout.querySelector('.readout-action').textContent=currentAction(selectedConstellation);
- readout.dataset.state=agentProgress(selectedConstellation)===3?'done':agentProgress(selectedConstellation)<0?'queued':'running';
- activityDemo.querySelector('.hub-result').textContent=firstAgentCompleted?'Delay findings received':'Collecting findings';
- activityDemo.querySelector('.constellation-hub').classList.toggle('has-result',firstAgentCompleted);
  document.getElementById('advance').disabled=firstProgress>=2||firstAgentCompleted;
 }
 capsulesDemo.querySelector('.agent-capsules').addEventListener('click',event=>{
@@ -111,17 +106,6 @@ capsulesDemo.querySelector('.agent-capsules').addEventListener('click',event=>{
 });
 document.getElementById('advance').onclick=()=>{if(firstAgentCompleted)return;firstProgress=Math.min(2,firstProgress+1);syncProgressDisplays();};
 syncProgressDisplays();
-function handoffFinding(){
- const graph=activityDemo.querySelector('.agent-constellation');
- const node=graph.querySelector('.constellation-agent'),hub=graph.querySelector('.constellation-hub');
- const box=graph.getBoundingClientRect(),from=node.getBoundingClientRect(),to=hub.getBoundingClientRect();
- const note=document.createElement('span');note.className='finding-handoff';note.textContent='Finding ready';note.setAttribute('aria-hidden','true');graph.append(note);
- const x=from.left+from.width/2-box.left,y=from.top+from.height/2-box.top;
- const dx=to.left+to.width/2-box.left,dy=to.top+to.height/2-box.top;
- const a=note.animate([{transform:`translate(${x}px,${y}px) translate(-50%,-50%) scale(.95)`,opacity:0},{transform:`translate(${x}px,${y}px) translate(-50%,-50%) scale(1)`,opacity:1,offset:.15},{transform:`translate(${dx}px,${dy}px) translate(-50%,-50%) scale(.95)`,opacity:0}],{duration:700,easing:'cubic-bezier(.32,.72,0,1)'});
- a.playbackRate=Number(document.getElementById('speed').value);if(paused)a.pause();animations.push(a);
- a.finished.then(()=>note.remove(),()=>note.remove());
-}
 function completeFirstAgent(){
  if(firstAgentCompleted)return;
  firstAgentCompleted=true;firstProgress=3;syncProgressDisplays();
@@ -139,8 +123,7 @@ function completeFirstAgent(){
  }
  if(card.getAttribute('aria-expanded')==='true')detail.querySelector('.agent-detail-status').textContent='Completed · Delay analysis is ready';
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- handoffFinding();
- for(const icon of [row.querySelector('.agent-icon svg'),card.querySelector('.agent-icon svg'),capsulesDemo.querySelector('.agent-chip .agent-icon svg'),activityDemo.querySelector('.constellation-agent .agent-icon svg')]){
+ for(const icon of [row.querySelector('.agent-icon img'),card.querySelector('.agent-icon img'),capsulesDemo.querySelector('.agent-chip .agent-icon img')]){
   icon.style.transformOrigin='center bottom';
   const a=icon.animate([
    {transform:'translateY(0) scale(1)',offset:0},
@@ -155,7 +138,7 @@ function completeFirstAgent(){
  }
 }
 function replayAgents(){
- firstAgentCompleted=false;firstProgress=0;selectedCapsule=0;selectedConstellation=0;closeAgentCard();syncProgressDisplays();
+ firstAgentCompleted=false;firstProgress=0;selectedCapsule=0;selectedGantt=0;closeAgentCard();syncProgressDisplays();
  for(const packet of packets)packet.route.classList.remove('is-complete');
  const row=document.querySelector('.rows .row'),card=cardDemo.querySelector('.agent-card');
  delete row.dataset.state;card.dataset.state='running';
@@ -167,11 +150,6 @@ const duration=Math.max(1100,Math.min(2600,(Math.max(...packets.map(x=>x.length)
 function start(){animations.forEach(a=>a.cancel());animations.length=0;const epoch=document.timeline.currentTime;
 for(const label of document.querySelectorAll('.heading-copy')){
  const a=label.animate([{backgroundPosition:'100% 0',offset:0},{backgroundPosition:'100% 0',offset:.12},{backgroundPosition:'0% 0',offset:.88},{backgroundPosition:'0% 0',offset:1}],{duration:1800,iterations:Infinity,easing:'linear'});
- a.startTime=epoch;a.playbackRate=Number(document.getElementById('speed').value);if(paused)a.pause();animations.push(a);
-}
-for(const signal of activityDemo.querySelectorAll('.constellation-signal')){
- if(signal.dataset.state!=='running'||matchMedia('(prefers-reduced-motion: reduce)').matches)continue;
- const a=signal.animate([{strokeDashoffset:0},{strokeDashoffset:-110}],{duration:2200,iterations:Infinity,easing:'linear'});
  a.startTime=epoch;a.playbackRate=Number(document.getElementById('speed').value);if(paused)a.pause();animations.push(a);
 }
 for(const packet of packets){if(firstAgentCompleted&&packet.agentIndex===0)continue;const {p,length,mode}=packet;const frames=mode==='current'?[{opacity:0,offset:0},{opacity:1,offset:.06},{opacity:1,offset:.94},{opacity:0,offset:1}]:[{opacity:0,offset:0},{opacity:1,offset:.06},{opacity:1,offset:.8},{opacity:0,offset:.9},{opacity:0,offset:1}];const a=p.animate(frames,{duration,delay:packet.group*duration/2,iterations:Infinity,easing:'linear'});a.startTime=epoch;a.playbackRate=Number(document.getElementById('speed').value);if(paused)a.pause();packet.animation=a;animations.push(a);}document.getElementById('play').textContent=paused?'Play':'Pause';}

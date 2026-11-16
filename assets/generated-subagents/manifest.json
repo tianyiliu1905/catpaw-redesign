@@ -1,0 +1,1597 @@
+[
+  {
+    "seed": "catpaw-2",
+    "palette": "lavender",
+    "colors": {
+      "name": "lavender",
+      "hue": 295,
+      "medium": "#A392D6",
+      "deep": "#7666A2",
+      "body": "#CEC0FB",
+      "background": "#F5F3FE",
+      "bodyOKLCH": "oklch(0.84 0.0826 295)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 295)"
+    },
+    "ellipses": [
+      {
+        "cx": 81.33,
+        "cy": 104.41,
+        "rx": 37.59,
+        "ry": 36.36,
+        "rotation": 86.61
+      },
+      {
+        "cx": 78.67,
+        "cy": 59.59,
+        "rx": 37.59,
+        "ry": 36.36,
+        "rotation": 86.61
+      },
+      {
+        "cx": 59.38,
+        "cy": 87.54,
+        "rx": 37.8,
+        "ry": 36.47,
+        "rotation": 164.95
+      },
+      {
+        "cx": 100.62,
+        "cy": 76.46,
+        "rx": 37.8,
+        "ry": 36.47,
+        "rotation": 164.95
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 35.71,
+        "ry": 35.43,
+        "rotation": 78.97
+      }
+    ],
+    "expression": {
+      "eyes": "wide",
+      "mouth": "smile"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-001.svg"
+  },
+  {
+    "seed": "catpaw-1",
+    "palette": "blue",
+    "colors": {
+      "name": "blue",
+      "hue": 250,
+      "medium": "#6DA3DA",
+      "deep": "#4475A6",
+      "body": "#A2CFFF",
+      "background": "#EEF6FF",
+      "bodyOKLCH": "oklch(0.84 0.0826 250)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 250)"
+    },
+    "ellipses": [
+      {
+        "cx": 61.56,
+        "cy": 92.43,
+        "rx": 38.22,
+        "ry": 33.74,
+        "rotation": 150.49
+      },
+      {
+        "cx": 98.44,
+        "cy": 71.57,
+        "rx": 38.22,
+        "ry": 33.74,
+        "rotation": 150.49
+      },
+      {
+        "cx": 72.03,
+        "cy": 62.49,
+        "rx": 40.78,
+        "ry": 38.73,
+        "rotation": 247.77
+      },
+      {
+        "cx": 87.97,
+        "cy": 101.51,
+        "rx": 40.78,
+        "ry": 38.73,
+        "rotation": 247.77
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 38.88,
+        "ry": 36.74,
+        "rotation": 148.63
+      }
+    ],
+    "expression": {
+      "eyes": "happy",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-002.svg"
+  },
+  {
+    "seed": "catpaw-3",
+    "palette": "green",
+    "colors": {
+      "name": "green",
+      "hue": 145,
+      "medium": "#76AF77",
+      "deep": "#4D804F",
+      "body": "#A9D9AA",
+      "background": "#EFF8EF",
+      "bodyOKLCH": "oklch(0.84 0.0826 145)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 145)"
+    },
+    "ellipses": [
+      {
+        "cx": 60.97,
+        "cy": 103.56,
+        "rx": 39.37,
+        "ry": 37.22,
+        "rotation": 131.44
+      },
+      {
+        "cx": 99.03,
+        "cy": 60.44,
+        "rx": 39.37,
+        "ry": 37.22,
+        "rotation": 131.44
+      },
+      {
+        "cx": 64.28,
+        "cy": 64.93,
+        "rx": 39.97,
+        "ry": 36.55,
+        "rotation": 227.34
+      },
+      {
+        "cx": 95.72,
+        "cy": 99.07,
+        "rx": 39.97,
+        "ry": 36.55,
+        "rotation": 227.34
+      }
+    ],
+    "expression": {
+      "eyes": "happy",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-003.svg"
+  },
+  {
+    "seed": "catpaw-4",
+    "palette": "mint",
+    "colors": {
+      "name": "mint",
+      "hue": 175,
+      "medium": "#50B39B",
+      "deep": "#21836E",
+      "body": "#8FDDC7",
+      "background": "#ECF9F4",
+      "bodyOKLCH": "oklch(0.84 0.0826 175)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 175)"
+    },
+    "ellipses": [
+      {
+        "cx": 59.04,
+        "cy": 88.01,
+        "rx": 39.44,
+        "ry": 33.83,
+        "rotation": 163.98
+      },
+      {
+        "cx": 100.96,
+        "cy": 75.99,
+        "rx": 39.44,
+        "ry": 33.83,
+        "rotation": 163.98
+      },
+      {
+        "cx": 73.5,
+        "cy": 60.58,
+        "rx": 37.43,
+        "ry": 32.82,
+        "rotation": 253.11
+      },
+      {
+        "cx": 86.5,
+        "cy": 103.42,
+        "rx": 37.43,
+        "ry": 32.82,
+        "rotation": 253.11
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 37.7,
+        "ry": 37.58,
+        "rotation": 170.4
+      }
+    ],
+    "expression": {
+      "eyes": "wide",
+      "mouth": "smile"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-004.svg"
+  },
+  {
+    "seed": "catpaw-5",
+    "palette": "rose",
+    "colors": {
+      "name": "rose",
+      "hue": 355,
+      "medium": "#D084A1",
+      "deep": "#9C5974",
+      "body": "#F7B5CD",
+      "background": "#FEF1F5",
+      "bodyOKLCH": "oklch(0.84 0.0826 355)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 355)"
+    },
+    "ellipses": [
+      {
+        "cx": 105.68,
+        "cy": 79.86,
+        "rx": 34.36,
+        "ry": 27.66,
+        "rotation": 355.24
+      },
+      {
+        "cx": 54.32,
+        "cy": 84.14,
+        "rx": 34.36,
+        "ry": 27.66,
+        "rotation": 355.24
+      },
+      {
+        "cx": 94.14,
+        "cy": 103.8,
+        "rx": 37.39,
+        "ry": 30.67,
+        "rotation": 417.01
+      },
+      {
+        "cx": 65.86,
+        "cy": 60.2,
+        "rx": 37.39,
+        "ry": 30.67,
+        "rotation": 417.01
+      },
+      {
+        "cx": 69.77,
+        "cy": 105.64,
+        "rx": 34.23,
+        "ry": 27.32,
+        "rotation": 473.4
+      },
+      {
+        "cx": 90.23,
+        "cy": 58.36,
+        "rx": 34.23,
+        "ry": 27.32,
+        "rotation": 473.4
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 38.6,
+        "ry": 27.28,
+        "rotation": 359.09
+      }
+    ],
+    "expression": {
+      "eyes": "wide",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-005.svg"
+  },
+  {
+    "seed": "catpaw-6",
+    "palette": "coral",
+    "colors": {
+      "name": "coral",
+      "hue": 25,
+      "medium": "#D6857F",
+      "deep": "#A15B55",
+      "body": "#FCB6AF",
+      "background": "#FFF2F0",
+      "bodyOKLCH": "oklch(0.84 0.0826 25)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 25)"
+    },
+    "ellipses": [
+      {
+        "cx": 60.19,
+        "cy": 95.88,
+        "rx": 42.11,
+        "ry": 35.95,
+        "rotation": 145
+      },
+      {
+        "cx": 99.81,
+        "cy": 68.12,
+        "rx": 42.11,
+        "ry": 35.95,
+        "rotation": 145
+      },
+      {
+        "cx": 61.25,
+        "cy": 64.23,
+        "rx": 40.54,
+        "ry": 38.25,
+        "rotation": 223.47
+      },
+      {
+        "cx": 98.75,
+        "cy": 99.77,
+        "rx": 40.54,
+        "ry": 38.25,
+        "rotation": 223.47
+      }
+    ],
+    "expression": {
+      "eyes": "wide",
+      "mouth": "flat"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-006.svg"
+  },
+  {
+    "seed": "catpaw-7",
+    "palette": "peach",
+    "colors": {
+      "name": "peach",
+      "hue": 55,
+      "medium": "#CF8D60",
+      "deep": "#9B6239",
+      "body": "#F5BD97",
+      "background": "#FDF3EC",
+      "bodyOKLCH": "oklch(0.84 0.0826 55)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 55)"
+    },
+    "ellipses": [
+      {
+        "cx": 66.71,
+        "cy": 60.16,
+        "rx": 40.86,
+        "ry": 29.61,
+        "rotation": 238.7
+      },
+      {
+        "cx": 93.29,
+        "cy": 103.84,
+        "rx": 40.86,
+        "ry": 29.61,
+        "rotation": 238.7
+      },
+      {
+        "cx": 89.81,
+        "cy": 63.19,
+        "rx": 37.42,
+        "ry": 27.18,
+        "rotation": 297.55
+      },
+      {
+        "cx": 70.19,
+        "cy": 100.81,
+        "rx": 37.42,
+        "ry": 27.18,
+        "rotation": 297.55
+      },
+      {
+        "cx": 103.65,
+        "cy": 78.37,
+        "rx": 36.12,
+        "ry": 26.79,
+        "rotation": 351.28
+      },
+      {
+        "cx": 56.35,
+        "cy": 85.63,
+        "rx": 36.12,
+        "ry": 26.79,
+        "rotation": 351.28
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 37.79,
+        "ry": 29.74,
+        "rotation": 232.79
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "pout"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-007.svg"
+  },
+  {
+    "seed": "catpaw-8",
+    "palette": "gold",
+    "colors": {
+      "name": "gold",
+      "hue": 85,
+      "medium": "#BB9A51",
+      "deep": "#8B6D28",
+      "body": "#E3C78C",
+      "background": "#FAF5EA",
+      "bodyOKLCH": "oklch(0.84 0.0826 85)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 85)"
+    },
+    "ellipses": [
+      {
+        "cx": 81.92,
+        "cy": 104.39,
+        "rx": 37.69,
+        "ry": 23.34,
+        "rotation": 85.11
+      },
+      {
+        "cx": 78.08,
+        "cy": 59.61,
+        "rx": 37.69,
+        "ry": 23.34,
+        "rotation": 85.11
+      },
+      {
+        "cx": 66.04,
+        "cy": 98.32,
+        "rx": 39.86,
+        "ry": 22.65,
+        "rotation": 130.54
+      },
+      {
+        "cx": 93.96,
+        "cy": 65.68,
+        "rx": 39.86,
+        "ry": 22.65,
+        "rotation": 130.54
+      },
+      {
+        "cx": 59.96,
+        "cy": 83.04,
+        "rx": 39.78,
+        "ry": 25.64,
+        "rotation": 177.04
+      },
+      {
+        "cx": 100.04,
+        "cy": 80.96,
+        "rx": 39.78,
+        "ry": 25.64,
+        "rotation": 177.04
+      },
+      {
+        "cx": 64.4,
+        "cy": 69.17,
+        "rx": 37.58,
+        "ry": 25.64,
+        "rotation": 219.45
+      },
+      {
+        "cx": 95.6,
+        "cy": 94.83,
+        "rx": 37.58,
+        "ry": 25.64,
+        "rotation": 219.45
+      }
+    ],
+    "expression": {
+      "eyes": "closed",
+      "mouth": "flat"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-008.svg"
+  },
+  {
+    "seed": "catpaw-9",
+    "palette": "lime",
+    "colors": {
+      "name": "lime",
+      "hue": 115,
+      "medium": "#9CA65B",
+      "deep": "#707833",
+      "body": "#C8D193",
+      "background": "#F4F6EB",
+      "bodyOKLCH": "oklch(0.84 0.0826 115)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 115)"
+    },
+    "ellipses": [
+      {
+        "cx": 100.53,
+        "cy": 71.51,
+        "rx": 35.54,
+        "ry": 22.12,
+        "rotation": 332.91
+      },
+      {
+        "cx": 59.47,
+        "cy": 92.49,
+        "rx": 35.54,
+        "ry": 22.12,
+        "rotation": 332.91
+      },
+      {
+        "cx": 103.41,
+        "cy": 83.66,
+        "rx": 33.06,
+        "ry": 19.25,
+        "rotation": 364.06
+      },
+      {
+        "cx": 56.59,
+        "cy": 80.34,
+        "rx": 33.06,
+        "ry": 19.25,
+        "rotation": 364.06
+      },
+      {
+        "cx": 96.16,
+        "cy": 97.04,
+        "rx": 32.61,
+        "ry": 21.13,
+        "rotation": 402.93
+      },
+      {
+        "cx": 63.84,
+        "cy": 66.96,
+        "rx": 32.61,
+        "ry": 21.13,
+        "rotation": 402.93
+      },
+      {
+        "cx": 84.49,
+        "cy": 104.5,
+        "rx": 37.91,
+        "ry": 25.06,
+        "rotation": 438.71
+      },
+      {
+        "cx": 75.51,
+        "cy": 59.5,
+        "rx": 37.91,
+        "ry": 25.06,
+        "rotation": 438.71
+      },
+      {
+        "cx": 71.34,
+        "cy": 103.99,
+        "rx": 38.31,
+        "ry": 26.45,
+        "rotation": 471.49
+      },
+      {
+        "cx": 88.66,
+        "cy": 60.01,
+        "rx": 38.31,
+        "ry": 26.45,
+        "rotation": 471.49
+      }
+    ],
+    "expression": {
+      "eyes": "closed",
+      "mouth": "pout"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-009.svg"
+  },
+  {
+    "seed": "catpaw-10",
+    "palette": "teal",
+    "colors": {
+      "name": "teal",
+      "hue": 200,
+      "medium": "#40B1B7",
+      "deep": "#008287",
+      "body": "#86DBE0",
+      "background": "#EAF8F9",
+      "bodyOKLCH": "oklch(0.84 0.0826 200)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 200)"
+    },
+    "ellipses": [
+      {
+        "cx": 59.36,
+        "cy": 66.14,
+        "rx": 41.24,
+        "ry": 35.95,
+        "rotation": 217.53
+      },
+      {
+        "cx": 100.64,
+        "cy": 97.86,
+        "rx": 41.24,
+        "ry": 35.95,
+        "rotation": 217.53
+      },
+      {
+        "cx": 89.76,
+        "cy": 62.36,
+        "rx": 39.49,
+        "ry": 38.98,
+        "rotation": 296.43
+      },
+      {
+        "cx": 70.24,
+        "cy": 101.64,
+        "rx": 39.49,
+        "ry": 38.98,
+        "rotation": 296.43
+      }
+    ],
+    "expression": {
+      "eyes": "wide",
+      "mouth": "flat"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-010.svg"
+  },
+  {
+    "seed": "catpaw-11",
+    "palette": "sky",
+    "colors": {
+      "name": "sky",
+      "hue": 225,
+      "medium": "#4FABCD",
+      "deep": "#217D9B",
+      "body": "#8ED6F3",
+      "background": "#EBF7FD",
+      "bodyOKLCH": "oklch(0.84 0.0826 225)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 225)"
+    },
+    "ellipses": [
+      {
+        "cx": 55.93,
+        "cy": 79.66,
+        "rx": 36,
+        "ry": 27.46,
+        "rotation": 185.54
+      },
+      {
+        "cx": 104.07,
+        "cy": 84.34,
+        "rx": 36,
+        "ry": 27.46,
+        "rotation": 185.54
+      },
+      {
+        "cx": 69.92,
+        "cy": 62.02,
+        "rx": 35.88,
+        "ry": 28.84,
+        "rotation": 243.24
+      },
+      {
+        "cx": 90.08,
+        "cy": 101.98,
+        "rx": 35.88,
+        "ry": 28.84,
+        "rotation": 243.24
+      },
+      {
+        "cx": 94.74,
+        "cy": 62.76,
+        "rx": 35.83,
+        "ry": 27.45,
+        "rotation": 307.46
+      },
+      {
+        "cx": 65.26,
+        "cy": 101.24,
+        "rx": 35.83,
+        "ry": 27.45,
+        "rotation": 307.46
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-011.svg"
+  },
+  {
+    "seed": "catpaw-12",
+    "palette": "orchid",
+    "colors": {
+      "name": "orchid",
+      "hue": 325,
+      "medium": "#BE89C1",
+      "deep": "#8D5E90",
+      "body": "#E7B8E9",
+      "background": "#FAF2FB",
+      "bodyOKLCH": "oklch(0.84 0.0826 325)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 325)"
+    },
+    "ellipses": [
+      {
+        "cx": 71.62,
+        "cy": 59.91,
+        "rx": 38.9,
+        "ry": 30.21,
+        "rotation": 249.22
+      },
+      {
+        "cx": 88.38,
+        "cy": 104.09,
+        "rx": 38.9,
+        "ry": 30.21,
+        "rotation": 249.22
+      },
+      {
+        "cx": 96.31,
+        "cy": 61.45,
+        "rx": 36.08,
+        "ry": 25.6,
+        "rotation": 308.45
+      },
+      {
+        "cx": 63.69,
+        "cy": 102.55,
+        "rx": 36.08,
+        "ry": 25.6,
+        "rotation": 308.45
+      },
+      {
+        "cx": 100.4,
+        "cy": 88.27,
+        "rx": 39.04,
+        "ry": 31.87,
+        "rotation": 377.09
+      },
+      {
+        "cx": 59.6,
+        "cy": 75.73,
+        "rx": 39.04,
+        "ry": 31.87,
+        "rotation": 377.09
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 38.59,
+        "ry": 29.09,
+        "rotation": 254.72
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "flat"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-012.svg"
+  },
+  {
+    "seed": "catpaw-13",
+    "palette": "blue",
+    "colors": {
+      "name": "blue",
+      "hue": 250,
+      "medium": "#6DA3DA",
+      "deep": "#4475A6",
+      "body": "#A2CFFF",
+      "background": "#EEF6FF",
+      "bodyOKLCH": "oklch(0.84 0.0826 250)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 250)"
+    },
+    "ellipses": [
+      {
+        "cx": 59.17,
+        "cy": 79.77,
+        "rx": 34.68,
+        "ry": 29.7,
+        "rotation": 186.12
+      },
+      {
+        "cx": 100.83,
+        "cy": 84.23,
+        "rx": 34.68,
+        "ry": 29.7,
+        "rotation": 186.12
+      },
+      {
+        "cx": 85.86,
+        "cy": 59.32,
+        "rx": 37.57,
+        "ry": 33.34,
+        "rotation": 284.49
+      },
+      {
+        "cx": 74.14,
+        "cy": 104.68,
+        "rx": 37.57,
+        "ry": 33.34,
+        "rotation": 284.49
+      }
+    ],
+    "expression": {
+      "eyes": "squint",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-013.svg"
+  },
+  {
+    "seed": "catpaw-14",
+    "palette": "lavender",
+    "colors": {
+      "name": "lavender",
+      "hue": 295,
+      "medium": "#A392D6",
+      "deep": "#7666A2",
+      "body": "#CEC0FB",
+      "background": "#F5F3FE",
+      "bodyOKLCH": "oklch(0.84 0.0826 295)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 295)"
+    },
+    "ellipses": [
+      {
+        "cx": 96.2,
+        "cy": 97.08,
+        "rx": 37.76,
+        "ry": 34.96,
+        "rotation": 42.93
+      },
+      {
+        "cx": 63.8,
+        "cy": 66.92,
+        "rx": 37.76,
+        "ry": 34.96,
+        "rotation": 42.93
+      },
+      {
+        "cx": 64.29,
+        "cy": 105.02,
+        "rx": 37.59,
+        "ry": 35.63,
+        "rotation": 124.3
+      },
+      {
+        "cx": 95.71,
+        "cy": 58.98,
+        "rx": 37.59,
+        "ry": 35.63,
+        "rotation": 124.3
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 40.82,
+        "ry": 36.85,
+        "rotation": 35.4
+      }
+    ],
+    "expression": {
+      "eyes": "happy",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-014.svg"
+  },
+  {
+    "seed": "catpaw-15",
+    "palette": "green",
+    "colors": {
+      "name": "green",
+      "hue": 145,
+      "medium": "#76AF77",
+      "deep": "#4D804F",
+      "body": "#A9D9AA",
+      "background": "#EFF8EF",
+      "bodyOKLCH": "oklch(0.84 0.0826 145)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 145)"
+    },
+    "ellipses": [
+      {
+        "cx": 100.39,
+        "cy": 83.72,
+        "rx": 39.68,
+        "ry": 25.06,
+        "rotation": 4.8
+      },
+      {
+        "cx": 59.61,
+        "cy": 80.28,
+        "rx": 39.68,
+        "ry": 25.06,
+        "rotation": 4.8
+      },
+      {
+        "cx": 94.96,
+        "cy": 101.88,
+        "rx": 36.71,
+        "ry": 21.97,
+        "rotation": 53.04
+      },
+      {
+        "cx": 65.04,
+        "cy": 62.12,
+        "rx": 36.71,
+        "ry": 21.97,
+        "rotation": 53.04
+      },
+      {
+        "cx": 77.82,
+        "cy": 103.46,
+        "rx": 38.65,
+        "ry": 25.02,
+        "rotation": 95.81
+      },
+      {
+        "cx": 82.18,
+        "cy": 60.54,
+        "rx": 38.65,
+        "ry": 25.02,
+        "rotation": 95.81
+      },
+      {
+        "cx": 58.76,
+        "cy": 95.49,
+        "rx": 37.74,
+        "ry": 25.27,
+        "rotation": 147.59
+      },
+      {
+        "cx": 101.24,
+        "cy": 68.51,
+        "rx": 37.74,
+        "ry": 25.27,
+        "rotation": 147.59
+      }
+    ],
+    "expression": {
+      "eyes": "happy",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-015.svg"
+  },
+  {
+    "seed": "catpaw-16",
+    "palette": "mint",
+    "colors": {
+      "name": "mint",
+      "hue": 175,
+      "medium": "#50B39B",
+      "deep": "#21836E",
+      "body": "#8FDDC7",
+      "background": "#ECF9F4",
+      "bodyOKLCH": "oklch(0.84 0.0826 175)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 175)"
+    },
+    "ellipses": [
+      {
+        "cx": 102.99,
+        "cy": 83.8,
+        "rx": 37.03,
+        "ry": 32.48,
+        "rotation": 364.48
+      },
+      {
+        "cx": 57.01,
+        "cy": 80.2,
+        "rx": 37.03,
+        "ry": 32.48,
+        "rotation": 364.48
+      },
+      {
+        "cx": 80.25,
+        "cy": 103.17,
+        "rx": 32.99,
+        "ry": 30.93,
+        "rotation": 449.31
+      },
+      {
+        "cx": 79.75,
+        "cy": 60.83,
+        "rx": 32.99,
+        "ry": 30.93,
+        "rotation": 449.31
+      }
+    ],
+    "expression": {
+      "eyes": "wide",
+      "mouth": "pout"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-016.svg"
+  },
+  {
+    "seed": "catpaw-17",
+    "palette": "rose",
+    "colors": {
+      "name": "rose",
+      "hue": 355,
+      "medium": "#D084A1",
+      "deep": "#9C5974",
+      "body": "#F7B5CD",
+      "background": "#FEF1F5",
+      "bodyOKLCH": "oklch(0.84 0.0826 355)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 355)"
+    },
+    "ellipses": [
+      {
+        "cx": 105.01,
+        "cy": 78.43,
+        "rx": 35.16,
+        "ry": 25.2,
+        "rotation": 351.89
+      },
+      {
+        "cx": 54.99,
+        "cy": 85.57,
+        "rx": 35.16,
+        "ry": 25.2,
+        "rotation": 351.89
+      },
+      {
+        "cx": 93.57,
+        "cy": 99.95,
+        "rx": 35.29,
+        "ry": 25.23,
+        "rotation": 412.91
+      },
+      {
+        "cx": 66.43,
+        "cy": 64.05,
+        "rx": 35.29,
+        "ry": 25.23,
+        "rotation": 412.91
+      },
+      {
+        "cx": 72.86,
+        "cy": 102.45,
+        "rx": 37.29,
+        "ry": 29.64,
+        "rotation": 469.23
+      },
+      {
+        "cx": 87.14,
+        "cy": 61.55,
+        "rx": 37.29,
+        "ry": 29.64,
+        "rotation": 469.23
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-017.svg"
+  },
+  {
+    "seed": "catpaw-18",
+    "palette": "coral",
+    "colors": {
+      "name": "coral",
+      "hue": 25,
+      "medium": "#D6857F",
+      "deep": "#A15B55",
+      "body": "#FCB6AF",
+      "background": "#FFF2F0",
+      "bodyOKLCH": "oklch(0.84 0.0826 25)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 25)"
+    },
+    "ellipses": [
+      {
+        "cx": 100.99,
+        "cy": 79.86,
+        "rx": 34.02,
+        "ry": 24.1,
+        "rotation": 354.19
+      },
+      {
+        "cx": 59.01,
+        "cy": 84.14,
+        "rx": 34.02,
+        "ry": 24.1,
+        "rotation": 354.19
+      },
+      {
+        "cx": 94.2,
+        "cy": 97.07,
+        "rx": 36.48,
+        "ry": 26.01,
+        "rotation": 406.71
+      },
+      {
+        "cx": 65.8,
+        "cy": 66.93,
+        "rx": 36.48,
+        "ry": 26.01,
+        "rotation": 406.71
+      },
+      {
+        "cx": 73.94,
+        "cy": 102.48,
+        "rx": 40.2,
+        "ry": 30.57,
+        "rotation": 466.47
+      },
+      {
+        "cx": 86.06,
+        "cy": 61.52,
+        "rx": 40.2,
+        "ry": 30.57,
+        "rotation": 466.47
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-018.svg"
+  },
+  {
+    "seed": "catpaw-19",
+    "palette": "peach",
+    "colors": {
+      "name": "peach",
+      "hue": 55,
+      "medium": "#CF8D60",
+      "deep": "#9B6239",
+      "body": "#F5BD97",
+      "background": "#FDF3EC",
+      "bodyOKLCH": "oklch(0.84 0.0826 55)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 55)"
+    },
+    "ellipses": [
+      {
+        "cx": 58.2,
+        "cy": 95.58,
+        "rx": 35.07,
+        "ry": 28.53,
+        "rotation": 148.09
+      },
+      {
+        "cx": 101.8,
+        "cy": 68.42,
+        "rx": 35.07,
+        "ry": 28.53,
+        "rotation": 148.09
+      },
+      {
+        "cx": 57.44,
+        "cy": 69.7,
+        "rx": 39.01,
+        "ry": 31.57,
+        "rotation": 208.6
+      },
+      {
+        "cx": 102.56,
+        "cy": 94.3,
+        "rx": 39.01,
+        "ry": 31.57,
+        "rotation": 208.6
+      },
+      {
+        "cx": 78.24,
+        "cy": 57.52,
+        "rx": 34.15,
+        "ry": 26.85,
+        "rotation": 265.87
+      },
+      {
+        "cx": 81.76,
+        "cy": 106.48,
+        "rx": 34.15,
+        "ry": 26.85,
+        "rotation": 265.87
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 34.37,
+        "ry": 24.65,
+        "rotation": 144.04
+      }
+    ],
+    "expression": {
+      "eyes": "squint",
+      "mouth": "smile"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-019.svg"
+  },
+  {
+    "seed": "catpaw-20",
+    "palette": "gold",
+    "colors": {
+      "name": "gold",
+      "hue": 85,
+      "medium": "#BB9A51",
+      "deep": "#8B6D28",
+      "body": "#E3C78C",
+      "background": "#FAF5EA",
+      "bodyOKLCH": "oklch(0.84 0.0826 85)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 85)"
+    },
+    "ellipses": [
+      {
+        "cx": 101.62,
+        "cy": 70.27,
+        "rx": 39.27,
+        "ry": 29.92,
+        "rotation": 331.51
+      },
+      {
+        "cx": 58.38,
+        "cy": 93.73,
+        "rx": 39.27,
+        "ry": 29.92,
+        "rotation": 331.51
+      },
+      {
+        "cx": 100.28,
+        "cy": 89.8,
+        "rx": 39.18,
+        "ry": 31.39,
+        "rotation": 381.05
+      },
+      {
+        "cx": 59.72,
+        "cy": 74.2,
+        "rx": 39.18,
+        "ry": 31.39,
+        "rotation": 381.05
+      },
+      {
+        "cx": 79.48,
+        "cy": 105.24,
+        "rx": 36.76,
+        "ry": 28.1,
+        "rotation": 451.28
+      },
+      {
+        "cx": 80.52,
+        "cy": 58.76,
+        "rx": 36.76,
+        "ry": 28.1,
+        "rotation": 451.28
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-020.svg"
+  },
+  {
+    "seed": "catpaw-21",
+    "palette": "lime",
+    "colors": {
+      "name": "lime",
+      "hue": 115,
+      "medium": "#9CA65B",
+      "deep": "#707833",
+      "body": "#C8D193",
+      "background": "#F4F6EB",
+      "bodyOKLCH": "oklch(0.84 0.0826 115)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 115)"
+    },
+    "ellipses": [
+      {
+        "cx": 103.56,
+        "cy": 83.88,
+        "rx": 36.5,
+        "ry": 24.87,
+        "rotation": 4.56
+      },
+      {
+        "cx": 56.44,
+        "cy": 80.12,
+        "rx": 36.5,
+        "ry": 24.87,
+        "rotation": 4.56
+      },
+      {
+        "cx": 91.62,
+        "cy": 99.89,
+        "rx": 39.49,
+        "ry": 23.47,
+        "rotation": 57
+      },
+      {
+        "cx": 68.38,
+        "cy": 64.11,
+        "rx": 39.49,
+        "ry": 23.47,
+        "rotation": 57
+      },
+      {
+        "cx": 74.62,
+        "cy": 104,
+        "rx": 34.85,
+        "ry": 19.7,
+        "rotation": 103.75
+      },
+      {
+        "cx": 85.38,
+        "cy": 60,
+        "rx": 34.85,
+        "ry": 19.7,
+        "rotation": 103.75
+      },
+      {
+        "cx": 63.72,
+        "cy": 95.61,
+        "rx": 39.35,
+        "ry": 26.39,
+        "rotation": 140.11
+      },
+      {
+        "cx": 96.28,
+        "cy": 68.39,
+        "rx": 39.35,
+        "ry": 26.39,
+        "rotation": 140.11
+      },
+      {
+        "cx": 80,
+        "cy": 82,
+        "rx": 35.54,
+        "ry": 22.91,
+        "rotation": 9.08
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-021.svg"
+  },
+  {
+    "seed": "catpaw-22",
+    "palette": "teal",
+    "colors": {
+      "name": "teal",
+      "hue": 200,
+      "medium": "#40B1B7",
+      "deep": "#008287",
+      "body": "#86DBE0",
+      "background": "#EAF8F9",
+      "bodyOKLCH": "oklch(0.84 0.0826 200)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 200)"
+    },
+    "ellipses": [
+      {
+        "cx": 59.65,
+        "cy": 72.12,
+        "rx": 37.25,
+        "ry": 20.64,
+        "rotation": 205.89
+      },
+      {
+        "cx": 100.35,
+        "cy": 91.88,
+        "rx": 37.25,
+        "ry": 20.64,
+        "rotation": 205.89
+      },
+      {
+        "cx": 71.23,
+        "cy": 59.35,
+        "rx": 38.78,
+        "ry": 25.91,
+        "rotation": 248.82
+      },
+      {
+        "cx": 88.77,
+        "cy": 104.65,
+        "rx": 38.78,
+        "ry": 25.91,
+        "rotation": 248.82
+      },
+      {
+        "cx": 88.86,
+        "cy": 63.96,
+        "rx": 37.99,
+        "ry": 25.83,
+        "rotation": 296.15
+      },
+      {
+        "cx": 71.14,
+        "cy": 100.04,
+        "rx": 37.99,
+        "ry": 25.83,
+        "rotation": 296.15
+      },
+      {
+        "cx": 100.62,
+        "cy": 73.19,
+        "rx": 37.87,
+        "ry": 23.54,
+        "rotation": 336.85
+      },
+      {
+        "cx": 59.38,
+        "cy": 90.81,
+        "rx": 37.87,
+        "ry": 23.54,
+        "rotation": 336.85
+      }
+    ],
+    "expression": {
+      "eyes": "squint",
+      "mouth": "smile"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-022.svg"
+  },
+  {
+    "seed": "catpaw-23",
+    "palette": "sky",
+    "colors": {
+      "name": "sky",
+      "hue": 225,
+      "medium": "#4FABCD",
+      "deep": "#217D9B",
+      "body": "#8ED6F3",
+      "background": "#EBF7FD",
+      "bodyOKLCH": "oklch(0.84 0.0826 225)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 225)"
+    },
+    "ellipses": [
+      {
+        "cx": 67.55,
+        "cy": 101.74,
+        "rx": 36.36,
+        "ry": 20.93,
+        "rotation": 122.25
+      },
+      {
+        "cx": 92.45,
+        "cy": 62.26,
+        "rx": 36.36,
+        "ry": 20.93,
+        "rotation": 122.25
+      },
+      {
+        "cx": 56.3,
+        "cy": 93.11,
+        "rx": 36.58,
+        "ry": 22.21,
+        "rotation": 154.87
+      },
+      {
+        "cx": 103.7,
+        "cy": 70.89,
+        "rx": 36.58,
+        "ry": 22.21,
+        "rotation": 154.87
+      },
+      {
+        "cx": 58.98,
+        "cy": 77.34,
+        "rx": 33.9,
+        "ry": 19.64,
+        "rotation": 192.5
+      },
+      {
+        "cx": 101.02,
+        "cy": 86.66,
+        "rx": 33.9,
+        "ry": 19.64,
+        "rotation": 192.5
+      },
+      {
+        "cx": 65.75,
+        "cy": 64.5,
+        "rx": 40.45,
+        "ry": 22.65,
+        "rotation": 230.83
+      },
+      {
+        "cx": 94.25,
+        "cy": 99.5,
+        "rx": 40.45,
+        "ry": 22.65,
+        "rotation": 230.83
+      },
+      {
+        "cx": 78.27,
+        "cy": 59.53,
+        "rx": 37.59,
+        "ry": 26.03,
+        "rotation": 265.58
+      },
+      {
+        "cx": 81.73,
+        "cy": 104.47,
+        "rx": 37.59,
+        "ry": 26.03,
+        "rotation": 265.58
+      }
+    ],
+    "expression": {
+      "eyes": "dots",
+      "mouth": "surprised"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-023.svg"
+  },
+  {
+    "seed": "catpaw-24",
+    "palette": "orchid",
+    "colors": {
+      "name": "orchid",
+      "hue": 325,
+      "medium": "#BE89C1",
+      "deep": "#8D5E90",
+      "body": "#E7B8E9",
+      "background": "#FAF2FB",
+      "bodyOKLCH": "oklch(0.84 0.0826 325)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 325)"
+    },
+    "ellipses": [
+      {
+        "cx": 104.38,
+        "cy": 73.68,
+        "rx": 36.12,
+        "ry": 31.01,
+        "rotation": 341.15
+      },
+      {
+        "cx": 55.62,
+        "cy": 90.32,
+        "rx": 36.12,
+        "ry": 31.01,
+        "rotation": 341.15
+      },
+      {
+        "cx": 91.95,
+        "cy": 102.32,
+        "rx": 37.99,
+        "ry": 35.04,
+        "rotation": 419.54
+      },
+      {
+        "cx": 68.05,
+        "cy": 61.68,
+        "rx": 37.99,
+        "ry": 35.04,
+        "rotation": 419.54
+      }
+    ],
+    "expression": {
+      "eyes": "happy",
+      "mouth": "pout"
+    },
+    "size": 160,
+    "transparent": false,
+    "file": "subagent-024.svg"
+  }
+]

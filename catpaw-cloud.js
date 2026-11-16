@@ -21,16 +21,16 @@
   var APP_SCRIPTS = [
     './ppt-workbar.js',
     './artifact-editing-demo.js',
-    './strategy-scenes.js',
+    './strategy-scenes.js?v=20261113-slide-layout',
     './supplier-conversation-demo.js?v=ds003',
     './conversation-queue-demo.js',
-    './recovery-conversation-demo.js?v=20261110-continuous-retry',
+    './recovery-conversation-demo.js?v=20261113-slide-layout',
     './clarification-demo.js?v=20261110-question-icon',
     './capability-market.js',
     './nocode-page.js',
     './library-page.js',
     './widget-value-cases.js?v=20261110-current',
-    './app.js?v=20261110-remove-budget-conversation',
+    './app.js?v=20261116-conversation-init',
     './credits-demo.js',
   ];
 

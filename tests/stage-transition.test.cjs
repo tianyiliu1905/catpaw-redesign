@@ -38,7 +38,7 @@ test('a manually open plan skips automatic first-step collapse',()=>{
 test('phase updates honor manual open/closed preferences, including completion',()=>{
  for(const preference of ['true','false'])for(const done of [false,true]){
   let rendered;const task={},panel={dataset:{stageFrame:'0',planExpanded:preference},classList:{toggle(){}},querySelector:()=>null,querySelectorAll:()=>[]};
-  const ctx={conversationScroll:{scrollHeight:1000,scrollTop:0,clientHeight:600},conversationThread:{innerHTML:''},conversationFollowLatest:false,conversationStageFrames:[{stage:'plan'},{stage:done?'done':'work'}],stageAutoTimer:null,clearTimeout(){},preserveConversationScrollRange(){},replaceStageContent:(panel,markup)=>{panel.innerHTML=markup},renderConversationStageBody:(...args)=>{rendered=args;return ''},syncStageDemoControls(){},scheduleStageAutoAdvance(){},conversationThreads:new Map(),conversationTask:task,Date};vm.createContext(ctx);
+  const ctx={conversationScroll:{scrollHeight:1000,scrollTop:0,clientHeight:600},conversationThread:{innerHTML:''},conversationFollowLatest:false,conversationStageFrames:[{stage:'plan'},{stage:done?'done':'work'}],stageAutoTimer:null,clearTimeout(){},preserveConversationScrollRange(){},replaceStageContent:(panel,markup)=>{panel.innerHTML=markup},renderConversationStageBody:(...args)=>{rendered=args;return ''},syncStageDemoControls(){},scheduleStageAutoAdvance(){},renderConversationTurnNav(){},conversationThreads:new Map(),conversationTask:task,Date};vm.createContext(ctx);
   vm.runInContext(extract('  function updateConversationStage(', '  function advanceConversationStage('),ctx);ctx.updateConversationStage(panel,1);assert.equal(rendered[1],preference==='true');assert.equal(rendered[3],done&&preference==='true');
  }
 });
@@ -114,4 +114,17 @@ test('previous step cancels a pending transition and removes the completion time
  assert.equal(panel.dataset.finishedAt,undefined);assert.equal(panel.dataset.pendingStageFrame,undefined);
  updated=undefined;panel.dataset.stageFrame='0';assert.equal(ctx.previousConversationStage(panel),false);assert.equal(updated,undefined);
  panel.dataset.stageFrame='2';panel.dataset.pausedAt='500';assert.equal(ctx.previousConversationStage(panel),false);
+});
+
+test('Demo task lists use Cascade two-digit numbering in all execution states',()=>{
+ const ctx={esc:String,stageToolIcons:{list:''}};vm.createContext(ctx);
+ vm.runInContext(extract('  function renderConversationPlan(', '  // A todo task'),ctx);
+ const steps=[{title:'核对资料口径'},{title:'比较门店跟进优先级'},{title:'整理处理建议'}];
+ for(let completed=0;completed<=3;completed++){
+  const html=ctx.renderConversationPlan(steps,completed,true);
+  assert.match(html,/stage-plan-cascade/);assert.doesNotMatch(html,/class="spinner"/);
+  for(const number of ['01','02','03'])assert.ok(html.includes(`>${number}</span>`));
+  assert.equal((html.match(/data-state="done"/g)||[]).length,completed);
+  assert.match(html,/--plan-index:2/);
+ }
 });

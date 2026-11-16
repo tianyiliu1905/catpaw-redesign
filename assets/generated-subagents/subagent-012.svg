@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Subagent catpaw-12">
+<rect width="160" height="160" rx="34" fill="#FAF2FB"/>
+<defs>
+  <linearGradient id="edge-fade" gradientUnits="userSpaceOnUse" x1="28" y1="132" x2="100" y2="65"><stop offset="0" stop-color="white" stop-opacity="0"/><stop offset="1" stop-color="white"/></linearGradient>
+  <linearGradient id="soft-fade" gradientUnits="userSpaceOnUse" x1="28" y1="132" x2="100" y2="65"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+  <mask id="sharp-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><rect width="160" height="160" fill="url(#edge-fade)"/></mask>
+  <mask id="soft-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><rect width="160" height="160" fill="url(#soft-fade)"/></mask>
+  <filter id="left-soft" filterUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><feGaussianBlur stdDeviation="3.2"/></filter>
+</defs>
+<!-- Enlarge the complete character together inside the unchanged tile. -->
+<g transform="translate(80 80) scale(1.1) translate(-80 -80)">
+<!-- Composite the solid union before filtering; facial features stay above both layers. -->
+<g mask="url(#soft-edge)"><g fill="#E7B8E9" filter="url(#left-soft)"><ellipse cx="71.62" cy="59.91" rx="38.9" ry="30.21" transform="rotate(249.22 71.62 59.91)"/>
+<ellipse cx="88.38" cy="104.09" rx="38.9" ry="30.21" transform="rotate(249.22 88.38 104.09)"/>
+<ellipse cx="96.31" cy="61.45" rx="36.08" ry="25.6" transform="rotate(308.45 96.31 61.45)"/>
+<ellipse cx="63.69" cy="102.55" rx="36.08" ry="25.6" transform="rotate(308.45 63.69 102.55)"/>
+<ellipse cx="100.4" cy="88.27" rx="39.04" ry="31.87" transform="rotate(377.09 100.4 88.27)"/>
+<ellipse cx="59.6" cy="75.73" rx="39.04" ry="31.87" transform="rotate(377.09 59.6 75.73)"/>
+<ellipse cx="80" cy="82" rx="38.59" ry="29.09" transform="rotate(254.72 80 82)"/></g></g>
+<g mask="url(#sharp-edge)" data-body="ellipse-union"><g fill="#E7B8E9"><ellipse cx="71.62" cy="59.91" rx="38.9" ry="30.21" transform="rotate(249.22 71.62 59.91)"/>
+<ellipse cx="88.38" cy="104.09" rx="38.9" ry="30.21" transform="rotate(249.22 88.38 104.09)"/>
+<ellipse cx="96.31" cy="61.45" rx="36.08" ry="25.6" transform="rotate(308.45 96.31 61.45)"/>
+<ellipse cx="63.69" cy="102.55" rx="36.08" ry="25.6" transform="rotate(308.45 63.69 102.55)"/>
+<ellipse cx="100.4" cy="88.27" rx="39.04" ry="31.87" transform="rotate(377.09 100.4 88.27)"/>
+<ellipse cx="59.6" cy="75.73" rx="39.04" ry="31.87" transform="rotate(377.09 59.6 75.73)"/>
+<ellipse cx="80" cy="82" rx="38.59" ry="29.09" transform="rotate(254.72 80 82)"/></g></g>
+<g data-face="dots-flat" transform="translate(83 91) scale(1.8975)"><ellipse cx="-11" cy="-5" rx="2.8" ry="3.7" fill="#8D5E90"/><ellipse cx="11" cy="-5" rx="2.8" ry="3.7" fill="#8D5E90"/><g transform="translate(0 9) scale(.85) translate(0 -9)"><path d="M -4 9 H 4" fill="none" stroke="#8D5E90" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+</g>
+</svg>

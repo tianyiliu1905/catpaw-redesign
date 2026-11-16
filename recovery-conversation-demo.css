@@ -164,3 +164,29 @@
 #conversationComposer .recovery-composer-card{grid-template-columns:minmax(0,1fr);align-content:start;gap:6px}
 #conversationComposer .recovery-composer-card .recovery-actions{grid-column:1;grid-row:3;justify-self:end;align-self:end;margin-top:10px}
 @media(max-width:760px){.conversation-composer-wrap.has-auth-request #conversationComposer{min-height:180px}}
+
+/* Compact notice for a slow connection while retries continue. */
+.recovery-demo .recovery-retry-strip{margin-top:12px;padding:6px 12px;border:0;border-radius:8px;background:var(--gray-1);font-size:var(--type-sm);line-height:20px}
+.recovery-retry-strip header{color:var(--text-3);gap:12px}
+.recovery-retry-strip header>span{min-width:0}
+.recovery-demo .recovery-retry-strip button{padding:2px 4px;border:0;border-radius:4px;line-height:20px;white-space:nowrap}
+
+/* Slide-only detail view: keep the real conversation, with navigation outside
+   this comparison crop. Standalone product pages retain their full layout. */
+.strategy-recovery-detail body{padding:0;min-height:100dvh;background:var(--main-bg)}
+.strategy-recovery-detail body>.stage{width:100%;height:100dvh;padding:0;display:block}
+.strategy-recovery-detail .window{--window-width:100vw;width:100vw!important;height:100dvh!important;max-height:none!important;min-height:0!important;border:0;border-radius:0;display:grid;grid-template-columns:0 minmax(0,1fr)!important;transform:none!important}
+.strategy-recovery-detail .sidebar,.strategy-recovery-detail #sidebarResizer,.strategy-recovery-detail .main-topbar,.strategy-recovery-detail #mainTopbar,.strategy-recovery-detail #toggleWorkbench,.strategy-recovery-detail #toggleOutputs,.strategy-recovery-detail #expandSidebar,.strategy-recovery-detail #expandSidebarFromConversation,.strategy-recovery-detail #catpawCloudStatus{display:none!important}
+.strategy-recovery-detail .content{grid-column:2;min-width:0;border-radius:0!important}
+.strategy-recovery-detail .window::before{left:0;border-radius:0}
+.strategy-recovery-detail .catpaw-cloud-status{display:none!important}
+.strategy-recovery-detail #catpawCloudChip,.strategy-recovery-detail #catpawCloudMenu{display:none!important}
+.strategy-recovery-detail .conversation-page{--type-md:16px;--type-sm:14px;--line-md:25px}
+.strategy-recovery-detail .conversation-task-bar{padding:0 24px!important;font-size:14px}
+.strategy-recovery-detail .conversation-scroll{padding:18px 24px!important;mask-image:none!important}
+.strategy-recovery-detail .conversation-thread{max-width:none!important;width:100%!important}
+.strategy-recovery-detail .conversation-composer-wrap{padding:8px 24px 16px!important}
+.strategy-recovery-detail .conversation-composer{box-shadow:none!important}
+.strategy-recovery-detail .conversation-page.has-system-notice .conversation-scroll{padding-top:72px!important}
+.strategy-recovery-detail #recoverySystemHost{max-width:calc(100% - 32px);width:calc(100% - 32px)}
+.strategy-recovery-detail .recovery-system-banner{background:var(--gray-1);box-shadow:none;border:0}

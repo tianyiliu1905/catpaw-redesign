@@ -111,6 +111,7 @@
       {action:'recovery-start',hold:10000},
       {action:'recovery-end'},
     ],
+    '2.3-3': [{action:'recovery-start',hold:4500},{action:'recovery-end'}],
     '2.3-6': [
       {action:'recovery-start',hold:5000},
       {action:'recovery-pointer',target:'fallback',hold:1200},

@@ -8,10 +8,12 @@
     const savedTheme = localStorage.getItem('catpaw-theme');
     if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.dataset.theme = savedTheme;
   } catch (_) { /* Storage may be unavailable in preview contexts. */ }
+  if (new URLSearchParams(location.search).get('strategyPanel') === 'recovery-detail') document.documentElement.classList.add('strategy-recovery-detail');
   if (new URLSearchParams(location.search).has('strategyScene')) document.documentElement.classList.add('strategy-embed');
+  if (window.self !== window.top) document.documentElement.classList.add('strategy-framed');
 </script>
 <title>CatPaw</title>
-<link rel="stylesheet" href="./styles.css?v=20261111-shared-surface-corners" />
+<link rel="stylesheet" href="./styles.css?v=20261116-minimal-scrollbar" />
 <link rel="stylesheet" href="./credits-demo.css?v=20261111-ds-audit">
 <link rel="stylesheet" href="./capability-market.css?v=20261110-palette-sync">
 <link rel="stylesheet" href="./nocode-page.css">
@@ -22,7 +24,7 @@
 <link rel="stylesheet" href="./supplier-conversation-demo.css?v=ds014">
 <link rel="stylesheet" href="./widget-value-cases.css?v=20261111-ds-audit">
 <link rel="stylesheet" href="./conversation-queue-demo.css?v=20261110-palette-sync">
-<link rel="stylesheet" href="./recovery-conversation-demo.css?v=20261110-palette-sync">
+<link rel="stylesheet" href="./recovery-conversation-demo.css?v=20261113-slide-layout-3">
 <link rel="stylesheet" href="./clarification-demo.css?v=20261111-ds-audit">
 <link rel="stylesheet" href="./widget-catpaw-components.css?v=20261111-ds-components">
 </head>
@@ -112,18 +114,31 @@
           <a class="task flush" id="backgroundAgentTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">主对话完成，子智能体 后台核查</span><span class="task-state"></span>
           </a>
+          <!-- 回复结尾提示方案已停用，保留入口代码。
           <a class="task flush" id="backgroundAgentInlineTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">子智能体后台核查 · 回复结尾提示</span><span class="task-state"></span>
           </a>
+          -->
           <a class="task flush" id="backgroundProcessTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">后台进程 · 悬浮提示</span><span class="task-state"></span>
           </a>
+          <a class="task flush" id="backgroundMixedTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">子智能体与后台进程 · 悬浮提示</span><span class="task-state"></span>
+          </a>
+          <a class="task flush" id="interventionTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">消息队列 · 补充与引导</span><span class="task-state"></span>
+          </a>
+
+          <!-- 回复结尾提示方案已停用，保留入口代码。
           <a class="task flush" id="backgroundProcessInlineTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">后台进程 · 回复结尾提示</span><span class="task-state"></span>
           </a>
+          -->
+          <!-- 正文链接方案已停用，保留入口代码。
           <a class="task flush" id="backgroundProcessTextTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">后台进程 · 正文链接</span><span class="task-state"></span>
           </a>
+          -->
           <a class="task flush" id="artifactEditingTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">把季度复盘要点汇总成幻灯片</span>
             <span class="task-state"></span>
@@ -151,6 +166,9 @@
           <a class="task flush" id="retryRecoveryTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">异常：梳理供应链风险预案清单</span>
             <span class="task-state"><span class="task-time">3d</span></span>
+          </a>
+          <a class="task flush" id="systemRecoveryTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">异常：全局网络连接中断</span><span class="task-state"></span>
           </a>
           <a class="task flush" id="failureRecoveryTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">异常：把季度经营复盘做成视频</span>
@@ -818,6 +836,7 @@
 <div class="summary-section" id="summaryAgentsSection" hidden>
   <header class="summary-section-head"><button type="button" class="summary-section-toggle" aria-controls="summaryAgentsList" aria-expanded="true"><span>子智能体</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></header>
   <div id="summaryAgentsList" class="summary-agent-list"></div>
+  <button id="summaryAgentsMore" class="summary-agents-more" type="button" aria-controls="summaryAgentsList" aria-expanded="false" hidden>展开全部</button>
 </div>
 <div class="summary-section" id="summaryArtifactsSection">
         <header class="summary-section-head">
@@ -958,6 +977,7 @@
         <header class="tool-file-preview-head">
           <svg viewBox="0 0 24 24" class="ic"><path d="M13 3H7a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-8a2 2 0 0 0-.6-1.4l-5-5A2 2 0 0 0 13 3Z"/><path d="M14 3.5V7a2 2 0 0 0 2 2h3.5"/></svg>
           <span id="toolFilePreviewTitle">选择文件</span>
+          <button class="file-mode-toggle" id="toolFileHistoryToggle" type="button" aria-pressed="false" hidden>版本记录</button>
           <button class="file-region-button" id="toolFileHtmlCrop" type="button" data-reference-crop aria-pressed="false" hidden><span class="file-ppt-action-label">标注区域</span></button>
           <button class="file-mode-toggle" id="toolFileModeToggle" type="button" hidden>编辑代码</button>
           <button class="file-edit-save" id="toolFileEditSave" type="button" hidden>保存</button>
@@ -1256,6 +1276,6 @@
 <!-- 云同步层：初始化云客户端、WorkBuddy 登录与四类本地数据的云端同步；成功后按原顺序注入下方应用脚本 -->
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
 <script src="./catpaw-cloud-config.js"></script>
-<script src="./catpaw-cloud.js"></script>
+<script src="./catpaw-cloud.js?v=20261116-conversation-init"></script>
 </body>
 </html>

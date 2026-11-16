@@ -1,0 +1,131 @@
+{
+  "rules": {
+    "bodyLightness": 0.84,
+    "bodyChroma": 0.0826,
+    "backgroundLightness": 0.97,
+    "backgroundChroma": 0.0146,
+    "eyes": "#FFFFFF"
+  },
+  "palettes": [
+    {
+      "name": "blue",
+      "hue": 250,
+      "medium": "#6DA3DA",
+      "deep": "#4475A6",
+      "body": "#A2CFFF",
+      "background": "#EEF6FF",
+      "bodyOKLCH": "oklch(0.84 0.0826 250)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 250)"
+    },
+    {
+      "name": "lavender",
+      "hue": 295,
+      "medium": "#A392D6",
+      "deep": "#7666A2",
+      "body": "#CEC0FB",
+      "background": "#F5F3FE",
+      "bodyOKLCH": "oklch(0.84 0.0826 295)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 295)"
+    },
+    {
+      "name": "green",
+      "hue": 145,
+      "medium": "#76AF77",
+      "deep": "#4D804F",
+      "body": "#A9D9AA",
+      "background": "#EFF8EF",
+      "bodyOKLCH": "oklch(0.84 0.0826 145)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 145)"
+    },
+    {
+      "name": "mint",
+      "hue": 175,
+      "medium": "#50B39B",
+      "deep": "#21836E",
+      "body": "#8FDDC7",
+      "background": "#ECF9F4",
+      "bodyOKLCH": "oklch(0.84 0.0826 175)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 175)"
+    },
+    {
+      "name": "rose",
+      "hue": 355,
+      "medium": "#D084A1",
+      "deep": "#9C5974",
+      "body": "#F7B5CD",
+      "background": "#FEF1F5",
+      "bodyOKLCH": "oklch(0.84 0.0826 355)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 355)"
+    },
+    {
+      "name": "coral",
+      "hue": 25,
+      "medium": "#D6857F",
+      "deep": "#A15B55",
+      "body": "#FCB6AF",
+      "background": "#FFF2F0",
+      "bodyOKLCH": "oklch(0.84 0.0826 25)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 25)"
+    },
+    {
+      "name": "peach",
+      "hue": 55,
+      "medium": "#CF8D60",
+      "deep": "#9B6239",
+      "body": "#F5BD97",
+      "background": "#FDF3EC",
+      "bodyOKLCH": "oklch(0.84 0.0826 55)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 55)"
+    },
+    {
+      "name": "gold",
+      "hue": 85,
+      "medium": "#BB9A51",
+      "deep": "#8B6D28",
+      "body": "#E3C78C",
+      "background": "#FAF5EA",
+      "bodyOKLCH": "oklch(0.84 0.0826 85)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 85)"
+    },
+    {
+      "name": "lime",
+      "hue": 115,
+      "medium": "#9CA65B",
+      "deep": "#707833",
+      "body": "#C8D193",
+      "background": "#F4F6EB",
+      "bodyOKLCH": "oklch(0.84 0.0826 115)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 115)"
+    },
+    {
+      "name": "teal",
+      "hue": 200,
+      "medium": "#40B1B7",
+      "deep": "#008287",
+      "body": "#86DBE0",
+      "background": "#EAF8F9",
+      "bodyOKLCH": "oklch(0.84 0.0826 200)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 200)"
+    },
+    {
+      "name": "sky",
+      "hue": 225,
+      "medium": "#4FABCD",
+      "deep": "#217D9B",
+      "body": "#8ED6F3",
+      "background": "#EBF7FD",
+      "bodyOKLCH": "oklch(0.84 0.0826 225)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 225)"
+    },
+    {
+      "name": "orchid",
+      "hue": 325,
+      "medium": "#BE89C1",
+      "deep": "#8D5E90",
+      "body": "#E7B8E9",
+      "background": "#FAF2FB",
+      "bodyOKLCH": "oklch(0.84 0.0826 325)",
+      "backgroundOKLCH": "oklch(0.97 0.0146 325)"
+    }
+  ]
+}

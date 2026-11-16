@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Subagent catpaw-6">
+<rect width="160" height="160" rx="34" fill="#FFF2F0"/>
+<defs>
+  <linearGradient id="edge-fade" gradientUnits="userSpaceOnUse" x1="28" y1="132" x2="100" y2="65"><stop offset="0" stop-color="white" stop-opacity="0"/><stop offset="1" stop-color="white"/></linearGradient>
+  <linearGradient id="soft-fade" gradientUnits="userSpaceOnUse" x1="28" y1="132" x2="100" y2="65"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+  <mask id="sharp-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><rect width="160" height="160" fill="url(#edge-fade)"/></mask>
+  <mask id="soft-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><rect width="160" height="160" fill="url(#soft-fade)"/></mask>
+  <filter id="left-soft" filterUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><feGaussianBlur stdDeviation="3.2"/></filter>
+</defs>
+<!-- Enlarge the complete character together inside the unchanged tile. -->
+<g transform="translate(80 80) scale(1.1) translate(-80 -80)">
+<!-- Composite the solid union before filtering; facial features stay above both layers. -->
+<g mask="url(#soft-edge)"><g fill="#FCB6AF" filter="url(#left-soft)"><ellipse cx="60.19" cy="95.88" rx="42.11" ry="35.95" transform="rotate(145 60.19 95.88)"/>
+<ellipse cx="99.81" cy="68.12" rx="42.11" ry="35.95" transform="rotate(145 99.81 68.12)"/>
+<ellipse cx="61.25" cy="64.23" rx="40.54" ry="38.25" transform="rotate(223.47 61.25 64.23)"/>
+<ellipse cx="98.75" cy="99.77" rx="40.54" ry="38.25" transform="rotate(223.47 98.75 99.77)"/></g></g>
+<g mask="url(#sharp-edge)" data-body="ellipse-union"><g fill="#FCB6AF"><ellipse cx="60.19" cy="95.88" rx="42.11" ry="35.95" transform="rotate(145 60.19 95.88)"/>
+<ellipse cx="99.81" cy="68.12" rx="42.11" ry="35.95" transform="rotate(145 99.81 68.12)"/>
+<ellipse cx="61.25" cy="64.23" rx="40.54" ry="38.25" transform="rotate(223.47 61.25 64.23)"/>
+<ellipse cx="98.75" cy="99.77" rx="40.54" ry="38.25" transform="rotate(223.47 98.75 99.77)"/></g></g>
+<g data-face="wide-flat" transform="translate(83 91) scale(1.8975)"><defs><clipPath id="eye-white-0"><ellipse cx="-11" cy="-5" rx="6.7" ry="6.7"/></clipPath></defs><ellipse cx="-11" cy="-5" rx="6.7" ry="6.7" fill="#FFFFFF"/><ellipse cx="-7.699999999999999" cy="-5" rx="3.9" ry="3.9" fill="#A15B55" clip-path="url(#eye-white-0)"/><defs><clipPath id="eye-white-1"><ellipse cx="11" cy="-5" rx="6.7" ry="6.7"/></clipPath></defs><ellipse cx="11" cy="-5" rx="6.7" ry="6.7" fill="#FFFFFF"/><ellipse cx="14.3" cy="-5" rx="3.9" ry="3.9" fill="#A15B55" clip-path="url(#eye-white-1)"/><g transform="translate(0 9) scale(.85) translate(0 -9)"><path d="M -4 9 H 4" fill="none" stroke="#A15B55" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+</g>
+</svg>

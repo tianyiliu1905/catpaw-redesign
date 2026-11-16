@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Subagent catpaw-15">
+<rect width="160" height="160" rx="34" fill="#EFF8EF"/>
+<defs>
+  <linearGradient id="edge-fade" gradientUnits="userSpaceOnUse" x1="28" y1="132" x2="100" y2="65"><stop offset="0" stop-color="white" stop-opacity="0"/><stop offset="1" stop-color="white"/></linearGradient>
+  <linearGradient id="soft-fade" gradientUnits="userSpaceOnUse" x1="28" y1="132" x2="100" y2="65"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>
+  <mask id="sharp-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><rect width="160" height="160" fill="url(#edge-fade)"/></mask>
+  <mask id="soft-edge" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><rect width="160" height="160" fill="url(#soft-fade)"/></mask>
+  <filter id="left-soft" filterUnits="userSpaceOnUse" x="0" y="0" width="160" height="160"><feGaussianBlur stdDeviation="3.2"/></filter>
+</defs>
+<!-- Enlarge the complete character together inside the unchanged tile. -->
+<g transform="translate(80 80) scale(1.1) translate(-80 -80)">
+<!-- Composite the solid union before filtering; facial features stay above both layers. -->
+<g mask="url(#soft-edge)"><g fill="#A9D9AA" filter="url(#left-soft)"><ellipse cx="100.39" cy="83.72" rx="39.68" ry="25.06" transform="rotate(4.8 100.39 83.72)"/>
+<ellipse cx="59.61" cy="80.28" rx="39.68" ry="25.06" transform="rotate(4.8 59.61 80.28)"/>
+<ellipse cx="94.96" cy="101.88" rx="36.71" ry="21.97" transform="rotate(53.04 94.96 101.88)"/>
+<ellipse cx="65.04" cy="62.12" rx="36.71" ry="21.97" transform="rotate(53.04 65.04 62.12)"/>
+<ellipse cx="77.82" cy="103.46" rx="38.65" ry="25.02" transform="rotate(95.81 77.82 103.46)"/>
+<ellipse cx="82.18" cy="60.54" rx="38.65" ry="25.02" transform="rotate(95.81 82.18 60.54)"/>
+<ellipse cx="58.76" cy="95.49" rx="37.74" ry="25.27" transform="rotate(147.59 58.76 95.49)"/>
+<ellipse cx="101.24" cy="68.51" rx="37.74" ry="25.27" transform="rotate(147.59 101.24 68.51)"/></g></g>
+<g mask="url(#sharp-edge)" data-body="ellipse-union"><g fill="#A9D9AA"><ellipse cx="100.39" cy="83.72" rx="39.68" ry="25.06" transform="rotate(4.8 100.39 83.72)"/>
+<ellipse cx="59.61" cy="80.28" rx="39.68" ry="25.06" transform="rotate(4.8 59.61 80.28)"/>
+<ellipse cx="94.96" cy="101.88" rx="36.71" ry="21.97" transform="rotate(53.04 94.96 101.88)"/>
+<ellipse cx="65.04" cy="62.12" rx="36.71" ry="21.97" transform="rotate(53.04 65.04 62.12)"/>
+<ellipse cx="77.82" cy="103.46" rx="38.65" ry="25.02" transform="rotate(95.81 77.82 103.46)"/>
+<ellipse cx="82.18" cy="60.54" rx="38.65" ry="25.02" transform="rotate(95.81 82.18 60.54)"/>
+<ellipse cx="58.76" cy="95.49" rx="37.74" ry="25.27" transform="rotate(147.59 58.76 95.49)"/>
+<ellipse cx="101.24" cy="68.51" rx="37.74" ry="25.27" transform="rotate(147.59 101.24 68.51)"/></g></g>
+<g data-face="happy-surprised" transform="translate(83 91) scale(1.8975)"><path d="M -15 -3 Q -11 -10 -7 -3" fill="none" stroke="#4D804F" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M 7 -3 Q 11 -10 15 -3" fill="none" stroke="#4D804F" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(0 9) scale(.85) translate(0 -9)"><ellipse cx="0" cy="9" rx="3.9" ry="4.1" fill="none" stroke="#4D804F" stroke-width="3"/></g></g>
+</g>
+</svg>

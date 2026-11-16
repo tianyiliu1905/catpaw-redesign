@@ -76,3 +76,16 @@ test('multi-task disclosure opens only on click and supports toggle, outside clo
  events['button:click']();events.keydown({key:'Escape',preventDefault(){prevented++},stopPropagation(){}});
  assert.equal(attrs['aria-expanded'],'false');assert.equal(prevented,1);assert.ok(focused>0);
 });
+
+test('terminated floating processes disappear from the shared summary and capsule source list',()=>{
+ const ctx=setup(),task={},other={};const items=[['导出明细','export.py'],['汇总指标','summary.py'],['检查记录','check.py']];
+ assert.equal(ctx.backgroundItemsForDisplay(task,items,true).length,3);
+ ctx.terminateBackgroundDemoProcess(task,'导出明细');
+ assert.equal(ctx.backgroundItemsForDisplay(task,items,true).length,2);
+ assert.equal(ctx.backgroundItemsForDisplay(task,[items[0]],true).length,0);
+ assert.equal(ctx.backgroundItemsForDisplay(task,items,false).length,3);
+ assert.equal(ctx.backgroundItemsForDisplay(other,items,true).length,3);
+ ctx.terminateBackgroundDemoProcess(task,'汇总指标');ctx.terminateBackgroundDemoProcess(task,'检查记录');
+ assert.equal(ctx.backgroundItemsForDisplay(task,items,true).length,0);
+ ctx.setBackgroundDemoState(task,'running');assert.equal(ctx.backgroundItemsForDisplay(task,items,true).length,3);
+});

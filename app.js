@@ -4,6 +4,8 @@
 (function () {
   'use strict';
   let artifactSelection;
+  // Summary rendering runs during sidebar initialization, before conversation setup.
+  let activeConversationTask = null;
   const strategyScene = new URLSearchParams(window.location.search).get('strategyScene');
   let strategyDemoActive = false;
 
@@ -1127,7 +1129,19 @@ function renderSummaryAgents() {
     agents.set(title, {title, detail, status, avatarIndex});
   }
   section.hidden = agents.size === 0;
-  const html = [...agents.values()].map(agent => `<button type="button" class="summary-agent-row" data-summary-agent="${esc(agent.title)}" data-agent-detail="${esc(agent.detail)}" data-agent-status="${agent.status}"><span class="summary-agent-icon" data-avatar-index="${agent.avatarIndex || 0}" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M8 5.33333V2.66667H5.33333" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M4 5.33333H12C12.7364 5.33333 13.3333 5.93029 13.3333 6.66667V12C13.3333 12.7364 12.7364 13.3333 12 13.3333H4C3.26362 13.3333 2.66667 12.7364 2.66667 12V6.66667C2.66667 5.93029 3.26362 5.33333 4 5.33333Z" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M1.33333 9.33333H2.66667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M13.3333 9.33333H14.6667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M10 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M6 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg></span><span class="summary-agent-name" title="${esc(agent.detail)}">${esc(agent.title)}</span>${agent.status === '已完成' ? '' : `<small class="summary-agent-status">${agent.status === '执行中' ? '运行中' : esc(agent.status)}</small>`}<img class="summary-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true"></button>`).join('');
+  section.querySelector('.summary-section-toggle span').textContent = `子智能体 (${agents.size})`;
+  const more = document.getElementById('summaryAgentsMore');
+  const ownerKey = activeConversationTask?.id || '';
+  if (list.dataset.owner !== ownerKey || list.dataset.count !== String(agents.size)) {
+    list.dataset.expanded = 'false';
+    list.dataset.owner = ownerKey;
+    list.dataset.count = String(agents.size);
+  }
+  more.hidden = agents.size <= 5;
+  more.setAttribute('aria-expanded', String(list.dataset.expanded === 'true'));
+  more.textContent = list.dataset.expanded === 'true' ? '收起' : `展开全部 (${agents.size})`;
+
+  const html = [...agents.values()].map(agent => `<button type="button" class="summary-agent-row" data-summary-agent="${esc(agent.title)}" data-agent-detail="${esc(agent.detail)}" data-agent-status="${agent.status}"><img class="stage-agent-avatar" src="${demoAgentAvatarSrc(agent.avatarIndex || 0)}" width="24" height="24" alt="" aria-hidden="true"><span class="summary-agent-name" title="${esc(agent.detail)}">${esc(agent.title)}</span>${agent.status === '已完成' ? '' : `<small class="summary-agent-status">${agent.status === '执行中' ? '运行中' : esc(agent.status)}</small>`}<img class="summary-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true"></button>`).join('');
   if (list.innerHTML !== html) list.innerHTML = html;
   const child = document.getElementById('subagentConversationPage') || document.querySelector('.subagent-workspace-pane.active .subagent-conversation-page');
   if (child) {
@@ -1138,6 +1152,12 @@ function renderSummaryAgents() {
       child.querySelector('[data-agent-live-copy]').textContent = subagentStatusCopy(agent.status);
     }
   }
+}
+
+function demoAgentAvatarSrc(index = 0) {
+  const selected = [4, 5, 6, 7];
+  const avatar = selected[((index % selected.length) + selected.length) % selected.length];
+  return `assets/generated-subagents/subagent-${String(avatar).padStart(3, '0')}.svg?v=20261116-selected-four`;
 }
 
 function subagentStatusCopy(status) {
@@ -1174,15 +1194,11 @@ function openSubagentConversation(button, workspaceHost = null, returnToParent =
         <article class="md conversation-reply"><p data-agent-live-copy>${subagentStatusCopy(status)}</p></article>
       </div></div></div></div></div>
     <div class="conversation-composer-wrap">
-      <section class="conversation-queue-group subagent-control-notice" aria-label="子智能体接管状态" hidden>
-        <div class="conversation-queue-item"><span class="conversation-queue-text" role="status">你已接管此对话</span><button type="button" class="subagent-release">返还权限</button></div>
-      </section>
       <div class="conversation-composer subagent-composer">
-      <form class="subagent-composer-form" inert>
-        <div class="conversation-prompt-entry"><textarea rows="1" placeholder="继续对话" aria-label="给子智能体补充要求" disabled></textarea></div>
+      <form class="subagent-composer-form">
+        <div class="conversation-prompt-entry"><textarea rows="1" placeholder="继续对话" aria-label="给子智能体补充要求"></textarea></div>
         <div class="conversation-composer-actions"><button type="submit" class="subagent-send" aria-label="发送给子智能体" disabled><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
       </form>
-      <div class="subagent-composer-mask"><button type="button" class="subagent-takeover">接管对话</button></div>
     </div></div>`;
   const parent = document.getElementById('conversationPage');
   if (!workspaceHost) {
@@ -1194,18 +1210,6 @@ function openSubagentConversation(button, workspaceHost = null, returnToParent =
   const form = child.querySelector('.subagent-composer-form');
   const prompt = form.querySelector('textarea');
   const send = form.querySelector('.subagent-send');
-  const takeover = child.querySelector('.subagent-takeover');
-  const controlNotice = child.querySelector('.subagent-control-notice');
-  function setSubagentTakeover(active) {
-    controlNotice.hidden = !active;
-    child.querySelector('.subagent-composer-mask').hidden = active;
-    form.inert = !active;
-    prompt.disabled = !active;
-    send.disabled = !active || !prompt.value.trim();
-    (active ? prompt : takeover).focus({preventScroll:true});
-  }
-  takeover.addEventListener('click', () => setSubagentTakeover(true));
-  child.querySelector('.subagent-release').addEventListener('click', () => setSubagentTakeover(false));
   prompt.addEventListener('input', () => {send.disabled = !prompt.value.trim();});
   prompt.addEventListener('keydown', event => {
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
@@ -1246,7 +1250,7 @@ if (backgroundProcesses.length) {
   button.type = 'button';
   button.className = 'summary-agent-row summary-process-row';
   button.dataset.processTitle = backgroundProcess.dataset.backgroundTitle;
-  button.innerHTML = '<svg viewBox="0 0 24 24" class="ic summary-process-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/></svg><span class="summary-agent-name">' + esc(backgroundProcess.dataset.backgroundTitle) + '</span><img class="summary-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true">';
+  button.innerHTML = '<svg viewBox="0 0 24 24" class="ic summary-process-icon" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/></svg><span class="summary-agent-name">' + esc(backgroundProcess.dataset.backgroundTitle) + '</span>';
   button.addEventListener('click', () => {setSummaryOpen(false);backgroundProcess.click();});
   entry.append(button);
   if (backgroundProcess.dataset.agentStatus === '执行中') {
@@ -1277,6 +1281,7 @@ if (backgroundProcesses.length) {
     processList.append(button);
   }
 }
+processSection.querySelector('.summary-section-toggle span').textContent = `后台进程 (${processList.querySelectorAll('.summary-process-row').length})`;
 const scheduled = hasActiveTask && scheduledRunTasks.has(activeConversationTask);
 document.getElementById('scheduledSummary').hidden = !scheduled;
 document.getElementById('standardSummary').hidden = false;
@@ -1288,6 +1293,8 @@ const folder = currentNode();
 if (!hasActiveTask) fileGrid.innerHTML = '<p class="summary-empty">无</p>';
 else if (scheduled) renderFileGrid({ files: conversationExamples.get(activeConversationTask)?.fileNodes || [] });
 else if (folder) renderFileGrid(folder);
+else fileGrid.innerHTML = '<p class="summary-empty">无</p>';
+document.getElementById('summaryArtifactsTitle').textContent += ` (${fileGrid.querySelectorAll('.summary-file-row').length})`;
 }
 
   /* 换了归属文件夹就是换了一棵树，层级栈必须重置到根。
@@ -2912,6 +2919,7 @@ const fileDetailsContent = document.getElementById('fileDetailsContent');
     },
   };
   const WORKSPACE_CLOSE = '<svg viewBox="0 0 24 24" class="ic"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg>';
+  const defaultTerminalMarkup = workbench.querySelector('[data-pane="terminal"] .term').innerHTML;
   let workspaceSeq = 0;
   let openWorkspaces = [{
     id: 'file-default',
@@ -3258,6 +3266,7 @@ let openingFileWorkspace = false;
     }
     if (next === 'tools' && openWorkspaces.length === 0 && !workbenchExpanded) ensureDefaultFileWorkspace();
     rightPanel = next;
+    document.querySelectorAll('.artifact-version-tag').forEach(tag => tag.setAttribute('aria-expanded', String(next === 'tools' && currentFileWorkspace()?.previewMode === 'history')));
     syncScheduledPanelToggle();
     syncWorkbenchWidth();
     const instantFileOpen = opening && content.classList.contains('wb-file-workspace');
@@ -3299,6 +3308,7 @@ let openingFileWorkspace = false;
       scheduledPanelToggle.classList.remove('active');
       clearTimeout(panelSwitchTimer);
       rightPanel = null;
+      document.querySelectorAll('.artifact-version-tag').forEach(tag => tag.setAttribute('aria-expanded', 'false'));
       content.classList.remove('wb-open', 'wb-file-workspace', 'wb-expanded', 'wb-file-active', 'wb-conversation-active', 'wb-panel-switch', 'wb-scheduled-overlay');
       if (conversationPage.parentNode !== conversationPageHome) conversationPageHome.insertBefore(conversationPage, conversationPageNextSibling);
       workbenchExpanded = false;
@@ -3335,7 +3345,9 @@ let openingFileWorkspace = false;
         ` data-workspace-tab="${item.id}" data-workspace-kind="${item.kind}"` +
         ` data-workspace-empty="${item.kind === 'file' && !item.node}"` +
         ` aria-selected="${selected}" title="${esc(item.title)}">` +
-        (item.kind === 'file' && item.node && fileExtension(item.node.name) === 'pdf'
+        (item.kind === 'subagent' && item.avatarSrc
+          ? `<img class="workspace-tab-agent-avatar" src="${esc(item.avatarSrc)}" width="24" height="24" alt="" aria-hidden="true">`
+          : item.kind === 'file' && item.node && fileExtension(item.node.name) === 'pdf'
           ? `<span class="workspace-tab-pdf-icon" aria-hidden="true">PDF</span>`
           : `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${meta.icon}</svg>`) +
         `<span class="workspace-tab-title">${esc(item.title)}${item.sourceDraft !== undefined && item.sourceDraft !== sourceForNode(item.node) ? ' •' : ''}</span>` +
@@ -3366,6 +3378,7 @@ let openingFileWorkspace = false;
     fullscreenConversationActive = false;
     content.classList.remove('wb-conversation-active');
     activeWorkspace = id;
+    document.querySelectorAll('.artifact-version-tag').forEach(tag => tag.setAttribute('aria-expanded', String(isArtifactHistoryOpen())));
     if (item.kind === 'terminal') fileTreeVisible = false;
     renderWorkspaceTabs();
     workbench.classList.toggle('file-split', fileTreeVisible);
@@ -3381,6 +3394,7 @@ let openingFileWorkspace = false;
       }
     }
     if (item.kind === 'file') renderToolFileWorkspace(item);
+    if (item.kind === 'terminal') renderProcessTerminal(item);
     syncFileTreeToggle();
     syncFullscreenChat();
   }
@@ -3985,10 +3999,11 @@ const preview = node.preview;
   function renderToolFileWorkspace(item) {
     if (!item || item.kind !== 'file') return;
     artifactSelection?.cancel();
+    const historyMode = item.previewMode === 'history';
     const treeVisible = fileTreeVisible;
     const canToggleMode = supportsRenderedPreview(item.node);
     const hasVisualPreview = Boolean(item.node?.preview && PREVIEWS[item.node.preview.kind]);
-    if (canToggleMode && item.previewMode !== 'source') item.previewMode = 'rendered';
+    if (canToggleMode && !historyMode && item.previewMode !== 'source') item.previewMode = 'rendered';
     if (item.node?.preview?.kind === 'image' && item.previewMode !== 'artifact') item.previewMode = 'rendered';
     workbench.classList.toggle('file-split', treeVisible);
     workbench.classList.toggle('file-preview-only', !treeVisible);
@@ -3997,7 +4012,7 @@ const preview = node.preview;
     syncFileTreeToggle();
     const editing = canToggleMode && item.previewMode === 'source';
     toolFileHtmlCrop.hidden = editing || item.node?.preview?.kind !== 'html';
-    toolFileModeToggle.hidden = !canToggleMode || editing;
+    toolFileModeToggle.hidden = historyMode || !canToggleMode || editing;
     toolFileModeToggle.textContent = '编辑代码';
     toolFileEditSave.hidden = !editing;
     toolFileEditDiscard.hidden = !editing;
@@ -4007,9 +4022,16 @@ const preview = node.preview;
     toolFileShare.hidden = editing || !isArtifactNode(item.node);
     setFileActionsMenu(false);
     activeFilePath = treeVisible ? item.path || null : null;
-    toolFilePreviewTitle.textContent = item.node ? item.node.name : '选择文件';
+    toolFilePreviewTitle.textContent = item.node ? item.node.name + (item.node.artifactVersion ? ` · 第 ${item.node.artifactVersion} 版` : '') : '选择文件';
+    const historyToggle = document.getElementById('toolFileHistoryToggle');
+    historyToggle.hidden = item.node?.name !== '门店履约异常明细.xlsx';
+    historyToggle.textContent = historyMode ? '返回文件预览' : '版本记录';
+    historyToggle.setAttribute('aria-pressed', String(historyMode));
+    document.querySelectorAll('.artifact-version-tag').forEach(tag => tag.setAttribute('aria-expanded', String(historyMode && rightPanel === 'tools')));
     fileActions.hidden = editing || !item.node;
-    if (!item.node) toolFilePreviewBody.innerHTML = TOOL_FILE_EMPTY;
+    toolFilePreviewBody.classList.toggle('is-version-history', historyMode);
+    if (historyMode) toolFilePreviewBody.innerHTML = renderArtifactHistory(item.historySelectedVersion);
+    else if (!item.node) toolFilePreviewBody.innerHTML = TOOL_FILE_EMPTY;
     else if (hasVisualPreview && item.previewMode !== 'source') {
       toolFilePreviewBody.innerHTML = PREVIEWS[item.node.preview.kind](item.node.preview, item);
     } else if (item.previewMode === 'artifact') {
@@ -4059,6 +4081,32 @@ const preview = node.preview;
     });
   }
 
+  function renderProcessTerminal(item) {
+    const terminal = workbench.querySelector('[data-pane="terminal"] .term');
+    if (!item.backgroundProcess) { terminal.innerHTML = defaultTerminalMarkup; return; }
+    const {title, status} = item.backgroundProcess;
+    const output = title.includes('汇总') ? '正在汇总各区域履约指标…' : title.includes('缺失') ? '正在检查缺失时间戳和订单记录…' : '正在整理明细并写入导出文件…';
+    terminal.innerHTML = `<span class="t-path">${esc(title)}</span>\n<span class="t-prompt">❯</span> 后台任务日志 · 演示\n\n<span class="t-ok">✓</span> 任务已启动\n<span class="t-ok">✓</span> 已载入本周门店履约数据\n\n${status === '已完成' ? '<span class="t-ok">✓ 处理完成，结果已交回当前对话。</span>' : status === '已终止' ? '任务已终止。' : esc(output)+'\n<span class="cursor"></span>'}`;
+  }
+  window.openBackgroundProcessWorkspace = (button) => {
+    const title = button.dataset.backgroundTitle;
+    let item = openWorkspaces.find(entry => entry.kind === 'terminal' && entry.owner === activeConversationTask && entry.backgroundProcess?.title === title);
+    if (!item) {
+      openWorkspaces = openWorkspaces.filter(entry => !(entry.kind === 'file' && entry.implicit && !entry.node));
+      item = {id:`terminal-${++workspaceSeq}`, kind:'terminal', title, owner:activeConversationTask};
+      openWorkspaces.push(item);
+    }
+    item.backgroundProcess = {title, status:button.dataset.agentStatus};
+    fileTreeVisible = false;
+    workbenchExpanded = false;
+    if (rightPanel !== 'tools') {
+      openingFileWorkspace = true;
+      try { setRightPanel('tools'); } finally { openingFileWorkspace = false; }
+    }
+    activateWorkspace(item.id);
+    setSummaryOpen(false);
+  };
+
   window.openSubagentWorkspace = (button) => {
     const title = button.dataset.summaryAgent;
     const owner = activeConversationTask;
@@ -4078,6 +4126,7 @@ const preview = node.preview;
         else conversationPrompt.focus({preventScroll:true});
       });
     }
+    item.avatarSrc = button.querySelector('.background-subagent-avatar, .stage-agent-avatar')?.getAttribute('src') || item.avatarSrc || demoAgentAvatarSrc(0);
     fileTreeVisible = false;
     if (rightPanel !== 'tools') {
       openingFileWorkspace = true;
@@ -4965,26 +5014,27 @@ const mainView = document.querySelector('.main');
   ];
   const artifactEditingTask = document.getElementById('artifactEditingTask');
   const supplierComparisonTask = document.getElementById('supplierComparisonTask');
-  // Detached scenario target: retained only for the slide's intervention animation.
-  const interventionTask = document.createElement('a');
-  interventionTask.innerHTML = '<span class="task-name">生成经营复盘时补充要求</span>';
-  interventionTask.dataset.scope = 'office';
+  // Shared by the standalone queue conversation and the slide intervention demo.
+  const interventionTask = document.getElementById('interventionTask');
   const recoveryTask = document.getElementById('recoveryTask');
   const retryRecoveryTask=document.getElementById('retryRecoveryTask');
   const failureRecoveryTask=document.getElementById('failureRecoveryTask');
   const extraRecoveryCases = [
+    {task:document.getElementById('systemRecoveryTask'), mode:'system', prompt:'整理本周门店经营数据，生成区域经营概况。'},
     {task:document.getElementById('authRecoveryTask'), mode:'auth', prompt:'读取门店巡检规范，结合本月问题更新标准作业流程。'},
     {task:document.getElementById('exhaustedRecoveryTask'), mode:'exhausted', prompt:'结合三月份销售、客流和营销数据，分析核心指标变化。'}
   ];
   const widgetCases = new Map(window.CatPawWidgetCases.cases.map(item => [document.getElementById('widgetCase-' + item.id), item]));
   const backgroundAgentTask = document.getElementById('backgroundAgentTask');
-  const backgroundAgentInlineTask = document.getElementById('backgroundAgentInlineTask');
+  // 回复结尾提示已停用：const backgroundAgentInlineTask = document.getElementById('backgroundAgentInlineTask');
   const backgroundProcessTask = document.getElementById('backgroundProcessTask');
-  const backgroundProcessInlineTask = document.getElementById('backgroundProcessInlineTask');
-  const backgroundProcessTextTask = document.getElementById('backgroundProcessTextTask');
+  const backgroundMixedTask = document.getElementById('backgroundMixedTask');
+  // 回复结尾提示已停用：const backgroundProcessInlineTask = document.getElementById('backgroundProcessInlineTask');
+  // 正文链接方案已停用：const backgroundProcessTextTask = document.getElementById('backgroundProcessTextTask');
   const conversationExamples = new Map([
-    ...[backgroundProcessTask, backgroundProcessInlineTask, backgroundProcessTextTask].map(task => [task, {folderId:'default',files:[],turns:[{prompt:'先整理本周门店履约概况，把完整明细导出为文件，导出可以在后台继续。',reply:''}]}]),
-    [backgroundAgentInlineTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
+    ...[backgroundProcessTask].map(task => [task, {folderId:'default',files:[],turns:[{prompt:'先整理本周门店履约概况，把完整明细导出为文件，导出可以在后台继续。',reply:''}]}]),
+    [backgroundMixedTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约概况，让一个子智能体交叉核查明细，同时在后台导出完整文件。',reply:''}]}],
+    // 回复结尾提示已停用：[backgroundAgentInlineTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
     [backgroundAgentTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
     ...extraRecoveryCases.map(({task,prompt})=>[task,{folderId:task.closest('[data-folder]')?.dataset.folder || 'default',files:[],turns:[{prompt,reply:''}]}]),
     ...[...widgetCases].map(([task, item]) => [task, {folderId:'default', files:[], turns:[{prompt:item.prompt, reply:''}]}]),
@@ -5721,26 +5771,67 @@ const mainView = document.querySelector('.main');
   const conversationComposerDrafts = new Map();
   const startedConversationDemos = new Set();
   const conversationGoals = new Map();
-  let activeConversationTask = null;
+  // Motion Lab / Text & tools / B · Slide up.
+  const rollSnapshots = new WeakMap();
+  let pendingToolRoll = null;
   const stepMotion = {
-    exit(text, tool, textChanges) {
-      if (reducedMotion.matches || strategyScene) return null;
-      const out = [{opacity:1,transform:'translateX(0)'},{offset:.35,opacity:.9,transform:'translateX(-3px)'},{opacity:0,transform:'translateX(-14px)'}];
-      const animations = [
-        textChanges && text?.animate(out, {duration:240,easing:'ease-in',fill:'forwards'}),
-        tool?.animate(out, {duration:260,delay:textChanges && text ? 240 : 0,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'})
-      ].filter(Boolean);
-      if (!animations.length) return null;
-      return {
-        finished: Promise.allSettled(animations.map(animation => animation.finished)),
-        cancel: () => animations.forEach(animation => animation.cancel())
-      };
+    exit(text, tool, textChanges, allowScene = false) {
+      if (reducedMotion.matches || (strategyScene && !allowScene)) return null;
+      if (tool) {
+        const snapshot = (tool.querySelector(':scope > summary') || tool).cloneNode(true);
+        if (tool.matches('.background-agent-choice-detail,.background-current-action')) rollSnapshots.set(tool, snapshot);
+        else pendingToolRoll = snapshot;
+      }
+      if (textChanges) text?.animate([{opacity:1},{opacity:0}], {duration:220,easing:'cubic-bezier(.4,0,.6,1)'});
+      // Old and new rows roll together, rather than waiting for the exit to finish.
+      return {finished:Promise.resolve(),cancel() {}};
     },
-    enter(text, tool) {
-      if (reducedMotion.matches || strategyScene) return;
-      const easing = 'cubic-bezier(.22,.68,0,1)';
-      text?.animate([{opacity:0,transform:'translateX(6px)'},{opacity:1,transform:'translateX(0)'}], {duration:220,easing});
-      tool?.animate([{opacity:0,transform:'translateX(8px)'},{opacity:1,transform:'translateX(0)'}], {duration:260,delay:text ? 70 : 0,easing,fill:'backwards'});
+    enter(text, tool, allowScene = false) {
+      if (reducedMotion.matches || (strategyScene && !allowScene)) return;
+      text?.animate([{opacity:0},{opacity:1}], {duration:220,delay:120,easing:'cubic-bezier(.22,.68,0,1)',fill:'backwards'});
+      if (!tool) return;
+      if (!tool.matches('.stage-tool-call,.background-agent-choice-detail,.background-current-action')) return;
+      const isTask = tool.matches('.background-agent-choice-detail,.background-current-action');
+      const old = isTask ? rollSnapshots.get(tool) : pendingToolRoll;
+      if (isTask) rollSnapshots.delete(tool); else pendingToolRoll = null;
+      const slot = tool.querySelector(':scope > summary') || tool;
+      const label = slot.querySelector('.stage-tool-description') || slot;
+      const content = label.textContent;
+      const letters = [];
+      label.replaceChildren();
+      for (const word of content.split(/(\s+)/)) {
+        if (!word) continue;
+        if (/^\s+$/.test(word)) {label.append(document.createTextNode(word));continue;}
+        const group = document.createElement('span');
+        group.className = 'demo-roll-word';
+        for (const character of Array.from(word)) {
+          const letter = document.createElement('span');
+          letter.className = 'demo-roll-letter';letter.textContent = character;
+          group.append(letter);letters.push(letter);
+        }
+        label.append(group);
+      }
+      slot.classList.add('demo-roll-slot');
+      const animations = [];
+      const roll = (node, from, to, delay, duration, fade = false) => {
+        const animation = node.animate([{transform:from,opacity:fade?0:1},{transform:to,opacity:1}], {duration,delay,easing:'cubic-bezier(.32,.72,0,1)',fill:'both'});
+        animations.push(animation);
+      };
+      if (old) {
+        const ghost = document.createElement('span');
+        ghost.className = 'demo-roll-ghost';ghost.setAttribute('aria-hidden','true');ghost.inert = true;
+        ghost.append(...old.childNodes);slot.append(ghost);
+        roll(ghost,'translateY(0)','translateY(-100%)',120,420);
+      }
+      for (const icon of slot.querySelectorAll(':scope > .stage-tool-icon,:scope > svg')) roll(icon,'translateY(110%)','translateY(0)',120,420,true);
+      const stagger = (index, gap, spread) => spread * (-Math.expm1(-index * gap / spread));
+      letters.forEach((letter,i) => roll(letter,'translateY(110%)','translateY(0)',120+stagger(i,5,110),360+stagger(i,2,60),true));
+      Promise.allSettled(animations.map(animation => animation.finished)).then(() => {
+        slot.querySelector(':scope > .demo-roll-ghost')?.remove();
+        label.replaceChildren(document.createTextNode(content));
+        slot.classList.remove('demo-roll-slot');
+        animations.forEach(animation => animation.cancel());
+      });
     }
   };
   const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure'],...extraRecoveryCases.map(({task,mode})=>[task,mode])].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
@@ -5763,7 +5854,7 @@ const mainView = document.querySelector('.main');
       moveConversationProgressToLatestTurn();renderConversationTurnNav();
       requestAnimationFrame(()=>{conversationScroll.scrollTop=conversationScroll.scrollHeight;});
     },
-    thread:conversationThread,mode,stepMotion,systemHost:['retry','exhausted'].includes(mode)?document.getElementById('recoverySystemHost'):null,actionHost:mode==='auth'?document.getElementById('recoveryActionHost'):null,host:document.getElementById('clarificationQuestionHost'),composer:conversationComposer,
+    thread:conversationThread,mode,stepMotion,systemHost:['retry','exhausted','system'].includes(mode)?document.getElementById('recoverySystemHost'):null,actionHost:mode==='auth'?document.getElementById('recoveryActionHost'):null,host:document.getElementById('clarificationQuestionHost'),composer:conversationComposer,
     onChange:(phase,execution={})=>{
       if(mode==='auth'){
         const pending=['blocked','handoff','deferred'].includes(phase);
@@ -5779,7 +5870,7 @@ const mainView = document.querySelector('.main');
       scheduleConversationFollow();
     },
   })]));
-  const recoverySceneTasks={'2.3':recoveryTask,'2.3-2':retryRecoveryTask,'2.3-6':failureRecoveryTask};
+  const recoverySceneTasks={'2.3':recoveryTask,'2.3-2':retryRecoveryTask,'2.3-3':document.getElementById('systemRecoveryTask'),'2.3-6':failureRecoveryTask};
   const supplierDemo = window.CatPawSupplierDemo.createController({
     container:conversationThread,
     isActive:() => activeConversationTask === supplierComparisonTask,
@@ -6048,7 +6139,7 @@ const mainView = document.querySelector('.main');
     const rows = conversationStageDelegations.map((task, index) => {
       const state = completed ? 'done' : reviewing ? (index < 3 ? 'done' : 'running') : (index < 3 ? 'running' : 'queued');
       const status = state === 'done' ? '已完成' : state === 'running' ? '执行中' : '等待中';
-      return `<li class="stage-delegation-node" data-state="${state}" data-delegation-index="${index}"><button type="button" class="stage-agent-open" data-summary-agent="${esc(task.title)}" data-agent-detail="${esc(task.detail)}" data-agent-status="${status}" aria-label="子智能体：${esc(task.title)}，${status}，打开右侧面板"><span class="stage-agent-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M8 5.33333V2.66667H5.33333" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M4 5.33333H12C12.7364 5.33333 13.3333 5.93029 13.3333 6.66667V12C13.3333 12.7364 12.7364 13.3333 12 13.3333H4C3.26362 13.3333 2.66667 12.7364 2.66667 12V6.66667C2.66667 5.93029 3.26362 5.33333 4 5.33333Z" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M1.33333 9.33333H2.66667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M13.3333 9.33333H14.6667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M10 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M6 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg></span><span class="stage-delegation-title">${esc(task.title)}</span><img class="stage-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true"></button></li>`;
+      return `<li class="stage-delegation-node" data-state="${state}" data-delegation-index="${index}"><button type="button" class="stage-agent-open" data-summary-agent="${esc(task.title)}" data-agent-detail="${esc(task.detail)}" data-agent-status="${status}" aria-label="子智能体：${esc(task.title)}，${status}，打开右侧面板"><img class="stage-agent-avatar" src="${demoAgentAvatarSrc(index)}" width="24" height="24" alt="" aria-hidden="true"><span class="stage-delegation-title">${esc(task.title)}</span><img class="stage-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true"></button></li>`;
     }).join('');
     const tree = `<div class="stage-delegation-tree"><ol class="stage-delegation-list">${rows}</ol><svg class="stage-delegation-flow" aria-hidden="true" focusable="false"></svg></div>`;
     if (completed) return `<section class="stage-delegation" aria-label="已调取的子智能体">${tree}</section>`;
@@ -6199,9 +6290,57 @@ const mainView = document.querySelector('.main');
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => syncAgentTransmissionPaths(conversationThread)).observe(conversationThread);
 
   const stageResultHistory = [];
+  let versionPreviewActive = false;
   function stageResultNode() {
     const example = conversationExamples.get(conversationTask);
     return FOLDERS.find(folder => folder.id === example.folderId).files.find(file => file.name === '门店履约异常明细.xlsx');
+  }
+  let earlierArtifactVersions = null;
+  const artifactVersionPreviewNodes = new Map();
+  function hasVersionDemoHistory() { return ['3.3','3.3-2'].includes(strategyScene); }
+  function artifactVersionCopy(version) {
+    const copies = hasVersionDemoHistory() ? [
+      ['整理异常明细初稿','按日期、门店和时段汇总异常记录，先保留订单量与超时单，方便核对范围。'],
+      ['补充超时率，标出优先核查对象','根据订单量与超时单补充超时率，帮助比较不同门店和时段的影响程度。'],
+      ['补充原因线索与待核实事项','加入异常原因线索，统一标记为待核实；增加行动跟踪表，记录负责人、期限和状态。'],
+      ['完善跟进建议，形成可交付版本','对齐统计口径，补齐 5 条异常的处理建议与行动跟踪，保留需人工核实的事项。'],
+      ['按超时率排序，优先查看高影响异常','按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。']
+    ] : [
+      ['整理门店履约异常明细','汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。'],
+      ['按超时率排序，优先查看高影响异常','按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。']
+    ];
+    const [title,summary] = copies[Math.min(version - 1,copies.length - 1)];
+    return {version,title,summary};
+  }
+  function priorArtifactVersions() {
+    if (!hasVersionDemoHistory()) return [];
+    if (!earlierArtifactVersions) {
+      const base = structuredClone(stageResultHistory[0] || stageResultNode().preview.sheets);
+      const initial = structuredClone(base[0]);
+      initial.columns = initial.columns.slice(0,5);
+      initial.rows = initial.rows.map(row => row.slice(0,5));
+      const rates = structuredClone(base[0]);
+      rates.columns = rates.columns.slice(0,6);
+      rates.rows = rates.rows.map(row => [...row.slice(0,5),`${(Number(row[4])/Number(row[3])*100).toFixed(1)}%`]);
+      const causes = structuredClone(base);
+      causes[0].rows = causes[0].rows.map(row => [...row.slice(0,5),`${(Number(row[4])/Number(row[3])*100).toFixed(1)}%`,`待核实：${row[6]}`]);
+      earlierArtifactVersions = [[initial],[rates],causes];
+    }
+    return earlierArtifactVersions;
+  }
+  function stageArtifactVersion() { return priorArtifactVersions().length + stageResultHistory.length + 1; }
+  function artifactVersionRecords() {
+    return [...priorArtifactVersions(),...stageResultHistory,stageResultNode().preview.sheets].map((sheets,index) => ({...artifactVersionCopy(index+1),sheets}));
+  }
+  function renderEarlierTurnArtifacts(index) {
+    if (!hasVersionDemoHistory()) return '';
+    const version = ({0:1,3:2,4:3,8:4})[index];
+    if (!version) return '';
+    const files = conversationExamples.get(conversationTask).files;
+    const name = '门店履约异常明细.xlsx';
+    const card = renderConversationArtifact(name,files.indexOf(name),artifactVersionCopy(version));
+    const otherFiles = index === 8 ? files.filter(file => file !== name).map(file => renderConversationArtifact(file,files.indexOf(file))).join('') : '';
+    return `<div class="conversation-artifacts${otherFiles ? '' : ' is-single'}" aria-label="第 ${version} 版产物">${card}${otherFiles}</div>`;
   }
   function renderStageRevision(resultName, version) {
     const before=stageResultHistory[stageResultHistory.length-1][0].rows;
@@ -6237,19 +6376,20 @@ const mainView = document.querySelector('.main');
       return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${renderStageResultSummary(true)}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(name, 0)}</div></section></div>`;
     }
     const resultName = '门店履约异常明细.xlsx';
-    const version = stageResultHistory.length + 1;
+    const version = stageArtifactVersion();
+    const revision = artifactVersionCopy(version);
     const summary = renderStageResultSummary(false);
-    const change = stageResultHistory.length ? '按超时率从高到低排列异常明细，优先查看影响最大的时段。原始记录与行动跟踪保持不变。' : '汇总 5 条异常与处理顺序，单列缺失记录和待确认的责任归属。';
-    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${summary}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName))}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
+    const change = revision.summary;
+    return `<div class="stage-result"><section class="stage-summary" aria-label="工作总结"><p>已完成门店履约异常核对，整理出 5 条优先跟进异常。</p>${summary}</section><section class="stage-output" aria-label="产物"><div class="conversation-artifacts is-single stage-result-artifacts" aria-label="本轮产物">${renderConversationArtifact(resultName, conversationExamples.get(conversationTask).files.indexOf(resultName), revision)}</div></section>${stageResultHistory.length?renderStageRevision(resultName,version):`<section class="stage-changes" aria-label="本轮变化"><p><strong>本轮变化</strong><span>版本 ${version}</span></p><p>${change}</p><div class="stage-version-actions">${!stageResultHistory.length ? '<button type="button" data-stage-sort>按超时率排序</button>' : '<button type="button" data-stage-undo>撤回本轮修改</button>'}</div><p class="stage-version-status" role="status" aria-live="polite"></p></section>`}</div>`;
   }
   function renderConversationPlan(planSteps, completedCount, planOpen, before=false, waiting=false, bodyId="stagePlanBody") {
     const plan = planSteps.map((step, index) => {
       const state = before ? (index === 0 ? 'current' : 'pending') : index < completedCount ? 'done' : index === completedCount ? (waiting ? 'waiting' : 'current') : 'pending';
       const label = state === 'done' ? '已完成' : state === 'current' ? '进行中' : state === 'waiting' ? '等待补充' : '待开始';
-      const statusIcon = state === 'current' ? '<span class="spinner" aria-hidden="true"></span>' : `<span class="stage-plan-digit">${index + 1}</span>`;
-      return `<li class="stage-plan-step" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title"><span class="stage-plan-title-text">${esc(step.title)}</span></span></li>`;
+      const statusIcon = `<span class="stage-plan-digit">${String(index + 1).padStart(2,'0')}</span>`;
+      return `<li class="stage-plan-step" style="--plan-index:${index}" data-state="${state}" aria-label="${esc(step.title)}，${label}"${state === 'current' ? ' aria-current="step"' : ''}><span class="stage-plan-number" aria-hidden="true">${statusIcon}</span><span class="stage-plan-title"><span class="stage-plan-title-text">${esc(step.title)}</span></span></li>`;
     }).join('');
-    return `<div class="stage-plan" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="${bodyId}"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${planSteps.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="${bodyId}"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
+    return `<div class="stage-plan stage-plan-cascade" data-collapsed="${!planOpen}" aria-label="Agent 的待办任务"><button class="stage-plan-toggle" type="button" aria-expanded="${planOpen}" aria-controls="${bodyId}"><svg viewBox="0 0 24 24" class="ic stage-plan-icon" aria-hidden="true">${stageToolIcons.list}</svg><strong>待办任务</strong><span>已完成 ${completedCount}/${planSteps.length}</span><svg viewBox="0 0 24 24" class="ic stage-plan-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="stage-plan-body" id="${bodyId}"${planOpen ? '' : ' inert'}><ol>${plan}</ol></div></div>`;
   }
 
   // A todo task owns a stable sequence of analysis and tool entries until the next task begins.
@@ -6436,6 +6576,7 @@ const mainView = document.querySelector('.main');
   function replaceStageContent(panel, markup, allowMotion = true) {
     const animate = allowMotion && !reducedMotion.matches && !strategyScene && !panel.classList.contains('is-entering') && typeof panel.animate === 'function';
     const previousCurrent = panel.querySelector('.stage-current');
+    const previousPlanStep = panel.querySelector('.stage-plan-cascade .stage-plan-step[data-state="current"]');
     const hadDelegation = Boolean(previousCurrent?.querySelector(':scope > .stage-delegation'));
     const previousProgress = previousCurrent?.querySelector(':scope > p')?.textContent;
     const previousTaskGroup = previousCurrent?.dataset?.taskGroup;
@@ -6452,6 +6593,8 @@ const mainView = document.querySelector('.main');
     syncAgentTransmissionPaths(panel);
     if (!animate) return;
     const duration = 420, easing = 'cubic-bezier(.22,.68,0,1)';
+    const nextPlanStep = panel.querySelector('.stage-plan-cascade .stage-plan-step[data-state="current"]');
+    if (nextPlanStep && nextPlanStep !== previousPlanStep) nextPlanStep.animate([{opacity:.4,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,easing});
     const current = panel.querySelector('.stage-current');
     const delegation = current?.querySelector('.stage-delegation');
     const delegationEntering = Boolean(delegation && !hadDelegation);
@@ -6542,6 +6685,7 @@ const mainView = document.querySelector('.main');
     openToolCalls.forEach(index => { const item = panel.querySelector(`.stage-completed-call[data-stage-completed-call="${index}"]`); if (item) item.open = true; });
     syncStageDemoControls();
     conversationThreads.set(conversationTask, conversationThread.innerHTML);
+    if (conversationStageFrames[frameIndex].stage === 'done') renderConversationTurnNav();
     scheduleStageAutoAdvance(panel);
     if (followLatest) requestAnimationFrame(() => {
       if (panel.isConnected && Number(panel.dataset.stageFrame) === frameIndex && activeConversationTask === conversationTask && conversationScroll.scrollHeight > previousScrollHeight) {
@@ -6608,17 +6752,8 @@ const mainView = document.querySelector('.main');
       preserveConversationScrollRange();
       const current = conversationStageFrames[Number(panel.dataset.stageFrame)];
       const progressChanges = current.progress !== conversationStageFrames[next].progress;
-      panel.classList.toggle('is-tool-exiting', true);
-      panel.classList.toggle('is-progress-exiting', progressChanges);
-      stageDemoAdvance.disabled = true;
-      panel.dataset.pendingStageFrame = String(next);
-      stageAdvanceTimer = setTimeout(() => {
-        if (panel.dataset.pausedAt || panel.dataset.pendingStageFrame !== String(next)) return;
-        stageAdvanceTimer = null;
-        delete panel.dataset.pendingStageFrame;
-        stageDemoAdvance.disabled = false;
-        if (panel.isConnected) updateConversationStage(panel, next);
-      }, progressChanges ? 500 : 260);
+      stepMotion.exit(panel.querySelector('.stage-current > p'), panel.querySelector('.stage-current > .stage-tool-call'), progressChanges);
+      updateConversationStage(panel, next);
       return;
     }
     updateConversationStage(panel, next);
@@ -6738,6 +6873,8 @@ const mainView = document.querySelector('.main');
     const frame = conversationStageFrames[Number(panel.dataset.stageFrame)];
     panel.querySelector('.stage-result').outerHTML = renderStageResult(frame);
     panel.querySelector('.stage-version-status').textContent = sort ? '' : '已撤回本轮修改，恢复上一版明细。';
+    renderConversationTurnNav();
+    if (isArtifactHistoryOpen()) renderToolFileWorkspace(currentFileWorkspace());
     const item = currentFileWorkspace();
     if (item?.node === node) renderToolFileWorkspace(item);
     conversationThreads.set(conversationTask, conversationThread.innerHTML);
@@ -6996,9 +7133,17 @@ const mainView = document.querySelector('.main');
       }).join('') + `</div></div></div>`;
   }
 
-  function renderConversationArtifact(name, index) {
+  function renderConversationArtifact(name, index, revision = null) {
       const extension = name.split('.').pop().toLowerCase();
       const icon = artifactIconByExtension[extension] || 'doc';
+      if (revision && Number.isInteger(revision.version)) {
+        renderConversationArtifact.versionSequence = (renderConversationArtifact.versionSequence || 0) + 1;
+        const tipId = `artifact-version-summary-${renderConversationArtifact.versionSequence}`;
+        return `<div class="conversation-artifact conversation-artifact-versioned" data-artifact-index="${index}">
+          <button class="conversation-artifact-open conversation-artifact-icon-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}"><span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span></button>
+          <div class="conversation-artifact-info"><div class="conversation-artifact-title-row"><button class="conversation-artifact-title-open" type="button" data-artifact-open><strong>${esc(name)}</strong></button><span class="artifact-version-wrap"><button class="artifact-version-tag" type="button" data-artifact-version="${revision.version}" aria-controls="artifactHistoryPanel" aria-expanded="${isArtifactHistoryOpen()}" aria-label="第 ${revision.version} 版，打开版本记录" aria-describedby="${tipId}">第 ${revision.version} 版</button><span class="artifact-version-tooltip" id="${tipId}" role="tooltip"><span class="artifact-version-tooltip-label">第 ${revision.version} 版 · 修改摘要</span><strong>${esc(revision.title)}</strong><span>${esc(revision.summary)}</span></span></span></div><button class="conversation-artifact-subtitle-open" type="button" data-artifact-open><small>查看产物</small></button></div>
+          <button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
+      }
       return `<div class="conversation-artifact" data-artifact-index="${index}">` +
         `<button class="conversation-artifact-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}">` +
         `<span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span>` +
@@ -7006,6 +7151,67 @@ const mainView = document.querySelector('.main');
         `<button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu">` +
         `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
   }
+
+  function renderArtifactHistory(selectedVersion = stageArtifactVersion()) {
+    const snapshots = artifactVersionRecords();
+    const currentVersion = snapshots.length;
+    const selected = Math.min(currentVersion, Math.max(1, selectedVersion));
+    return `<section class="artifact-history-panel" id="artifactHistoryPanel" aria-label="产物版本记录"><div class="artifact-history-heading"><h2>版本记录</h2><small>${currentVersion} 个版本</small></div>
+      <div class="artifact-history-scroll"><ol class="artifact-history-timeline" aria-label="从最新到最早的版本记录">${snapshots.map(({sheets,version,title,summary}) => {
+        const sheet = sheets[0];
+        return `<li class="artifact-history-entry${version === selected ? ' is-selected' : ''}"${version === currentVersion ? ' aria-current="true"' : ''}><div class="artifact-history-version"><span>第 ${version} 版</span><small>${version === currentVersion ? '当前版本' : '历史版本'}</small></div><h3>${title}</h3><p>${summary}</p>
+          <figure class="artifact-history-thumbnail" aria-label="第 ${version} 版表格缩略预览"><div class="artifact-history-sheet-head"><span>${esc(sheet.name)}</span><span>${sheet.rows.length} 条记录</span></div><div class="artifact-history-sheet"><table><thead><tr>${sheet.columns.slice(0,7).map(column => `<th scope="col">${esc(column)}</th>`).join('')}</tr></thead><tbody>${sheet.rows.slice(0,5).map(row => `<tr>${row.slice(0,7).map(value => `<td>${esc(value)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><figcaption>第 ${version} 版 · 表格预览</figcaption></figure></li>`;
+      }).reverse().join('')}</ol></div></section>`;
+  }
+  function isArtifactHistoryOpen() {
+    return rightPanel === 'tools' && currentFileWorkspace()?.previewMode === 'history';
+  }
+  function openArtifactHistory(version) {
+    const node = stageResultNode();
+    const folder = FOLDERS.find(entry => entry.id === conversationExamples.get(conversationTask).folderId);
+    fileTreeVisible = false;
+    workbenchExpanded = false;
+    setSummaryOpen(false);
+    const item = openFileWorkspace(node, [folder,node], {path:null,previewMode:'history'});
+    item.previewMode = 'history';
+    item.historySelectedVersion = version;
+    renderToolFileWorkspace(item);
+    document.getElementById('toolFileHistoryToggle').focus({preventScroll:true});
+  }
+  function closeArtifactHistory() {
+    setWorkbench(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('.artifact-version-tag')?.focus({preventScroll:true})));
+  }
+  document.addEventListener('click', event => {
+    const toggle = event.target.closest('#toolFileHistoryToggle');
+    if (toggle) {
+      const item = currentFileWorkspace();
+      if (!item) return;
+      item.previewMode = item.previewMode === 'history' ? 'rendered' : 'history';
+      renderToolFileWorkspace(item);
+      return;
+    }
+    const tag = event.target.closest('.artifact-version-tag');
+    if (!tag) return;
+    tag.closest('.artifact-version-wrap').classList.add('is-dismissed');
+    openArtifactHistory(Number(tag.dataset.artifactVersion));
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    if (isArtifactHistoryOpen()) closeArtifactHistory();
+    document.querySelectorAll('.artifact-version-wrap').forEach(wrap => {
+      wrap.classList.add('is-dismissed');
+      if (wrap.contains(document.activeElement)) document.activeElement.blur();
+    });
+  });
+  document.addEventListener('pointerover', event => {
+    const wrap = event.target.closest('.artifact-version-wrap');
+    if (wrap && !wrap.contains(event.relatedTarget)) wrap.classList.remove('is-dismissed');
+  });
+  document.addEventListener('focusin', event => {
+    event.target.closest('.artifact-version-wrap')?.classList.remove('is-dismissed');
+  });
 
   function renderConversationArtifacts(task) {
     const example = conversationExamples.get(task);
@@ -7103,9 +7309,19 @@ const mainView = document.querySelector('.main');
     conversationTurnNav.hidden = turns.length < 2;
     conversationTurnNav.innerHTML = turns.length < 2 ? '' : turns.map((turn, index) => {
       const question = turn.querySelector('.message-bubble')?.textContent.trim() || turn.querySelector('.artifact-reference-comment')?.textContent.trim() || turn.querySelector('.artifact-reference-copy strong')?.textContent.trim() || turn.querySelector('[data-message-attachment]')?.getAttribute('aria-label') || '对话';
-      const answer = turn.nextElementSibling?.querySelector('.assistant-content')?.textContent.trim() || '';
+      const response = turn.nextElementSibling?.querySelector('.assistant-content');
+      const answer = (response?.querySelector('.stage-summary') || response?.querySelector('.conversation-reply') || response)?.textContent.trim() || '';
+      const artifactPreviews = [...(response?.querySelectorAll('.conversation-artifact') || [])].map(card => {
+        const name = card.querySelector('.conversation-artifact-title-open strong, .conversation-artifact-info > strong')?.textContent.trim();
+        if (!name) return '';
+        const version = card.querySelector('[data-artifact-version]')?.dataset.artifactVersion || card.dataset.artifactVersion || '1';
+        const extension = name.split('.').pop().toLowerCase();
+        const icon = artifactIconByExtension[extension] || 'doc';
+        return `<span class="conversation-turn-artifact"><img src="assets/artifact-${icon}.svg" alt="" width="28" height="28"><span class="conversation-turn-artifact-name">${esc(name)}</span><span class="conversation-turn-artifact-version">第 ${esc(version)} 版</span></span>`;
+      }).filter(Boolean);
+      const artifacts = artifactPreviews[0] || '';
       return `<button class="conversation-turn" type="button" data-turn-index="${index}" aria-label="跳转到第 ${index + 1} 轮：${esc(question)}">` +
-        `<span class="conversation-turn-preview" aria-hidden="true"><strong>${esc(question)}</strong>${answer ? `<br>${esc(answer.slice(0, 90))}${answer.length > 90 ? '…' : ''}` : ''}</span></button>`;
+        `<span class="conversation-turn-preview${artifacts ? ' has-artifacts' : ''}" aria-hidden="true"><strong>${esc(question)}</strong>${answer ? `<span class="conversation-turn-answer">${esc(answer.slice(0, 90))}${answer.length > 90 ? '…' : ''}</span>` : ''}${artifacts ? `<span class="conversation-turn-artifacts">${artifacts}${artifactPreviews.length > 1 ? `<span class="conversation-turn-artifact-count">+${artifactPreviews.length - 1}</span>` : ''}</span>` : ''}</span></button>`;
     }).join('');
     updateConversationTurnNav();
   }
@@ -7185,6 +7401,7 @@ const mainView = document.querySelector('.main');
   });
 
   let backgroundAgentTimer;
+  let backgroundTaskStepTimer;
   const backgroundAgentStarts = new Map();
   const backgroundDemoCounts = new Map();
   const backgroundDemoCompleted = new Map();
@@ -7195,8 +7412,15 @@ const mainView = document.querySelector('.main');
     ['交叉核查门店履约明细', '比对订单明细与门店记录，检查缺失时间戳和异常归属。'],
     ['核对超时时长', '核对到店和出餐时间戳，整理持续时间最长的异常。'],
     ['评估影响范围', '按门店统计受影响订单和履约差异。'],
-    ['复核分析结论', '交叉核对分析结论与原始记录，保留待确认事项。']
+    ['复核分析结论', '交叉核对分析结论与原始记录，保留待确认事项。'],
+    ['整理跟进建议', '汇总优先处理事项，整理各门店的跟进建议。']
   ];
+  const backgroundAgentBaseItems = backgroundAgentItems.slice();
+  for (let i = 5; i < 50; i++) {
+    const [title, detail] = backgroundAgentBaseItems[i % 5];
+    const batch = Math.floor(i / 5) + 1;
+    backgroundAgentItems.push([`${title} · 门店组${batch}`, `门店组${batch}：${detail}`]);
+  }
   const backgroundProcessItems = [
     ['导出门店履约明细', '导出门店履约明细.py'],
     ['汇总区域履约指标', '汇总区域履约指标.py'],
@@ -7222,6 +7446,11 @@ const mainView = document.querySelector('.main');
     stopped.add(title);
     return true;
   }
+  function backgroundItemsForDisplay(task, items, removeTerminated = false) {
+    if (!removeTerminated) return items;
+    const stopped = backgroundDemoTerminated.get(task);
+    return items.filter(([title]) => !stopped?.has(title));
+  }
   function renderBackgroundFollowup(process, sentAt, workCompleted) {
     const prompt = process
       ? '先帮我写一段发给区域负责人的周报提醒，说明明细稍后补充。'
@@ -7233,10 +7462,23 @@ const mainView = document.querySelector('.main');
       `<div class="conversation-message assistant-message"><div class="assistant-content">${workCompleted ? '' : '<div class="stage-thinking" data-global-state="done"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>已完成</strong></div></div>'}<article class="md conversation-reply"><p>可以，下面这段可以直接使用：</p><p>${reply}</p></article></div></div>`;
   }
   function wireBackgroundDisclosure(disclosure, aggregate, popup) {
+    let collapseTimer;
     const setExpanded = expanded => {
-      disclosure.classList.toggle('is-open', expanded);
+      clearTimeout(collapseTimer);
       aggregate.setAttribute('aria-expanded', String(expanded));
       popup.inert = !expanded;
+      if (expanded) {
+        disclosure.classList.remove('is-closing');
+        disclosure.classList.add('is-open');
+      } else if (disclosure.classList.contains('is-open') && !reducedMotion.matches) {
+        // Fade the fixed-width list before narrowing the capsule, so rows never squeeze.
+        disclosure.classList.add('is-closing');
+        collapseTimer = setTimeout(() => {
+          disclosure.classList.remove('is-open', 'is-closing');
+        }, 160);
+      } else {
+        disclosure.classList.remove('is-open', 'is-closing');
+      }
     };
     aggregate.addEventListener('click', () => {
       const expanded = aggregate.getAttribute('aria-expanded') !== 'true';
@@ -7257,25 +7499,26 @@ const mainView = document.querySelector('.main');
     });
     return setExpanded;
   }
-  const backgroundQueueRemoved = new Set();
   document.addEventListener('click', event => {
     document.querySelectorAll('.background-agent-disclosure.is-open').forEach(disclosure => {
       if (!disclosure.contains(event.target)) disclosure.dispatchEvent(new Event('background-close'));
     });
   });
   function syncBackgroundAgentDemo(open, task) {
+    clearInterval(backgroundTaskStepTimer);
     clearTimeout(backgroundAgentTimer);
     document.getElementById('backgroundAgentQueue')?.remove();
     document.getElementById('backgroundCountSwitch')?.remove();
     document.getElementById('backgroundWorkGroup')?.remove();
-    if (!open || ![backgroundAgentTask, backgroundAgentInlineTask, backgroundProcessTask, backgroundProcessInlineTask, backgroundProcessTextTask].includes(task)) return;
-    const inline = [backgroundAgentInlineTask, backgroundProcessInlineTask, backgroundProcessTextTask].includes(task);
-    const textLink = task === backgroundProcessTextTask;
-    const process = [backgroundProcessTask, backgroundProcessInlineTask, backgroundProcessTextTask].includes(task);
+    if (!open || ![backgroundAgentTask, backgroundProcessTask, backgroundMixedTask].includes(task)) return;
+    const inline = false; // 回复结尾与正文链接方案已停用，保留渲染实现。
+    const textLink = false; // 正文链接方案已停用。
+    const process = task === backgroundProcessTask;
+    const mixed = task === backgroundMixedTask;
     if (!backgroundAgentStarts.has(task)) backgroundAgentStarts.set(task, Date.now());
     const paint = () => {
       if (activeConversationTask !== task || conversationPage.hidden) return;
-      // All four background-work examples open at the final handoff state.
+      // Background-work examples open after the main reply has handed off the work.
       const handedOff = true;
       const finished = true;
       const workCompleted = backgroundDemoCompleted.has(task);
@@ -7287,17 +7530,17 @@ const mainView = document.querySelector('.main');
       document.getElementById('backgroundFollowupTurn')?.remove();
       const content = conversationThread.querySelector('.assistant-content');
       content.innerHTML = `<div class="stage-thinking" data-global-state="${finished ? 'done' : 'running'}"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>${finished ? '已完成' : '整理中'}</strong></div></div>
-        <article class="md conversation-reply"><p>${process ? (finished ? '本周履约概况已整理完成，完整明细仍在后台导出。你可以继续其他对话，文件生成后会补充到当前任务。' : '我先整理履约概况，并启动完整明细的导出。') : finished ? '本周履约概况已整理完成。明细的交叉核查已交给子智能体在后台继续，你可以继续其他对话，核查结果会在完成后补充。' : '我先整理履约概况，再让子智能体独立核查明细。'}</p></article>
+        <article class="md conversation-reply"><p>${mixed ? '本周履约概况已整理完成。1 个子智能体正在交叉核查明细，1 个后台进程正在导出文件。你可以继续对话，结果完成后会补充到当前任务。' : process ? (finished ? '本周履约概况已整理完成，完整明细仍在后台导出。你可以继续其他对话，文件生成后会补充到当前任务。' : '我先整理履约概况，并启动完整明细的导出。') : finished ? '本周履约概况已整理完成。明细的交叉核查已交给子智能体在后台继续，你可以继续其他对话，核查结果会在完成后补充。' : '我先整理履约概况，再让子智能体独立核查明细。'}</p></article>
         ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-figma.svg" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
       document.getElementById('backgroundWorkGroup')?.remove();
-      const count = backgroundDemoCounts.get(task) || 1;
+      const count = mixed ? 2 : backgroundDemoCounts.get(task) || 1;
       document.getElementById('backgroundCountSwitch')?.remove();
       const controls = document.createElement('div');
       controls.id = 'backgroundCountSwitch';
       controls.className = 'background-count-switch';
       controls.setAttribute('role', 'group');
       controls.setAttribute('aria-label', process ? '后台进程数量' : '子智能体数量');
-      for (const value of [1, process ? 3 : 4]) {
+      for (const value of (mixed ? [] : process ? [1, 3] : [1, 4, 5, 50])) {
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = `${value} 个${process ? '后台进程' : '子智能体'}`;
@@ -7306,7 +7549,7 @@ const mainView = document.querySelector('.main');
           backgroundDemoCounts.set(task, value);
           clearTimeout(backgroundAgentTimer);
           paint();
-          document.querySelectorAll('#backgroundCountSwitch button')[value === 1 ? 0 : 1].focus({preventScroll:true});
+          document.querySelector('#backgroundCountSwitch button[aria-pressed="true"]')?.focus({preventScroll:true});
         });
         controls.append(button);
       }
@@ -7331,23 +7574,27 @@ const mainView = document.querySelector('.main');
         group.id = 'backgroundWorkGroup';
         group.className = 'background-work-group' + (inline ? ' background-work-group-inline' : '') + (workCompleted ? ' is-complete' : '');
         group.hidden = textLink || (workCompleted && !inline);
-        const items = (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count);
+        const items = backgroundItemsForDisplay(task, mixed ? [backgroundAgentItems[0], backgroundProcessItems[0]] : (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count), (mixed || process) && !inline);
+        const visibleCount = items.length;
+        if (!visibleCount) group.hidden = true;
         const stoppedProcesses = backgroundDemoTerminated.get(task) || new Set();
         const allStopped = process && !workCompleted && items.every(([title])=>stoppedProcesses.has(title));
         if (allStopped) group.classList.add('is-complete');
         for (const [title, detail] of items) {
+        const process = mixed ? backgroundProcessItems.some(item => item[0] === title) : task === backgroundProcessTask;
         const stopped = process && stoppedProcesses.has(title);
-        const stateCopy = stopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中';
+        const stateCopy = (stopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中') + (process ? '，后台进程不消耗积分' : '');
         const capsule = document.createElement('button');
         capsule.className = 'background-agent-capsule' + (inline ? ' background-agent-capsule-inline' : '');
         capsule.type = 'button';
         const backgroundIcon = process
-          ? '<svg class="background-running-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/></svg>'
-          : '<svg class="background-running-icon background-running-agent-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 5.33333V2.66667H5.33333" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M4 5.33333H12C12.7364 5.33333 13.3333 5.93029 13.3333 6.66667V12C13.3333 12.7364 12.7364 13.3333 12 13.3333H4C3.26362 13.3333 2.66667 12.7364 2.66667 12V6.66667C2.66667 5.93029 3.26362 5.33333 4 5.33333Z" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M1.33333 9.33333H2.66667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M13.3333 9.33333H14.6667" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M10 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M6 8.66667V10" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg>';
+          ? '<svg class="background-running-icon background-process-avatar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/></svg>'
+          : `<img class="background-running-icon background-subagent-avatar" src="${demoAgentAvatarSrc(Math.max(0, backgroundAgentItems.findIndex(item => item[0] === title)))}" alt="" aria-hidden="true" width="24" height="24">`;
+        const singleAgentAction = !process && visibleCount === 1 && !workCompleted ? '运行中' : '';
         const runningArrow = '<span class="background-running-arrow" aria-hidden="true"><img src="assets/arrow-up-right-figma.svg" alt="" width="24" height="24"></span>';
         capsule.innerHTML = inline
           ? '<span class="background-artifact-icon' + (process ? ' background-process-icon' : '') + '" aria-hidden="true">' + backgroundIcon + '</span><span class="background-artifact-info"><strong class="background-running-label">' + esc(title) + '</strong><small class="background-artifact-state">' + stateCopy + '</small></span>' + runningArrow
-          : backgroundIcon + '<span class="background-running-label">' + esc(title) + (' ' + stateCopy) + '</span>' + runningArrow;
+          : backgroundIcon + '<span class="background-running-label">' + esc(title) + (singleAgentAction ? ' <span class="background-current-action">' + esc(singleAgentAction) + '</span>' : ' ' + stateCopy) + '</span>' + runningArrow;
         capsule.dataset.backgroundKind = process ? 'process' : 'agent';
         capsule.dataset.backgroundTitle = title;
         capsule.dataset.summaryAgent = title;
@@ -7359,28 +7606,37 @@ const mainView = document.querySelector('.main');
         });
         capsule.addEventListener('click', () => {
           if (!process) return openSubagentConversation(capsule);
-          const folder = FOLDERS.find(entry => entry.id === 'default');
-          let script = folder.files.find(node => node.name === detail) || backgroundDemoScripts.get(detail);
-          if (!script) {
-            script = {name: detail, type:'code', preview:{kind:'code', text: detail === '汇总区域履约指标.py'
-              ? '# 汇总区域履约指标（预览示例）\nimport pandas as pd\n\norders = pd.read_csv("data/本周订单.csv")\nsummary = orders.groupby("区域").agg(订单数=("订单编号", "count"), 平均超时=("超时分钟", "mean"))\nsummary.to_csv("output/区域履约指标.csv")\n'
-              : '# 检查缺失订单记录（预览示例）\nimport pandas as pd\n\norders = pd.read_csv("data/本周订单.csv")\nmissing = orders[orders[["到店时间", "出餐时间"]].isna().any(axis=1)]\nmissing.to_csv("output/待核实订单.csv", index=False)\n'}};
-            backgroundDemoScripts.set(detail, script);
-          }
-          fileTreeVisible = false;
-          workbenchExpanded = false;
-          openFileWorkspace(script, [folder, script], { path: null, previewMode: 'source' });
-          setSummaryOpen(false);
+          window.openBackgroundProcessWorkspace(capsule);
         });
-        capsule.hidden = count > 1;
+        capsule.hidden = visibleCount > 1;
         group.append(capsule);
         }
-        if (count > 1) {
+        if (visibleCount > 1) {
           const aggregate = group.firstElementChild.cloneNode(true);
           aggregate.hidden = false;
           for (const key of Object.keys(aggregate.dataset)) delete aggregate.dataset[key];
           aggregate.classList.toggle('is-terminated',allStopped);
-          aggregate.querySelector('.background-running-label').textContent = `${count}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中'}`;
+          if (!process) {
+            const stack = document.createElement('span');
+            stack.className = 'background-avatar-stack';
+            stack.setAttribute('aria-hidden', 'true');
+            for (const source of [...group.children].slice(0, 4)) {
+              const icon = source.querySelector('.background-running-icon').cloneNode(true);
+              const layer = document.createElement('span');
+              layer.className = 'background-avatar-layer';
+              layer.append(icon);
+              stack.append(layer);
+            }
+            if (visibleCount > 4) {
+              const more = document.createElement('span');
+              more.className = 'background-avatar-layer';
+              more.innerHTML = '<svg class="background-running-icon background-process-avatar background-more-avatar" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>';
+              stack.append(more);
+            }
+            aggregate.querySelector('.background-running-icon').replaceWith(stack);
+          }
+          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程运行中` : mixed ? '1个子智能体和1个后台进程 运行中' : `${visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
+          aggregate.querySelector('.background-running-label').textContent = aggregateLabel + (process || mixed ? '，后台进程不消耗积分' : '');
           const aggregateState = aggregate.querySelector('.background-artifact-state');
           if (aggregateState) aggregateState.textContent = allStopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中';
           {
@@ -7389,7 +7645,7 @@ const mainView = document.querySelector('.main');
             const popup = document.createElement('div');
             popup.id = process ? 'backgroundProcessChoices' : 'backgroundAgentChoices';
             popup.className = 'background-agent-choices';
-            popup.setAttribute('aria-label', process ? '后台运行的进程' : '后台运行的子智能体');
+            popup.setAttribute('aria-label', mixed ? '后台运行的子智能体与进程' : process ? '后台运行的进程' : '后台运行的子智能体');
             popup.inert = true;
             aggregate.setAttribute('aria-controls', popup.id);
             aggregate.setAttribute('aria-expanded', 'false');
@@ -7399,9 +7655,21 @@ const mainView = document.querySelector('.main');
               row.type = 'button';
               row.className = 'background-agent-choice';
               const icon = source.querySelector('.background-running-icon').outerHTML;
-              row.innerHTML = (process ? icon : '<span class="stage-agent-icon" aria-hidden="true">' + icon + '</span>') +
-                '<span class="background-agent-choice-name">' + esc(source.dataset.summaryAgent) + '</span>' +
-                '<span class="background-agent-choice-status"><small>' + (source.dataset.agentStatus === '执行中' ? '运行中' : source.dataset.agentStatus) + '</small><img class="background-agent-choice-arrow" src="assets/arrow-up-right-figma.svg" alt="" aria-hidden="true" width="18" height="18"></span>';
+              row.innerHTML = icon +
+                '<span class="background-agent-choice-name"><span class="background-agent-choice-title">' + esc(source.dataset.summaryAgent) + '</span>' +
+                (source.dataset.backgroundKind === 'agent' ? '<span class="background-agent-choice-detail" title="' + esc(source.dataset.agentDetail) + '">' + esc(source.dataset.agentDetail) + '</span>' : '') + '</span>' +
+                '<span class="background-agent-choice-status"><small' + (source.dataset.agentStatus === '执行中' ? ' class="is-running"' : '') + '>' + (source.dataset.agentStatus === '执行中' ? '运行中' : source.dataset.agentStatus) + '</small><img class="background-agent-choice-arrow" src="assets/arrow-up-right-figma.svg" alt="" aria-hidden="true" width="18" height="18"></span>';
+              const detailNode = row.querySelector('.background-agent-choice-detail');
+              if (detailNode && source.dataset.agentStatus === '执行中') {
+                const steps = {
+                  '交叉核查门店履约明细':['正在比对订单明细与门店记录','正在检查缺失时间戳','正在核对异常归属'],
+                  '核对超时时长':['正在核对到店时间戳','正在比对出餐时间','正在整理持续时间最长的异常'],
+                  '评估影响范围':['正在统计受影响订单','正在比较各门店履约差异','正在汇总异常影响范围'],
+                  '复核分析结论':['正在比对分析结论与原始记录','正在核查结论依据','正在整理待确认事项'],
+                  '整理跟进建议':['正在汇总优先处理事项','正在整理门店跟进建议','正在检查建议可执行性']
+                }[source.dataset.summaryAgent];
+                if (steps) { detailNode.dataset.steps = JSON.stringify(steps); detailNode.dataset.stepIndex = '-1'; }
+              }
               row.addEventListener('click', () => {setExpanded(false); source.click();});
               popup.append(row);
             }
@@ -7415,11 +7683,40 @@ const mainView = document.querySelector('.main');
                 disclosure.style.setProperty('--capsule-closed-width', `${Math.ceil(aggregate.getBoundingClientRect().width)}px`);
                 disclosure.classList.remove('is-measuring-capsule');
               }
-              disclosure.style.setProperty('--capsule-list-height', `${popup.scrollHeight}px`);
+              disclosure.style.setProperty('--capsule-list-height', `${Math.min(popup.scrollHeight, 264)}px`);
             });
           }
         }
         (inline ? content : conversationPage.querySelector('.conversation-composer-wrap')).append(group);
+        const stepAreaVisible = () => !group.hidden && (visibleCount === 1 || !!group.querySelector('.background-agent-disclosure.is-open:not(.is-closing)'));
+        clearInterval(backgroundTaskStepTimer);
+        if (visibleCount > 1 && !workCompleted && !reducedMotion.matches) backgroundTaskStepTimer = setInterval(() => {
+          if (!group.isConnected) { clearInterval(backgroundTaskStepTimer); return; }
+          if (document.hidden || !stepAreaVisible()) return;
+          group.querySelectorAll('.background-agent-choice-detail[data-steps], .background-current-action[data-steps]').forEach(async (node, rowIndex) => {
+            if (node.dataset.animating) return;
+            node.dataset.animating = 'true';
+            const staggerDelay = [0, 0, 540, 780][rowIndex] ?? 780;
+            if (staggerDelay) await new Promise(resolve => setTimeout(resolve, staggerDelay));
+            if (!node.isConnected || document.hidden || reducedMotion.matches || !stepAreaVisible()) {
+              delete node.dataset.animating;
+              return;
+            }
+            const motion = stepMotion.exit(null, node, false, true);
+            if (motion) await motion.finished;
+            motion?.cancel();
+            if (!node.isConnected) return;
+            if (!stepAreaVisible()) { delete node.dataset.animating; return; }
+            const steps = JSON.parse(node.dataset.steps);
+            const index = (Number(node.dataset.stepIndex) + 1) % steps.length;
+            node.dataset.stepIndex = String(index);
+            node.textContent = steps[index];
+            node.title = steps[index];
+            stepMotion.enter(null, node, true);
+            delete node.dataset.animating;
+          });
+        }, 3600);
+
         if (inline && !textLink) {
           const comparison = document.createElement('div');
           comparison.className = 'conversation-artifacts is-single background-artifact-comparison';
@@ -7445,31 +7742,7 @@ const mainView = document.querySelector('.main');
           content.querySelector('.conversation-reply').append(paragraph);
         }
 
-        if (!backgroundQueueRemoved.has(task) && !document.getElementById('backgroundAgentQueue')) {
-          const queue = document.createElement('section');
-          queue.id = 'backgroundAgentQueue';
-          queue.className = 'conversation-queue-group';
-          queue.setAttribute('aria-label', '待发送队列');
-          queue.innerHTML = `<div class="conversation-queue-item"><span class="conversation-queue-handle" title="待发送消息"><img class="background-queue-grip" src="assets/background-queue-grip.svg" width="18" height="18" alt=""></span><span class="conversation-queue-text">${process ? '导出完成后，请把文件附在这段对话里。' : '核查完成后，请按门店汇总需要优先跟进的问题。'}</span><div class="conversation-queue-actions">${['guide','edit','delete'].map((action,index)=>`<button type="button" data-background-queue-action="${action}" aria-label="${['立即发送','编辑消息','删除消息'][index]}" title="${['立即发送','编辑消息','删除消息'][index]}"><img class="background-queue-${action}" src="assets/background-queue-${action}.svg" width="18" height="18" alt=""></button>`).join('')}</div></div>`;
-          queue.addEventListener('click', event => {
-            const action = event.target.closest('[data-background-queue-action]')?.dataset.backgroundQueueAction;
-            if (!action) return;
-            const text = queue.querySelector('.conversation-queue-text').textContent;
-            if (action === 'edit') {
-              const field = queue.querySelector('.conversation-queue-text');
-              field.contentEditable = 'true'; field.setAttribute('role','textbox'); field.setAttribute('aria-label','编辑排队消息'); field.focus();
-              field.addEventListener('blur', () => {field.contentEditable = 'false';}, {once:true});
-              return;
-            }
-            if (action === 'guide') {
-              conversationPrompt.value = text;
-              conversationPrompt.dispatchEvent(new Event('input', {bubbles:true}));
-              sendConversationMessage();
-            }
-            backgroundQueueRemoved.add(task); queue.remove();
-          });
-          conversationPage.querySelector('.conversation-composer-wrap').prepend(queue);
-        }
+
 
       }
       if (followupAt) {
@@ -7485,7 +7758,7 @@ const mainView = document.querySelector('.main');
         turn.id = 'backgroundCompletionTurn';
         turn.setAttribute('aria-live', 'polite');
         const names = process || count === 1 ? ['门店履约异常明细.xlsx'] : ['门店履约异常明细.xlsx', '门店履约分析.docx'];
-        const summary = process
+        const summary = mixed ? '子智能体交叉核查与后台文件导出均已完成，核查结果和明细文件已补充到当前任务。' : process
           ? (count === 1 ? '门店履约明细已导出，我把文件补充到这里了。' : '3 个后台进程都已完成：明细导出、区域指标汇总和缺失记录检查已完成，结果已整理到文件中。')
           : (count === 1 ? '后台交叉核查已完成，我把核查结果整理好了。' : '4 个子智能体都已完成核查，我已汇总超时时长、影响范围与复核结论。');
         turn.innerHTML = renderConversationTurnTime(backgroundDemoCompleted.get(task)) +
@@ -7538,7 +7811,8 @@ const mainView = document.querySelector('.main');
           (widgetCases.has(task) && index === 0 ? window.CatPawWidgetCases.renderReply(widgetCases.get(task).id) : '') +
           (task === interventionTask && index === 0 ? queueDemo.initial() : '') +
           (recoveryDemos.has(task) && index === 0 ? recoveryDemos.get(task).initial() : '') +
-          (example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
+          (task === conversationTask ? renderEarlierTurnArtifacts(index) : '') +
+          (!(task === conversationTask && hasVersionDemoHistory()) && example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && startedConversationDemos.has(task) && index === turns.length - 1 ? renderConversationStage() : '') +
           (reply ? renderMessageMeta('assistant') : '') +
           '</div></div>'
@@ -7568,6 +7842,14 @@ const mainView = document.querySelector('.main');
     window.CatPawWidgetCases?.syncControls();
     syncExpertForContext();
     queueDemo.activate(open && task === interventionTask);
+    if (open && task === interventionTask && !new URLSearchParams(location.search).has('strategyScene') && !task.dataset.queueSeeded) {
+      task.dataset.queueSeeded = 'true';
+      for (const text of ['先只看华东区域，按门店整理问题。', '尚未核实的原因单独标出，并补上需要跟进的材料。']) {
+        queueDemo.enqueue({text, rawText:text});
+      }
+      conversationPrompt.value = '';
+      resizeConversationPrompt();
+    }
     recoveryDemos.forEach((demo,key)=>demo.activate(open && task===key));
     if (!open || task !== conversationTask) clearTimeout(stageAutoTimer);
     syncStageDemoControls();
@@ -7765,6 +8047,11 @@ const mainView = document.querySelector('.main');
     const button = event.target.closest('.stage-agent-open');
     if (button) openSubagentConversation(button);
   });
+  document.getElementById('summaryAgentsMore').addEventListener('click', () => {
+    const list = document.getElementById('summaryAgentsList');
+    list.dataset.expanded = String(list.dataset.expanded !== 'true');
+    renderSummaryAgents();
+  });
   document.getElementById('summaryAgentsList').addEventListener('click', event => {
     const button = event.target.closest('[data-summary-agent]');
     if (button) openSubagentConversation(button);
@@ -7900,6 +8187,19 @@ function beginConversationTurn(message) {
     task.addEventListener('click', (e) => {
       if (e.target.closest('.row-acts, .row-act')) return;
       e.preventDefault();
+      if (task === conversationTask && versionPreviewActive) {
+        versionPreviewActive = false;
+        clearTimeout(stageAutoTimer);
+        clearTimeout(stageAdvanceTimer);
+        clearInterval(stageClockTimer);
+        stageClockTimer = null;
+        if (stageResultHistory.length) stageResultNode().preview.sheets = stageResultHistory[0];
+        stageResultHistory.length = 0;
+        startedConversationDemos.delete(task);
+        conversationThreads.delete(task);
+        conversationComposerDrafts.delete(task);
+        if (activeConversationTask === task) activeConversationTask = null;
+      }
       setConversationOpen(true, task);
     });
   });
@@ -8111,6 +8411,15 @@ function beginConversationTurn(message) {
     if (target) {
       closeConversationArtifactMenu();
       anchorConversationToArtifact(target.card);
+      const version = Number(target.card.querySelector('[data-artifact-version]')?.dataset.artifactVersion);
+      if (hasVersionDemoHistory() && target.node === stageResultNode() && version && version < stageArtifactVersion()) {
+        if (!artifactVersionPreviewNodes.has(version)) {
+          const record = artifactVersionRecords().find(entry => entry.version === version);
+          if (record) artifactVersionPreviewNodes.set(version, {...target.node,artifactVersion:version,preview:{...target.node.preview,sheets:structuredClone(record.sheets)}});
+        }
+        const node = artifactVersionPreviewNodes.get(version);
+        if (node) {openArtifactPreview(node,[...target.chain.slice(0,-1),node],{fromConversation:true});return;}
+      }
       openArtifactPreview(target.node, target.chain, { fromConversation: true });
     }
   });
@@ -8635,6 +8944,7 @@ function beginConversationTurn(message) {
   }
   function closeAddMenu(restoreFocus = false) {
     clearTimeout(addSubmenuTimer);
+    document.body.classList.remove('composer-add-panel-open');
     const focusTarget = directAddTrigger || activeAddTrigger;
     addMenu.hidden = true;
     addSubmenu.hidden = true;
@@ -8671,7 +8981,7 @@ function beginConversationTurn(message) {
     if (addMenuPage === 'root') { addSubmenu.hidden = true; return; }
     const back = addItem('back', '返回');
     if (addMenuPage === 'file') {
-      addSubmenu.innerHTML = addItem('local', '上传本地文件') + addItem('library', '从资料库添加', true);
+      addSubmenu.innerHTML = (directAddTrigger ? '' : back) + addItem('local', '上传本地文件') + addItem('library', '从资料库添加', true);
     } else if (addMenuPage === 'library') {
       const entries = recentOpenedFiles.slice(0, 5);
       addSubmenu._libraryEntries = entries;
@@ -8682,10 +8992,11 @@ function beginConversationTurn(message) {
       const kind = addMenuPage;
       const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
       const searchLabel = directAddTrigger ? `搜索${label}` : `搜索已添加的${label}`;
-      addSubmenu.innerHTML = `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'expert' ? '专家市场' : kind === 'mcp' ? '管理连接器' : ['skill', 'knowledge'].includes(kind) ? `管理${label}` : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+      addSubmenu.innerHTML = (directAddTrigger ? '' : back) + `<label class="composer-search-field">${addIcon('search')}<input class="composer-add-input" id="composerAddSearch" type="search" aria-label="${searchLabel}" placeholder="${searchLabel}" autocomplete="off"></label><div class="composer-add-list"></div><div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="${kind}">${addIcon(kind)}<span>${kind === 'expert' ? '专家市场' : kind === 'mcp' ? '管理连接器' : ['skill', 'knowledge'].includes(kind) ? `管理${label}` : `去广场添加更多${label}`}</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
       renderAddList();
     }
     addSubmenu.hidden = false;
+    if (!directAddTrigger) addMenu.hidden = true;
     addMenu.querySelectorAll('[aria-haspopup="menu"]').forEach(item => {
       item.setAttribute('aria-expanded', String(item.dataset.addKind === (addMenuPage === 'library' ? 'file' : addMenuPage)));
     });
@@ -8703,6 +9014,7 @@ function beginConversationTurn(message) {
     clearTimeout(addSubmenuTimer);
     addMenuPage = 'root';
     addSubmenu.hidden = true;
+    if (activeAddTrigger && !directAddTrigger) { addMenu.hidden = false; placeAddMenu(); }
     addMenu.querySelectorAll('[aria-haspopup="menu"]').forEach(item => item.setAttribute('aria-expanded', 'false'));
   }
   function libraryEntries() {
@@ -8792,20 +9104,31 @@ function beginConversationTurn(message) {
       renderAddDialogResults();
     }
   });
+  function placeComposerAddPanel(panel) {
+    const bounds = win.getBoundingClientRect();
+    const wrap = activeAddTrigger.closest('.conversation-composer-wrap');
+    const composer = activeAddTrigger.closest('.conversation-composer') || activeAddTrigger.closest('.composer-card');
+    const anchor = (composer || activeAddTrigger).getBoundingClientRect();
+    // Anchor to the input itself, allowing the menu to overlay queued messages.
+    const bottom = anchor.top - 8;
+    const availableHeight = wrap ? bottom - bounds.top - 8 : bounds.bottom - anchor.bottom - 16;
+    panel.style.width = `${anchor.width}px`;
+    panel.style.maxHeight = `${Math.max(40, Math.min(390, availableHeight))}px`;
+    const height = panel.getBoundingClientRect().height;
+    panel.style.left = `${anchor.left}px`;
+    panel.style.top = `${wrap ? Math.max(bounds.top + 8, bottom - height) : anchor.bottom + 8}px`;
+    document.body.classList.toggle('composer-add-panel-open', Boolean(wrap));
+  }
   function placeAddMenu() {
     if (!activeAddTrigger) return;
-    if (directAddTrigger) { placeAddSubmenu(); return; }
-    if (addMenu.hidden) return;
-    const trigger = activeAddTrigger.getBoundingClientRect();
-    const bounds = win.getBoundingClientRect();
-    const width = addMenu.getBoundingClientRect().width;
-    const height = addMenu.getBoundingClientRect().height;
-    addMenu.style.left = `${Math.max(bounds.left + 8, Math.min(trigger.left, bounds.right - width - 8))}px`;
-    addMenu.style.top = `${trigger.top - height - 6 >= bounds.top + 8 ? trigger.top - height - 6 : Math.min(trigger.bottom + 6, bounds.bottom - height - 8)}px`;
-    placeAddSubmenu();
+    if (directAddTrigger || !addSubmenu.hidden) { placeAddSubmenu(); return; }
+    if (!addMenu.hidden) placeComposerAddPanel(addMenu);
   }
   function placeAddSubmenu() {
     if (!activeAddTrigger || addSubmenu.hidden) return;
+    if (!directAddTrigger) { placeComposerAddPanel(addSubmenu); return; }
+    addSubmenu.style.width = '';
+    addSubmenu.style.maxHeight = '';
     const bounds = win.getBoundingClientRect();
     const parent = (directAddTrigger || addMenu).getBoundingClientRect();
     const width = addSubmenu.getBoundingClientRect().width;
@@ -8824,7 +9147,7 @@ function beginConversationTurn(message) {
     trigger.setAttribute('aria-controls', addMenu.id);
     trigger.addEventListener('click', event => {
       event.stopPropagation();
-      if (activeAddTrigger === trigger && !addMenu.hidden) { closeAddMenu(); return; }
+      if (activeAddTrigger === trigger && (!addMenu.hidden || !addSubmenu.hidden)) { closeAddMenu(); return; }
       closeAddMenu();
       activeAddTrigger = trigger;
       trigger.setAttribute('aria-expanded', 'true');
@@ -8920,32 +9243,7 @@ function beginConversationTurn(message) {
   quickAddOverflowObserver.observe(document.querySelector('.conversation-composer-wrap'));
   quickAddOverflowObserver.observe(document.querySelector('.hero .composer'));
   window.addEventListener('resize', placeQuickAddOverflowMenu);
-  addMenu.addEventListener('pointerover', event => {
-    if (event.pointerType === 'touch') return;
-    const item = event.target.closest('[data-add-kind]');
-    if (!item || !addMenu.contains(item) || item.contains(event.relatedTarget)) return;
-    const kind = item.dataset.addKind;
-    if (['file', 'skill', 'expert', 'mcp'].includes(kind)) showAddSubmenu(kind);
-    else hideAddSubmenu();
-  });
-  addMenu.addEventListener('pointerleave', event => {
-    if (addSubmenu.contains(event.relatedTarget)) return;
-    clearTimeout(addSubmenuTimer);
-    addSubmenuTimer = setTimeout(() => {
-      if (!addSubmenu.contains(document.activeElement)) hideAddSubmenu();
-    }, 180);
-  });
-  addSubmenu.addEventListener('pointerenter', () => clearTimeout(addSubmenuTimer));
-  addSubmenu.addEventListener('pointerleave', event => {
-    if (addMenu.contains(event.relatedTarget)) return;
-    clearTimeout(addSubmenuTimer);
-    addSubmenuTimer = setTimeout(() => {
-      if (!addSubmenu.contains(document.activeElement)) {
-        if (directAddTrigger) closeAddMenu();
-        else hideAddSubmenu();
-      }
-    }, 180);
-  });
+  // Categories open on click and replace the first level in the same panel.
   addMenu.addEventListener('click', event => {
     event.stopPropagation();
     const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
@@ -8978,7 +9276,11 @@ function beginConversationTurn(message) {
     if (kind === 'back') {
       if (addMenuPage === 'library') showAddSubmenu('file', true);
       else if (directAddTrigger) closeAddMenu(true);
-      else hideAddSubmenu();
+      else {
+        const previousPage = addMenuPage;
+        hideAddSubmenu();
+        addMenu.querySelector(`[data-add-kind="${previousPage}"]`)?.focus({preventScroll:true});
+      }
     } else if (kind === 'local') addFileInput.click();
     else if (kind === 'library') showAddSubmenu('library', true);
   });
@@ -9046,6 +9348,7 @@ function beginConversationTurn(message) {
     if (event.key === 'Escape' && (!addMenu.hidden || !addSubmenu.hidden)) closeAddMenu(true);
   });
   window.addEventListener('resize', placeAddMenu);
+  window.addEventListener('scroll', placeAddMenu, true);
 
   /* 首页与对话输入框共用的 / 快捷菜单；原型未接入的功能不伪装成已执行。 */
   const slashMenu = document.createElement('div');
@@ -9947,8 +10250,19 @@ function beginConversationTurn(message) {
       setConversationOpen(true, conversationTask);
       let panel = conversationThread.querySelector('.conversation-stage-demo');
       if (!panel) {
-        const request = conversationExamples.get(conversationTask).turns.at(-1).prompt;
-        conversationThread.innerHTML = renderUserMessage(request, []) +
+        const example = conversationExamples.get(conversationTask);
+        const request = example.turns.at(-1).prompt;
+        const versionScene = ['3.3','3.3-2'].includes(strategyScene);
+        const previousTurns = versionScene ? example.turns.slice(0,-1).map(({prompt,reply,attachments = []},index) => {
+          const folder = FOLDERS.find(entry => entry.id === example.folderId);
+          const files = attachments.map(name => {
+            const node = folder.files.find(file => file.name === name);
+            return node ? {node,chain:[folder,node]} : null;
+          }).filter(Boolean);
+          return renderConversationTurnTime(new Date(Date.now() - (demoTurnMinutesAgo[index] ?? 4) * 60000)) + renderUserMessage(prompt,files) +
+            `<div class="conversation-message assistant-message"><div class="assistant-content"><article class="md conversation-reply">${renderMarkdown(reply)}</article>${renderEarlierTurnArtifacts(index)}</div></div>`;
+        }).join('') : '';
+        conversationThread.innerHTML = previousTurns + renderUserMessage(request, []) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage()}</div></div>`;
         panel = conversationThread.querySelector('.conversation-stage-demo');
         conversationPrompt.value = '';
@@ -10266,6 +10580,7 @@ function beginConversationTurn(message) {
           processPanel = showStrategyProcess(step.frame);
           break;
         case 'revision-start': {
+          versionPreviewActive = true;
           if(stageResultHistory.length)stageResultNode().preview.sheets=stageResultHistory[0];
           stageResultHistory.length=0;
           showStrategyProcess(10);
@@ -10488,8 +10803,8 @@ function beginConversationTurn(message) {
   });
   const linkedRecovery = extraRecoveryCases.find(item=>item.mode===new URLSearchParams(location.search).get('recoveryCase'));
   if(linkedRecovery)setConversationOpen(true,linkedRecovery.task);
-  if (new URLSearchParams(location.search).has('backgroundProcess')) setConversationOpen(true, new URLSearchParams(location.search).get('backgroundProcess') === 'text' ? backgroundProcessTextTask : new URLSearchParams(location.search).get('backgroundProcess') === 'inline' ? backgroundProcessInlineTask : backgroundProcessTask);
-  if (new URLSearchParams(location.search).has('backgroundAgent')) setConversationOpen(true, new URLSearchParams(location.search).get('backgroundAgent') === 'inline' ? backgroundAgentInlineTask : backgroundAgentTask);
+  if (new URLSearchParams(location.search).has('backgroundProcess')) setConversationOpen(true, backgroundProcessTask);
+  if (new URLSearchParams(location.search).has('backgroundAgent')) setConversationOpen(true, backgroundAgentTask);
   const linkedWidgetCase = document.getElementById('widgetCase-' + new URLSearchParams(location.search).get('widgetCase'));
   if (linkedWidgetCase && widgetCases.has(linkedWidgetCase)) setConversationOpen(true, linkedWidgetCase);
 })();

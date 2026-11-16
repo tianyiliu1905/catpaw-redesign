@@ -2,6 +2,7 @@
 (function(root){
   'use strict';
   const extraPaths={
+    system:{reading:{finish:'blocked'},blocked:{reconnect:'verifying'},verifying:{finish:'done'},done:{restart:'reading'}},
     auth:{reading:{finish:'blocked'},blocked:{login:'handoff',defer:'deferred'},deferred:{login:'handoff'},handoff:{confirm:'verifying',back:'blocked'},verifying:{finish:'done'},done:{restart:'reading'}},
     receipt:{reading:{finish:'unknown'},unknown:{check:'checking'},checking:{finish:'done'},done:{restart:'reading'}},
     exhausted:{reading:{finish:'retrying'},retrying:{finish:'blocked',cancel:'paused'},blocked:{retry:'retrying',later:'paused',partial:'partial'},paused:{retry:'retrying',resume:'verifying',partial:'partial'},partial:{resume:'verifying'},verifying:{finish:'done'},done:{restart:'reading'}}
@@ -30,8 +31,15 @@
   function createController({thread,onChange=()=>{},setTimer=setTimeout,clearTimer=clearTimeout,mode='supplement',stepMotion,actionHost,systemHost}){
     const model=createModel(mode);
     let active=false,timer=null,generation=0;
-    const status=()=>extraPaths[mode]?({reading:'处理中',blocked:mode==='auth'?'等待本人登录':'已暂停 · 保留进度',deferred:'已暂停 · 待授权',handoff:'等待本人操作',verifying:'正在继续',unknown:'提交结果待确认',checking:'正在查询回执',retrying:'服务暂时不可用 · 正在重试',paused:'已暂停',partial:'已保留部分结果',done:'已完成'})[model.stage]:mode==='retry'?({reading:'读取中',retrying:'正在重试',verifying:'连接已恢复 · 核对中',blocked:'等待重新尝试',done:'已完成'})[model.stage]:mode==='failure'?({reading:'检查能力',failed:'暂时无法完成',alternative:model.choice==='script'?'正在整理讲解稿':'正在整理分镜',paused:'已暂停',done:'替代内容已整理'})[model.stage]:({reading:'读取中',blocked:'等待补充',choosing:'等待补充',selected:'资料已补充',resuming:'核对中',done:'已完成'})[model.stage];
+    const status=()=>extraPaths[mode]?({reading:'处理中',blocked:mode==='auth'?'等待本人登录':mode==='system'?'等待网络恢复':'已暂停 · 保留进度',deferred:'已暂停 · 待授权',handoff:'等待本人操作',verifying:'正在继续',unknown:'提交结果待确认',checking:'正在查询回执',retrying:'服务暂时不可用 · 正在重试',paused:'已暂停',partial:'已保留部分结果',done:'已完成'})[model.stage]:mode==='retry'?({reading:'读取中',retrying:'正在重试',verifying:'连接已恢复 · 核对中',blocked:'等待重新尝试',done:'已完成'})[model.stage]:mode==='failure'?({reading:'检查能力',failed:'暂时无法完成',alternative:model.choice==='script'?'正在整理讲解稿':'正在整理分镜',paused:'已暂停',done:'替代内容已整理'})[model.stage]:({reading:'读取中',blocked:'等待补充',choosing:'等待补充',selected:'资料已补充',resuming:'核对中',done:'已完成'})[model.stage];
     function body(){
+      if(mode==='system'){
+        if(model.stage==='reading')return '<p>已整理门店清单，接着读取本周经营数据。</p><div class="recovery-tool is-running">读取门店经营数据</div>';
+        if(model.stage==='blocked')return '<p>门店清单与已有汇总已保留，剩余数据将在网络恢复后继续读取。</p>';
+        if(model.stage==='verifying')return '<p>网络连接已恢复，从中断处继续读取剩余数据。</p><div class="recovery-tool is-running">继续读取经营数据</div>';
+        return '<p>已补齐剩余数据，完成区域经营概况整理。</p><button data-recovery-action="restart">重播演示</button>';
+      }
+
       const stage=model.stage;
       const button=(action,label)=>`<button data-recovery-action="${action}">${label}</button>`;
       const replay=button('restart','重播处理过程');
@@ -54,7 +62,7 @@
         const intro=supplier?'我会接着核对交付记录，整理供应链风险与应对建议。':'我会继续读取营销明细，结合销售和客流数据分析指标变化。';
         if(stage==='reading')return `<p>${intro}</p><div class="recovery-tool is-running">读取${target}</div>`;
         if(supplier){
-          const notice=model.attempt>4?`<section class="recovery-retry-card" aria-label="持续重试提示"><header><span role="status">连接有点慢，仍在重试中</span><div class="recovery-retry-actions">${button('retry','立即重试')}</div></header><p>前 2 份资料和当前进度都已保留，不用从头开始。我会继续尝试连接，你也可以点击「立即重试」。</p></section>`:'';
+          const notice=model.attempt>4?`<section class="recovery-retry-card recovery-retry-strip" aria-label="持续重试提示"><header><span role="status">连接较慢，仍在重试 · 已保留当前进度</span><div class="recovery-retry-actions">${button('retry','立即重试')}</div></header></section>`:'';
           return `<p>${intro}</p><div class="recovery-tool is-running">正在重新连接 · 第 ${model.attempt} 次重试</div>${notice}`;
         }
         const waiting=stage==='retrying';
@@ -103,7 +111,7 @@
       if(!systemHost)return;
       if(!active){if(systemHost.dataset.owner===mode){systemHost.hidden=true;systemHost.innerHTML='';systemHost.closest('.conversation-page')?.classList.remove('has-system-notice');}return;}
       const stage=model.stage;
-      const notices=mode==='retry'?{
+      const notices=mode==='system'?{blocked:['网络连接已断开','所有在线任务暂时无法继续，已有进度与草稿保留','reconnect','模拟恢复网络'],verifying:['网络已恢复','正在继续未完成的步骤']} :mode==='retry'?{
         retrying:['供应链资料服务连接超时','正在尝试恢复连接'],
         verifying:['连接已恢复','继续读取未完成的资料']
       }:{

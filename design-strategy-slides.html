@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" class="journal-view">
+<html lang="zh-CN" class="journal-view case-study-view">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -503,8 +503,6 @@
     .interruption-route-map [data-flow-active="true"] text,.interruption-route-map text[data-flow-active="true"]{fill:#21835b}
     .interruption-route-map path[data-flow-active="true"]{stroke:#21835b}
     .slide h1 .title-status{font-size:.5em;font-weight:400;white-space:nowrap}
-    /* Reserve bold weight for each slide's main heading. */
-    .slide :not(h1):not(h1 *){font-weight:400!important}
     .slide h1 *{font-weight:inherit}
     .wvc-case-scene{font-size:14px;color:var(--gray);line-height:1.6}
     .wvc-case-concern{margin:8px 0 14px}
@@ -520,6 +518,8 @@
   </style>
   <link rel="stylesheet" href="./strategy-journal.css">
 <link rel="stylesheet" href="./widget-catpaw-components.css?v=20261111-ds-components">
+<link rel="stylesheet" href="./slide-layout.css">
+<link rel="stylesheet" href="./strategy-case-study.css?v=20261116">
 </head>
 <body>
   <div class="shell">
@@ -527,9 +527,10 @@
       <div class="canvas" id="canvas"></div>
     </main>
   </div>
-  <script src="./strategy-scenes.js"></script>
+  <script src="./strategy-scenes.js?v=20261113-slide-layout"></script>
   <script src="./widget-value-cases.js"></script>
   <script src="./strategy-journal.js"></script>
+  <script src="./strategy-case-study.js?v=20261116"></script>
   <script>
     const pointSlides = [
       {
@@ -570,7 +571,8 @@
         actions:[
           ['工作前：确认意图与任务规划','收到任务即显示全局响应与计时，先复述目标、产物与关键约束，再展开完整待办。让用户确认任务已被接住，并检查理解与推进安排。'],
           ['工作时：语义化呈现工具执行过程','将工具执行转译为用户能理解的任务描述，说明正在处理什么、要解决什么问题，降低理解成本。持续展示全局状态，每组完成后留下阶段总结；技术细节与历史过程按需展开。'],
-          ['结束后：呈现文字、产物与变化','停止计时，呈现简短结论、可打开的产物与本轮变化。待办和执行过程收进全局状态，展开可回看；迭代后支持撤回本轮修改，恢复上一版本。']
+          ['结束后：呈现文字、产物与变化','停止计时，呈现简短结论、可打开的产物与本轮变化。待办和执行过程收进全局状态，展开可回看；迭代后支持撤回本轮修改，恢复上一版本。'],
+          ['后台运行：持续呈现进程状态与结果入口','主回复结束后，仍显示后台进程的运行状态，支持查看与终止；完成后在原对话补充结果。通过悬浮提示呈现后台工作。']
         ], check:'不同用户都能快速判断任务是否按预期推进，并按需核对执行依据。'
       },
       {
@@ -606,9 +608,8 @@
         recoveryResearch:true,
         actions:[
           ['请求信息：用补充卡片占用输入区','Agent 执行正常，但缺少用户信息或必要操作。用补充卡片占用普通输入区，支持填写、选择、上传或前往目标系统登录／授权；完成后继续原任务。'],
-          ['Agent 遇到问题：回复区展示修复状态，保留打断入口','当前步骤超时、读取失败或工具短暂繁忙时，系统有限次恢复；在 Agent 回复区展示受影响步骤、恢复状态与已保留内容。输入框保持可用，允许补充或打断，并提供“换个来源继续”等另一条路径。'],
-          ['系统问题：在标题下方悬浮提示','积分或配额用尽、全局断网、服务维护或停用、账号使用受限等影响任务继续执行时，在任务标题下方固定显示轻量状态条，说明原因、影响范围及恢复入口。保留草稿与已有结果；问题解除后撤除提示。'],
-          ['能力不支持：正文说明限制，提供建议方案按钮','在回复正文中说明无法完成的部分及可沿用的成果，提供“改为生成分镜与解说稿”等具体方案按钮。保留正常输入，用户确认新方案后再执行。']
+          ['能力不支持：说明限制，由用户选择替代方案','在正文说明无法完成的部分和已保留的成果，提供具体替代方案。保留正常输入，用户确认后再改变交付目标。'],
+          ['执行与系统异常：按影响范围呈现恢复状态','针对两种更系统性的异常区分提示位置：单个工具或步骤受阻，在回复区就近呈现重试；整体运行条件受限，在任务标题下方显示全局提示。两者都保留已有成果与草稿。']
         ], check:'用户能根据提示位置判断需要自己补充、等待恢复、处理系统限制，还是确认替代方案。以下为交互设计示意，不代表恢复能力已接通。'
       },
       {
@@ -682,7 +683,8 @@
       '2.1':[
         '“发出去了，它明白我要的是什么了吗？”',
         '“等了一会儿了，事情有进展吗？”',
-        '“这就做好了吗？改了哪些，能退回上一版吗？”'
+        '“这就做好了吗？改了哪些，能退回上一版吗？”',
+        '“你已经回复完了，导出还在继续吗？我要去哪里看？”'
       ],
       '2.2':[
         '“先停一下，我想看清楚再继续。”',
@@ -691,9 +693,8 @@
       ],
       '2.3':[
         '“需要我补什么，补完才能接着做？”',
-        '“你在修复吗？我能补充要求或换条路继续吗？”',
-        '“为什么现在不能继续？要怎么恢复？”',
-        '“这个做不了，有什么能继续完成目标的办法？”'
+        '“这个做不了，有什么能继续完成目标的办法？”',
+        '“是这一步出问题，还是整个任务都不能继续？我要怎么恢复？”'
       ],
       '2.4':[
         '“生成的界面能不能保持一致，让我看懂、用得顺？”',
@@ -777,7 +778,7 @@
         kind:'action',
         status:point.no==='2.3'&&actionIndex>0?'（设计中）':point.status,
         pointNo:point.no,
-        no:point.no==='2.3'&&actionIndex===3?'2.3-6':point.analysis||point.research?`${point.no}-${actionIndex+2}`:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
+        no:point.analysis||point.research?`${point.no}-${actionIndex+2}`:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
         action,
         actionIndex
       });});
@@ -1001,6 +1002,7 @@
       const pointNav=progress.phase>=0?`<nav class="deck-points" aria-label="各策略要点">${deckPointGroups.map((points,chapter)=>`<div class="deck-point-group${chapter===progress.phase?' is-current':''}">${points.map(point=>`<a href="#${escapeHtml(slides[point.start].no)}"${index>=point.start&&index<point.end?' aria-current="step"':''}>${escapeHtml(point.label)}</a>`).join('')}</div>`).join('')}</nav>`:'';
       return `<div class="topline"><span>CATPAW / 设计策略</span><div class="deck-progress" role="progressbar" aria-label="设计策略场景进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.value}" aria-valuetext="${description}">${labels.map((label,i)=>`<span class="deck-progress-step ${progress.phase===i?'is-current':progress.fractions[i]===1?'is-complete':''}"${progress.phase===i?' aria-current="step"':''}><span>${label}</span><span class="deck-progress-track"><span class="deck-progress-fill" style="--phase-progress:${(progress.fractions[i]*100).toFixed(1)}%"></span></span></span>`).join('')}</div>${pointNav}<span class="right">${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</span></div>`;
     };
+    const demoJump = (scene,label='打开完整 Demo') => `<a class="slide-demo-jump" href="./index.html?strategyScene=${encodeURIComponent(scene)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)}（在新标签页打开）">${escapeHtml(label)} ↗</a>`;
     canvas.innerHTML=slides.map((slide,index)=>{
       if(slide.kind==='evolution')return `
         <section class="slide story-slide evolution-slide" id="slide-evolution" aria-label="Agent 工作形态演化：${escapeHtml(slide.title)}">
@@ -1049,27 +1051,59 @@
           <h1>${escapeHtml(slide.title)}</h1>
           <div class="body"><div class="left-content"><div class="action-detail"><span class="label">场景分析</span><h3>谁在场，谁在持续工作？</h3><p>同一份完整产物，在讨论、边看边改、专心批注和人暂离时，需要不同的窗口关系。</p></div><p class="design-note">先看人和 Agent 的参与度，再分别设计四种状态；切换时仍沿用同一任务、产物和修改上下文。</p></div><figure class="design-slot" aria-label="人和 Agent 参与度的四状态分析图">${participationAnalysis}</figure></div>
         </section>`;
+      if(slide.pointNo==='2.1'&&slide.kind==='action'&&slide.actionIndex===3)return `
+        <section class="slide background-layout" id="slide-${slide.no}" aria-label="过程可懂：后台进程展示记录">
+          ${topline(index)}
+          <div class="mainline"><span class="number">2.1</span><span>策略二 · 过程可懂 / 设计动作 2.1.4</span></div>
+          <h1>过程可懂</h1>
+          <h2 class="layout-subtitle">主回复结束后，仍能看见后台进程</h2>
+          <p class="recovery-analysis-intro">用户关注：“你已经回复完了，导出还在继续吗？我要去哪里看？”<br>将本轮回复结束与后台工作完成区分开，保留查看进程和接收结果的入口。</p>
+          <div class="background-comparison" aria-label="后台进程的悬浮提示">
+            ${[
+              ['悬浮提示','在输入区上方持续显示运行状态；多个进程聚合为数量入口，展开后查看各项进度。','floating','查看悬浮提示 Demo ↗'],
+              // 已停用：['回复结尾提示','在本轮回复结尾附上进程入口，将仍在执行的工作与这次回复关联起来。','inline','查看回复结尾 Demo ↗'],
+              // 已停用：['正文链接','在回复中说明“导出仍在后台继续”，通过文字链接打开对应脚本预览。','text','查看正文链接 Demo ↗']
+            ].map(([title,description,kind,link],i)=>`<article class="background-option"><span class="label">已实现的展示方式 · 0${i+1}</span><h3>${title}</h3><div class="background-sample background-sample-${kind}" aria-hidden="true"><div class="background-sample-reply">本周履约概况已整理。</div>${kind==='text'?'<span class="background-sample-link">导出仍在后台继续，你可以查看：<u>导出明细.py ↗</u></span>':'<span class="background-sample-process"><span class="background-sample-dot"></span>导出门店履约明细 <small>后台运行中</small> ↗</span>'}<div class="background-sample-composer">继续对话</div></div><span class="label">呈现与交互</span><p>${description}</p><div class="background-option-link"><span class="label">原型入口</span><a href="./index.html?backgroundProcess=${kind}" target="_blank" rel="noopener">${link}</a></div></article>`).join('')}
+          </div>
+          <p class="recovery-analysis-intro">统一管理：摘要中汇总后台进程，支持查看与终止；进程完成后，在原对话补充结果文件。</p>
+          <p class="recovery-analysis-note">当前展示悬浮提示方案。运行状态、脚本与产出均为本地预设演示，不执行真实后台任务。</p>
+        </section>`;
       if(slide.kind==='recovery-analysis')return `
-        <section class="slide recovery-analysis" id="slide-${slide.no}" aria-label="异常恢复的四种交互位置">
+        <section class="slide recovery-analysis" id="slide-${slide.no}" aria-label="异常可恢复：异常类型与交互方式研究">
           ${topline(index)}
           <div class="mainline"><span class="number">2.3</span><span>策略二 · 四类受阻情景</span></div>
-          <h1>谁遇到了问题，决定提示放在哪里</h1>
-          <p class="recovery-analysis-intro">共同保留已有成果；按当前是否需要用户补充、能否继续执行，决定输入框与提示的关系。</p>
-          <div class="recovery-pattern-grid">${recoveryPatterns.map((pattern,i)=>`<article class="recovery-pattern-card"><h2>${i+1}. ${pattern.name}</h2>${recoveryWireframe(i)}<h3>${pattern.place}</h3><p>${pattern.input}</p><p class="recovery-pattern-example">${pattern.example}</p></article>`).join('')}</div>
+          <h1>异常可恢复</h1>
+          <p class="recovery-analysis-intro"><strong>异常类型与交互方式研究</strong><br>共同保留已有成果；按当前是否需要用户补充、能否继续执行，决定输入框与提示的关系。</p>
+          <div class="recovery-pattern-grid">${recoveryPatterns.map((pattern,i)=>`<article class="recovery-pattern-card"><h2>${i+1}. ${pattern.name}</h2>${recoveryWireframe(i)}<h3>${pattern.place}</h3><p>${pattern.input}</p><p class="recovery-pattern-example">${pattern.example}</p>${demoJump(['2.3','2.3-2','2.3-3','2.3-6'][i],'打开'+pattern.name+' Demo')}</article>`).join('')}</div>
           <p class="recovery-pattern-note">边界：工具问题在执行处留记录；系统状态在标题下提示并注明范围；授权与补充信息由输入区承接。恢复失败后的选择放在对话中。此框架可按新场景扩展，并非穷举。</p>
+        </section>`;
+      if(slide.pointNo==='2.3'&&slide.kind==='action'&&slide.actionIndex===2)return `
+        <section class="slide recovery-analysis recovery-comparison-slide" id="slide-${escapeHtml(slide.no)}" aria-label="异常可恢复：执行与系统异常">
+          ${topline(index)}
+          <div class="mainline"><span class="number">2.3</span><span>策略二 · 设计动作 2.3.3</span></div>
+          <h1>异常可恢复</h1>
+          <p class="recovery-analysis-intro"><strong>执行与系统异常：按影响范围呈现恢复状态</strong><br>针对两种更系统性的异常，区分当前步骤受阻与整体运行条件受限，分别就近提示或全局提示。</p>
+          <div class="recovery-comparison-grid">
+            ${[
+              ['执行步骤异常','单个工具超时、读取失败或暂时繁忙。在回复区说明当前恢复状态，保留输入与打断入口。','2.3-2'],
+              ['全局系统异常','全局断网、额度耗尽或服务不可用。在标题下方说明影响范围与恢复入口，保留草稿和已有成果。','2.3-3']
+            ].map(([title,description,scene])=>`<article class="recovery-comparison-item"><h2>${title}</h2><p>${description}</p>${demoJump(scene,'打开'+title+' Demo')}<div class="demo-viewport" data-demo-width="640" data-demo-height="400"><iframe title="${title} Demo" data-scene="${scene}" src="./index.html?strategyScene=${scene}&amp;strategyPanel=recovery-detail" scrolling="no"></iframe></div></article>`).join('')}
+          </div>
+          <p class="recovery-analysis-note">两种异常均保留已有进度；恢复状态与网络变化为本地预设演示。</p>
         </section>`;
       if(slide.pointNo==='2.3'&&slide.kind==='action')return `
         <section class="slide action-slide recovery-pattern-action" id="slide-${escapeHtml(slide.no)}" aria-label="${escapeHtml(slide.action[0])}">
           ${topline(index)}
           <div class="mainline"><span class="number">2.3</span><span>${escapeHtml(slide.strategy)}</span></div>
-          <h1>${recoveryPatterns[slide.actionIndex].name}</h1>
+          <h1>异常可恢复</h1>
           <div class="body"><div class="left-content">
             <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns['2.3'][slide.actionIndex])}</p></div>
             <div class="action-detail"><span class="label">设计动作 2.3.${slide.actionIndex+1}</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
-            <p class="design-note">${escapeHtml(recoveryPatterns[slide.actionIndex].example)}</p>
-          </div><figure class="design-slot recovery-pattern-detail" aria-label="${recoveryPatterns[slide.actionIndex].place}">
-            ${recoveryWireframe(slide.actionIndex)}
-            <figcaption><strong>${recoveryPatterns[slide.actionIndex].place}</strong><p>${recoveryPatterns[slide.actionIndex].input}</p>${recoveryPatterns[slide.actionIndex].steps.map(step=>`<p>${step}</p>`).join('')}<small>设计示意 · 尚未代表真实恢复能力</small></figcaption>
+            <p class="design-note">${escapeHtml(recoveryPatterns[slide.actionIndex===1?3:0].example)}</p>
+            ${demoJump(slide.actionIndex===1?'2.3-6':'2.3')}
+          </div><figure class="design-slot recovery-pattern-detail" aria-label="${recoveryPatterns[slide.actionIndex===1?3:0].place}">
+            <div class="demo-viewport recovery-action-viewport" data-demo-width="800" data-demo-height="580"><iframe title="${slide.actionIndex===1?'能力不支持：用户选择替代方案':'请求信息：连续补充与确认'} Demo" data-scene="${slide.actionIndex===1?'2.3-6':'2.3'}" src="./index.html?strategyScene=${slide.actionIndex===1?'2.3-6':'2.3'}&amp;strategyPanel=recovery-detail" scrolling="no"></iframe></div>
+            <figcaption class="recovery-action-caption">${slide.actionIndex===0?`<div class="recovery-caption-wireframe">${recoveryWireframe(0)}</div>`:''}<div><strong>${recoveryPatterns[slide.actionIndex===1?3:0].place}</strong><p>${recoveryPatterns[slide.actionIndex===1?3:0].input}</p><small>预设交互演示</small></div></figcaption>
           </figure></div>
         </section>`;
       if(slide.kind==='interruption-research')return `
@@ -1248,6 +1282,7 @@
               <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns[slide.pointNo][slide.actionIndex])}</p></div>
               <div class="action-detail"><span class="label">设计动作 ${escapeHtml(`${slide.pointNo}.${slide.actionIndex+1}`)}</span><h3>${escapeHtml(slide.action[0])}</h3>${slide.pointNo==='2.3'&&slide.actionIndex===0?`<p>共用底部问题卡片，按信息类型提供：</p><table class="feedback-component-table" aria-label="四类补充信息组件"><thead><tr><th scope="col">组件类型</th><th scope="col">适用信息</th></tr></thead><tbody><tr><th scope="row">单选</th><td>确定方向与偏好</td></tr><tr><th scope="row">文本输入</th><td>补充开放信息</td></tr><tr><th scope="row">范围输入</th><td>限定预算或时间</td></tr><tr><th scope="row">摘要确认</th><td>核对目标与约束</td></tr></tbody></table><p>登录失效或权限不足时，提供“前往登录／授权”入口，在目标系统完成；说明所需权限，返回后接着处理原任务。</p>`:`<p>${escapeHtml(slide.action[1])}</p>`}</div>
               ${slide.note&&slide.actionIndex===0?`<p class="design-note">${escapeHtml(slide.note)}</p>`:''}
+              ${slide.pointNo==='3.3'?demoJump(slide.no,slide.actionIndex===0?'打开版本修改摘要 Demo':'打开版本差异与撤销 Demo'):''}
               ${slide.pointNo==='1.1'&&slide.actionIndex===0?`<p class="capability-source">四类是任务归并，并非统计标签。ToC 首轮 n=3,322；ToB 抽样 n=938。来源：<a href="https://km.sankuai.com/collabpage/2789760458" target="_blank" rel="noopener noreferrer">ToC 报告</a> · <a href="https://km.sankuai.com/collabpage/2786789535" target="_blank" rel="noopener noreferrer">ToB 报告</a></p>`:''}
             </div>
             <figure class="design-slot ${CatPawStrategyScenes.scenes[slide.no]?'has-demo':''}" data-design-slot="${escapeHtml(slide.no)}" aria-label="设计稿：${escapeHtml(pageView[slide.pointNo][1])}">${slide.no==='3.2'?toolbarComparison:''}${CatPawStrategyScenes.scenes[slide.no]?`<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="CatPaw Demo：${escapeHtml(slide.action[0])}" data-scene="${escapeHtml(slide.no)}" src="./index.html?strategyScene=${escapeHtml(slide.no)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`:slide.no==='2.1'?processDemo:slide.no==='2.1-5'?modeDemo:slide.pointNo==='2.2'?`<div class="design-slot-body">${slide.actionIndex===0?'中途干预':'异常恢复'}设计待定</div>`:slide.pointNo==='3.1'?workspaceDemo[0]:slide.pointNo==='3.3'?`<div class="design-slot-body">版本界面待设计</div>`:`<div class="design-slot-body">对应设计稿放在这里</div>`}</figure>
@@ -1261,7 +1296,7 @@
     let sharedGreetingText='';
     const fromHash=()=>{
       const hash=decodeURIComponent(location.hash);
-      const canonical=hash==='#2.1-5'?'#2.1':hash==='#3.4'?'#3.3':hash==='#2.2-recovery-analysis'?'#2.3-analysis':hash==='#2.3-4'?'#2.3-analysis':hash==='#2.3-5'?'#2.3':hash==='#2.2-4'?'#2.3':hash==='#2.2-5'?'#2.3-2':hash==='#2.2-6'?'#2.3-6':hash==='#1.2-2'?'#1.2':hash==='#1.2-3'?'#1.3':/^#1\.1-[23]$/.test(hash)?'#1.1':hash==='#2.4-2'?'#2.4-modules':/^#2\.4-[34]$/.test(hash)?'#2.4-cases':/^#3\.1-[234]$/.test(hash)?'#3.1':hash==='#3.2-4'?'#3.2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.3':hash;
+      const canonical=hash==='#2.1-background'?'#2.1-5':hash==='#3.4'?'#3.3':hash==='#2.2-recovery-analysis'?'#2.3-analysis':hash==='#2.3-6'?'#2.3-2':hash==='#2.3-4'?'#2.3-analysis':hash==='#2.3-5'?'#2.3':hash==='#2.2-4'?'#2.3':hash==='#2.2-5'?'#2.3-2':hash==='#2.2-6'?'#2.3-6':hash==='#1.2-2'?'#1.2':hash==='#1.2-3'?'#1.3':/^#1\.1-[23]$/.test(hash)?'#1.1':hash==='#2.4-2'?'#2.4-modules':/^#2\.4-[34]$/.test(hash)?'#2.4-cases':/^#3\.1-[234]$/.test(hash)?'#3.1':hash==='#3.2-4'?'#3.2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.3':hash;
       return slides.findIndex(slide=>'#'+slide.no===canonical);
     };
     let current=Math.max(0,fromHash());
@@ -1439,6 +1474,7 @@
       const open=history.hidden;diagram.dataset.historyPinned=String(open);history.hidden=!open;status.setAttribute('aria-expanded',String(open));
     });
     document.addEventListener('keydown',event=>{
+      if(document.documentElement.classList.contains('case-study-view'))return;
       if(event.target.closest('input,textarea,select,button,a,[contenteditable=true]'))return;
       if(['ArrowRight','ArrowDown','PageDown',' '].includes(event.key)){event.preventDefault();journal.step(1)}
       if(['ArrowLeft','ArrowUp','PageUp'].includes(event.key)){event.preventDefault();journal.step(-1)}
