@@ -13,7 +13,7 @@
   if (window.self !== window.top) document.documentElement.classList.add('strategy-framed');
 </script>
 <title>CatPaw</title>
-<link rel="stylesheet" href="./styles.css?v=20261116-minimal-scrollbar" />
+<link rel="stylesheet" href="./styles.css?v=20261116-divider-gradient" />
 <link rel="stylesheet" href="./credits-demo.css?v=20261111-ds-audit">
 <link rel="stylesheet" href="./capability-market.css?v=20261110-palette-sync">
 <link rel="stylesheet" href="./nocode-page.css">
@@ -833,17 +833,17 @@
     <!-- 常规摘要悬浮于内容区；定时任务信息在右侧工作区展开。 -->
 <section class="summary-popover" id="summaryPopover" role="dialog" aria-label="摘要" hidden>
 <div class="standard-summary" id="standardSummary">
-<div class="summary-section" id="summaryAgentsSection" hidden>
-  <header class="summary-section-head"><button type="button" class="summary-section-toggle" aria-controls="summaryAgentsList" aria-expanded="true"><span>子智能体</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></header>
-  <div id="summaryAgentsList" class="summary-agent-list"></div>
-  <button id="summaryAgentsMore" class="summary-agents-more" type="button" aria-controls="summaryAgentsList" aria-expanded="false" hidden>展开全部</button>
-</div>
 <div class="summary-section" id="summaryArtifactsSection">
         <header class="summary-section-head">
           <button type="button" class="summary-section-toggle" aria-controls="fileGrid" aria-expanded="true"><span id="summaryArtifactsTitle">当前任务产物</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
         </header>
         <div class="summary-file-list" id="fileGrid"></div>
       </div>
+<div class="summary-section" id="summaryAgentsSection" hidden>
+  <header class="summary-section-head"><button type="button" class="summary-section-toggle" aria-controls="summaryAgentsList" aria-expanded="true"><span>子智能体</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></header>
+  <div id="summaryAgentsList" class="summary-agent-list"></div>
+  <button id="summaryAgentsMore" class="summary-agents-more" type="button" aria-controls="summaryAgentsList" aria-expanded="false" hidden>展开全部</button>
+</div>
       <div class="summary-section" id="summaryProcessesSection" hidden>
         <header class="summary-section-head"><button type="button" class="summary-section-toggle" aria-controls="summaryProcessesList" aria-expanded="false"><span>后台进程</span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></header>
         <div id="summaryProcessesList" class="summary-agent-list" hidden></div>
@@ -1276,6 +1276,6 @@
 <!-- 云同步层：初始化云客户端、WorkBuddy 登录与四类本地数据的云端同步；成功后按原顺序注入下方应用脚本 -->
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
 <script src="./catpaw-cloud-config.js"></script>
-<script src="./catpaw-cloud.js?v=20261116-conversation-init"></script>
+<script src="./catpaw-cloud.js?v=20261116-completion-fade"></script>
 </body>
 </html>

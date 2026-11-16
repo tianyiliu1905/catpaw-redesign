@@ -1022,7 +1022,8 @@ color:var(--text-1); font:inherit; font-size:var(--type-sm); text-align:left; cu
 
 /* 悬停时状态让出宽度，任务名称可以一直延伸到行尾。 */
 .task:hover .task-state,
-.task:focus-within .task-state{ display:none; }
+.task:focus-visible .task-state,
+.task:has(.row-act:focus-visible) .task-state{ display:none; }
 
 /* hover 显形；focus-within 保证键盘走到这里时按钮同样可见，
    否则 Tab 会停在一个看不见的目标上。
@@ -1033,7 +1034,8 @@ color:var(--text-1); font:inherit; font-size:var(--type-sm); text-align:left; cu
    「这张菜单属于谁」就断了线索。 */
 .task:hover .row-acts,
 .group-head:hover .row-acts,
-.task:focus-within .row-acts,
+.task:focus-visible .row-acts,
+.task:has(.row-act:focus-visible) .row-acts,
 .group-head:focus-within .row-acts,
 .task.menu-open .row-acts,
 .group-head.menu-open .row-acts{
@@ -3315,7 +3317,7 @@ to  { clip-path: inset(0 -2% 0 0); }
 .composer-add-menu:has(.composer-add-goal) .composer-add-item,
 .composer-add-submenu .composer-add-item{ min-height:34px; padding:5px 8px; gap:6px; }
 .composer-add-goal span{ min-width:0; flex:none; }
-.composer-add-goal small{ flex:1; min-width:0; margin-left:auto; overflow:hidden; text-overflow:ellipsis; text-align:right; color:var(--ds-text-4); font:var(--weight-body) 10px var(--font); white-space:nowrap; }
+.composer-add-goal small{ flex:1; min-width:0; margin-left:auto; overflow:hidden; text-overflow:ellipsis; text-align:right; color:var(--ds-text-4); font:var(--weight-body) 13px/20px var(--font); white-space:nowrap; }
 .composer-add-section{ display:block; padding:10px 9px 5px; color:var(--text-4); font:var(--weight-emphasis) var(--type-sm) var(--font); }
 .composer-add-empty{ margin:0; padding:14px 9px; color:var(--text-4); font:var(--weight-body) var(--type-sm) var(--font); }
 .composer-add-file span,.composer-dialog-row span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -7916,13 +7918,13 @@ font-weight:var(--weight-emphasis);
 @media(max-width:640px){.theme-panel .background-count-switch{top:auto;bottom:calc(100% + 8px)}}
 
 /* The multi-agent capsule itself grows upward into a single surface. */
-.background-agent-disclosure{position:relative;isolation:isolate;max-width:100%;width:var(--capsule-closed-width,max-content);height:40px;transition:width .22s cubic-bezier(.2,.8,.2,1)}
-.background-agent-disclosure::before{content:"";position:absolute;z-index:-1;left:0;right:0;bottom:0;height:40px;border:1px solid var(--ds-border-3);border-radius:20px;background:var(--main-bg);box-shadow:0 4px 16px #00000008;transition:height .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+.background-agent-disclosure{position:relative;isolation:isolate;max-width:100%;width:var(--capsule-closed-width,max-content);height:44px;transition:width .22s cubic-bezier(.2,.8,.2,1)}
+.background-agent-disclosure::before{content:"";position:absolute;z-index:-1;left:0;right:0;bottom:0;height:44px;border:1px solid var(--ds-border-3);border-radius:22px;background:var(--main-bg);box-shadow:0 4px 16px #00000008;transition:height .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
 .background-work-group:not(.background-work-group-inline) .background-agent-disclosure::before{border:.5px solid var(--gray-5)}
 .background-agent-disclosure.is-open{z-index:80}
-.background-agent-disclosure.is-open::before{height:calc(40px + var(--capsule-list-height,160px));box-shadow:0 6px 20px #00000008}
-.background-work-group .background-agent-disclosure>.background-agent-capsule{width:100%;height:40px;min-height:40px;background:transparent;border-color:transparent;box-shadow:none}
-.background-agent-choices{position:absolute;bottom:40px;left:0;right:0;padding:4px 6px;opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity .16s ease,transform .22s ease,visibility .16s;pointer-events:none}
+.background-agent-disclosure.is-open::before{height:calc(44px + var(--capsule-list-height,160px));box-shadow:0 6px 20px #00000008}
+.background-work-group .background-agent-disclosure>.background-agent-capsule{width:100%;height:44px;min-height:44px;background:transparent;border-color:transparent;box-shadow:none}
+.background-agent-choices{position:absolute;bottom:44px;left:0;right:0;padding:4px 6px;opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity .16s ease,transform .22s ease,visibility .16s;pointer-events:none}
 /* Floating disclosure header and list icons share the same 12px inset. */
 .background-work-group:not(.background-work-group-inline) .background-agent-choices{padding:4px}
 .background-work-group:not(.background-work-group-inline) .background-agent-disclosure>.background-agent-capsule{padding-inline:12px;border:0}
@@ -8056,7 +8058,7 @@ font-weight:var(--weight-emphasis);
 .background-work-group:not(.background-work-group-inline) .background-agent-disclosure.is-measuring-capsule .background-running-arrow{width:0;margin-left:-8px;opacity:0}
 
 /* Single floating tasks respond to hover without changing their geometry. */
-.background-work-group:not(.background-work-group-inline) > .background-agent-capsule{height:40px;min-height:40px;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.background-work-group:not(.background-work-group-inline) > .background-agent-capsule{height:44px;min-height:44px;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
 .background-work-group:not(.background-work-group-inline) > .background-agent-capsule:hover,.background-work-group:not(.background-work-group-inline) > .background-agent-capsule:focus-visible{background:var(--ds-fill-2);border-color:var(--gray-6);box-shadow:var(--conversation-card-hover-shadow)}
 
 /* Regular UI copy uses the body weight; the homepage greeting is the headline. */
@@ -8137,3 +8139,34 @@ font-weight:var(--weight-emphasis);
 .background-agent-choices::-webkit-scrollbar-button{display:none;width:0;height:0}
 .background-agent-choices::-webkit-scrollbar-corner{background:transparent}
 @supports not selector(::-webkit-scrollbar){.background-agent-choices{scrollbar-width:thin;scrollbar-color:#c4c4c4 transparent}}
+
+/* Keep the scrollbar inside the floating surface and clear of its top corner. */
+.background-work-group:not(.background-work-group-inline) .background-agent-choices{right:8px}
+.background-agent-choices::-webkit-scrollbar-track{margin-block:10px}
+
+/* Stable-width percentage readout, with a clipped vertical number handoff. */
+.background-agent-choice-status small.background-agent-progress{position:relative;display:inline-grid;align-items:center;justify-items:end;width:4ch;height:20px;overflow:hidden;font-variant-numeric:tabular-nums;line-height:20px;white-space:nowrap}
+.background-agent-progress>span{grid-area:1/1;display:block}
+
+/* Sweep only the active status inside floating background-work capsules. */
+.background-work-group:not(.is-complete) .background-agent-capsule:not(.is-terminated) .background-current-action{background:linear-gradient(105deg,var(--text-4) 0%,var(--text-4) 38%,var(--text-2) 49%,var(--text-2) 51%,var(--text-4) 62%,var(--text-4) 100%);background-size:240% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:stageTextSweep 2.4s linear infinite}
+@media(prefers-reduced-motion:reduce){.background-work-group:not(.is-complete) .background-agent-capsule:not(.is-terminated) .background-current-action{background:none;color:var(--text-4);-webkit-text-fill-color:currentColor;animation:none}}
+
+
+
+/* Overlay thumb preserves identical row spacing with and without overflow. */
+.background-work-group:not(.background-work-group-inline) .background-agent-choices{right:0;scrollbar-width:none}
+.background-agent-choices::-webkit-scrollbar{display:none;width:0;height:0}
+.background-list-scroll-thumb{position:absolute;right:5px;width:5px;border-radius:999px;background:#c4c4c4;z-index:2;opacity:0;pointer-events:none;touch-action:none;transition:opacity .16s ease}
+.background-agent-disclosure.is-open:not(.is-closing)>.background-list-scroll-thumb{opacity:1;pointer-events:auto}
+.background-list-scroll-thumb[hidden]{display:none}
+
+/* Percentages share the task description typography. */
+.background-agent-choice-status small.background-agent-progress{font:400 14px/20px var(--font);color:var(--text-4);font-variant-numeric:tabular-nums}
+
+/* Expanded task list divider; positioned without changing capsule geometry. */
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure::after{content:"";position:absolute;left:12px;right:12px;bottom:44px;height:1px;background:linear-gradient(90deg,transparent 0%,var(--ds-border-2) 30%,var(--ds-border-2) 70%,transparent 100%);opacity:0;pointer-events:none;transition:opacity .16s ease}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure.is-open:not(.is-closing)::after{opacity:1}
+@media(prefers-reduced-motion:reduce){.background-agent-disclosure::after{transition:none}}
+
+.background-status-copy{color:var(--text-4);font-weight:400}

@@ -7402,6 +7402,54 @@ const mainView = document.querySelector('.main');
 
   let backgroundAgentTimer;
   let backgroundTaskStepTimer;
+  // Demo percentages persist across repaint; only the completion control reaches 100%.
+  const backgroundAgentProgress = new Map();
+  function updateBackgroundAgentProgress(node, value) {
+    node.getAnimations?.({subtree:true}).forEach(animation => animation.cancel());
+    node.dataset.progress = String(value);
+    node.setAttribute('aria-label', `进度 ${value}%`);
+    node.textContent = `${value}%`;
+  }
+
+  async function finishBackgroundCapsule(group) {
+    if (!group || group.hidden || group.classList.contains('background-work-group-inline')) return;
+    group.classList.add('is-complete');
+    group.style.pointerEvents = 'none';
+    group.querySelectorAll('.background-agent-disclosure').forEach(disclosure => {
+      disclosure.classList.remove('is-open', 'is-closing');
+      disclosure.querySelector('[aria-expanded]')?.setAttribute('aria-expanded', 'false');
+      const popup = disclosure.querySelector('.background-agent-choices');
+      if (popup) popup.inert = true;
+    });
+    const labels = [...group.querySelectorAll('.background-agent-capsule')]
+      .filter(capsule => !capsule.hidden)
+      .map(capsule => {
+        const label = capsule.querySelector('.background-running-label');
+        let status = label?.querySelector('.background-current-action');
+        if (!status && label) {
+          label.textContent = label.textContent.replace(/(?:后台)?运行中.*$/, '').trimEnd() + ' ';
+          status = document.createElement('span');
+          status.className = 'background-current-action';
+          label.append(status);
+        }
+        return status;
+      }).filter(Boolean);
+    for (const status of labels) {
+      status.textContent = '已完成';
+      if (!reducedMotion.matches) status.animate([
+        {opacity:0},
+        {opacity:1}
+      ], {duration:240,easing:'cubic-bezier(.23,1,.32,1)'});
+    }
+    if (reducedMotion.matches) return;
+    await new Promise(resolve => setTimeout(resolve, 600));
+    if (!group.isConnected) return;
+    await group.animate([
+      {opacity:1},
+      {opacity:0}
+    ], {duration:200,easing:'cubic-bezier(.23,1,.32,1)',fill:'forwards'}).finished.catch(() => {});
+  }
+
   const backgroundAgentStarts = new Map();
   const backgroundDemoCounts = new Map();
   const backgroundDemoCompleted = new Map();
@@ -7530,10 +7578,10 @@ const mainView = document.querySelector('.main');
       document.getElementById('backgroundFollowupTurn')?.remove();
       const content = conversationThread.querySelector('.assistant-content');
       content.innerHTML = `<div class="stage-thinking" data-global-state="${finished ? 'done' : 'running'}"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>${finished ? '已完成' : '整理中'}</strong></div></div>
-        <article class="md conversation-reply"><p>${mixed ? '本周履约概况已整理完成。1 个子智能体正在交叉核查明细，1 个后台进程正在导出文件。你可以继续对话，结果完成后会补充到当前任务。' : process ? (finished ? '本周履约概况已整理完成，完整明细仍在后台导出。你可以继续其他对话，文件生成后会补充到当前任务。' : '我先整理履约概况，并启动完整明细的导出。') : finished ? '本周履约概况已整理完成。明细的交叉核查已交给子智能体在后台继续，你可以继续其他对话，核查结果会在完成后补充。' : '我先整理履约概况，再让子智能体独立核查明细。'}</p></article>
+        <article class="md conversation-reply"><p>${mixed ? '本周履约概况已整理完成。3 个子智能体正在交叉核查明细、核对超时时长和评估影响范围，1 个后台进程正在导出文件。你可以继续对话，结果完成后会补充到当前任务。' : process ? (finished ? '本周履约概况已整理完成，完整明细仍在后台导出。你可以继续其他对话，文件生成后会补充到当前任务。' : '我先整理履约概况，并启动完整明细的导出。') : finished ? '本周履约概况已整理完成。明细的交叉核查已交给子智能体在后台继续，你可以继续其他对话，核查结果会在完成后补充。' : '我先整理履约概况，再让子智能体独立核查明细。'}</p></article>
         ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-figma.svg" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
       document.getElementById('backgroundWorkGroup')?.remove();
-      const count = mixed ? 2 : backgroundDemoCounts.get(task) || 1;
+      const count = mixed ? 4 : backgroundDemoCounts.get(task) || 1;
       document.getElementById('backgroundCountSwitch')?.remove();
       const controls = document.createElement('div');
       controls.id = 'backgroundCountSwitch';
@@ -7560,7 +7608,14 @@ const mainView = document.querySelector('.main');
         button.dataset.backgroundState = state;
         button.textContent = label;
         button.setAttribute('aria-pressed', String(demoState === state));
-        button.addEventListener('click', () => {
+        button.addEventListener('click', async () => {
+          if (controls.dataset.completing) return;
+          if (state === 'complete' && !workCompleted && !inline && !textLink) {
+            controls.dataset.completing = 'true';
+            clearInterval(backgroundTaskStepTimer);
+            await finishBackgroundCapsule(document.getElementById('backgroundWorkGroup'));
+            if (!controls.isConnected) return;
+          }
           setBackgroundDemoState(task, state);
           paint();
           document.querySelector(`#backgroundCountSwitch [data-background-state="${state}"]`)?.focus({preventScroll:true});
@@ -7574,7 +7629,7 @@ const mainView = document.querySelector('.main');
         group.id = 'backgroundWorkGroup';
         group.className = 'background-work-group' + (inline ? ' background-work-group-inline' : '') + (workCompleted ? ' is-complete' : '');
         group.hidden = textLink || (workCompleted && !inline);
-        const items = backgroundItemsForDisplay(task, mixed ? [backgroundAgentItems[0], backgroundProcessItems[0]] : (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count), (mixed || process) && !inline);
+        const items = backgroundItemsForDisplay(task, mixed ? [...backgroundAgentItems.slice(0, 3), backgroundProcessItems[0]] : (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count), (mixed || process) && !inline);
         const visibleCount = items.length;
         if (!visibleCount) group.hidden = true;
         const stoppedProcesses = backgroundDemoTerminated.get(task) || new Set();
@@ -7583,7 +7638,7 @@ const mainView = document.querySelector('.main');
         for (const [title, detail] of items) {
         const process = mixed ? backgroundProcessItems.some(item => item[0] === title) : task === backgroundProcessTask;
         const stopped = process && stoppedProcesses.has(title);
-        const stateCopy = (stopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中') + (process ? '，后台进程不消耗积分' : '');
+        const stateCopy = (stopped ? '已终止' : workCompleted ? '运行完成' : process && !inline && visibleCount === 1 ? '运行中' : '后台运行中') + (process ? '，后台进程不消耗积分' : '');
         const capsule = document.createElement('button');
         capsule.className = 'background-agent-capsule' + (inline ? ' background-agent-capsule-inline' : '');
         capsule.type = 'button';
@@ -7594,7 +7649,7 @@ const mainView = document.querySelector('.main');
         const runningArrow = '<span class="background-running-arrow" aria-hidden="true"><img src="assets/arrow-up-right-figma.svg" alt="" width="24" height="24"></span>';
         capsule.innerHTML = inline
           ? '<span class="background-artifact-icon' + (process ? ' background-process-icon' : '') + '" aria-hidden="true">' + backgroundIcon + '</span><span class="background-artifact-info"><strong class="background-running-label">' + esc(title) + '</strong><small class="background-artifact-state">' + stateCopy + '</small></span>' + runningArrow
-          : backgroundIcon + '<span class="background-running-label">' + esc(title) + (singleAgentAction ? ' <span class="background-current-action">' + esc(singleAgentAction) + '</span>' : ' ' + stateCopy) + '</span>' + runningArrow;
+          : backgroundIcon + '<span class="background-running-label">' + esc(singleAgentAction ? '1个子智能体' : process && visibleCount === 1 ? '1个后台进程' : title) + (singleAgentAction ? ' <span class="background-current-action">' + esc(singleAgentAction) + '</span>' : ' <span class="' + (!stopped && !workCompleted ? 'background-current-action' : 'background-status-copy') + '">' + esc(stateCopy) + '</span>') + '</span>' + runningArrow;
         capsule.dataset.backgroundKind = process ? 'process' : 'agent';
         capsule.dataset.backgroundTitle = title;
         capsule.dataset.summaryAgent = title;
@@ -7615,6 +7670,7 @@ const mainView = document.querySelector('.main');
           const aggregate = group.firstElementChild.cloneNode(true);
           aggregate.hidden = false;
           for (const key of Object.keys(aggregate.dataset)) delete aggregate.dataset[key];
+          aggregate.dataset.backgroundKind = process ? 'process' : mixed ? 'mixed' : 'agent';
           aggregate.classList.toggle('is-terminated',allStopped);
           if (!process) {
             const stack = document.createElement('span');
@@ -7635,8 +7691,9 @@ const mainView = document.querySelector('.main');
             }
             aggregate.querySelector('.background-running-icon').replaceWith(stack);
           }
-          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程运行中` : mixed ? '1个子智能体和1个后台进程 运行中' : `${visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
-          aggregate.querySelector('.background-running-label').textContent = aggregateLabel + (process || mixed ? '，后台进程不消耗积分' : '');
+          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程运行中` : mixed ? '3个子智能体和1个后台进程 运行中' : `${visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
+          const aggregateCopy = aggregateLabel + (process || mixed ? '，后台进程不消耗积分' : '');
+          aggregate.querySelector('.background-running-label').innerHTML = esc(aggregateCopy).replace(/运行中(.*)$/, '<span class="background-current-action">运行中$1</span>');
           const aggregateState = aggregate.querySelector('.background-artifact-state');
           if (aggregateState) aggregateState.textContent = allStopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中';
           {
@@ -7659,6 +7716,16 @@ const mainView = document.querySelector('.main');
                 '<span class="background-agent-choice-name"><span class="background-agent-choice-title">' + esc(source.dataset.summaryAgent) + '</span>' +
                 (source.dataset.backgroundKind === 'agent' ? '<span class="background-agent-choice-detail" title="' + esc(source.dataset.agentDetail) + '">' + esc(source.dataset.agentDetail) + '</span>' : '') + '</span>' +
                 '<span class="background-agent-choice-status"><small' + (source.dataset.agentStatus === '执行中' ? ' class="is-running"' : '') + '>' + (source.dataset.agentStatus === '执行中' ? '运行中' : source.dataset.agentStatus) + '</small><img class="background-agent-choice-arrow" src="assets/arrow-up-right-figma.svg" alt="" aria-hidden="true" width="18" height="18"></span>';
+              if (source.dataset.backgroundKind === 'agent' && source.dataset.agentStatus === '执行中') {
+                const title = source.dataset.summaryAgent;
+                if (!backgroundAgentProgress.has(task)) backgroundAgentProgress.set(task, new Map());
+                const progress = backgroundAgentProgress.get(task);
+                if (!progress.has(title)) progress.set(title, [36,52,28,12,8][popup.children.length] ?? 8);
+                const number = row.querySelector('.background-agent-choice-status small');
+                number.className = 'background-agent-progress';
+                number.dataset.progressTitle = title;
+                updateBackgroundAgentProgress(number, progress.get(title), false);
+              }
               const detailNode = row.querySelector('.background-agent-choice-detail');
               if (detailNode && source.dataset.agentStatus === '执行中') {
                 const steps = {
@@ -7675,6 +7742,35 @@ const mainView = document.querySelector('.main');
             }
             const setExpanded = wireBackgroundDisclosure(disclosure, aggregate, popup);
             disclosure.append(aggregate, popup);
+            // Overlay scrollbar: never subtract width from the rows or hover surface.
+            const scrollThumb = document.createElement('span');
+            scrollThumb.className = 'background-list-scroll-thumb';
+            scrollThumb.setAttribute('aria-hidden', 'true');
+            disclosure.append(scrollThumb);
+            const syncScrollThumb = () => {
+              const height = popup.clientHeight;
+              const range = popup.scrollHeight - height;
+              scrollThumb.hidden = range <= 1;
+              const track = Math.max(0, height - 20);
+              const size = Math.min(track, Math.max(28, track * height / popup.scrollHeight));
+              scrollThumb.style.height = `${size}px`;
+              scrollThumb.style.bottom = `${44 + height - 10 - size - (range > 0 ? popup.scrollTop / range * (track - size) : 0)}px`;
+            };
+            popup.addEventListener('scroll', syncScrollThumb, {passive:true});
+            let scrollDrag = null;
+            scrollThumb.addEventListener('pointerdown', event => {
+              event.preventDefault();event.stopPropagation();
+              scrollDrag = {y:event.clientY, top:popup.scrollTop};
+              scrollThumb.setPointerCapture(event.pointerId);
+            });
+            scrollThumb.addEventListener('pointermove', event => {
+              if (!scrollDrag) return;
+              const travel = popup.clientHeight - 20 - scrollThumb.offsetHeight;
+              if (travel > 0) popup.scrollTop = scrollDrag.top + (event.clientY - scrollDrag.y) * (popup.scrollHeight - popup.clientHeight) / travel;
+            });
+            scrollThumb.addEventListener('lostpointercapture', () => {scrollDrag = null;});
+            scrollThumb.addEventListener('click', event => event.stopPropagation());
+
             group.append(disclosure);
             requestAnimationFrame(() => {
               if (!disclosure.isConnected) return;
@@ -7684,15 +7780,22 @@ const mainView = document.querySelector('.main');
                 disclosure.classList.remove('is-measuring-capsule');
               }
               disclosure.style.setProperty('--capsule-list-height', `${Math.min(popup.scrollHeight, 264)}px`);
+              syncScrollThumb();
             });
           }
         }
         (inline ? content : conversationPage.querySelector('.conversation-composer-wrap')).append(group);
         const stepAreaVisible = () => !group.hidden && (visibleCount === 1 || !!group.querySelector('.background-agent-disclosure.is-open:not(.is-closing)'));
         clearInterval(backgroundTaskStepTimer);
-        if (visibleCount > 1 && !workCompleted && !reducedMotion.matches) backgroundTaskStepTimer = setInterval(() => {
+        if (visibleCount > 1 && !workCompleted) backgroundTaskStepTimer = setInterval(() => {
           if (!group.isConnected) { clearInterval(backgroundTaskStepTimer); return; }
           if (document.hidden || !stepAreaVisible()) return;
+          group.querySelectorAll('.background-agent-progress').forEach((node, index) => {
+            const progress = backgroundAgentProgress.get(task);
+            const next = Math.min(95, Number(node.dataset.progress) + ([3,5,4,2][index] ?? 2));
+            progress.set(node.dataset.progressTitle, next);
+            updateBackgroundAgentProgress(node, next);
+          });
           group.querySelectorAll('.background-agent-choice-detail[data-steps], .background-current-action[data-steps]').forEach(async (node, rowIndex) => {
             if (node.dataset.animating) return;
             node.dataset.animating = 'true';
