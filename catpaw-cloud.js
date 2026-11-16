@@ -30,7 +30,7 @@
     './nocode-page.js',
     './library-page.js',
     './widget-value-cases.js?v=20261110-current',
-    './app.js?v=20261116-completion-fade',
+    './app.js?v=20261116-agent-flow-endpoint',
     './credits-demo.js',
   ];
 

@@ -6086,7 +6086,7 @@ const mainView = document.querySelector('.main');
     generating: '生成中', checking: '检查中', summarizing: '整理中', done: '已完成',
   };
   const stageToolIcons = {
-    agent: '<rect x="4" y="6" width="16" height="16" rx="4"/><path d="M12 2v4M1 12v5m22-5v5M9 17h6"/><circle cx="9" cy="12" r=".8"/><circle cx="15" cy="12" r=".8"/>',
+    agent: '<g fill="none" stroke="none"><path d="M12 4.3V2.5" stroke-width="1.5" stroke-linecap="round" stroke="currentColor"/><path d="M17.5 4C19.7091 4 21.5 5.79086 21.5 8V9C22.3284 9 23 9.67157 23 10.5V15.5C23 16.3284 22.3284 17 21.5 17C21.4718 17 21.4439 16.9967 21.416 16.9951C20.9418 19.8351 18.4746 22 15.5 22H8.5L8.19141 21.9922C5.356 21.8485 3.04167 19.7363 2.58398 16.9951C2.55614 16.9967 2.52823 17 2.5 17C1.67157 17 1 16.3284 1 15.5V10.5C1 9.67157 1.67157 9 2.5 9V8C2.5 5.79086 4.29086 4 6.5 4H17.5ZM6.5 5.5C5.11929 5.5 4 6.61929 4 8V16C4 18.4853 6.01472 20.5 8.5 20.5H15.5C17.9853 20.5 20 18.4853 20 16V8C20 6.61929 18.8807 5.5 17.5 5.5H6.5Z" fill="currentColor"/><path d="M14 16C13.5805 16.6007 12.8409 17 12 17C11.1591 17 10.4195 16.6007 10 16" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M8.00127 13.3332C8.73727 13.3332 9.33457 12.7363 9.33457 11.9999C9.33457 11.2635 8.73727 10.6665 8.00127 10.6665C7.26527 10.6665 6.66797 11.2635 6.66797 11.9999C6.66797 12.7363 7.26527 13.3332 8.00127 13.3332Z" fill="currentColor"/><path d="M16.0013 13.3332C16.7373 13.3332 17.3346 12.7363 17.3346 11.9999C17.3346 11.2635 16.7373 10.6665 16.0013 10.6665C15.2653 10.6665 14.668 11.2635 14.668 11.9999C14.668 12.7363 15.2653 13.3332 16.0013 13.3332Z" fill="currentColor"/></g>',
     code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',
     file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
     table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M15 9v11M3 14h18"/>',
@@ -6113,7 +6113,7 @@ const mainView = document.querySelector('.main');
   }
 
   function renderCompletedAgentCall() {
-    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子智能体，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-figma.svg" width="16" height="16" alt=""></span><span class="stage-completed-text">已调取 4 个子智能体，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
+    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子智能体，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""></span><span class="stage-completed-text">已调取 4 个子智能体，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
   }
 
   function renderStageToolCall(frame, development, completed = false) {
@@ -6143,7 +6143,7 @@ const mainView = document.querySelector('.main');
     }).join('');
     const tree = `<div class="stage-delegation-tree"><ol class="stage-delegation-list">${rows}</ol><svg class="stage-delegation-flow" aria-hidden="true" focusable="false"></svg></div>`;
     if (completed) return `<section class="stage-delegation" aria-label="已调取的子智能体">${tree}</section>`;
-    return `<section class="stage-delegation" aria-label="子智能体任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-figma.svg" width="16" height="16" alt=""></span><span>${reviewing ? '正在调取子智能体，汇总异常分析结果' : '正在调用子智能体，并行分析门店异常'}</span></p>${tree}</section>`;
+    return `<section class="stage-delegation" aria-label="子智能体任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""></span><span>${reviewing ? '正在调取子智能体，汇总异常分析结果' : '正在调用子智能体，并行分析门店异常'}</span></p>${tree}</section>`;
   }
 
   const agentTransmissionStates = new WeakMap();
@@ -6172,7 +6172,7 @@ const mainView = document.querySelector('.main');
       const routes = running.map(node => {
         const summary = node.querySelector('.stage-agent-open') || node.querySelector('summary');
         const endY = node.offsetTop + summary.offsetTop + summary.offsetHeight / 2;
-        const avatar = node.querySelector('.stage-agent-icon');
+        const avatar = node.querySelector('.stage-agent-avatar, .stage-agent-icon');
         const endX = avatar ? avatar.getBoundingClientRect().left - tree.getBoundingClientRect().left : x+9.5;
         return `M${x} ${startY}V${Math.max(startY,endY-8)}Q${x} ${endY} ${x+8} ${endY}H${endX}`;
       });
@@ -7112,7 +7112,7 @@ const mainView = document.querySelector('.main');
   function renderConversationSubagents() {
     return `<div class="conversation-subagents" aria-label="子智能体调取">` +
       `<button class="conversation-activity-link conversation-subagent-toggle" type="button" aria-expanded="false" aria-controls="conversationSubagentItems">` +
-      `<img class="subagent-figma-icon" src="assets/subagent-figma.svg" width="16" height="16" alt="">` +
+      `<img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt="">` +
       `<span class="conversation-activity-label">正在调取子智能体</span>` +
       `<svg viewBox="0 0 24 24" class="ic conversation-subagent-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>` +
       `<div class="conversation-subagent-items" id="conversationSubagentItems" aria-hidden="true" inert><div class="conversation-subagent-items-content">` +
@@ -7579,7 +7579,7 @@ const mainView = document.querySelector('.main');
       const content = conversationThread.querySelector('.assistant-content');
       content.innerHTML = `<div class="stage-thinking" data-global-state="${finished ? 'done' : 'running'}"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>${finished ? '已完成' : '整理中'}</strong></div></div>
         <article class="md conversation-reply"><p>${mixed ? '本周履约概况已整理完成。3 个子智能体正在交叉核查明细、核对超时时长和评估影响范围，1 个后台进程正在导出文件。你可以继续对话，结果完成后会补充到当前任务。' : process ? (finished ? '本周履约概况已整理完成，完整明细仍在后台导出。你可以继续其他对话，文件生成后会补充到当前任务。' : '我先整理履约概况，并启动完整明细的导出。') : finished ? '本周履约概况已整理完成。明细的交叉核查已交给子智能体在后台继续，你可以继续其他对话，核查结果会在完成后补充。' : '我先整理履约概况，再让子智能体独立核查明细。'}</p></article>
-        ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-figma.svg" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
+        ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
       document.getElementById('backgroundWorkGroup')?.remove();
       const count = mixed ? 4 : backgroundDemoCounts.get(task) || 1;
       document.getElementById('backgroundCountSwitch')?.remove();
@@ -7691,7 +7691,7 @@ const mainView = document.querySelector('.main');
             }
             aggregate.querySelector('.background-running-icon').replaceWith(stack);
           }
-          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程运行中` : mixed ? '3个子智能体和1个后台进程 运行中' : `${visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
+          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程 运行中` : mixed ? '3个子智能体和1个后台进程 运行中' : `${visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
           const aggregateCopy = aggregateLabel + (process || mixed ? '，后台进程不消耗积分' : '');
           aggregate.querySelector('.background-running-label').innerHTML = esc(aggregateCopy).replace(/运行中(.*)$/, '<span class="background-current-action">运行中$1</span>');
           const aggregateState = aggregate.querySelector('.background-artifact-state');
