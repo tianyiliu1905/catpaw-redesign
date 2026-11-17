@@ -7452,6 +7452,7 @@ const mainView = document.querySelector('.main');
 
   const backgroundAgentStarts = new Map();
   const backgroundDemoCounts = new Map();
+  const backgroundDemoPartial = new Set();
   const backgroundDemoCompleted = new Map();
   const backgroundDemoFollowups = new Map();
   const backgroundDemoTerminated = new Map();
@@ -7582,19 +7583,22 @@ const mainView = document.querySelector('.main');
         ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
       document.getElementById('backgroundWorkGroup')?.remove();
       const count = mixed ? 4 : backgroundDemoCounts.get(task) || 1;
+      const partial = !mixed && !process && backgroundDemoPartial.has(task) && !workCompleted;
       document.getElementById('backgroundCountSwitch')?.remove();
       const controls = document.createElement('div');
       controls.id = 'backgroundCountSwitch';
       controls.className = 'background-count-switch';
       controls.setAttribute('role', 'group');
       controls.setAttribute('aria-label', process ? '后台进程数量' : '子智能体数量');
-      for (const value of (mixed ? [] : process ? [1, 3] : [1, 4, 5, 50])) {
+      for (const value of (mixed ? [] : process ? [1, 3] : [1, 4, 5, 'partial', 50])) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.textContent = `${value} 个${process ? '后台进程' : '子智能体'}`;
-        button.setAttribute('aria-pressed', String(count === value));
+        button.textContent = value === 'partial' ? '5 个 · 1 个已完成' : `${value} 个${process ? '后台进程' : '子智能体'}`;
+        button.setAttribute('aria-pressed', String(value === 'partial' ? backgroundDemoPartial.has(task) : !backgroundDemoPartial.has(task) && count === value));
         button.addEventListener('click', () => {
-          backgroundDemoCounts.set(task, value);
+          backgroundDemoCounts.set(task, value === 'partial' ? 5 : value);
+          if (value === 'partial') backgroundDemoPartial.add(task);
+          else backgroundDemoPartial.delete(task);
           clearTimeout(backgroundAgentTimer);
           paint();
           document.querySelector('#backgroundCountSwitch button[aria-pressed="true"]')?.focus({preventScroll:true});
@@ -7631,6 +7635,7 @@ const mainView = document.querySelector('.main');
         group.hidden = textLink || (workCompleted && !inline);
         const items = backgroundItemsForDisplay(task, mixed ? [...backgroundAgentItems.slice(0, 3), backgroundProcessItems[0]] : (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count), (mixed || process) && !inline);
         const visibleCount = items.length;
+        const hasDisclosure = visibleCount > 1 || (visibleCount === 1 && !process && !inline);
         if (!visibleCount) group.hidden = true;
         const stoppedProcesses = backgroundDemoTerminated.get(task) || new Set();
         const allStopped = process && !workCompleted && items.every(([title])=>stoppedProcesses.has(title));
@@ -7654,7 +7659,7 @@ const mainView = document.querySelector('.main');
         capsule.dataset.backgroundTitle = title;
         capsule.dataset.summaryAgent = title;
         capsule.dataset.agentDetail = detail;
-        capsule.dataset.agentStatus = stopped ? '已终止' : workCompleted ? '已完成' : '执行中';
+        capsule.dataset.agentStatus = stopped ? '已终止' : workCompleted || (partial && title === backgroundAgentItems[1][0]) ? '已完成' : '执行中';
         capsule.classList.toggle('is-terminated',stopped);
         if (process) capsule.addEventListener('background-terminate', () => {
           if (terminateBackgroundDemoProcess(task,title)) paint();
@@ -7663,10 +7668,12 @@ const mainView = document.querySelector('.main');
           if (!process) return openSubagentConversation(capsule);
           window.openBackgroundProcessWorkspace(capsule);
         });
-        capsule.hidden = visibleCount > 1;
+        capsule.hidden = hasDisclosure;
         group.append(capsule);
         }
-        if (visibleCount > 1) {
+        if (hasDisclosure) {
+          const runningSources = [...group.children].filter(source => source.dataset.agentStatus === '执行中');
+          const runningCount = runningSources.length;
           const aggregate = group.firstElementChild.cloneNode(true);
           aggregate.hidden = false;
           for (const key of Object.keys(aggregate.dataset)) delete aggregate.dataset[key];
@@ -7676,14 +7683,14 @@ const mainView = document.querySelector('.main');
             const stack = document.createElement('span');
             stack.className = 'background-avatar-stack';
             stack.setAttribute('aria-hidden', 'true');
-            for (const source of [...group.children].slice(0, 4)) {
+            for (const source of (partial ? runningSources : [...group.children]).slice(0, 4)) {
               const icon = source.querySelector('.background-running-icon').cloneNode(true);
               const layer = document.createElement('span');
               layer.className = 'background-avatar-layer';
               layer.append(icon);
               stack.append(layer);
             }
-            if (visibleCount > 4) {
+            if ((partial ? runningCount : visibleCount) > 4) {
               const more = document.createElement('span');
               more.className = 'background-avatar-layer';
               more.innerHTML = '<svg class="background-running-icon background-process-avatar background-more-avatar" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>';
@@ -7691,7 +7698,7 @@ const mainView = document.querySelector('.main');
             }
             aggregate.querySelector('.background-running-icon').replaceWith(stack);
           }
-          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程 运行中` : mixed ? '3个子智能体和1个后台进程 运行中' : `${visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
+          const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程 运行中` : mixed ? '3个子智能体和1个后台进程 运行中' : `${partial ? runningCount : visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
           const aggregateCopy = aggregateLabel + (process || mixed ? '，后台进程不消耗积分' : '');
           aggregate.querySelector('.background-running-label').innerHTML = esc(aggregateCopy).replace(/运行中(.*)$/, '<span class="background-current-action">运行中$1</span>');
           const aggregateState = aggregate.querySelector('.background-artifact-state');
@@ -7785,9 +7792,9 @@ const mainView = document.querySelector('.main');
           }
         }
         (inline ? content : conversationPage.querySelector('.conversation-composer-wrap')).append(group);
-        const stepAreaVisible = () => !group.hidden && (visibleCount === 1 || !!group.querySelector('.background-agent-disclosure.is-open:not(.is-closing)'));
+        const stepAreaVisible = () => !group.hidden && (!hasDisclosure || !!group.querySelector('.background-agent-disclosure.is-open:not(.is-closing)'));
         clearInterval(backgroundTaskStepTimer);
-        if (visibleCount > 1 && !workCompleted) backgroundTaskStepTimer = setInterval(() => {
+        if (hasDisclosure && !workCompleted) backgroundTaskStepTimer = setInterval(() => {
           if (!group.isConnected) { clearInterval(backgroundTaskStepTimer); return; }
           if (document.hidden || !stepAreaVisible()) return;
           group.querySelectorAll('.background-agent-progress').forEach((node, index) => {

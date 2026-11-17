@@ -8044,6 +8044,11 @@ font-weight:var(--weight-emphasis);
 .background-work-group:not(.background-work-group-inline) > .background-agent-capsule:focus-visible > .background-running-arrow{width:16px;margin-left:0}
 @media(hover:hover){.background-work-group:not(.background-work-group-inline) > .background-agent-capsule:hover > .background-running-arrow{width:16px;margin-left:0}}
 /* Multi-task floating capsules gain a 16px chevron plus the shared 8px gap. */
+/* Keep the arrow slot in sync with the shell so status text never loses width mid-transition. */
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure > .background-agent-capsule > .background-running-label{flex-shrink:0;overflow:visible;text-overflow:clip}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure .background-running-arrow{transition:width .22s cubic-bezier(.2,.8,.2,1),margin-left .22s cubic-bezier(.2,.8,.2,1),opacity .16s ease}
+.background-work-group:not(.background-work-group-inline) .background-agent-disclosure.is-measuring-capsule .background-running-arrow{transition:none}
+@media(prefers-reduced-motion:reduce){.background-work-group:not(.background-work-group-inline) .background-agent-disclosure .background-running-arrow{transition:none}}
 .background-work-group:not(.background-work-group-inline) .background-agent-disclosure:is(:hover,:focus-within,.is-open){width:calc(var(--capsule-closed-width) + 24px)}
 .background-work-group:not(.background-work-group-inline){width:100%;max-width:100%;pointer-events:none}
 .background-work-group:not(.background-work-group-inline)>*{pointer-events:auto}
@@ -8162,7 +8167,7 @@ font-weight:var(--weight-emphasis);
 .background-list-scroll-thumb[hidden]{display:none}
 
 /* Percentages share the task description typography. */
-.background-agent-choice-status small.background-agent-progress{font:400 14px/20px var(--font);color:var(--text-4);font-variant-numeric:tabular-nums}
+.background-agent-choice-status small{font:400 14px/20px var(--font);color:var(--text-4);font-variant-numeric:tabular-nums}
 
 /* Expanded task list divider; positioned without changing capsule geometry. */
 .background-work-group:not(.background-work-group-inline) .background-agent-disclosure::after{content:"";position:absolute;left:12px;right:12px;bottom:44px;height:1px;background:linear-gradient(90deg,transparent 0%,var(--ds-border-2) 30%,var(--ds-border-2) 70%,transparent 100%);opacity:0;pointer-events:none;transition:opacity .16s ease}

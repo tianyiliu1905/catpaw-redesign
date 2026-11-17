@@ -30,7 +30,7 @@
     './nocode-page.js',
     './library-page.js',
     './widget-value-cases.js?v=20261110-current',
-    './app.js?v=20261116-agent-flow-endpoint',
+    './app.js?v=20261117-single-agent-list',
     './credits-demo.js',
   ];
 
