@@ -8,7 +8,7 @@ html.case-study-view,html.case-study-view body{height:auto;overflow:visible;back
 .case-nav{position:fixed;left:36px;top:240px;width:148px;display:flex;flex-direction:column;gap:16px;font-size:12px;color:var(--muted)}
 .case-nav a[aria-current]{color:var(--black);font-weight:600}
 .case-study-view .shell{display:block;height:auto;min-height:100vh;padding:0}
-.case-study-view .stage{display:block;width:min(820px,calc(100% - 64px));height:auto;margin:0 auto;padding:120px 0 80px;aspect-ratio:auto;overflow:visible;box-shadow:none;background:none;touch-action:auto}
+.case-study-view .stage{display:block;width:min(820px,calc(100% - 64px));height:auto;margin:0 auto;padding:120px 0 80px;aspect-ratio:auto;overflow:visible;box-shadow:none;background:none;touch-action:auto;outline:none}
 .case-study-view .canvas{position:static;width:100%;height:auto;transform:none}
 .case-study-view .slide,.case-study-view .slide.active{display:block;position:relative;inset:auto;width:100%;height:auto;min-height:0;padding:58px 0 0;margin:58px 0 0;transform:none;background:none;border-top:1px solid var(--line);overflow:visible;scroll-margin-top:40px}
 .case-study-view .slide:first-child{padding-top:0;margin-top:0;border:0}

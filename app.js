@@ -4969,6 +4969,28 @@ const mainView = document.querySelector('.main');
   // Observing geometry covers streaming, cards, files and expanded tool output alike.
   let conversationFollowLatest = true;
   let conversationFollowFrame = null;
+  let anchoredConversationPlan = null;
+  const conversationPlanBottomGap = 32; // Plus the composer's 8px top padding.
+  function currentConversationPlan() {
+    return [...conversationThread.querySelectorAll('.conversation-stage-demo:not(.is-paused) > .stage-plan')].at(-1) || null;
+  }
+  function followConversationContent() {
+    const plan = currentConversationPlan();
+    if (anchoredConversationPlan !== plan) anchoredConversationPlan = null;
+    if (!conversationFollowLatest) return;
+    if (plan) {
+      const boundary = conversationScroll.getBoundingClientRect().bottom - conversationPlanBottomGap;
+      const distance = plan.getBoundingClientRect().bottom - boundary;
+      // Short replies remain in normal flow. Once they reach the composer,
+      // follow the plan's bottom edge instead of the whole thread's bottom.
+      if (distance >= 0 || anchoredConversationPlan === plan) {
+        anchoredConversationPlan = plan;
+        conversationScroll.scrollTop += distance;
+      }
+      return;
+    }
+    conversationScroll.scrollTop = conversationScroll.scrollHeight;
+  }
   let conversationFollowSize = {height:conversationScroll.scrollHeight, viewport:conversationScroll.clientHeight};
   function scheduleConversationFollow() {
     if (conversationFollowFrame !== null) return;
@@ -4978,12 +5000,14 @@ const mainView = document.querySelector('.main');
       const viewport = conversationScroll.clientHeight;
       const needsFollow = height > conversationFollowSize.height || viewport < conversationFollowSize.viewport;
       conversationFollowSize = {height, viewport};
-      if (!conversationFollowLatest || !viewport || !needsFollow) return;
-      conversationScroll.scrollTop = height;
+      if (!conversationFollowLatest || !viewport || (!needsFollow && !anchoredConversationPlan)) return;
+      followConversationContent();
     });
   }
   conversationScroll.addEventListener('scroll', () => {
-    conversationFollowLatest = conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight <= 4;
+    const plan = currentConversationPlan();
+    const atPlan = plan && Math.abs(plan.getBoundingClientRect().bottom - conversationScroll.getBoundingClientRect().bottom + conversationPlanBottomGap) <= 4;
+    conversationFollowLatest = Boolean(atPlan) || conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight <= 4;
   }, { passive:true });
   // Cancel following before the next streaming frame when the reader scrolls back.
   conversationScroll.addEventListener('wheel', event => {
@@ -6104,7 +6128,18 @@ const mainView = document.querySelector('.main');
     const input = frame.call.input;
     const code = typeof input.code === 'string' ? input.code : JSON.stringify(input, null, 2);
     const language = frame.call.name === 'python' ? 'Python' : frame.call.name;
-    return `<div class="stage-call-details"><div class="stage-tool-code-block"><span class="stage-tool-code-label">${esc(language)}</span><pre><code>${esc(code)}</code></pre>${completed ? `<div class="stage-tool-code-result">${esc(frame.completed)}</div>` : ''}</div></div>`;
+    const operations = conversationStageFrames.includes(frame) ? {
+      '读取文件': [['file', 'read_file("趋势图.png")'], ['file', 'read_file("门店履约异常明细.xlsx")'], ['file', 'read_file("门店履约分析.docx")']],
+      '表格分析': [['terminal', 'pd.read_excel("门店履约异常明细.xlsx")'], ['terminal', 'df.drop_duplicates(subset=["订单 ID"])'], ['terminal', 'df[time_fields].isna().any(axis=1)']],
+      '汇总门店数据': [['terminal', 'df.groupby("门店")'], ['terminal', 'store_groups["订单 ID"].nunique()']],
+      '数据分析': [['terminal', 'df.sort_values(["超时时长", "影响订单数", "重复发生次数"], ascending=False)'], ['terminal', 'priority.head(5)']],
+      '读取文档': [['file', 'read_file("门店履约分析.docx", section="结论与建议")']],
+      '整理结果': [['terminal', 'recommendations = priority.copy()'], ['terminal', 'recommendations["责任归属"] = "待人工确认"'], ['terminal', 'recommendations.to_excel("门店履约异常明细.xlsx", index=False)']],
+      '结果检查': [['terminal', 'recommendations["订单 ID"].isin(df["订单 ID"]).all()'], ['terminal', 'recommendations["责任归属"].eq("待人工确认").all()'], ['terminal', 'assert len(recommendations) == 5']]
+    }[frame.tool] : null;
+    const terminalIcon = '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/>';
+    const calls = operations ? `<ul class="stage-call-operations">${operations.map(([kind, operation]) => `<li><svg class="ic stage-call-operation-icon" viewBox="0 0 24 24" aria-hidden="true">${kind === 'terminal' ? terminalIcon : stageToolIcons.file}</svg><span title="${esc(operation)}">${esc(operation)}</span></li>`).join('')}</ul>` : '';
+    return `<div class="stage-call-details">${calls}<div class="stage-tool-code-block"><span class="stage-tool-code-label">${esc(language)}</span><pre><code>${esc(code)}</code></pre>${completed ? `<div class="stage-tool-code-result">${esc(frame.completed)}</div>` : ''}</div></div>`;
   }
 
   function renderCompletedStageCall(event, index, development, isNew) {
@@ -6634,7 +6669,7 @@ const mainView = document.querySelector('.main');
     const result = panel.querySelector('.stage-result');
     if (result && !positions.has(stageContentKey(result))) stepMotion.enter(null, result);
     for (const {node,previous,delta} of movements) {
-      if (Math.abs(delta) > 1) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
+      if (Math.abs(delta) > 1 && node !== anchoredConversationPlan) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
       if (!((delegationEntering || sameTaskGroup || current?.dataset.taskGroup !== undefined) && node === current) && (!previous || previous.text !== node.textContent) && node.matches('.stage-checkpoint,.stage-current:not(:has(> .stage-tool-call))')) {
         node.animate([{opacity:0},{opacity:1}], {duration:320,easing});
       }
@@ -6658,7 +6693,7 @@ const mainView = document.querySelector('.main');
     clearTimeout(stageAutoTimer);
     delete panel.dataset.autoDueAt;
     delete panel.dataset.autoRemaining;
-    const followLatest = conversationFollowLatest && conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight < 64;
+    const followLatest = conversationFollowLatest;
     const previousScrollHeight = conversationScroll.scrollHeight;
     preserveConversationScrollRange();
     const previousEvents = conversationStageFrames.slice(1, Number(panel.dataset.stageFrame)).filter(event => event.call).length;
@@ -6689,7 +6724,7 @@ const mainView = document.querySelector('.main');
     scheduleStageAutoAdvance(panel);
     if (followLatest) requestAnimationFrame(() => {
       if (panel.isConnected && Number(panel.dataset.stageFrame) === frameIndex && activeConversationTask === conversationTask && conversationScroll.scrollHeight > previousScrollHeight) {
-        conversationScroll.scrollTop = conversationScroll.scrollHeight;
+        followConversationContent();
       }
     });
   }
@@ -7361,11 +7396,12 @@ const mainView = document.querySelector('.main');
   const messageLikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></svg>';
   const messageDislikeIcon = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g transform="rotate(180 12 12)"><path d="M4.3 10h4.9l3.1-5.9a1.6 1.6 0 0 1 3 1v3.4h3.5a2.1 2.1 0 0 1 2 2.6l-1.6 7a2.5 2.5 0 0 1-2.4 1.9H4.3A1.3 1.3 0 0 1 3 18.7v-7.4A1.3 1.3 0 0 1 4.3 10ZM7 10v10"/></g></svg>';
 
-  function renderMessageMeta(role) {
+  function renderMessageMeta(role, date = new Date()) {
     const buttons = `<button type="button" data-message-action="copy" title="复制" aria-label="复制${role === 'user' ? '消息' : '回复'}">${messageCopyIcon}</button>` +
       (role === 'assistant' ? `<button type="button" data-message-action="like" title="赞" aria-label="赞" aria-pressed="false">${messageLikeIcon}</button>` +
       `<button type="button" data-message-action="dislike" title="踩" aria-label="踩" aria-pressed="false">${messageDislikeIcon}</button>` : '');
-    return `<div class="conversation-message-meta">${buttons}</div>`;
+    const time = role === 'assistant' ? `<time class="conversation-reply-time" datetime="${date.toISOString()}" title="${date.toLocaleString('zh-CN')}">${formatConversationTurnTime(date)}</time>` : '';
+    return `<div class="conversation-message-meta">${buttons}${time}</div>`;
   }
 
   conversationThread.addEventListener('click', event => {
@@ -7635,7 +7671,7 @@ const mainView = document.querySelector('.main');
         group.hidden = textLink || (workCompleted && !inline);
         const items = backgroundItemsForDisplay(task, mixed ? [...backgroundAgentItems.slice(0, 3), backgroundProcessItems[0]] : (process ? backgroundProcessItems : backgroundAgentItems).slice(0, count), (mixed || process) && !inline);
         const visibleCount = items.length;
-        const hasDisclosure = visibleCount > 1 || (visibleCount === 1 && !process && !inline);
+        const hasDisclosure = visibleCount > 1 || (visibleCount === 1 && !inline);
         if (!visibleCount) group.hidden = true;
         const stoppedProcesses = backgroundDemoTerminated.get(task) || new Set();
         const allStopped = process && !workCompleted && items.every(([title])=>stoppedProcesses.has(title));
@@ -7924,7 +7960,7 @@ const mainView = document.querySelector('.main');
           (task === conversationTask ? renderEarlierTurnArtifacts(index) : '') +
           (!(task === conversationTask && hasVersionDemoHistory()) && example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && startedConversationDemos.has(task) && index === turns.length - 1 ? renderConversationStage() : '') +
-          (reply ? renderMessageMeta('assistant') : '') +
+          (reply ? renderMessageMeta('assistant', sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45) * 60000)) : '') +
           '</div></div>'
         ).join('');
       }

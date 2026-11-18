@@ -1417,7 +1417,7 @@
         frame.contentWindow?.postMessage({type:'catpaw:scene-deactivate',scene:frame.dataset.scene},'*');
       });
       current=Math.max(0,Math.min(pages.length-1,index));
-      if(document.activeElement?.matches('iframe')){
+      if(!document.documentElement.classList.contains('case-study-view') && document.activeElement?.matches('iframe')){
         stage.setAttribute('tabindex','-1');
         stage.focus({preventScroll:true});
       }
