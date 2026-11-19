@@ -1,0 +1,492 @@
+[
+  {
+    "id": 7,
+    "name": "四宫格",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "07-success.svg"
+  },
+  {
+    "id": 7,
+    "name": "四宫格",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "07.svg"
+  },
+  {
+    "id": 7,
+    "name": "四宫格",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "07-purple.svg"
+  },
+  {
+    "id": 7,
+    "name": "四宫格",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "07-warning.svg"
+  },
+  {
+    "id": 7,
+    "name": "四宫格",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "07-danger.svg"
+  },
+  {
+    "id": 9,
+    "name": "圆角菱形",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "09-success.svg"
+  },
+  {
+    "id": 9,
+    "name": "圆角菱形",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "09-link.svg"
+  },
+  {
+    "id": 9,
+    "name": "圆角菱形",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "09-purple.svg"
+  },
+  {
+    "id": 9,
+    "name": "圆角菱形",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "09.svg"
+  },
+  {
+    "id": 9,
+    "name": "圆角菱形",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "09-danger.svg"
+  },
+  {
+    "id": 11,
+    "name": "正三圆",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "11.svg"
+  },
+  {
+    "id": 11,
+    "name": "正三圆",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "11-link.svg"
+  },
+  {
+    "id": 11,
+    "name": "正三圆",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "11-purple.svg"
+  },
+  {
+    "id": 11,
+    "name": "正三圆",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "11-warning.svg"
+  },
+  {
+    "id": 11,
+    "name": "正三圆",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "11-danger.svg"
+  },
+  {
+    "id": 14,
+    "name": "横向双圆",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "14-success.svg"
+  },
+  {
+    "id": 14,
+    "name": "横向双圆",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "14-link.svg"
+  },
+  {
+    "id": 14,
+    "name": "横向双圆",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "14-purple.svg"
+  },
+  {
+    "id": 14,
+    "name": "横向双圆",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "14.svg"
+  },
+  {
+    "id": 14,
+    "name": "横向双圆",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "14-danger.svg"
+  },
+  {
+    "id": 15,
+    "name": "正六边形",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "15-success.svg"
+  },
+  {
+    "id": 15,
+    "name": "正六边形",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "15-link.svg"
+  },
+  {
+    "id": 15,
+    "name": "正六边形",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "15-purple.svg"
+  },
+  {
+    "id": 15,
+    "name": "正六边形",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "15-warning.svg"
+  },
+  {
+    "id": 15,
+    "name": "正六边形",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "15.svg"
+  },
+  {
+    "id": 19,
+    "name": "四向圆瓣",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "19-success.svg"
+  },
+  {
+    "id": 19,
+    "name": "四向圆瓣",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "19-link.svg"
+  },
+  {
+    "id": 19,
+    "name": "四向圆瓣",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "19-purple.svg"
+  },
+  {
+    "id": 19,
+    "name": "四向圆瓣",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "19.svg"
+  },
+  {
+    "id": 19,
+    "name": "四向圆瓣",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "19-danger.svg"
+  },
+  {
+    "id": 20,
+    "name": "正三角形",
+    "palette": "success",
+    "level": 2,
+    "color": "#87E4A4",
+    "gradient": {
+      "start": "#9AEBB1",
+      "middle": "#87E4A4",
+      "end": "#67D78E"
+    },
+    "background": "#F6FBF7",
+    "file": "20-success.svg"
+  },
+  {
+    "id": 20,
+    "name": "正三角形",
+    "palette": "link",
+    "level": 2,
+    "color": "#A1CAFF",
+    "gradient": {
+      "start": "#B0D3FF",
+      "middle": "#A1CAFF",
+      "end": "#87BCFF"
+    },
+    "background": "#F4F9FF",
+    "file": "20-link.svg"
+  },
+  {
+    "id": 20,
+    "name": "正三角形",
+    "palette": "purple",
+    "level": 2,
+    "color": "#BEA6FF",
+    "gradient": {
+      "start": "#C7B3FF",
+      "middle": "#BEA6FF",
+      "end": "#B08EFF"
+    },
+    "background": "#F6F3FF",
+    "file": "20-purple.svg"
+  },
+  {
+    "id": 20,
+    "name": "正三角形",
+    "palette": "warning",
+    "level": 2,
+    "color": "#FFD2B2",
+    "gradient": {
+      "start": "#FFD6B9",
+      "middle": "#FFD2B2",
+      "end": "#FFCCA6"
+    },
+    "background": "#FFF6EF",
+    "file": "20-warning.svg"
+  },
+  {
+    "id": 20,
+    "name": "正三角形",
+    "palette": "danger",
+    "level": 2,
+    "color": "#FFC1B9",
+    "gradient": {
+      "start": "#FFCEC7",
+      "middle": "#FFC1B9",
+      "end": "#FFACA1"
+    },
+    "background": "#FFF5F4",
+    "file": "20.svg"
+  }
+]

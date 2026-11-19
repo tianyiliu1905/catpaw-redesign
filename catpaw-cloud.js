@@ -8,7 +8,7 @@
  *     同步到云数据库 user_store 表（owner-only RLS，按 owner_id 隔离，行级 last-write-wins）。
  *  4. 登录态下拉取云端合并到 localStorage 之后再注入应用脚本，保证页面模块读到合并后的数据；
  *     未登录 / 云不可用时立即注入脚本，原型照常可用。
- *  5. 左下角「云同步」状态胶囊：登录入口、同步状态、手动同步、退出登录。
+ *  5. 同步状态保留在模块内，不在原型上显示浮动胶囊。
  */
 (function (root) {
   'use strict';
@@ -303,7 +303,7 @@
     chip.id = 'catpawCloudChip';
     chip.setAttribute('role', 'status');
     chip.innerHTML = '<span class="cloud-dot"></span><span class="cloud-text">云同步</span>';
-    document.body.appendChild(chip);
+    // Keep the internal status node for updates without displaying a floating badge.
     chip.addEventListener('click', onChipClick);
     document.addEventListener('click', function (event) {
       if (chipMenu && !chipMenu.contains(event.target) && event.target !== chip) closeMenu();

@@ -3,19 +3,22 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-function setup() {
+function setup({ withPlan = false } = {}) {
   const source = fs.readFileSync('app.js', 'utf8');
   const code = source.slice(source.indexOf('  let conversationFollowLatest ='), source.indexOf("  const conversationSend = document.getElementById('conversationSend');"));
   const listeners = {}, frames = [], observed = [];
   let resize, top = 400;
+  const css = fs.readFileSync('styles.css', 'utf8');
+  const planPadding = Number(css.match(/\.conversation-thread:has\(\.conversation-stage-demo:not\(\.is-paused\) > \.stage-plan\)\{padding-bottom:(\d+)px\}/)[1]);
   const scroll = {
     scrollHeight:1000, clientHeight:600,
     get scrollTop() { return top; },
     set scrollTop(value) { top = Math.max(0, Math.min(value, this.scrollHeight - this.clientHeight)); },
+    getBoundingClientRect() { return { bottom:this.clientHeight }; },
     addEventListener(type, handler) { listeners[type] = handler; },
   };
   vm.runInNewContext(code, {
-    conversationScroll:scroll, conversationThread:{},
+    conversationScroll:scroll, conversationThread:{querySelectorAll:() => withPlan ? [{getBoundingClientRect:() => ({bottom:scroll.scrollHeight - planPadding - top})}] : []},
     conversationComposer:{closest:() => ({})},
     requestAnimationFrame:callback => { frames.push(callback); return frames.length; },
     ResizeObserver:class { constructor(callback) { resize = callback; } observe(node) { observed.push(node); } },
@@ -32,6 +35,19 @@ test('streaming growth and a taller composer keep the latest reply in view', () 
   s.scroll.clientHeight -= 100;
   s.resize(); s.flush();
   assert.equal(s.scroll.scrollTop, 580);
+});
+
+test('long output keeps the live todo list 32px above the scroll boundary', () => {
+  const s = setup({withPlan:true});
+  s.scroll.scrollHeight += 300;
+  s.resize(); s.flush();
+  const css = fs.readFileSync('styles.css', 'utf8');
+  const padding = Number(css.match(/\.conversation-thread:has\(\.conversation-stage-demo:not\(\.is-paused\) > \.stage-plan\)\{padding-bottom:(\d+)px\}/)[1]);
+  const planBottom = s.scroll.scrollHeight - padding - s.scroll.scrollTop;
+  assert.equal(s.scroll.clientHeight - planBottom, 32);
+  s.scroll.clientHeight -= 100;
+  s.resize(); s.flush();
+  assert.equal(s.scroll.clientHeight - (s.scroll.scrollHeight - padding - s.scroll.scrollTop), 32);
 });
 
 test('scrolling back stops following; returning to the bottom resumes it', () => {

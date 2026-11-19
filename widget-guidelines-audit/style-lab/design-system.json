@@ -1,0 +1,566 @@
+{
+  "version": "DS-001",
+  "date": "2026-11-06",
+  "sources": {
+    "palette": "81:11369",
+    "semantics": "79:11345",
+    "fileKey": "wojWSXcThx3qAUL2NX6VSa",
+    "typography": "user screenshot"
+  },
+  "leaves": {
+    "--widget-surface-canvas": {
+      "light": "#F9F9F9",
+      "dark": "#070707"
+    },
+    "--widget-surface-card": {
+      "light": "#FFFFFF",
+      "dark": "#3B3B3B"
+    },
+    "--widget-surface-subtle": {
+      "light": "#F2F2F2",
+      "dark": "#181818"
+    },
+    "--widget-surface-card-hover": {
+      "light": "#F2F2F2",
+      "dark": "#3B3B3B"
+    },
+    "--widget-surface-dialog": {
+      "light": "#E5E5E5",
+      "dark": "#282828"
+    },
+    "--widget-surface-inset": {
+      "light": "#D4D4D4",
+      "dark": "#3B3B3B"
+    },
+    "--widget-surface-overlay": {
+      "light": "rgba(0,0,0,0.5)"
+    },
+    "--widget-text-user": {
+      "light": "#000000",
+      "dark": "#FFFFFF"
+    },
+    "--widget-text-primary": {
+      "light": "#2B2B2B",
+      "dark": "#F9F9F9"
+    },
+    "--widget-text-secondary": {
+      "light": "#505050",
+      "dark": "#A6A6A6"
+    },
+    "--widget-text-muted": {
+      "light": "#737373"
+    },
+    "--widget-text-tertiary": {
+      "light": "#A6A6A6",
+      "dark": "#737373"
+    },
+    "--widget-text-placeholder": {
+      "light": "#D4D4D4",
+      "dark": "#A6A6A6"
+    },
+    "--widget-text-on-action": {
+      "light": "#FFFFFF",
+      "dark": "#000000"
+    },
+    "--widget-text-on-solid": {
+      "light": "#FFFFFF"
+    },
+    "--widget-control-bg": {
+      "light": "#F2F2F2",
+      "dark": "#3B3B3B"
+    },
+    "--widget-control-hover": {
+      "light": "#F2F2F2",
+      "dark": "#282828"
+    },
+    "--widget-control-pressed": {
+      "light": "#E5E5E5",
+      "dark": "#3B3B3B"
+    },
+    "--widget-icon-secondary": {
+      "light": "#737373",
+      "dark": "#A6A6A6"
+    },
+    "--widget-icon-primary": {
+      "light": "#3B3B3B",
+      "dark": "#F9F9F9"
+    },
+    "--widget-action-hover": {
+      "light": "#313131",
+      "dark": "#D6D6D6"
+    },
+    "--widget-action-bg": {
+      "light": "#000000",
+      "dark": "#FFFFFF"
+    },
+    "--widget-border-subtle": {
+      "light": "#F2F2F2",
+      "dark": "#181818"
+    },
+    "--widget-border-default": {
+      "light": "#E5E5E5",
+      "dark": "#2B2B2B"
+    },
+    "--widget-border-strong": {
+      "light": "#D4D4D4",
+      "dark": "#505050"
+    },
+    "--widget-brand-subtle": {
+      "light": "#ECF7EF",
+      "dark": "#163620"
+    },
+    "--widget-brand-selected": {
+      "light": "#A8F1BB",
+      "dark": "#184829"
+    },
+    "--widget-brand-default": {
+      "light": "#4BCC7A",
+      "dark": "#5ED586"
+    },
+    "--widget-brand-hover": {
+      "light": "#3BB96B",
+      "dark": "#6DDE92"
+    },
+    "--widget-brand-pressed": {
+      "light": "#30A55D",
+      "dark": "#4BCC7A"
+    },
+    "--widget-brand-text": {
+      "light": "#2C8F52",
+      "dark": "#85E5A1"
+    },
+    "--widget-success-1": {
+      "light": "#ECF7EF",
+      "dark": "#163620"
+    },
+    "--widget-success-2": {
+      "light": "#A8F1BB",
+      "dark": "#184829"
+    },
+    "--widget-success-3": {
+      "light": "#4BCC7A",
+      "dark": "#5ED586"
+    },
+    "--widget-success-4": {
+      "light": "#3BB96B",
+      "dark": "#6DDE92"
+    },
+    "--widget-success-5": {
+      "light": "#30A55D",
+      "dark": "#4BCC7A"
+    },
+    "--widget-success-6": {
+      "light": "#2C8F52",
+      "dark": "#85E5A1"
+    },
+    "--widget-success-bg": {
+      "light": "#ECF7EF",
+      "dark": "#163620"
+    },
+    "--widget-success-border": {
+      "light": "#4BCC7A",
+      "dark": "#5ED586"
+    },
+    "--widget-success-text": {
+      "light": "var(--widget-brand-text)",
+      "dark": "var(--widget-brand-text)"
+    },
+    "--widget-warning-1": {
+      "light": "#FFEDDF"
+    },
+    "--widget-warning-2": {
+      "light": "#FFD9BE"
+    },
+    "--widget-warning-3": {
+      "light": "#FFC69C"
+    },
+    "--widget-warning-4": {
+      "light": "#FD8C11"
+    },
+    "--widget-warning-5": {
+      "light": "#D97500"
+    },
+    "--widget-warning-6": {
+      "light": "#AE5D00"
+    },
+    "--widget-warning-bg": {
+      "light": "#FFEDDF",
+      "dark": "#FFEDDF"
+    },
+    "--widget-warning-border": {
+      "light": "#FFC69C",
+      "dark": "rgba(234,179,8,0.3)"
+    },
+    "--widget-warning-text": {
+      "light": "#FD8C11",
+      "dark": "#FD8C11"
+    },
+    "--widget-danger-1": {
+      "light": "#FFEBE9"
+    },
+    "--widget-danger-2": {
+      "light": "#FFD7D1"
+    },
+    "--widget-danger-3": {
+      "light": "#FF998D"
+    },
+    "--widget-danger-4": {
+      "light": "#F85149"
+    },
+    "--widget-danger-5": {
+      "light": "#DB3733"
+    },
+    "--widget-danger-6": {
+      "light": "#B12825"
+    },
+    "--widget-danger-bg": {
+      "light": "#FFEBE9",
+      "dark": "rgba(229,72,77,0.14)"
+    },
+    "--widget-danger-border": {
+      "light": "#FF998D",
+      "dark": "rgba(229,72,77,0.32)"
+    },
+    "--widget-danger-text": {
+      "light": "#F85149",
+      "dark": "#F85149"
+    },
+    "--widget-link-1": {
+      "light": "#E8F2FF"
+    },
+    "--widget-link-2": {
+      "light": "#BBD9FF"
+    },
+    "--widget-link-3": {
+      "light": "#70AFFF"
+    },
+    "--widget-link-4": {
+      "light": "#0285FF"
+    },
+    "--widget-link-5": {
+      "light": "#0070D9"
+    },
+    "--widget-link-6": {
+      "light": "#0759AC"
+    },
+    "--widget-link-bg": {
+      "light": "#E8F2FF",
+      "dark": "#0759AC"
+    },
+    "--widget-link-border": {
+      "light": "#70AFFF",
+      "dark": "#0285FF"
+    },
+    "--widget-link-text": {
+      "light": "#0759AC",
+      "dark": "#E8F2FF"
+    },
+    "--widget-purple-1": {
+      "light": "#ECE7FF"
+    },
+    "--widget-purple-2": {
+      "light": "#CDBDFF"
+    },
+    "--widget-purple-3": {
+      "light": "#A37AFF"
+    },
+    "--widget-purple-4": {
+      "light": "#882EFF"
+    },
+    "--widget-purple-5": {
+      "light": "#6E00D7"
+    },
+    "--widget-purple-6": {
+      "light": "#5903AD"
+    },
+    "--widget-series-1": {
+      "light": "#4BCC7A",
+      "dark": "#5ED586"
+    },
+    "--widget-series-2": {
+      "light": "#3BB96B",
+      "dark": "#6DDE92"
+    },
+    "--widget-series-3": {
+      "light": "#30A55D",
+      "dark": "#30A55D"
+    },
+    "--widget-title-lg-size": {
+      "light": "22px"
+    },
+    "--widget-title-lg-line": {
+      "light": "32px"
+    },
+    "--widget-title-lg-weight": {
+      "light": "600"
+    },
+    "--widget-title-md-size": {
+      "light": "18px"
+    },
+    "--widget-title-md-line": {
+      "light": "28px"
+    },
+    "--widget-title-md-weight": {
+      "light": "600"
+    },
+    "--widget-body-size": {
+      "light": "14px"
+    },
+    "--widget-body-line": {
+      "light": "22px"
+    },
+    "--widget-body-weight": {
+      "light": "400"
+    },
+    "--widget-body-emphasis-size": {
+      "light": "14px"
+    },
+    "--widget-body-emphasis-line": {
+      "light": "22px"
+    },
+    "--widget-body-emphasis-weight": {
+      "light": "500"
+    },
+    "--widget-text-md-size": {
+      "light": "14px"
+    },
+    "--widget-text-md-line": {
+      "light": "22px"
+    },
+    "--widget-text-md-weight": {
+      "light": "400"
+    },
+    "--widget-text-md-emphasis-size": {
+      "light": "14px"
+    },
+    "--widget-text-md-emphasis-line": {
+      "light": "22px"
+    },
+    "--widget-text-md-emphasis-weight": {
+      "light": "500"
+    },
+    "--widget-text-sm-size": {
+      "light": "12px"
+    },
+    "--widget-text-sm-line": {
+      "light": "20px"
+    },
+    "--widget-text-sm-weight": {
+      "light": "400"
+    },
+    "--widget-text-sm-emphasis-size": {
+      "light": "12px"
+    },
+    "--widget-text-sm-emphasis-line": {
+      "light": "20px"
+    },
+    "--widget-text-sm-emphasis-weight": {
+      "light": "500"
+    },
+    "--widget-text-xs-size": {
+      "light": "12px"
+    },
+    "--widget-text-xs-line": {
+      "light": "20px"
+    },
+    "--widget-text-xs-weight": {
+      "light": "400"
+    },
+    "--widget-text-xs-emphasis-size": {
+      "light": "12px"
+    },
+    "--widget-text-xs-emphasis-line": {
+      "light": "20px"
+    },
+    "--widget-text-xs-emphasis-weight": {
+      "light": "500"
+    },
+    "--widget-radius-md": {
+      "light": "12px"
+    },
+    "--widget-radius-lg": {
+      "light": "16px"
+    },
+    "--widget-radius-xl": {
+      "light": "20px"
+    },
+    "--widget-control-height": {
+      "light": "32px"
+    },
+    "--widget-border-width": {
+      "light": "0.5px"
+    },
+    "--widget-space-1": {
+      "light": "4px"
+    },
+    "--widget-space-2": {
+      "light": "8px"
+    },
+    "--widget-space-3": {
+      "light": "12px"
+    },
+    "--widget-space-4": {
+      "light": "16px"
+    },
+    "--widget-space-6": {
+      "light": "24px"
+    },
+    "--widget-space-8": {
+      "light": "32px"
+    },
+    "--widget-selection-bg": {
+      "light": "var(--widget-surface-subtle)"
+    },
+    "--widget-selection-border": {
+      "light": "#000000",
+      "dark": "#FFFFFF"
+    },
+    "--widget-selection-indicator": {
+      "light": "var(--widget-action-bg)"
+    },
+    "--widget-font-family": {
+      "light": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    },
+    "--widget-code-font-family": {
+      "light": "'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+    },
+    "--widget-font-serif": {
+      "light": "ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif"
+    }
+  },
+  "aliases": {
+    "--color-text-primary": "var(--widget-text-primary)",
+    "--color-text-secondary": "var(--widget-text-secondary)",
+    "--color-text-tertiary": "var(--widget-text-muted)",
+    "--color-background-primary": "var(--widget-surface-card)",
+    "--color-background-secondary": "var(--widget-surface-subtle)",
+    "--color-background-tertiary": "var(--widget-surface-canvas)",
+    "--color-border-primary": "var(--widget-border-strong)",
+    "--color-border-secondary": "var(--widget-border-strong)",
+    "--color-border-tertiary": "var(--widget-border-default)",
+    "--color-text-success": "var(--widget-success-text)",
+    "--color-background-success": "var(--widget-success-bg)",
+    "--color-border-success": "var(--widget-success-border)",
+    "--color-text-warning": "var(--widget-warning-text)",
+    "--color-background-warning": "var(--widget-warning-bg)",
+    "--color-border-warning": "var(--widget-warning-border)",
+    "--color-text-danger": "var(--widget-danger-text)",
+    "--color-background-danger": "var(--widget-danger-bg)",
+    "--color-border-danger": "var(--widget-danger-border)",
+    "--color-text-info": "var(--widget-link-text)",
+    "--color-background-info": "var(--widget-link-bg)",
+    "--color-border-info": "var(--widget-selection-border)",
+    "--border-radius-md": "var(--widget-radius-md)",
+    "--border-radius-lg": "var(--widget-radius-lg)",
+    "--border-radius-xl": "var(--widget-radius-xl)",
+    "--b": "var(--widget-brand-default)",
+    "--t": "var(--widget-border-default)",
+    "--font-sans": "var(--widget-font-family)",
+    "--font-serif": "var(--widget-font-serif)",
+    "--font-mono": "var(--widget-code-font-family)",
+    "--p": "var(--widget-text-primary)",
+    "--s": "var(--widget-text-secondary)",
+    "--bg2": "var(--widget-surface-subtle)"
+  },
+  "typography": {
+    "title-lg": [
+      18,
+      28,
+      600
+    ],
+    "title-md": [
+      18,
+      28,
+      600
+    ],
+    "body": [
+      15,
+      26,
+      400
+    ],
+    "body-emphasis": [
+      15,
+      26,
+      500
+    ],
+    "text-md": [
+      14,
+      22,
+      400
+    ],
+    "text-md-emphasis": [
+      14,
+      22,
+      500
+    ],
+    "text-sm": [
+      12,
+      20,
+      400
+    ],
+    "text-sm-emphasis": [
+      12,
+      20,
+      500
+    ],
+    "text-xs": [
+      12,
+      20,
+      400
+    ],
+    "text-xs-emphasis": [
+      12,
+      20,
+      500
+    ]
+  },
+  "functionalLightPalette": {
+    "success": [
+      "#ECF7EF",
+      "#A8F1BB",
+      "#4BCC7A",
+      "#3BB96B",
+      "#30A55D",
+      "#2C8F52"
+    ],
+    "warning": [
+      "#FFEDDF",
+      "#FFD9BE",
+      "#FFC69C",
+      "#FD8C11",
+      "#D97500",
+      "#AE5D00"
+    ],
+    "danger": [
+      "#FFEBE9",
+      "#FFD7D1",
+      "#FF998D",
+      "#F85149",
+      "#DB3733",
+      "#B12825"
+    ],
+    "link": [
+      "#E8F2FF",
+      "#BBD9FF",
+      "#70AFFF",
+      "#0285FF",
+      "#0070D9",
+      "#0759AC"
+    ],
+    "purple": [
+      "#ECE7FF",
+      "#CDBDFF",
+      "#A37AFF",
+      "#882EFF",
+      "#6E00D7",
+      "#5903AD"
+    ]
+  },
+  "pending": [
+    "Yellow is excluded due inconsistent Figma labels.",
+    "Focus, disabled and loading behavior retained as compatibility, not new Figma specifications."
+  ],
+  "interactionPolicy": "DS-011: selected cards use light green surface and 1px green border; radio outline/dot use text-secondary dark gray. Focus stays gray; primary/segment buttons remain black/white.",
+  "typographyPolicy": "Two heading levels: H1 22px/32px/600, H2 18px/28px/600. Key metrics 24px/32px/500; body 14px and auxiliary text 12px.",
+  "notes": []
+}

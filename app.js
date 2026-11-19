@@ -1155,9 +1155,9 @@ function renderSummaryAgents() {
 }
 
 function demoAgentAvatarSrc(index = 0) {
-  const selected = [4, 5, 6, 7];
+  const selected = ['07.svg', '09.svg', '11.svg', '14-purple.svg', '15.svg', '19-link.svg', '20-warning.svg'];
   const avatar = selected[((index % selected.length) + selected.length) % selected.length];
-  return `assets/generated-subagents/subagent-${String(avatar).padStart(3, '0')}.svg?v=20261116-selected-four`;
+  return `assets/subagent-soft-geometric/${avatar}?v=20261119-geometric-gradient-vivid`;
 }
 
 function subagentStatusCopy(status) {
@@ -6148,7 +6148,7 @@ const mainView = document.querySelector('.main');
   }
 
   function renderCompletedAgentCall() {
-    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子智能体，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""></span><span class="stage-completed-text">已调取 4 个子智能体，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
+    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子智能体，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool-v2-figma.svg" width="16" height="16" alt=""></span><span class="stage-completed-text">已调取 4 个子智能体，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
   }
 
   function renderStageToolCall(frame, development, completed = false) {
@@ -6174,15 +6174,16 @@ const mainView = document.querySelector('.main');
     const rows = conversationStageDelegations.map((task, index) => {
       const state = completed ? 'done' : reviewing ? (index < 3 ? 'done' : 'running') : (index < 3 ? 'running' : 'queued');
       const status = state === 'done' ? '已完成' : state === 'running' ? '执行中' : '等待中';
-      return `<li class="stage-delegation-node" data-state="${state}" data-delegation-index="${index}"><button type="button" class="stage-agent-open" data-summary-agent="${esc(task.title)}" data-agent-detail="${esc(task.detail)}" data-agent-status="${status}" aria-label="子智能体：${esc(task.title)}，${status}，打开右侧面板"><img class="stage-agent-avatar" src="${demoAgentAvatarSrc(index)}" width="24" height="24" alt="" aria-hidden="true"><span class="stage-delegation-title">${esc(task.title)}</span><img class="stage-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true"></button></li>`;
+      return `<li class="stage-delegation-node" data-state="${state}" data-delegation-index="${index}" style="--stage-agent-color:${['var(--ds-link-3)','var(--ds-warning-3)','var(--ds-primary-3)','var(--ds-purple-3, #A37AFF)'][index] || 'var(--text-4)'}"><button type="button" class="stage-agent-open" data-summary-agent="${esc(task.title)}" data-agent-detail="${esc(task.detail)}" data-agent-status="${status}" aria-label="子智能体：${esc(task.title)}，${status}，打开右侧面板"><img class="stage-agent-avatar" src="${demoAgentAvatarSrc(index)}" width="24" height="24" alt="" aria-hidden="true"><span class="stage-delegation-title">${esc(task.title)}</span><img class="stage-agent-open-arrow" src="assets/arrow-up-right-figma.svg" width="16" height="16" alt="" aria-hidden="true"></button></li>`;
     }).join('');
     const tree = `<div class="stage-delegation-tree"><ol class="stage-delegation-list">${rows}</ol><svg class="stage-delegation-flow" aria-hidden="true" focusable="false"></svg></div>`;
     if (completed) return `<section class="stage-delegation" aria-label="已调取的子智能体">${tree}</section>`;
-    return `<section class="stage-delegation" aria-label="子智能体任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""></span><span>${reviewing ? '正在调取子智能体，汇总异常分析结果' : '正在调用子智能体，并行分析门店异常'}</span></p>${tree}</section>`;
+    return `<section class="stage-delegation" aria-label="子智能体任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool-v2-figma.svg" width="16" height="16" alt=""></span><span>${reviewing ? '正在调取子智能体，汇总异常分析结果' : '正在调用子智能体，并行分析门店异常'}</span></p>${tree}</section>`;
   }
 
   const agentTransmissionStates = new WeakMap();
   let agentTransmissionSequence = 0;
+  const agentTransmissionPacketGroups = 5;
   function syncAgentTransmissionPaths(panel) {
     if (!panel) return;
     panel.querySelectorAll('.stage-delegation-tree').forEach(tree => {
@@ -6195,6 +6196,7 @@ const mainView = document.querySelector('.main');
         old?.cancel();
         agentTransmissionStates.delete(tree);
         svg.replaceChildren();
+        tree.classList.remove('has-dispatch-flow');
         return;
       }
       const width = tree.clientWidth, height = tree.clientHeight;
@@ -6204,14 +6206,17 @@ const mainView = document.querySelector('.main');
       const icon = heading?.querySelector('.stage-delegation-icon');
       const startY = icon ? heading.offsetTop + icon.offsetTop + icon.offsetHeight - tree.offsetTop : 0;
       const x = tree.querySelector('.stage-delegation-list').offsetLeft + .5;
-      const routes = running.map(node => {
+      const allNodes = [...tree.querySelectorAll('.stage-delegation-node')];
+      const allRoutes = allNodes.map(node => {
         const summary = node.querySelector('.stage-agent-open') || node.querySelector('summary');
         const endY = node.offsetTop + summary.offsetTop + summary.offsetHeight / 2;
         const avatar = node.querySelector('.stage-agent-avatar, .stage-agent-icon');
         const endX = avatar ? avatar.getBoundingClientRect().left - tree.getBoundingClientRect().left : x+9.5;
         return `M${x} ${startY}V${Math.max(startY,endY-8)}Q${x} ${endY} ${x+8} ${endY}H${endX}`;
       });
-      const signature = JSON.stringify([width,height,x,startY,routes]);
+      const routes = running.map(node => allRoutes[allNodes.indexOf(node)]);
+      const signature = JSON.stringify([width,height,x,startY,allRoutes,allNodes.map(node=>node.dataset.state)]);
+      tree.classList.add('has-dispatch-flow');
       if (old?.signature === signature) {
         if (!old.animations.length) old.play();
         return;
@@ -6221,6 +6226,7 @@ const mainView = document.querySelector('.main');
         old.signature = signature;
         svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
         old.stem?.setAttribute('d',`M${x} ${startY}V0`);
+        old.bases.forEach((item,index) => { item.path.setAttribute('d',allRoutes[index]); item.sync(); });
         old.packets.forEach(item => {
           item.route.setAttribute('d',routes[item.routeIndex]);
           item.length = item.route.getTotalLength();
@@ -6242,12 +6248,34 @@ const mainView = document.querySelector('.main');
       const ns = 'http://www.w3.org/2000/svg';
       const defs = document.createElementNS(ns,'defs');
       svg.append(defs);
+      const bases = allRoutes.map((d,index) => {
+        const node = allNodes[index];
+        const path = document.createElementNS(ns,'path');
+        path.setAttribute('d',d);
+        path.setAttribute('class','stage-agent-base' + (node.dataset.state === 'queued' ? ' is-queued' : ''));
+        const gradient = document.createElementNS(ns,'linearGradient');
+        const id = `stage-agent-terminal-${++agentTransmissionSequence}`;
+        gradient.setAttribute('id',id);
+        gradient.setAttribute('gradientUnits','userSpaceOnUse');
+        const color = node.dataset.state === 'queued' ? 'var(--text-4)' : node.style.getPropertyValue('--stage-agent-color') || 'var(--text-4)';
+        for (const [offset,colorValue] of [[0,'var(--ds-border-2)'],[1,color]]) {
+          const stop = document.createElementNS(ns,'stop');
+          stop.setAttribute('offset',offset); stop.setAttribute('stop-color',colorValue); gradient.append(stop);
+        }
+        defs.append(gradient); path.style.stroke = `url(#${id})`; svg.append(path);
+        const sync = () => {
+          const end = path.getPointAtLength(path.getTotalLength());
+          gradient.setAttribute('x1',end.x-12); gradient.setAttribute('x2',end.x);
+          gradient.setAttribute('y1',end.y); gradient.setAttribute('y2',end.y);
+        };
+        sync(); return {path,sync};
+      });
       const packets = routes.flatMap((d,routeIndex) => {
         const route = document.createElementNS(ns,'path');
         route.setAttribute('d',d);
         defs.append(route);
         const length = route.getTotalLength();
-        return [0,1].map(group => {
+        return Array.from({length:agentTransmissionPacketGroups},(_,group) => {
           const gradient = document.createElementNS(ns,'linearGradient');
           const id = `stage-agent-tail-${++agentTransmissionSequence}`;
           gradient.setAttribute('id',id);
@@ -6255,8 +6283,8 @@ const mainView = document.querySelector('.main');
           for (const [offset,opacity] of [[0,0],[.18,.35],[.4,.8],[.55,1],[1,1]]) {
             const stop = document.createElementNS(ns,'stop');
             stop.setAttribute('offset',offset);
-            stop.setAttribute('stop-color','#a6a6a6');
-            stop.setAttribute('stop-opacity',opacity);
+            stop.setAttribute('stop-color','#000');
+            stop.setAttribute('stop-opacity',opacity*.13);
             gradient.append(stop);
           }
           defs.append(gradient);
@@ -6267,7 +6295,7 @@ const mainView = document.querySelector('.main');
           return {packet,route,gradient,length,group,routeIndex};
         });
       });
-      const state = {signature,nodes:running,packets,stem,animations:[],frame:null,play:null,draw:null,resizeObserver:null,cancel(){
+      const state = {signature,nodes:running,packets,bases,stem,animations:[],frame:null,play:null,draw:null,resizeObserver:null,cancel(){
         this.animations.forEach(animation => animation.cancel());
         this.animations=[];
         cancelAnimationFrame(this.frame);
@@ -6275,7 +6303,7 @@ const mainView = document.querySelector('.main');
       }};
       state.play = () => {
         if (!tree.isConnected || agentTransmissionStates.get(tree) !== state) return;
-        const duration = Math.max(1100,Math.min(2600,(Math.max(...packets.map(item => item.length))+40)*14));
+        const duration = Math.max(1100,Math.min(2600,(Math.max(...packets.map(item => item.length))+40)*14))*1.25;
         const epoch = document.timeline?.currentTime;
         state.animations = packets.map(({packet,group}) => {
           const animation = packet.animate([
@@ -6283,14 +6311,14 @@ const mainView = document.querySelector('.main');
             {opacity:1,offset:.06},
             {opacity:1,offset:.94},
             {opacity:0,offset:1}
-          ],{duration,delay:group*duration/2,easing:'linear',iterations:Infinity});
+          ],{duration,delay:group*duration/agentTransmissionPacketGroups,easing:'linear',iterations:Infinity});
           if (typeof epoch === 'number') animation.startTime = epoch;
           return animation;
         });
         const draw = () => {
           if (!tree.isConnected || agentTransmissionStates.get(tree) !== state) {state.cancel();return;}
           packets.forEach(({packet,route,gradient,length,group},index) => {
-            const elapsed = (state.animations[index].currentTime || 0) - group*duration/2;
+            const elapsed = (state.animations[index].currentTime || 0) - group*duration/agentTransmissionPacketGroups;
             const phase = (elapsed % duration)/duration;
             const travel = -2 + (length+60)*phase;
             const begin = Math.max(0,travel-28), end = Math.min(length,travel);
@@ -7147,7 +7175,7 @@ const mainView = document.querySelector('.main');
   function renderConversationSubagents() {
     return `<div class="conversation-subagents" aria-label="子智能体调取">` +
       `<button class="conversation-activity-link conversation-subagent-toggle" type="button" aria-expanded="false" aria-controls="conversationSubagentItems">` +
-      `<img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt="">` +
+      `<img class="subagent-figma-icon" src="assets/subagent-tool-v2-figma.svg" width="16" height="16" alt="">` +
       `<span class="conversation-activity-label">正在调取子智能体</span>` +
       `<svg viewBox="0 0 24 24" class="ic conversation-subagent-chevron" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>` +
       `<div class="conversation-subagent-items" id="conversationSubagentItems" aria-hidden="true" inert><div class="conversation-subagent-items-content">` +
@@ -7616,7 +7644,7 @@ const mainView = document.querySelector('.main');
       const content = conversationThread.querySelector('.assistant-content');
       content.innerHTML = `<div class="stage-thinking" data-global-state="${finished ? 'done' : 'running'}"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>${finished ? '已完成' : '整理中'}</strong></div></div>
         <article class="md conversation-reply"><p>${mixed ? '本周履约概况已整理完成。3 个子智能体正在交叉核查明细、核对超时时长和评估影响范围，1 个后台进程正在导出文件。你可以继续对话，结果完成后会补充到当前任务。' : process ? (finished ? '本周履约概况已整理完成，完整明细仍在后台导出。你可以继续其他对话，文件生成后会补充到当前任务。' : '我先整理履约概况，并启动完整明细的导出。') : finished ? '本周履约概况已整理完成。明细的交叉核查已交给子智能体在后台继续，你可以继续其他对话，核查结果会在完成后补充。' : '我先整理履约概况，再让子智能体独立核查明细。'}</p></article>
-        ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-tool.svg?v=gray" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
+        ${!process && handedOff && !finished ? '<ul class="background-agent-delegation"><li class="stage-delegation-node" data-state="running"><details><summary><img class="subagent-figma-icon" src="assets/subagent-tool-v2-figma.svg" width="16" height="16" alt=""><span class="stage-delegation-title">交叉核查门店履约明细</span><svg class="ic background-agent-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><p>比对订单明细与门店记录，检查缺失时间戳和异常归属。</p></details></li></ul>' : ''}`;
       document.getElementById('backgroundWorkGroup')?.remove();
       const count = mixed ? 4 : backgroundDemoCounts.get(task) || 1;
       const partial = !mixed && !process && backgroundDemoPartial.has(task) && !workCompleted;
@@ -7680,6 +7708,7 @@ const mainView = document.querySelector('.main');
         const process = mixed ? backgroundProcessItems.some(item => item[0] === title) : task === backgroundProcessTask;
         const stopped = process && stoppedProcesses.has(title);
         const stateCopy = (stopped ? '已终止' : workCompleted ? '运行完成' : process && !inline && visibleCount === 1 ? '运行中' : '后台运行中') + (process ? '，后台进程不消耗积分' : '');
+        const stateMarkup = esc(stateCopy).replace('，后台进程不消耗积分', '<span class="background-credit-note">，后台进程不消耗积分</span>');
         const capsule = document.createElement('button');
         capsule.className = 'background-agent-capsule' + (inline ? ' background-agent-capsule-inline' : '');
         capsule.type = 'button';
@@ -7690,7 +7719,7 @@ const mainView = document.querySelector('.main');
         const runningArrow = '<span class="background-running-arrow" aria-hidden="true"><img src="assets/arrow-up-right-figma.svg" alt="" width="24" height="24"></span>';
         capsule.innerHTML = inline
           ? '<span class="background-artifact-icon' + (process ? ' background-process-icon' : '') + '" aria-hidden="true">' + backgroundIcon + '</span><span class="background-artifact-info"><strong class="background-running-label">' + esc(title) + '</strong><small class="background-artifact-state">' + stateCopy + '</small></span>' + runningArrow
-          : backgroundIcon + '<span class="background-running-label">' + esc(singleAgentAction ? '1个子智能体' : process && visibleCount === 1 ? '1个后台进程' : title) + (singleAgentAction ? ' <span class="background-current-action">' + esc(singleAgentAction) + '</span>' : ' <span class="' + (!stopped && !workCompleted ? 'background-current-action' : 'background-status-copy') + '">' + esc(stateCopy) + '</span>') + '</span>' + runningArrow;
+          : backgroundIcon + '<span class="background-running-label">' + esc(singleAgentAction ? '1个子智能体' : process && visibleCount === 1 ? '1个后台进程' : title) + (singleAgentAction ? ' <span class="background-current-action">' + esc(singleAgentAction) + '</span>' : ' <span class="' + (!stopped && !workCompleted ? 'background-current-action' : 'background-status-copy') + '">' + stateMarkup + '</span>') + '</span>' + runningArrow;
         capsule.dataset.backgroundKind = process ? 'process' : 'agent';
         capsule.dataset.backgroundTitle = title;
         capsule.dataset.summaryAgent = title;
@@ -7736,7 +7765,7 @@ const mainView = document.querySelector('.main');
           }
           const aggregateLabel = process && !workCompleted && !allStopped && !inline ? `${visibleCount}个后台进程 运行中` : mixed ? '3个子智能体和1个后台进程 运行中' : `${partial ? runningCount : visibleCount}个${process ? '后台进程' : '子智能体'}${inline ? '' : allStopped ? ' 已终止' : workCompleted ? ' 运行完成' : ' 运行中'}`;
           const aggregateCopy = aggregateLabel + (process || mixed ? '，后台进程不消耗积分' : '');
-          aggregate.querySelector('.background-running-label').innerHTML = esc(aggregateCopy).replace(/运行中(.*)$/, '<span class="background-current-action">运行中$1</span>');
+          aggregate.querySelector('.background-running-label').innerHTML = esc(aggregateCopy).replace('，后台进程不消耗积分', '<span class="background-credit-note">，后台进程不消耗积分</span>').replace(/运行中(.*)$/, '<span class="background-current-action">运行中$1</span>');
           const aggregateState = aggregate.querySelector('.background-artifact-state');
           if (aggregateState) aggregateState.textContent = allStopped ? '已终止' : workCompleted ? '运行完成' : '后台运行中';
           {

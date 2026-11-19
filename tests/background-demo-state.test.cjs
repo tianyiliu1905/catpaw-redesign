@@ -1,9 +1,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('app.js','utf8');
 function setup(){
- const context={backgroundDemoCompleted:new Map(),backgroundDemoFollowups:new Map(),backgroundDemoTerminated:new Map(),renderConversationTurnTime:date=>`<time>${date.toISOString()}</time>`,renderUserMessage:prompt=>`<div class="user-message">${prompt}</div>`};
+ const context={clearTimeout,setTimeout,reducedMotion:{matches:true},backgroundDemoCompleted:new Map(),backgroundDemoFollowups:new Map(),backgroundDemoTerminated:new Map(),renderConversationTurnTime:date=>`<time>${date.toISOString()}</time>`,renderUserMessage:prompt=>`<div class="user-message">${prompt}</div>`};
  vm.createContext(context);
- const start=source.indexOf('  function setBackgroundDemoState('),end=source.indexOf('  const backgroundQueueRemoved',start);
+ const start=source.indexOf('  function setBackgroundDemoState('),end=source.indexOf("  document.addEventListener('click', event => {",source.indexOf('  function wireBackgroundDisclosure(',start));
  vm.runInContext(source.slice(start,end),context);
  return context;
 }
@@ -67,7 +67,7 @@ test('multi-task disclosure opens only on click and supports toggle, outside clo
  const ctx=setup(),events={},attrs={'aria-expanded':'false'},classes=new Set();let focused=0,prevented=0;
  const aggregate={addEventListener:(name,handler)=>events['button:'+name]=handler,setAttribute:(name,value)=>attrs[name]=value,getAttribute:name=>attrs[name],focus(){focused++}};
  const popup={inert:true,querySelector:()=>({focus(){focused++}})};
- const disclosure={classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)},addEventListener:(name,handler)=>events[name]=handler,contains:target=>target===aggregate||target===popup};
+ const disclosure={classList:{add:(...names)=>names.forEach(name=>classes.add(name)),remove:(...names)=>names.forEach(name=>classes.delete(name)),contains:name=>classes.has(name),toggle:(name,on)=>on?classes.add(name):classes.delete(name)},addEventListener:(name,handler)=>events[name]=handler,contains:target=>target===aggregate||target===popup};
  ctx.wireBackgroundDisclosure(disclosure,aggregate,popup);
  assert.equal(events.pointerenter,undefined);assert.equal(events.focusin,undefined);assert.equal(events.pointerleave,undefined);
  events['button:click']();assert.equal(attrs['aria-expanded'],'true');assert.equal(popup.inert,false);assert.ok(classes.has('is-open'));
