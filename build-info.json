@@ -1,0 +1,26 @@
+{
+  "buildId": "3a149a2a28875c8b",
+  "builtAt": "2026-11-23T02:32:24.928Z",
+  "sourceSha256": "fdc1b8ea95742c0cf29e178bb71377a2fdb70784ac3a5b78d381dbdc9dc1ecca",
+  "deployedSha256": "e14e39c47bfa84b349bc305cd89a62b031dbac8ad382826ca2355080db324824",
+  "baselineHash": "9abbb0b3be279b4bdc0e73fac8c87ea132d7a664be0cd0a6323119aeb16b27d9",
+  "adjustedHash": "4ba06c890c285c1ea78c66a55151bead3c6a2bcf8500088a2f767c70ff171cda",
+  "versions": {
+    "baseline": {
+      "items": 29,
+      "files": 11
+    },
+    "adjusted": {
+      "items": 32,
+      "files": 11
+    }
+  },
+  "baselineCommit": "ebd8d0b70a9fc40db83c443c5510b067dea7ba74",
+  "pollingDisabled": true,
+  "faviconLinked": true,
+  "externalOrigins": [
+    "https://cdnjs.cloudflare.com",
+    "https://esm.sh"
+  ],
+  "bytes": 4247146
+}
