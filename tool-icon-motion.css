@@ -1,0 +1,66 @@
+@media (prefers-reduced-motion:no-preference){
+  [data-tool-state="running"] .stage-tool-icon{
+    --tool-icon-cycle:1.8s;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-read-line{
+    transform-origin:9px 0;
+    animation:toolIconRead var(--tool-icon-cycle) ease infinite;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-read-line + .tool-icon-read-line{
+    animation-delay:100ms;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-table-row{
+    animation:toolIconScanRow var(--tool-icon-cycle) ease infinite;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-trend{
+    transform-origin:8px 15px;
+    animation:toolIconTrend var(--tool-icon-cycle) ease infinite;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-bracket{
+    --bracket-travel:1.3px;
+    animation:toolIconCode var(--tool-icon-cycle) ease infinite;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-bracket + .tool-icon-bracket{
+    --bracket-travel:-1.3px;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-list-check,
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-result-check{
+    transform-box:fill-box;
+    transform-origin:center;
+    animation:toolIconCheck var(--tool-icon-cycle) ease infinite;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-list-check + .tool-icon-list-check{
+    animation-delay:80ms;
+  }
+  [data-tool-state="running"] .stage-tool-icon .tool-icon-list-check + .tool-icon-list-check + .tool-icon-list-check{
+    animation-delay:160ms;
+  }
+  [data-tool-state="waiting"] .stage-tool-icon .tool-icon-question{
+    animation:toolIconQuestion 240ms ease 100ms both;
+  }
+  @keyframes toolIconRead{
+    0%,18%,100%{transform:scaleX(1)}
+    8%{transform:scaleX(.66)}
+  }
+  @keyframes toolIconScanRow{
+    0%,28%,100%{transform:translateY(0)}
+    9%{transform:translateY(-2px)}
+    19%{transform:translateY(2px)}
+  }
+  @keyframes toolIconTrend{
+    0%,19%,100%{transform:scaleY(1)}
+    8%{transform:scaleY(.72)}
+  }
+  @keyframes toolIconCode{
+    0%,19%,100%{transform:translateX(0)}
+    8%{transform:translateX(var(--bracket-travel))}
+  }
+  @keyframes toolIconCheck{
+    0%,18%,100%{transform:scale(1)}
+    8%{transform:scale(.72)}
+  }
+  @keyframes toolIconQuestion{
+    0%,100%{transform:translateY(0)}
+    45%{transform:translateY(-1.5px)}
+  }
+}

@@ -1,0 +1,195 @@
+html.white-background-lab {
+  background: #fff;
+}
+
+body.background-motion-page::before {
+  display: none;
+}
+
+.background-motion-page .lab-navigation-panel,
+.background-motion-page .lab-sidebar > .lab-chrome {
+  border-color: #e7ece8;
+  background: #f9faf9;
+}
+
+.background-motion-page .lab-sidebar nav a[aria-current="page"] {
+  background: #eaf0ec;
+}
+
+.background-heading {
+  margin: 0 0 20px;
+}
+
+.background-workspace {
+  --canvas-height: clamp(320px, 43vw, 540px);
+  --texture-strength: .7;
+  --texture-ink: #567564;
+  --texture-accent: #2b7457;
+}
+
+.motion-pattern-selector {
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.motion-pattern-selector legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: #526058;
+  font-size: 12px;
+}
+
+.motion-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.motion-options label {
+  position: relative;
+}
+
+.motion-options input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.motion-options label > span {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid #e0e7e2;
+  border-radius: 9px;
+  color: #405149;
+}
+
+.motion-pattern-selector input:checked + span {
+  border-color: #9db9a9;
+  background: #e9f2ec;
+  color: #244537;
+}
+
+.motion-options input:focus-visible + span {
+  outline: 2px solid #315f4d;
+  outline-offset: 2px;
+}
+
+.background-surface {
+  position: relative;
+  height: var(--canvas-height);
+  overflow: hidden;
+  border: 1px solid #e7ece8;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.background-texture {
+  position: absolute;
+  inset: 0;
+  color: var(--texture-ink);
+  opacity: var(--texture-strength);
+  pointer-events: none;
+}
+
+.matrix-heading {
+  margin-bottom: 12px;
+}
+
+.matrix-field {
+  width: 100%;
+  height: 100%;
+}
+
+.matrix-base {
+  opacity: .25;
+}
+
+.matrix-field[data-pattern="code"] {
+  --matrix-low: .24;
+  --matrix-static: .36;
+}
+
+.matrix-field[data-pattern="code"] .matrix-base {
+  display: none;
+}
+
+.matrix-field text {
+  font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-ligatures: none;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.matrix-band {
+  fill: var(--texture-accent);
+  opacity: var(--matrix-static, .16);
+  animation: backgroundDotsPulse 6.4s ease-in-out infinite;
+}
+
+.background-motion-page .lab-sidebar .toolbar {
+  gap: 12px;
+}
+
+.background-motion-page .toolbar input {
+  accent-color: #315f4d;
+}
+
+.background-motion-page .toolbar input:focus-visible {
+  outline: 2px solid #315f4d;
+  outline-offset: 3px;
+}
+
+.background-motion-page .toolbar input[type="range"] {
+  width: 100%;
+  margin: 0;
+}
+
+.intensity-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.intensity-label output {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes backgroundDotsPulse {
+  0%, 34%, 100% { opacity: var(--matrix-low, .08); }
+  11% { opacity: .96; }
+  22% { opacity: .38; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matrix-band {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .background-motion-page .lab-sidebar .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .background-motion-page .lab-sidebar .control-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 8px 12px;
+  }
+
+  .background-workspace {
+    --canvas-height: 300px;
+  }
+}

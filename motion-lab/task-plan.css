@@ -35,7 +35,7 @@
 .task-case[data-mode="focus"] .stage-plan-step[data-state="done"]{opacity:.6}
 .task-case[data-mode="check"] .stage-plan-step[data-state="done"] .stage-plan-digit{opacity:0}
 .task-case[data-mode="check"] .stage-plan-step[data-state="done"] .task-check{opacity:1}
-.task-case[data-mode="check"] .stage-plan-step[data-state="done"] .stage-plan-number{border-color:var(--ds-success-3);color:var(--ds-success-6);background:var(--ds-success-1)}
+.task-case[data-mode="check"] .stage-plan-step[data-state="done"] .stage-plan-number{border-color:var(--ds-success-3);color:var(--ds-success-6);background:var(--ds-fill-2)}
 .completed-toggle{padding:4px 0;border:0;background:transparent;color:var(--ds-text-5);font-size:12px!important;line-height:20px;cursor:pointer}
 .completed-toggle:hover{text-decoration:underline;text-underline-offset:3px}
 .completed-toggle[hidden]{display:none}
@@ -46,8 +46,9 @@
 .numbering-caption{display:inline-block;margin-top:8px;color:var(--ds-text-4);font-size:11px;line-height:18px}
 .task-check{inset:auto;left:calc(50% - 6px);top:calc(50% - 6px)}
 .task-case[data-numbering="plain"] .stage-plan-number{width:18px;height:20px;border:0;border-radius:0;font-size:13px}
-.task-case[data-numbering="padded"] .stage-plan-step{grid-template-columns:18px minmax(0,1fr);column-gap:10px}
-.task-case[data-numbering="padded"] .stage-plan-number{width:18px;height:22px;border:0;border-radius:0;font-size:12px;color:var(--ds-text-5)}
+.task-case[data-numbering="padded"] .stage-plan-step{grid-template-columns:18px minmax(0,1fr);column-gap:10px;align-items:baseline}
+.task-case[data-numbering="padded"] .stage-plan-number{display:block;width:18px;height:auto;border:0;border-radius:0;font-size:12px;line-height:var(--line-lg);text-align:center;color:var(--ds-text-5)}
+.task-case[data-numbering="padded"] .stage-plan-digit{display:block;height:auto}
 .task-case[data-numbering="padded"] .stage-plan-step[data-state="current"] .stage-plan-number{color:var(--ds-text-2)}
 .task-case[data-numbering="column"] .stage-plan-step{grid-template-columns:32px minmax(0,1fr);column-gap:8px}
 .task-case[data-numbering="column"] .stage-plan-number{justify-self:start;width:28px;height:24px;padding-right:6px;border:0;border-right:1px solid var(--ds-border-3);border-radius:0;font-size:14px;font-weight:400;color:var(--ds-text-5)}
@@ -71,3 +72,51 @@
 .task-case[data-numbering="tile"] .stage-plan-number,.task-case[data-numbering="timeline"] .stage-plan-number{left:-2px}
 .task-case[data-numbering="column"] .stage-plan-number{left:-1.5px}
 .task-case[data-numbering="timeline"] .stage-plan-step:not(:last-child)::before{left:8.5px}
+
+/* D: keep the sequence numbers black, including the active task. */
+.task-case[data-mode="check"] .stage-plan-digit{color:var(--ds-text-2)}
+.task-case[data-mode="check"][data-numbering="tile"] .stage-plan-step[data-state="current"] .stage-plan-number{background:var(--ds-fill-2);color:var(--ds-text-2)}
+
+/* A: connect circled sequence numbers along their shared center line. */
+.task-connector{display:none}
+.task-case[data-mode="baseline"][data-numbering="circle"] .task-connector{display:block;transform-origin:top;position:absolute;left:9px;top:calc(50% + 11px);width:0;height:calc(100% - 20px);border-left:.6px solid var(--text-4);background:none;transform:translateX(-50%);pointer-events:none}
+
+/* Case labels stay quiet and centered below each example. */
+.task-case .task-case-heading{text-align:center;margin:16px 0 0}
+.task-case .task-case-heading h2{color:var(--ds-text-4);font-weight:400}
+
+
+/* Give all task-list examples the same small rightward inset. */
+.task-preview>.stage-plan{margin-left:16px}
+
+/* D: fade a green surface over the neutral tile as the number hands off to a check. */
+.task-completion-fill{display:none}
+.task-case[data-mode="check"] .task-completion-fill{display:block;position:absolute;inset:0;border-radius:inherit;background:var(--ds-success-1);opacity:0;pointer-events:none}
+.task-case[data-mode="check"] .stage-plan-step[data-state="done"] .task-completion-fill{opacity:1}
+.task-case[data-mode="check"] .stage-plan-digit{position:relative}
+
+/* D: trace the check from its left tip through the lower turn to the right tip. */
+.task-case[data-mode="check"] .task-check path{stroke-dasharray:1;stroke-dashoffset:0}
+
+/* A: hand focus to the next task in place, without replaying an entrance. */
+.task-case[data-mode="cascade"] .stage-plan-step,.task-case[data-mode="cascade"] .stage-plan-number{transition:color 200ms ease}
+@media(prefers-reduced-motion:reduce){.task-case[data-mode="cascade"] .stage-plan-step,.task-case[data-mode="cascade"] .stage-plan-number{transition:none}}
+
+/* Use true black for emphasized text so active and muted states contrast clearly. */
+.task-preview{--text-1:#000}
+.task-case[data-numbering="padded"] .stage-plan-step[data-state="current"] .stage-plan-number,
+.task-case[data-numbering="column"] .stage-plan-step[data-state="current"] .stage-plan-number,
+.task-case[data-mode="check"] .stage-plan-digit{color:#000}
+
+/* D: soften the task label's handoff from active black to completed gray. */
+.task-case[data-mode="check"] .stage-plan-title{color:var(--text-3);transition:color 480ms linear}
+.task-case[data-mode="check"] .stage-plan-step[data-state="current"] .stage-plan-title{color:var(--text-1)}
+.task-case:not([data-mode="focus"]) .stage-plan-step[data-state="done"] .stage-plan-title{color:color-mix(in srgb,var(--text-3) 60%,white)}
+@media(prefers-reduced-motion:reduce){.task-case[data-mode="check"] .stage-plan-title{transition:none}}
+
+/* Only the completed count rolls; the label and denominator stay still. */
+.task-count{display:inline-flex;align-items:center;white-space:nowrap;line-height:26px}
+.task-count-label{margin-right:4px}
+.task-count-value{display:inline-grid;width:1ch;height:26px;overflow:hidden;vertical-align:bottom}
+.task-count-value>span{display:block;grid-area:1/1;line-height:26px;text-align:center}
+

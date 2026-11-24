@@ -10,7 +10,7 @@
 .conversation-queue-handle:hover,.conversation-queue-actions button:hover{background:var(--hover)}
 .conversation-queue-handle img,.conversation-queue-actions img{display:block;flex:none}
 .conversation-queue-text{flex:1;min-width:0;overflow:hidden;line-height:var(--line-md);text-overflow:ellipsis;white-space:nowrap}
-.conversation-queue-actions{display:flex;align-items:center;gap:0;flex:none}
+.conversation-queue-actions{display:flex;align-items:center;gap:8px;flex:none}
 .conversation-queue-actions button{color:var(--text-3)}
 :root[data-theme="dark"] .conversation-queue-handle img,:root[data-theme="dark"] .conversation-queue-actions img{filter:invert(.8)}
 .conversation-queue-group :is(button,input):focus-visible{outline:2px solid var(--brand-green);outline-offset:2px}

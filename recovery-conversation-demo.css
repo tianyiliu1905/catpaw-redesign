@@ -68,7 +68,6 @@
 .recovery-demo[data-recovery-mode] > button{margin-top:var(--space-3)}
 .recovery-demo[data-recovery-mode] .recovery-result{border-color:var(--gray-5);border-radius:var(--radius-md);padding:16px;margin-top:var(--space-4)}
 
-.recovery-demo[data-recovery-mode="failure"] .recovery-actions button{background:transparent;color:var(--text-2);border:1px solid var(--gray-5);font-size:var(--type-md);line-height:20px;padding:8px 16px;border-radius:var(--radius-sm)}
 
 .recovery-demo[data-recovery-mode="failure"] .recovery-actions{flex-direction:column;align-items:flex-start;gap:8px}
 .recovery-script header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;color:var(--text-1)}
@@ -92,13 +91,13 @@
 .recovery-demo .recovery-retry-card button{background:transparent;color:var(--text-2);border:1px solid var(--gray-5);font-size:var(--type-sm);padding:4px 10px}
 
 /* Figma 5062:22816: radial mint fill and a blurred white trapezoid. */
-.conversation-composer-wrap:is(.has-clarification,.has-auth-request)::before,
-.conversation-composer-wrap:is(.has-clarification,.has-auth-request)::after{
+.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request)::before,
+.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request)::after{
   content:"";position:absolute;pointer-events:none;
   inset:-24px -12px -12px;border-radius:0;clip-path:none;
   -webkit-backdrop-filter:none;backdrop-filter:none;
 }
-.conversation-composer-wrap:is(.has-clarification,.has-auth-request)::before{
+.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request)::before{
   z-index:-2;
   background:radial-gradient(ellipse 101% 114% at 50% 0%,#fff 0%,#eaf5ee 34.13%,#cdffdb 61.06%,#dcffe6 78.85%);
   filter:blur(7px);
@@ -106,7 +105,7 @@
   mask-image:linear-gradient(to bottom,transparent,#000 24%);
   animation:request-attention-reveal 800ms ease-out both,request-attention-breathe 4.8s ease-in-out 800ms infinite;
 }
-.conversation-composer-wrap:is(.has-clarification,.has-auth-request)::after{
+.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request)::after{
   z-index:-1;
   -webkit-mask-image:linear-gradient(to bottom,transparent,#000 40px);
   mask-image:linear-gradient(to bottom,transparent,#000 40px);
@@ -120,19 +119,19 @@
 }
 .has-auth-request #conversationComposer .recovery-composer-card{width:100%;border:0;padding:0;margin:0;}
 @media(max-width:760px){.conversation-composer-wrap.has-auth-request #conversationComposer{min-height:160px;}}
-.has-clarification .clarify-card{border-color:var(--gray-5);background:color-mix(in srgb,var(--main-bg) 94%,transparent);}
+:is(.has-clarification,.has-browser-question) .clarify-card{border-color:var(--gray-5);background:color-mix(in srgb,var(--main-bg) 94%,transparent);}
 @keyframes request-attention-reveal{from{opacity:0}to{opacity:.28}}
 @keyframes request-attention-breathe{0%,100%{opacity:.28}50%{opacity:.5}}
-@media(prefers-reduced-motion:reduce){.conversation-composer-wrap:is(.has-clarification,.has-auth-request)::before{animation:none;opacity:.4}}
+@media(prefers-reduced-motion:reduce){.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request)::before{animation:none;opacity:.4}}
 
 /* Keep the form aligned with the thread while the wash spans the conversation. */
-.conversation-composer-wrap:is(.has-clarification,.has-auth-request){
+.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request){
   width:100%;box-sizing:border-box;
   padding-inline:max(24px,calc((100% - 732px)/2));
 }
 
 /* The request wash must meet the sidebar at a square inner bottom corner. */
-.content:has(.conversation-composer-wrap:is(.has-clarification,.has-auth-request)){
+.content:has(.conversation-composer-wrap:is(.has-clarification,.has-browser-question,.has-auth-request)){
   border-bottom-left-radius:0;
   clip-path:inset(0 round var(--radius-lg) 0 0 0);
 }
@@ -146,17 +145,37 @@
 #conversationComposer .recovery-composer-card button.recovery-secondary{background:transparent;border-color:var(--gray-5);color:var(--text-1);}
 
 
-/* Questionnaire attention pools at the bottom center, fading upward in an arc. */
-.conversation-composer-wrap.has-clarification::before{
+/* Questionnaire and browser confirmation share a bottom-centered wash. */
+.conversation-composer-wrap:is(.has-clarification,.has-browser-question)::before{
   inset:auto 0 -12px;height:200px;
   background:radial-gradient(ellipse 88% 100% at 50% 100%,#b5ffce 0%,#ceffdf 36%,rgba(222,248,234,.5) 65%,transparent 100%);
   filter:blur(16px);-webkit-mask-image:none;mask-image:none;
   animation:request-attention-reveal 800ms ease-out both,question-bottom-breathe 4.8s ease-in-out 800ms infinite;
 }
-.conversation-composer-wrap.has-clarification::after{content:none;}
+.conversation-composer-wrap.has-browser-question::after{content:none;}
 
 @keyframes question-bottom-breathe{0%,100%{opacity:.28}50%{opacity:.62}}
-@media(prefers-reduced-motion:reduce){.conversation-composer-wrap.has-clarification::before{animation:none;opacity:.4}}
+@media(prefers-reduced-motion:reduce){.conversation-composer-wrap:is(.has-clarification,.has-browser-question)::before{animation:none;opacity:.4}}
+
+/* The ring pulse sits above the wash and below the questionnaire card. */
+.conversation-composer-wrap.has-clarification::after{
+  --waiting-rings-fade:radial-gradient(ellipse 72% 104% at 50% calc(100% - 12px),
+    #000 0%,rgb(0 0 0 / .84) 24%,rgb(0 0 0 / .38) 52%,rgb(0 0 0 / .10) 78%,transparent 100%);
+  inset:auto 0 -12px;
+  height:200px;
+  background:url("assets/clarification/waiting-rings.svg") center bottom / cover no-repeat;
+  filter:none;
+  -webkit-mask-image:var(--waiting-rings-fade);
+  mask-image:var(--waiting-rings-fade);
+  animation:none;
+  opacity:.94;
+}
+@media(prefers-reduced-motion:reduce){
+  .conversation-composer-wrap.has-clarification::after{
+    background:radial-gradient(circle at center,#539a72 1px,transparent 1.5px) center bottom / 14px 14px repeat;
+    opacity:.30;
+  }
+}
 
 /* Keep the authorization message above the actions, with a clear lower-right exit. */
 .conversation-composer-wrap.has-auth-request #conversationComposer{min-height:152px}
@@ -190,3 +209,34 @@
 .strategy-recovery-detail .conversation-page.has-system-notice .conversation-scroll{padding-top:72px!important}
 .strategy-recovery-detail #recoverySystemHost{max-width:calc(100% - 32px);width:calc(100% - 32px)}
 .strategy-recovery-detail .recovery-system-banner{background:var(--gray-1);box-shadow:none;border:0}
+
+.recovery-suggestions {
+  display:grid;
+  gap:2px;
+  margin-top:16px;
+  padding-top:8px;
+}
+.recovery-demo[data-recovery-mode="failure"] .recovery-suggestions button {
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  text-align:start;
+  background:transparent;
+  color:var(--text-2);
+  padding:8px 10px;
+  line-height:1.5;
+}
+.recovery-suggestions button::before {
+  content:"";
+  flex:0 0 16px;
+  height:16px;
+  align-self:flex-start;
+  margin-top:calc(.75em - 8px);
+  background:var(--text-3);
+  mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%205.5v5.25A3.25%203.25%200%200%200%207.25%2014H20m-4.5-4.5L20%2014l-4.5%204.5%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+}
+.recovery-demo[data-recovery-mode="failure"] .recovery-suggestions button:is(:hover,:focus-visible) {
+  background:var(--gray-3);
+  color:var(--text-1);
+  opacity:1;
+}

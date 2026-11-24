@@ -54,8 +54,10 @@
       { action: 'process', frame: 10 },
     ],
     '2.1-2': [
-      { action: 'process', frame: 0, focus: '.stage-thinking', hold: 1800 },
-      { action: 'process-focus', focus: '.stage-acknowledgement', hold: 2200 },
+      { action: 'process-compose', focus: '#conversationComposer', hold: 1200 },
+      { action: 'process-send', focus: '#conversationThread .user-message .message-bubble', hold: 850 },
+      { action: 'process', frame: 0, focus: '.stage-thinking', hold: 950 },
+      { action: 'process-focus', focus: '.stage-acknowledgement', hold: 2800 },
       { action: 'process-focus', focus: '.stage-plan' },
     ],
     '2.1-3': [
@@ -64,6 +66,7 @@
       { action: 'process', frame: 7, focus: '.stage-tool-call > summary' },
     ],
     '2.1-4': [{ action: 'process', frame: 10, focus: '.stage-result' }],
+    '2.1-5': [{ action: 'background-four-agents' }],
     '2.2': [
       {action:'intervention-stream',hold:3000},
       {action:'intervention-pointer',hold:1200},

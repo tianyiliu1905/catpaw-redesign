@@ -30,7 +30,7 @@
       finish(){state.running=false;state.paused=false;},
     };
   }
-  function createController({container,thread,onResume=()=>{},onEdit=()=>false,onChange=()=>{},now=Date.now,setTimer=setInterval,clearTimer=clearInterval,characterInterval=220}){
+  function createController({container,thread,onResume=()=>{},onDispatch,onEdit=()=>false,onChange=()=>{},now=Date.now,setTimer=setInterval,clearTimer=clearInterval,characterInterval=220}){
     let model=createModel(),active=false,timer=null,generation=0,startedAt=null,finishedAt=null,shown=42,draggingId=null;
     let content=output,pausedAt=null,pausedDuration=0,segmentStarted=0,thinkingFor=0,initialShown=42;
     const current=selector=>Array.from(thread.querySelectorAll(selector)).at(-1);
@@ -39,7 +39,7 @@
     function render(){
       const {state}=model;
       container.hidden=!active||!state.prompts.length;
-      container.innerHTML=`<div id="conversationQueueItems">${state.prompts.map(message=>`<div class="conversation-queue-item" data-queue-row="${message.id}"><button class="conversation-queue-handle" type="button" draggable="true" data-queue-drag="${message.id}" aria-label="调整消息顺序，按上下方向键移动" title="拖动排序"><img src="assets/figma-queue-grip.svg" alt="" width="18" height="18" draggable="false"></button><span class="conversation-queue-text" title="${escape(label(message))}">${escape(label(message))}</span><div class="conversation-queue-actions">${['send','edit','remove'].map(action=>`<button type="button" data-queue-action="${action}" data-queue-id="${message.id}" aria-label="${({send:'引导当前任务',remove:'移除消息',edit:'编辑消息'})[action]}" title="${({send:'引导当前任务',remove:'删除',edit:'编辑'})[action]}"><img src="assets/${icons[action]}" alt="" width="18" height="18" draggable="false"></button>`).join('')}</div></div>`).join('')}</div>`;
+      container.innerHTML=`<div class="conversation-queue-items">${state.prompts.map(message=>`<div class="conversation-queue-item" data-queue-row="${message.id}"><button class="conversation-queue-handle" type="button" draggable="true" data-queue-drag="${message.id}" aria-label="调整消息顺序，按上下方向键移动" title="拖动排序"><img src="assets/figma-queue-grip.svg" alt="" width="18" height="18" draggable="false"></button><span class="conversation-queue-text" title="${escape(label(message))}">${escape(label(message))}</span><div class="conversation-queue-actions">${['send','edit','remove'].map(action=>`<button type="button" data-queue-action="${action}" data-queue-id="${message.id}" aria-label="${({send:'引导当前任务',remove:'移除消息',edit:'编辑消息'})[action]}" title="${({send:'引导当前任务',remove:'删除',edit:'编辑'})[action]}"><img src="assets/${icons[action]}" alt="" width="18" height="18" draggable="false"></button>`).join('')}</div></div>`).join('')}</div>`;
     }
     function initial(){return `<section class="queue-demo-output" aria-label="任务执行状态"><div class="queue-demo-status"><span class="global-status-paw" aria-hidden="true"></span><span data-queue-agent-label role="status">${thinkingFor?'思考中':'生成中'}</span><span data-queue-agent-time>0秒</span></div>${thinkingFor?'<p class="queue-demo-thinking-copy" data-queue-agent-thinking>正在回顾已有内容，确认接下来的执行方向</p>':''}<p data-queue-agent-body>${escape(content.slice(0,shown))}</p></section>`;}
     function renderOutput(){
@@ -62,7 +62,7 @@
     function stop(){generation++;if(timer!==null)clearTimer(timer);timer=null;}
     function finish(){if(finishedAt===null)finishedAt=pausedAt??now();model.finish();shown=content.length;stop();renderOutput();render();}
     function activate(enabled){
-      stop();active=enabled;render();if(!active)return;
+      stop();active=enabled;render();if(!active||onDispatch)return;
       if(startedAt===null)startedAt=now();
       renderOutput();if(!model.state.running||model.state.paused)return;
       const token=generation;
@@ -112,7 +112,7 @@
         model.take(id);render();return;
       }
       const message=model.take(id);if(!message)return;
-      if(action==='send')guide(message);
+      if(action==='send')(onDispatch || guide)(message);
       render();
     });
     container.addEventListener('keydown',event=>{
@@ -155,7 +155,11 @@
       draggingId=null;
       container.querySelectorAll?.('.is-dragging,.is-drop-target').forEach(item=>item.classList.remove('is-dragging','is-drop-target'));
     });
-    return {initial,enqueue,activate,stop,finish,pause,resume,guide,reset(){stop();active=false;model=createModel();startedAt=null;finishedAt=null;shown=42;content=output;pausedAt=null;pausedDuration=0;segmentStarted=0;thinkingFor=0;initialShown=42;render();},get state(){return model.state;}};
+    function dispatchPending(){
+      for(const message of model.state.prompts.splice(0))onDispatch(message);
+      render();
+    }
+    return {initial,enqueue,dispatchPending,activate,stop,finish,pause,resume,guide,reset(){stop();active=false;model=createModel();startedAt=null;finishedAt=null;shown=42;content=output;pausedAt=null;pausedDuration=0;segmentStarted=0;thinkingFor=0;initialShown=42;render();},get state(){return model.state;}};
   }
   const api={draft,output,createModel,createController};
   if(typeof module==='object'&&module.exports)module.exports=api;

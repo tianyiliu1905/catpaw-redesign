@@ -171,7 +171,7 @@ test('process strategy starts with design research and maps three actions to sta
   assert.ok(research.includes('按任务阶段切换信息重点'));
   assert.doesNotMatch(research,/设计动作 2\.1\./);
   const concerns = [];
-  for (const [index, title] of ['工作前：确认意图与任务规划', '工作时：语义化呈现工具执行过程', '结束后：呈现文字、产物与变化'].entries()) {
+  for (const [index, title] of ['工作初始：确认意图与任务规划', '工作中：语义化呈现工具执行过程', '工作结束：呈现文字、产物与变化'].entries()) {
     const id = `2.1-${index + 2}`;
     context.location.hash = `#${id}`;
     assert.equal(context.route(), id, 'each action hash resolves to its own page');
@@ -187,7 +187,7 @@ test('process strategy starts with design research and maps three actions to sta
   assert.equal(scenes['2.1-5'], undefined);
   assert.doesNotMatch(canvas.innerHTML,/id="slide-2\.1-5"|成果可续/);
   context.location.hash='#2.1-5';assert.equal(context.route(),'2.1');
-  assert.deepEqual(scenes['2.1-2'].map(step=>step.focus),['.stage-thinking','.stage-acknowledgement','.stage-plan']);
+  assert.deepEqual(scenes['2.1-2'].map(step=>step.focus),['#conversationComposer','#conversationThread .user-message .message-bubble','.stage-thinking','.stage-acknowledgement','.stage-plan']);
 });
 
 test('ink confirmation preserves the complete message and finishes before the plan appears', () => {
@@ -714,7 +714,7 @@ test('SVG spotlight follows the target and viewport, then cancels its pending fr
   const context={
     spotlightOverlay:null,spotlightSvg:null,spotlightMaskPath:null,spotlightFrame:null,strategyDemoActive:true,
     window:{innerWidth:1200,innerHeight:800,CatPawStrategyScenes:require('../strategy-scenes.js')},
-    document:{createElement:element,createElementNS:(_,tag)=>element(tag),body:{append(){}},querySelector:()=>target},
+    document:{documentElement:{classList:{contains:()=>false}},createElement:element,createElementNS:(_,tag)=>element(tag),body:{append(){}},querySelector:()=>target},
     requestAnimationFrame:callback=>{frames.set(++serial,callback);return serial},cancelAnimationFrame:id=>frames.delete(id),
   };
   vm.runInNewContext(functions+';globalThis.show=showStrategySpotlight;globalThis.stop=stopStrategySpotlight;',context);
@@ -735,6 +735,11 @@ test('SVG spotlight follows the target and viewport, then cancels its pending fr
   context.stop();
   assert.equal(frames.size,0);
   assert.equal(context.spotlightOverlay.hidden,true);
+  context.document.documentElement.classList.contains=name=>name==='slide-outer-backdrop';
+  context.show('.stage-current');
+  context.stop();
+  assert.equal(context.spotlightOverlay.hidden,false);
+  assert.equal(frames.size,0);
   context.strategyDemoActive=false;
   stale();
   assert.equal(frames.size,0);
@@ -987,12 +992,20 @@ test('greeting close-ups cover their viewport without exposing top or bottom wal
   assert.match(css,/\.strategy-embed\.strategy-greeting-zoom \.window\{transform:scale\(2\)/);
 });
 
+test('the before-work demo sends the user request before starting the existing process',async()=>{
+  const demo=setup('2.1-2');
+  await demo.player.activate();
+  while(demo.timers.size)await demo.next();
+  assert.deepEqual(demo.events.filter(step=>step.action).map(step=>step.action),
+    ['process-compose','process-send','process','process-focus','process-focus']);
+});
+
 test('the three stage-specific process designs stay in their own phase and reuse the same output',async()=>{
   const start=setup('2.1-2');
   await start.player.activate();while(start.timers.size)await start.next();
   const startSteps=start.events.filter(item=>item.action);
   assert.deepEqual(startSteps.filter(item=>item.action==='process').map(item=>item.frame),[0],'focusing acknowledgement and planning must not rerender or advance the task');
-  assert.deepEqual(startSteps.map(item=>item.focus),['.stage-thinking','.stage-acknowledgement','.stage-plan']);
+  assert.deepEqual(startSteps.map(item=>item.focus),['#conversationComposer','#conversationThread .user-message .message-bubble','.stage-thinking','.stage-acknowledgement','.stage-plan']);
   const work=setup('2.1-3');
   await work.player.activate();while(work.timers.size)await work.next();
   const data=stageRenderer();

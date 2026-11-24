@@ -2,6 +2,8 @@
 .clarify-card{background:var(--main-bg);border:.6px solid var(--ds-border-3);border-radius:20px;box-shadow:0 12px 40px -8px rgba(32,34,35,.09),0 4px 16px rgba(32,34,35,.025);padding:12px;display:flex;flex-direction:column;gap:4px;color:var(--text-1);font-size:14px;line-height:20px}
 .clarify-card header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 8px}
 .clarify-card header strong{font-size:14px;font-weight:500;line-height:22px}
+.clarify-question-heading{display:flex;align-items:flex-start;gap:6px;min-width:0}
+.clarify-question-heading > .stage-tool-icon{color:inherit}
 .clarify-card nav{display:flex;align-items:center;gap:4px;flex-shrink:0;color:var(--text-3);font-size:12px;line-height:var(--line-sm)}
 .clarify-card button{font:inherit;color:inherit;cursor:pointer;background:transparent;border:0}
 .clarify-card button:disabled{cursor:default;opacity:.4}
@@ -60,12 +62,16 @@
 
 /* Request tools remain visible in the reply while the user fills the question card. */
 
+.clarify-reply-body{margin-bottom:20px}
+.clarify-reply-body:has(>.clarify-tool-call){margin-bottom:var(--space-2)}
+.clarify-reply-body>p{margin:0}
+.clarify-reply-body>.clarify-tool-call{margin:6px 0 0;padding:4px 0}
 .clarify-reply .stage-plan-step[data-state="waiting"]{color:var(--text-2)}
 .clarify-request-history{margin-top:12px;color:var(--text-3)}
 .clarify-execution .clarify-result{margin-top:12px}
 
 /* Animate the persistent host once on reveal, not on each answer render. */
-#clarificationQuestionHost:not([hidden]){
+#clarificationQuestionHost:not([hidden]):has(>[data-clarification-intro]){
   animation:clarify-request-enter 620ms cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes clarify-request-enter{
@@ -73,7 +79,7 @@
   to{opacity:1;transform:translateY(0)}
 }
 @media(prefers-reduced-motion:reduce){
-  #clarificationQuestionHost:not([hidden]){animation:none}
+  #clarificationQuestionHost:not([hidden]):has(>[data-clarification-intro]){animation:none}
 }
 
 .clarify-reply[data-intro-step="2"] .stage-plan{animation:clarify-plan-enter 400ms ease both}
@@ -83,3 +89,180 @@
 .clarify-reply[data-intro-step="2"] .stage-plan-step:nth-child(3){animation-delay:600ms}
 @keyframes clarify-plan-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.clarify-reply[data-intro-step="2"] :is(.stage-plan,.stage-plan-step){animation:none}}
+
+#browserControlSummary { overflow:visible }
+#browserControlSummary:has(+ #browserMessageQueue:not([hidden])) { margin-bottom:0; padding-bottom:0 }
+#browserControlSummary:has(+ #browserMessageQueue:not([hidden]))::after {
+  content:""; display:block; margin-inline:12px; border-bottom:1px solid var(--gray-5);
+}
+#browserControlSummary:not([hidden]) + #browserMessageQueue { border-radius:0 }
+button.browser-preview-row {width:100%; column-gap:16px; align-items:center; padding-block:0; padding-inline-end:20px; background:transparent; border:0; color:inherit; font:inherit; text-align:start; cursor:pointer}
+#browserControlSummary button:focus-visible {outline-offset:-3px}
+.browser-search-field {border:1px solid var(--gray-5); border-radius:8px; padding:10px 14px; text-align:start}
+.browser-search-field span {display:inline-block; white-space:nowrap; overflow:hidden; vertical-align:middle; border-inline-end:2px solid var(--ds-primary-3)}
+[data-store-hours] dl {margin:0}
+[data-store-hours] dl div {display:flex; justify-content:space-between; padding:10px 12px; border-radius:8px}
+[data-store-hours] dd {margin:0}
+@media(prefers-reduced-motion:no-preference){
+  .browser-search-field span {animation:browserTypeStore 1.2s steps(3,end) both}
+  [data-store-hours] dl div {animation:browserReadDay 1.3s ease both}
+  [data-store-hours] dl div + div {animation-delay:1.3s}
+}
+@keyframes browserTypeStore {from{width:0}to{width:3em}}
+@keyframes browserReadDay {0%,100%{background:transparent}50%{background:var(--ds-primary-1)}}
+.browser-preview-row .browser-thumbnail { width:88px; flex:none; margin-top:-20px; margin-bottom:var(--space-2); align-self:flex-end }
+.browser-preview-row .conversation-queue-text { color:var(--text-3); text-align:right }
+.browser-control-status { flex:none; align-self:center; line-height:var(--line-md); font-weight:600 }
+@media (prefers-reduced-motion:no-preference) and (forced-colors:none) {
+  #browserControlSummary:is([data-browser-stage="browsing"], [data-browser-stage="reading"]) .browser-control-status {
+    background:linear-gradient(100deg,var(--text-1) 40%,var(--text-3) 50%,var(--text-1) 60%) no-repeat;
+    background-size:300% 100%; background-clip:text; -webkit-background-clip:text; color:transparent;
+    animation:browserStatusSweep 2.4s linear infinite;
+  }
+}
+@keyframes browserStatusSweep {
+  from {background-position:100% 50%}
+  85%, to {background-position:0% 50%}
+}
+.browser-thumbnail { aspect-ratio:1.55; border:1px solid var(--gray-5); border-radius:6px; overflow:hidden; background:var(--main-bg); display:flex; flex-direction:column }
+.browser-login-form { width:46%; display:grid; gap:3px; padding:5px; background:var(--main-bg); border:1px solid var(--gray-5); border-radius:3px }
+.browser-control-reply > button { font:inherit; cursor:pointer; color:var(--text-2); background:transparent; border:0; padding:4px 0; text-decoration:underline; text-underline-offset:3px }
+.browser-control-reply p { margin:0 0 8px }
+:root[data-theme="dark"] .browser-control-reply .stage-thinking-status {--text-3:var(--ds-text-3)}
+:root[data-theme="dark"] .browser-control-reply .stage-thinking {border-color:var(--gray-5)}
+#browserControlSummary[data-browser-stage="asking"] .browser-control-status {color:var(--warning-text)}
+.browser-control-reply .stage-thinking[data-browser-stage="asking"] .stage-global-label {
+  color:var(--warning-text); -webkit-text-fill-color:currentColor; background:none; animation:none;
+}
+.browser-takeover-card {
+  grid-template-columns:40px minmax(0,1fr) auto; gap:var(--space-2); margin-top:var(--space-3);
+}
+:root[data-theme="dark"] .browser-takeover-card {background:var(--ds-background-3)}
+.browser-takeover-card .conversation-artifact-icon img {width:24px; height:24px}
+.browser-takeover-card strong {font-size:var(--type-md); font-weight:var(--weight-emphasis); line-height:var(--line-md)}
+.browser-takeover-card-action {
+  min-height:36px; padding:4px 16px; border:0; border-radius:var(--radius-sm);
+  background:var(--text-1); color:var(--main-bg); font:inherit; font-weight:var(--weight-emphasis);
+  white-space:nowrap; cursor:pointer;
+}
+.browser-takeover-card-action:hover {background:var(--text-2)}
+.browser-takeover-card-action:focus-visible {outline:2px solid var(--brand-green); outline-offset:2px}
+
+.browser-takeover {
+  width:min(82vw,1100px); height:min(78dvh,800px); padding:0;
+  border:0; border-radius:var(--radius-panel);
+  background:var(--main-bg); color:var(--text-1); box-shadow:var(--soft-shadow);
+}
+.browser-takeover[open] {display:flex; flex-direction:column}
+.browser-takeover::backdrop {background:transparent}
+.browser-takeover header {display:flex; align-items:center; gap:16px; padding:12px 16px; border-bottom:1px solid var(--gray-5)}
+#browserTakeoverTitle {display:inline-flex;align-items:center;gap:6px}
+#browserTakeoverTitle .global-status-paw[hidden] {display:none}
+.browser-takeover header [data-browser-address] {flex:1; min-width:0; overflow-wrap:anywhere; font-size:var(--type-sm); color:var(--text-2)}
+.browser-takeover-page button {font:inherit; cursor:pointer; border:0; border-radius:8px}
+.browser-takeover header .icon-btn {width:28px; height:28px; padding:0; color:var(--ds-fill-7)}
+.browser-takeover header [data-browser-step="close"] {position:relative}
+.browser-takeover header [data-browser-step="close"]::before {
+  content:""; position:absolute; top:50%; left:-8px; transform:translateY(-50%);
+  width:1px; height:20px; border-radius:1px; background:var(--gray-4); pointer-events:none;
+}
+.browser-take-control {flex:none}
+.browser-takeover header .browser-take-control:not([hidden]) {
+  display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 8px;
+  border:0; border-radius:var(--radius-sm); background:transparent; color:var(--ds-fill-7);
+  font:inherit; white-space:nowrap; cursor:pointer;
+}
+.browser-takeover header .browser-take-control:hover {background:var(--hover)}
+.browser-takeover header .browser-take-control:active {background:var(--active)}
+.browser-takeover header .browser-take-control:focus-visible {outline:2px solid var(--brand-green); outline-offset:2px}
+.browser-control-button-icon img {display:block}
+.browser-takeover header .browser-control-button-icon img {width:18px; height:18px}
+#browserDockHost .browser-control-button-icon img {opacity:.58}
+:root[data-theme="dark"] .browser-control-monitor {filter:invert(1)}
+.browser-take-control[hidden] {display:none}
+.browser-takeover header .icon-btn > .ic {width:18px; height:18px}
+.browser-takeover-page {flex:1; display:grid; place-items:safe center; min-height:0; overflow:auto; padding:clamp(16px,3vw,32px); background:var(--gray-3); text-align:center}
+.browser-takeover-page > div {width:min(100%,360px); box-sizing:border-box; padding:clamp(20px,3vw,32px); border-radius:var(--radius-panel); background:var(--main-bg)}
+#browserDemoLogin:not([hidden]) {display:grid; gap:16px; text-align:start}
+#browserDemoLogin label {display:grid; gap:6px}
+#browserDemoLogin input {width:100%; box-sizing:border-box; padding:10px 12px; font:inherit; color:var(--text-1); background:var(--main-bg); border:1px solid var(--gray-6); border-radius:8px}
+#browserDemoLogin input:focus-visible {outline:2px solid var(--ds-primary-3); outline-offset:1px}
+.browser-takeover-page h2 {font-size:22px; margin:0}
+.browser-takeover-page p {margin:12px 0 24px; color:var(--text-2)}
+.browser-takeover-primary {padding:10px 20px; color:var(--main-bg); background:var(--text-1)}
+@media(max-width:640px){.browser-takeover{width:calc(100vw - 24px);height:min(80dvh,800px)}}
+
+
+.browser-page-mini {
+  position:relative;
+  left:2px;
+  background:var(--gray-3);
+}
+.browser-page-mini::after {
+  content:"查看";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  background:rgb(0 0 0 / 40%);
+  backdrop-filter:blur(2px);
+  color:white;
+  font-size:var(--type-sm);
+  font-weight:600;
+  opacity:0;
+  pointer-events:none;
+}
+@media (hover:hover) {
+  .browser-page-mini:hover::after {opacity:1}
+}
+.browser-preview-row:focus-visible .browser-page-mini::after {opacity:1}
+.browser-mini-viewport {
+  position:absolute; inset:0 auto auto 0; width:600px; height:374px;
+  display:flex; flex-direction:column; transform:scale(.14333); transform-origin:top left;
+  color:var(--text-1); font-size:14px; line-height:1.4; pointer-events:none;
+}
+.browser-mini-address {padding:6px 14px; font-size:13px; color:var(--text-2); background:var(--main-bg)}
+.browser-mini-viewport .browser-takeover-page {padding:16px; overflow:hidden}
+.browser-mini-viewport b {display:inline-block; padding:8px 18px; border-radius:8px; background:var(--text-1); color:var(--main-bg)}
+
+.browser-body:has(> #browserDockHost:not([hidden])) {display:flex;align-items:stretch}
+#browserDockHost:not([hidden]) {
+  --browser-control-bottom:24px;
+  --browser-control-clearance:calc(var(--browser-control-bottom) + 44px + var(--space-2));
+  position:relative; flex:1; min-width:0; display:flex; flex-direction:column; background:var(--gray-3);
+}
+#browserDockHost > .browser-take-control {
+  position:absolute; inset-inline:0; inset-block-end:var(--browser-control-bottom); z-index:1;
+  width:max-content; margin-inline:auto;
+}
+#browserDockHost:has(> .browser-take-control:not([hidden])) .browser-takeover-page {
+  padding-block-end:var(--browser-control-clearance);
+  scroll-padding-block-end:var(--browser-control-clearance);
+}
+@media(max-width:600px) {
+  body:has(.stage-demo-controls:not([hidden])) #browserDockHost:not([hidden]) {--browser-control-bottom:92px}
+}
+#browserDockHost:not([hidden]) + .wb-empty {display:none}
+
+[data-store-search] > .browser-takeover-primary, .browser-mini-viewport .browser-search-field + b {margin-top:16px}
+
+.browser-takeover-viewport {
+  position:relative; display:flex; flex-direction:column; flex:1; min-height:0;
+  background:var(--gray-3);
+}
+.browser-takeover-viewport > .browser-takeover-page {
+  position:relative; background:transparent;
+}
+.browser-takeover-viewport::before {
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:0;
+  box-shadow:inset 0 0 28px 3px color-mix(in srgb,var(--ds-primary-3) 32%,transparent);
+}
+.browser-takeover-viewport[data-agent-control]::before {opacity:1}
+@media (prefers-reduced-motion:no-preference) {
+  .browser-takeover-viewport[data-agent-control]::before {
+    transition:opacity 250ms cubic-bezier(.23,1,.32,1);
+  }
+  @starting-style {
+    .browser-takeover-viewport[data-agent-control]::before {opacity:0}
+  }
+}

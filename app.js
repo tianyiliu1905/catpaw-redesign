@@ -1284,7 +1284,6 @@ if (backgroundProcesses.length) {
 processSection.querySelector('.summary-section-toggle span').textContent = `后台进程 (${processList.querySelectorAll('.summary-process-row').length})`;
 const scheduled = hasActiveTask && scheduledRunTasks.has(activeConversationTask);
 document.getElementById('scheduledSummary').hidden = !scheduled;
-document.getElementById('standardSummary').hidden = false;
 if (scheduled) {
   renderScheduledRunList();
 }
@@ -2366,14 +2365,14 @@ promptGuide = text;
       { label: '培训课件', title: '新员工入职培训', theme: 'onboarding', greeting: '给新人准备份指南吧。', prompt: '新员工入职培训课件 PPT，清爽分模块、多图示少文字，含文化、制度、流程。' },
     ];
     const websiteScenarios = [
-      { label: '企业网站首页', theme: 'corporate', greeting: '想展示企业的哪些优势？', prompt: '创建一个企业网站，风格要大气、商务、专业。设计一个完整的企业网站首页，包括导航栏、hero 区域、服务介绍、公司优势、客户评价等部分。' },
-      { label: '电商网页', theme: 'shop', greeting: '复古波普风很有趣呀。', prompt: '设计一个复古波普艺术风格的电商网页，背景使用鲜艳的橙色和粉色撞色，融入漫画风格的圆点图案和手绘插图。商品展示区以波普画框形式呈现，按钮带有手写字体和跳跃动画。整体风格活泼有趣，适合潮流服饰或艺术品销售。' },
+      { label: '企业咨询服务官网', theme: 'corporate', greeting: '想展示企业的哪些优势？', prompt: '创建一个企业网站，风格要大气、商务、专业。设计一个完整的企业网站首页，包括导航栏、hero 区域、服务介绍、公司优势、客户评价等部分。' },
+      { label: '潮流服饰商店', theme: 'shop', greeting: '复古波普风很有趣呀。', prompt: '设计一个复古波普艺术风格的电商网页，背景使用鲜艳的橙色和粉色撞色，融入漫画风格的圆点图案和手绘插图。商品展示区以波普画框形式呈现，按钮带有手写字体和跳跃动画。整体风格活泼有趣，适合潮流服饰或艺术品销售。' },
       { label: '电商运营后台', theme: 'commerce', greeting: '日常运营有哪些忙碌的事？', prompt: '设计一个现代化电商运营后台，背景为纯白，顶部导航使用渐变主题色（#4F46E5 → #2563EB）。订单处理采用卡片流设计，商品管理支持拖拽排序。数据分析区使用动态仪表盘，支持多维度筛选。整体风格简洁高效。' },
       { label: '话题社区', theme: 'community', greeting: '想让大家在这里聊些什么？', prompt: '参考微博的能力和布局生成一个暗黑色调的话题社区。' },
     ];
     const appScenarios = [
-      { label: '健身打卡', theme: 'fitness', greeting: '做个健身打卡应用吧。', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
-      { label: '国风阅读', theme: 'reading', greeting: '国风阅读很有韵味呀。', prompt: '设计并开发一个国风阅读 App，宣纸米底 + 水墨留白，含书架、翻页阅读器、书签笔记、书城推荐。' },
+      { label: '训练计划与打卡', theme: 'fitness', greeting: '做个健身打卡应用吧。', prompt: '设计并开发一个健身打卡 App，动感高对比配色，含训练计划、打卡日历、数据统计、成就徽章。' },
+      { label: '古籍阅读与摘记', theme: 'reading', greeting: '国风阅读很有韵味呀。', prompt: '设计并开发一个国风阅读 App，宣纸米底 + 水墨留白，含书架、翻页阅读器、书签笔记、书城推荐。' },
       { label: '露营装备租赁', theme: 'camping', greeting: '让露营准备更轻松吧。', prompt: '设计并开发一个露营装备租赁 App，户外大地色系，含装备浏览、租赁下单、取还日期、订单管理。' },
       { label: '宠物健康管理', theme: 'petcare', greeting: '毛孩子值得细心照顾呀。', prompt: '设计并开发一款宠物健康管理 App，温馨圆润的暖橙色系，含宠物档案、疫苗/驱虫提醒、健康日记、附近宠物服务。' },
     ];
@@ -2692,6 +2691,10 @@ promptGuide = text;
       const dimension = isLogistics ? '配送站点' : isRestaurant ? '门店' : isUser ? '用户分层' : isArchive ? '资料类别' : '投放渠道';
       const volume = isLogistics ? '配送量' : isRestaurant ? '订单量' : isUser ? '用户数' : isArchive ? '文件数' : '线索量';
       const rate = isLogistics ? '准时率' : isRestaurant ? '达成率' : isUser ? '复购率' : isArchive ? '有效率' : '转化率';
+      if (thumbnail) {
+        const cells = row => row.map(value => `<td>${esc(value)}</td>`).join('');
+        return `<div class="case-artifact artifact-workbook"><header>${title}</header><table><thead><tr><th></th>${['A','B','C','D','E'].map(col => `<th>${col}</th>`).join('')}</tr></thead><tbody>${[[dimension,volume,rate,'异常类型','级别'], ...rows].map((row,i) => `<tr><th>${i+1}</th>${cells(row)}</tr>`).join('')}</tbody></table></div>`;
+      }
       return `<div class="case-artifact case-artifact-sheet"><div class="artifact-sheet-body"><div class="artifact-sheet-eyebrow">${category}</div><h3>${title}</h3><p>更新于 09:30 · ${isLogistics ? '全国 4 个站点' : isRestaurant ? '全国 4 家门店' : `4 个${dimension}`}</p><div class="artifact-metrics"><div><small>${isLogistics ? '配送订单量' : isRestaurant ? '门店订单量' : isUser ? '活跃用户数' : isArchive ? '资料总数' : '活动曝光量'}</small><strong>${isLogistics ? '12,486' : isRestaurant ? '8,624' : isUser ? '24,860' : isArchive ? '789' : '186,420'}</strong><em>↑ 8.2%</em></div><div><small>${isLogistics ? '准时送达率' : isRestaurant ? '营业额达成率' : isUser ? '30 日复购率' : isArchive ? '资料有效率' : '到店转化率'}</small><strong>${isLogistics ? '96.4%' : isRestaurant ? '108.6%' : isUser ? '38.2%' : isArchive ? '86.4%' : '12.8%'}</strong><em>↑ 1.3%</em></div><div><small>待处理异常</small><strong>${isLogistics ? '126' : isRestaurant ? '24' : isUser ? '18' : isArchive ? '42' : '38'}</strong><em class="alert">需关注</em></div></div><div class="artifact-chart"><div class="artifact-chart-heading">${isLogistics ? '各站点准时率趋势' : isRestaurant ? '各门店营收趋势' : isUser ? '分层用户复购趋势' : isArchive ? '资料有效率趋势' : '各渠道转化趋势'} <span>近 7 日</span></div><div class="artifact-bars">${[56,68,61,78,70,89,82,93,75,86,95,88].map((n,i) => `<i style="height:${n}%;${i > 8 ? 'background:#38a873' : ''}"></i>`).join('')}</div><div class="artifact-chart-axis">周一 <span>周三</span><span>周五</span><span>今日</span></div></div><div class="artifact-table-wrap"><div class="artifact-table-title">${isLogistics ? '配送站点异常明细' : isRestaurant ? '门店经营明细' : isUser ? '用户分层明细' : isArchive ? '资料清理明细' : '渠道投放明细'} <span>共 ${rows.length} 条</span></div><table><thead><tr><th>${dimension}</th><th>${volume}</th><th>${rate}</th><th>异常类型</th><th>级别</th></tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell,i) => `<td${i === 4 ? ' class="artifact-level"' : ''}>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div></div>`;
     }
     if (item.kind === 'app' && item.theme) {
@@ -2717,6 +2720,8 @@ promptGuide = text;
       return `<div class="case-artifact case-artifact-web"><div class="artifact-web-scroll" tabindex="0" aria-label="滚动查看网页预览"><div class="artifact-web-header"><strong>${festival ? '城市美食节' : '餐饮消费观察'} <span>2026</span></strong><span>首页　 ${festival ? '活动日程　 合作商家' : '行业趋势　 品类洞察'}</span></div><div class="artifact-web-layout"><aside><b>${festival ? '活动导航' : '市场洞察'}</b><span class="selected">${festival ? '本周精选' : '消费概览'}</span><span>${festival ? '主题餐厅' : '热门品类'}</span><span>${festival ? '活动日程' : '价格带'}</span><span>${festival ? '合作商家' : '区域机会'}</span><b>更多内容</b><span>数据与说明</span></aside><main><span class="artifact-web-crumb">${festival ? '城市活动 / 餐饮生活' : '市场行业 / 餐饮消费'}</span><h3>${title}</h3><p>${festival ? '发现街区好味道，逛一场属于城市的美食节。' : '从价格带、品类与消费场景出发，观察本地餐饮的新变化。'}</p><h4>${festival ? '本周活动亮点' : '品类热度观察'}</h4><div class="artifact-web-demo"><span class="primary">${festival ? '查看活动日程' : '现制饮品 ↑ 18%'}</span><span>${festival ? '街区主题餐厅' : '快餐简餐 ↑ 12%'}</span></div><h4>${festival ? '逛吃路线' : '价格带变化'}</h4><p>${festival ? '从午间简餐到夜间小食，按街区和时间发现适合自己的餐饮活动。' : '高性价比套餐与特色单品同步增长，工作日午餐和周末聚餐呈现不同选择。'}</p><div class="artifact-web-demo muted"><span>${festival ? '午市 · 主题套餐' : '20–40 元 · 日常简餐'}</span><span>${festival ? '晚市 · 街区夜食' : '60–100 元 · 聚会餐饮'}</span></div><h4>${festival ? '合作商家' : '区域机会'}</h4><table><tr><th>城市</th><th>${festival ? '特色主题' : '热门场景'}</th><th>关注度</th></tr><tr><td>北京</td><td>${festival ? '胡同小馆' : '工作日午餐'}</td><td>较高</td></tr><tr><td>上海</td><td>${festival ? '创意融合菜' : '周末聚餐'}</td><td>上升</td></tr><tr><td>广州</td><td>${festival ? '岭南风味' : '下午茶'}</td><td>稳定</td></tr></table><h4>说明</h4><p>本页为交互示例，图表和数值均为演示数据，不代表真实市场结论。</p></main></div></div></div>`;
     }
     if (item.kind === 'visual') {
+      const cover = caseCover(item);
+      if (cover) return `<div class="case-artifact case-artifact-cover">${cover}</div>`;
       const festival = /美食节/.test(item.title);
       return `<div class="case-artifact case-artifact-visual"><div class="artifact-poster"><div class="artifact-poster-top"><span>${festival ? 'CITY FOOD FESTIVAL' : 'SEASONAL MENU'}</span><span>2026 / AUTUMN</span></div><div class="artifact-poster-orbit"><span></span></div><div class="artifact-poster-copy"><small>${festival ? '一城好味 · 限时开席' : '餐饮品牌秋季企划'}</small><h3>${festival ? '把城市，<br>吃个遍。' : '秋天的第一口<br>好味道。'}</h3><p>${festival ? '探索街区餐厅与城市限定菜单' : '当季新品 · 现在尝鲜'}</p><strong>${festival ? '查看活动 ↗' : '了解新品 ↗'}</strong></div><div class="artifact-poster-bottom">${festival ? 'TASTE THE CITY' : 'TASTE THE SEASON'} <span>01 — 04</span></div></div></div>`;
     }
@@ -2797,16 +2802,55 @@ promptGuide = text;
     ];
   }
 
+  function caseCover(item) {
+    const covers = {
+      '企业咨询服务官网': ['corporate', '企业咨询服务官网', 'ink'],
+      '潮流服饰商店': ['shop', '潮流服饰商店', 'ink'],
+      '训练计划与打卡': ['fitness', '训练计划与打卡'],
+      '古籍阅读与摘记': ['reading', '古籍阅读与摘记', 'ink'],
+      '同城配送履约异常看板': ['dispatch', '履约监测'],
+      '即时配送站点健康度看板': ['stations', '站点监测'],
+      '餐饮趋势报告': ['trends', '餐饮观察'],
+      '外卖用户反馈洞察报告': ['feedback', '用户反馈'],
+      '城市美食节主视觉': ['festival', '城市美食节'],
+      '餐饮品牌秋季上新视觉': ['autumn', '秋日新味', 'ink'],
+      '季度工作总结汇报': ['summary', '季度回顾', 'ink'],
+      '餐饮品牌市场拓展提案': ['expansion', '城市拓展', 'shade'],
+      '餐饮订单高峰预测方案': ['forecast', '高峰预测'],
+    };
+    const entry = covers[item.title];
+    if (!entry) return '';
+    const [key, label, tone] = entry;
+    const src = window.CatPawCasePosters?.[key] || `assets/case-covers/${key}.jpg`;
+    return `<span class="artifact-case-cover${tone ? ' ' + tone : ''}"><img src="${src}" alt=""><b>${label}</b></span>`;
+  }
+
   function renderCaseThumbnail(item) {
+    const cover = caseCover(item);
+    if (item.kind === 'visual' && cover) return `<span class="cthumb" aria-hidden="true">${cover}</span>`;
     const kind = ['web', 'app', 'deck', 'article', 'dashboard', 'code', 'visual'].includes(item.kind) ? item.kind : 'article';
-    return `<span class="cthumb"><span class="case-mockup case-mockup-${kind}" aria-hidden="true"><span class="case-mockup-object">${caseArtifact(item, true)}</span></span></span>`;
+    let preview = caseArtifact(item, true);
+    if (cover && kind === 'article') {
+      const feedback = item.title === '外卖用户反馈洞察报告';
+      preview = `<div class="case-artifact case-artifact-document"><article class="artifact-page"><div class="artifact-page-meta">${esc(item.type)}</div><h3>${esc(item.title)}</h3><div class="artifact-page-rule"></div><h4>${feedback ? '反馈主题' : '观察维度'}</h4><p>${feedback ? '配送时效、餐品品质与售后体验' : '消费场景、品类变化与价格带'}</p><div class="artifact-report-figure">${cover}</div></article></div>`;
+    }
+    if (cover && kind === 'deck') {
+      preview = `<div class="case-artifact case-artifact-deck"><div class="artifact-deck-pages"><div class="artifact-slide">${cover}</div></div></div>`;
+    }
+    if (cover && kind === 'web') {
+      preview = `<div class="case-artifact"><div class="artifact-browser-hero">${cover}</div></div>`;
+    }
+    if (cover && kind === 'app') {
+      preview = `<div class="case-artifact case-artifact-app"><div class="artifact-app-phone"><div class="artifact-phone-hero">${cover}</div></div></div>`;
+    }
+    return `<span class="cthumb"><span class="case-mockup case-mockup-${kind}" aria-hidden="true"><span class="case-mockup-object">${preview}</span></span></span>`;
   }
 
   function renderCases(scope) {
     const casesEl = document.getElementById('cases');
     if (!casesEl) return;
     const iconByKind = {
-      dashboard: 'html', article: 'doc', deck: 'ppt',
+      dashboard: 'excel', article: 'doc', deck: 'ppt',
       web: 'html', app: 'html', code: 'html', visual: 'image',
     };
     const list = visibleCaseData(scope);
@@ -2941,7 +2985,7 @@ const fileDetailsContent = document.getElementById('fileDetailsContent');
       (rightPanel === 'tree' || ((rightPanel === 'tools' || rightPanel === 'landing') && fileTreeVisible));
     const label = active ? '收起文件目录树' : '显示文件目录树';
     fileTreeToggle.setAttribute('aria-pressed', String(active));
-    fileTreeToggle.title = label;
+    fileTreeToggle.dataset.tooltip = label;
     fileTreeToggle.setAttribute('aria-label', label);
   }
 
@@ -3205,7 +3249,7 @@ let openingFileWorkspace = false;
         !content.classList.contains('wb-auto-collapsed')) {
       const triggerRect = outputToggle.getBoundingClientRect();
       const contentRect = content.getBoundingClientRect();
-      const floatWidth = Math.min(326, Math.max(0, contentRect.width - 32));
+      const floatWidth = Math.min(parseFloat(getComputedStyle(summaryPopover).getPropertyValue('--summary-panel-width')), Math.max(0, contentRect.width - 32));
       const left = Math.max(contentRect.left + 16,
         Math.min(triggerRect.right - floatWidth, contentRect.right - floatWidth - 16));
       summaryPopover.style.setProperty('position', 'fixed', 'important');
@@ -3228,7 +3272,7 @@ let openingFileWorkspace = false;
 
     const mainRect = main.getBoundingClientRect();
     const triggerRect = outputToggle.getBoundingClientRect();
-    const floatWidth = Math.min(326, Math.max(0, mainRect.width - 32));
+    const floatWidth = Math.min(parseFloat(getComputedStyle(summaryPopover).getPropertyValue('--summary-panel-width')), Math.max(0, mainRect.width - 32));
     const minLeft = mainRect.left + 16;
     const maxLeft = Math.max(minLeft, mainRect.right - floatWidth - 16);
     const left = Math.min(maxLeft, Math.max(minLeft, triggerRect.right - floatWidth));
@@ -3284,7 +3328,8 @@ let openingFileWorkspace = false;
     setWorkbenchExpanded(workbenchExpanded);
     workbench.setAttribute('aria-hidden', String(!open || content.classList.contains('wb-auto-collapsed')));
     wbToggle.setAttribute('aria-expanded', String(next === 'tools' || next === 'landing'));
-    wbToggle.title = next === 'tools' || next === 'landing' ? '收起工具' : '工具';
+    wbToggle.dataset.tooltip = next === 'tools' || next === 'landing' ? '收起工具' : '打开工具';
+    wbToggle.setAttribute('aria-label', wbToggle.dataset.tooltip);
     syncFileTreeToggle();
     if (instantFileOpen) {
       syncResizeLayout();
@@ -3322,7 +3367,8 @@ let openingFileWorkspace = false;
       workbench.dataset.panel = '';
       workbench.setAttribute('aria-hidden', 'true');
       wbToggle.setAttribute('aria-expanded', 'false');
-      wbToggle.title = '工具';
+      wbToggle.dataset.tooltip = '打开工具';
+      wbToggle.setAttribute('aria-label', wbToggle.dataset.tooltip);
       syncFileTreeToggle();
       fullscreenChat.hidden = true;
       syncSummaryTriggerPosition();
@@ -3388,6 +3434,9 @@ let openingFileWorkspace = false;
     wbPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === item.kind));
     workbench.querySelectorAll('.subagent-workspace-pane').forEach(pane => pane.classList.toggle('active', pane.dataset.workspaceId === id));
     if (item.kind === 'browser') {
+      const dock=document.getElementById('browserDockHost');
+      dock.hidden=!(item.controlSession && dock.childElementCount);
+      urlInput.readOnly=!dock.hidden;
       urlInput.value = item.url || '';
       if (!saveCurrent || document.activeElement === workspaceAdd || document.activeElement?.closest('.workspace-create-menu')) {
         requestAnimationFrame(() => urlInput.focus());
@@ -3569,11 +3618,13 @@ summaryPopover.addEventListener('click', event => {
   list.hidden = !expanded;
 });
 function setSummaryOpen(open) {
+  if (open && document.getElementById('standardSummary').hidden) open = false;
   // 工具区已打开时先用当前左侧主区边界定位，再显示摘要浮窗，避免沿用旧的静态位置。
   syncSummaryTriggerPosition();
   summaryPopover.hidden = !open;
   content.classList.toggle('summary-open', open);
   outputToggle.setAttribute('aria-expanded', String(open));
+  outputToggle.dataset.tooltip = open ? '收起摘要' : '查看摘要';
   outputToggle.classList.toggle('active', open);
   if (open) renderSummaryContents();
   else closeTreeContextMenu();
@@ -5043,6 +5094,7 @@ const mainView = document.querySelector('.main');
   const recoveryTask = document.getElementById('recoveryTask');
   const retryRecoveryTask=document.getElementById('retryRecoveryTask');
   const failureRecoveryTask=document.getElementById('failureRecoveryTask');
+  const browserControlTask=document.getElementById('browserControlTask');
   const extraRecoveryCases = [
     {task:document.getElementById('systemRecoveryTask'), mode:'system', prompt:'整理本周门店经营数据，生成区域经营概况。'},
     {task:document.getElementById('authRecoveryTask'), mode:'auth', prompt:'读取门店巡检规范，结合本月问题更新标准作业流程。'},
@@ -5060,6 +5112,11 @@ const mainView = document.querySelector('.main');
     [backgroundMixedTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约概况，让一个子智能体交叉核查明细，同时在后台导出完整文件。',reply:''}]}],
     // 回复结尾提示已停用：[backgroundAgentInlineTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
     [backgroundAgentTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
+    [browserControlTask,{folderId:'default',files:[],turns:[
+      {minutesAgo:38,prompt:'我在准备周末的到店提醒，需要跟门店确认哪些信息？',reply:'先确认门店名称和周六、周日各自的营业时间。如果有临时调整，再把调整日期写进提醒。'},
+      {minutesAgo:24,prompt:'这次只看湖滨店，两天的时间分开核对。',reply:'好的，我会分别核对湖滨店周六和周日的记录。两天一致时，提醒里可以合并写成一句话。'},
+      {minutesAgo:12,prompt:'营业时间以门店管理后台为准。',reply:'明白，以后台的门店详情为准；如果周末有单独排班，就采用当天的排班时间。'},
+      {prompt:'打开门店管理后台，帮我查一下湖滨店周末的营业时间。',reply:''}]}],
     ...extraRecoveryCases.map(({task,prompt})=>[task,{folderId:task.closest('[data-folder]')?.dataset.folder || 'default',files:[],turns:[{prompt,reply:''}]}]),
     ...[...widgetCases].map(([task, item]) => [task, {folderId:'default', files:[], turns:[{prompt:item.prompt, reply:''}]}]),
     [retryRecoveryTask,{folderId:'default',files:[],turns:[{prompt:'对照供应商交付记录，帮我梳理供应链风险和应对预案。',reply:''}]}],
@@ -5858,7 +5915,24 @@ const mainView = document.querySelector('.main');
       });
     }
   };
+  const browserControlDemo=window.createBrowserControlDemo({thread:conversationThread,task:browserControlTask,openDock:(address)=>{
+    setRightPanel('tools');
+    fileTreeVisible=false;
+    let item=openWorkspaces.find(tab=>tab.controlSession);
+    if(!item){
+      createWorkspace('browser',{replaceImplicitFile:true});
+      item=openWorkspaces.find(tab=>tab.id===activeWorkspace);
+      item.controlSession=true;
+      item.title='妙手的电脑';
+    }
+    item.url=address;
+    activateWorkspace(item.id,false);
+  },updateDockAddress:(address)=>{
+    const item=openWorkspaces.find(tab=>tab.controlSession);
+    if(item){item.url=address;if(item.id===activeWorkspace)urlInput.value=address;}
+  },onComplete:()=>browserQueue.dispatchPending(),syncProgress:syncStageDemoControls,preserveConversationScrollRange,renderStageAcknowledgement,replaceStageContent});
   const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure'],...extraRecoveryCases.map(({task,mode})=>[task,mode])].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
+    intro: strategyScene==='2.3',
     renderPlan:state=>renderConversationPlan(clarificationPlan.map(title=>({title})),state.phase==='done'?1:0,state.open,false,state.phase!=='done','clarificationPlanBody'),
     renderExecution:renderClarificationExecution,
     async waitForRequestReady(){
@@ -5913,7 +5987,7 @@ const mainView = document.querySelector('.main');
     },
   });
   function restoreQueuedMessage(message) {
-    if(activeConversationTask!==interventionTask||conversationPage.hidden)return false;
+    if(conversationPage.hidden || (activeConversationTask!==interventionTask && !(activeConversationTask===browserControlTask && browserControlDemo.acceptsQueuedMessages)))return false;
     const text=message.rawText??message.text;
     const existing=conversationPrompt.value.trim();
     conversationPrompt.value=[text,existing].filter(Boolean).join('\n\n');
@@ -5924,11 +5998,15 @@ const mainView = document.querySelector('.main');
     for(const name of message.knowledge||[])addKnowledgeTag(conversationPrompt,name);
     artifactSelection?.restoreDraft(message.references||[]);
     resizeConversationPrompt();
-    conversationComposerDrafts.set(interventionTask,conversationPrompt.value);
+    conversationComposerDrafts.set(activeConversationTask,conversationPrompt.value);
     conversationPrompt.focus({preventScroll:true});
     conversationPrompt.setSelectionRange(0,text.length);
     return true;
   }
+  const browserQueue = window.CatPawQueueDemo.createController({
+    container:document.getElementById('browserMessageQueue'),thread:conversationThread,
+    onEdit:restoreQueuedMessage,onDispatch:beginConversationTurn,
+  });
   const queueDemo = window.CatPawQueueDemo.createController({
     characterInterval:['2.2','2.2-2','2.2-3'].includes(strategyScene)?80:55,
     container:document.getElementById('conversationQueueGroup'),thread:conversationThread,
@@ -5987,7 +6065,6 @@ const mainView = document.querySelector('.main');
     const scheduled = mainView.classList.contains('conversation-open') && scheduledRunTasks.has(activeConversationTask);
     content.classList.toggle('scheduled-conversation', scheduled);
     const count = conversationPage.hidden ? 0 : (conversationExamples.get(activeConversationTask)?.files.length || 0);
-    outputToggle.title = '摘要';
     outputToggle.setAttribute('aria-label', count ? `摘要，${count} 个产物` : '摘要');
     summaryPopover.setAttribute('aria-label', '摘要');
   }
@@ -6109,15 +6186,17 @@ const mainView = document.querySelector('.main');
     thinking: '思考中', reading: '读取中', analyzing: '分析中',
     generating: '生成中', checking: '检查中', summarizing: '整理中', done: '已完成',
   };
+  const stageFileIcon = '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/><path class="tool-icon-read-line" d="M9 13h6"/><path class="tool-icon-read-line" d="M9 17h6"/>';
   const stageToolIcons = {
+    subagent: '<rect x="3" y="8" width="18" height="12" rx="4"/><circle cx="12" cy="4" r="1.5"/><path d="M12 5.5V8"/><g fill="currentColor" stroke="none"><circle cx="8.5" cy="14" r="1.1"/><circle cx="15.5" cy="14" r="1.1"/></g>',
     agent: '<g fill="none" stroke="none"><path d="M12 4.3V2.5" stroke-width="1.5" stroke-linecap="round" stroke="currentColor"/><path d="M17.5 4C19.7091 4 21.5 5.79086 21.5 8V9C22.3284 9 23 9.67157 23 10.5V15.5C23 16.3284 22.3284 17 21.5 17C21.4718 17 21.4439 16.9967 21.416 16.9951C20.9418 19.8351 18.4746 22 15.5 22H8.5L8.19141 21.9922C5.356 21.8485 3.04167 19.7363 2.58398 16.9951C2.55614 16.9967 2.52823 17 2.5 17C1.67157 17 1 16.3284 1 15.5V10.5C1 9.67157 1.67157 9 2.5 9V8C2.5 5.79086 4.29086 4 6.5 4H17.5ZM6.5 5.5C5.11929 5.5 4 6.61929 4 8V16C4 18.4853 6.01472 20.5 8.5 20.5H15.5C17.9853 20.5 20 18.4853 20 16V8C20 6.61929 18.8807 5.5 17.5 5.5H6.5Z" fill="currentColor"/><path d="M14 16C13.5805 16.6007 12.8409 17 12 17C11.1591 17 10.4195 16.6007 10 16" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/><path d="M8.00127 13.3332C8.73727 13.3332 9.33457 12.7363 9.33457 11.9999C9.33457 11.2635 8.73727 10.6665 8.00127 10.6665C7.26527 10.6665 6.66797 11.2635 6.66797 11.9999C6.66797 12.7363 7.26527 13.3332 8.00127 13.3332Z" fill="currentColor"/><path d="M16.0013 13.3332C16.7373 13.3332 17.3346 12.7363 17.3346 11.9999C17.3346 11.2635 16.7373 10.6665 16.0013 10.6665C15.2653 10.6665 14.668 11.2635 14.668 11.9999C14.668 12.7363 15.2653 13.3332 16.0013 13.3332Z" fill="currentColor"/></g>',
-    code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',
-    file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
-    table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M15 9v11M3 14h18"/>',
-    chart: '<path d="M4 19V5M4 19h17M8 15l4-4 3 2 5-7"/><path d="M17 6h3v3"/>',
-    document: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
-    list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="m4 6 1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2"/>',
-    check: '<circle cx="11" cy="11" r="7"/><path d="m8 11 2 2 4-4m2.3 7.3L21 21"/>',
+    code: '<path class="tool-icon-bracket" d="m8 7-5 5 5 5"/><path class="tool-icon-bracket" d="m16 7 5 5-5 5"/><path d="m14 4-4 16"/>',
+    file: stageFileIcon,
+    table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M15 9v11"/><path class="tool-icon-table-row" d="M3 14h18"/>',
+    chart: '<path d="M4 19V5M4 19h17"/><path class="tool-icon-trend" d="M8 15l4-4 3 2 5-7M17 6h3v3"/>',
+    document: stageFileIcon,
+    list: '<path d="M9 6h11M9 12h11M9 18h11"/><path class="tool-icon-list-check" d="m4 6 1 1 2-2"/><path class="tool-icon-list-check" d="m4 12 1 1 2-2"/><path class="tool-icon-list-check" d="m4 18 1 1 2-2"/>',
+    check: '<circle cx="11" cy="11" r="7"/><path class="tool-icon-result-check" d="m8 11 2 2 4-4"/><path d="m16.3 16.3 4.7 4.7"/>',
   };
 
   function completedStageCount(frame) {
@@ -6137,7 +6216,7 @@ const mainView = document.querySelector('.main');
       '整理结果': [['terminal', 'recommendations = priority.copy()'], ['terminal', 'recommendations["责任归属"] = "待人工确认"'], ['terminal', 'recommendations.to_excel("门店履约异常明细.xlsx", index=False)']],
       '结果检查': [['terminal', 'recommendations["订单 ID"].isin(df["订单 ID"]).all()'], ['terminal', 'recommendations["责任归属"].eq("待人工确认").all()'], ['terminal', 'assert len(recommendations) == 5']]
     }[frame.tool] : null;
-    const terminalIcon = '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3m6 0h4"/>';
+    const terminalIcon = '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3"/><path class="stage-terminal-cursor" d="M13 15h4"/>';
     const calls = operations ? `<ul class="stage-call-operations">${operations.map(([kind, operation]) => `<li><svg class="ic stage-call-operation-icon" viewBox="0 0 24 24" aria-hidden="true">${kind === 'terminal' ? terminalIcon : stageToolIcons.file}</svg><span title="${esc(operation)}">${esc(operation)}</span></li>`).join('')}</ul>` : '';
     return `<div class="stage-call-details">${calls}<div class="stage-tool-code-block"><span class="stage-tool-code-label">${esc(language)}</span><pre><code>${esc(code)}</code></pre>${completed ? `<div class="stage-tool-code-result">${esc(frame.completed)}</div>` : ''}</div></div>`;
   }
@@ -6148,13 +6227,13 @@ const mainView = document.querySelector('.main');
   }
 
   function renderCompletedAgentCall() {
-    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子智能体，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool-v2-figma.svg" width="16" height="16" alt=""></span><span class="stage-completed-text">已调取 4 个子智能体，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
+    return `<li class="stage-completed-item"><details class="stage-completed-call" data-stage-completed-call="agents"><summary aria-label="已调取 4 个子智能体，展开查看任务"><span class="stage-completed-icon" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24">${stageToolIcons.subagent}</svg></span><span class="stage-completed-text">已调取 4 个子智能体，完成门店异常分析与复核</span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="stage-call-details stage-agent-history">${renderStageDelegations(5, true)}</div></details></li>`;
   }
 
   function renderStageToolCall(frame, development, completed = false) {
     const name = development ? frame.call.name : frame.tool;
     const icon = stageToolIcons[development && frame.call.name === 'python' ? 'code' : frame.toolIcon];
-    return `<details class="stage-tool-call" data-tool-state="${completed ? 'done' : 'running'}"${development ? ' open' : ''}><summary aria-label="${esc(development ? name : frame.detail)}，${completed ? '已完成' : '运行中'}，展开查看工具调用"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg>${completed ? '' : `<svg viewBox="0 0 24 24" class="ic stage-tool-shine">${icon}</svg>`}</span><span class="stage-tool-copy">${development ? `<strong>${esc(name)}</strong>` : ''}<span class="stage-tool-description">${esc(completed ? frame.completed : frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>${renderStageCallDetails(frame, completed)}</details>`;
+    return `<details class="stage-tool-call" data-tool-state="${completed ? 'done' : 'running'}"${development ? ' open' : ''}><summary aria-label="${esc(development ? name : frame.detail)}，${completed ? '已完成' : '运行中'}，展开查看工具调用"><span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic">${icon}</svg></span><span class="stage-tool-copy">${development ? `<strong>${esc(name)}</strong>` : ''}<span class="stage-tool-description">${esc(completed ? frame.completed : frame.detail)}</span></span><svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>${renderStageCallDetails(frame, completed)}</details>`;
   }
 
   function renderStageAcknowledgement(text) {
@@ -6178,7 +6257,7 @@ const mainView = document.querySelector('.main');
     }).join('');
     const tree = `<div class="stage-delegation-tree"><ol class="stage-delegation-list">${rows}</ol><svg class="stage-delegation-flow" aria-hidden="true" focusable="false"></svg></div>`;
     if (completed) return `<section class="stage-delegation" aria-label="已调取的子智能体">${tree}</section>`;
-    return `<section class="stage-delegation" aria-label="子智能体任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><img class="subagent-figma-icon" src="assets/subagent-tool-v2-figma.svg" width="16" height="16" alt=""></span><span>${reviewing ? '正在调取子智能体，汇总异常分析结果' : '正在调用子智能体，并行分析门店异常'}</span></p>${tree}</section>`;
+    return `<section class="stage-delegation" aria-label="子智能体任务分派"><p class="stage-delegation-heading"><span class="stage-delegation-icon" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24">${stageToolIcons.subagent}</svg></span><span>${reviewing ? '正在调取子智能体，汇总异常分析结果' : '正在调用子智能体，并行分析门店异常'}</span></p>${tree}</section>`;
   }
 
   const agentTransmissionStates = new WeakMap();
@@ -6845,6 +6924,14 @@ const mainView = document.querySelector('.main');
     syncAgentTransmissionPaths(panel);
     if(panel?.dataset.pausedAt)applyStagePausedView(panel,true);
     syncInterventionComposer();
+    if (!conversationPage.hidden && activeConversationTask===browserControlTask) {
+      const progress=browserControlDemo.progress;
+      stageDemoControls.hidden=!!conversationThread.querySelector('[data-browser-reply].is-entering');
+      stageDemoPrevious.disabled=progress.first;
+      stageDemoAdvance.disabled=false;
+      stageDemoAdvance.textContent=progress.label;
+      return;
+    }
     stageDemoControls.hidden = conversationPage.hidden || activeConversationTask !== conversationTask || !panel || panel.classList.contains('is-entering');
     if (stageDemoControls.hidden) return;
     stageDemoAdvance.disabled=Boolean(panel.dataset.pausedAt)||stageAdvanceTimer!==null;
@@ -6910,10 +6997,12 @@ const mainView = document.querySelector('.main');
   }
 
   stageDemoPrevious.addEventListener('click', () => {
+    if(activeConversationTask===browserControlTask)return browserControlDemo.step(-1);
     if (activeConversationTask !== conversationTask) return;
     previousConversationStage(conversationThread.querySelector('.conversation-stage-demo'));
   });
   stageDemoAdvance.addEventListener('click', () => {
+    if(activeConversationTask===browserControlTask)return browserControlDemo.step(1);
     const panel = conversationThread.querySelector('.conversation-stage-demo');
     if (!panel || activeConversationTask !== conversationTask) return;
     const next = (Number(panel.dataset.stageFrame) + 1) % conversationStageFrames.length;
@@ -7012,6 +7101,12 @@ const mainView = document.querySelector('.main');
     conversationThreads.set(activeConversationTask, conversationThread.innerHTML);
   });
   conversationThread.addEventListener('animationend', (event) => {
+    const browserIntro=event.target.closest('[data-browser-reply].is-entering');
+    if(browserIntro && event.target.matches('.stage-plan-step:last-child')){
+      browserIntro.classList.remove('is-entering');
+      syncStageDemoControls();
+      return;
+    }
     if (!event.target.matches('.conversation-stage-demo.is-entering .stage-plan-step:last-child')) return;
     const panel = event.target.closest('.conversation-stage-demo');
     panel.classList.remove('is-entering');
@@ -7814,6 +7909,7 @@ const mainView = document.querySelector('.main');
             }
             const setExpanded = wireBackgroundDisclosure(disclosure, aggregate, popup);
             disclosure.append(aggregate, popup);
+            if (task===backgroundAgentTask && document.documentElement.classList.contains('strategy-four-agents')) setExpanded(true);
             // Overlay scrollbar: never subtract width from the rows or hover surface.
             const scrollThumb = document.createElement('span');
             scrollThumb.className = 'background-list-scroll-thumb';
@@ -7950,7 +8046,11 @@ const mainView = document.querySelector('.main');
     paint();
   }
   let scheduledPageMode = false;
+  function awaitingDemoPrompt(task) {
+    return task === conversationTask && !startedConversationDemos.has(task);
+  }
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
+    document.getElementById('standardSummary').hidden = open && task === browserControlTask;
     closeSubagentConversation();
     if (open && scheduledRunTasks.has(task)) showScheduledTaskDetails(task);
     closeAccessMenus();
@@ -7965,23 +8065,24 @@ const mainView = document.querySelector('.main');
       }
       activeConversationTask = task;
       conversationPrompt.value = conversationComposerDrafts.has(task) ? conversationComposerDrafts.get(task) :
-        (task === conversationTask && !startedConversationDemos.has(task) ? conversationExamples.get(task).turns.at(-1).prompt : task === interventionTask ? window.CatPawQueueDemo.draft : '');
+        (awaitingDemoPrompt(task) ? conversationExamples.get(task).turns.at(-1).prompt : task === interventionTask ? window.CatPawQueueDemo.draft : '');
       resizeConversationPrompt();
       const example = conversationExamples.get(task);
       if (conversationThreads.has(task)) {
         conversationThread.innerHTML = conversationThreads.get(task);
       } else {
         const allTurns = example.turns || [{ prompt: example.prompt, reply: example.reply }];
-        const turns = task === conversationTask && !startedConversationDemos.has(task) ? allTurns.slice(0, -1) : allTurns;
+        const turns = awaitingDemoPrompt(task) ? allTurns.slice(0, -1) : allTurns;
         const openedAt = new Date();
         conversationThread.innerHTML = turns.map(({ prompt, reply, isGoal, attachments = [], sentAt }, index) =>
-          renderConversationTurnTime(sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45) * 60000)) +
+          renderConversationTurnTime(sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (allTurns[index].minutesAgo ?? (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45)) * 60000)) +
           renderUserMessage(prompt, attachments.map(name => {
             const folder = FOLDERS.find(entry => entry.id === example.folderId);
             const node = folder?.files.find(file => file.name === name);
             return node ? { node, chain: [folder, node] } : null;
           }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
+          (task === browserControlTask && index === turns.length - 1 ? browserControlDemo.initial(!reducedMotion.matches) : '') +
           (task === supplierComparisonTask && index === 0 ? supplierDemo.initial() : '') +
           (widgetCases.has(task) && index === 0 ? window.CatPawWidgetCases.renderReply(widgetCases.get(task).id) : '') +
           (task === interventionTask && index === 0 ? queueDemo.initial() : '') +
@@ -7989,7 +8090,7 @@ const mainView = document.querySelector('.main');
           (task === conversationTask ? renderEarlierTurnArtifacts(index) : '') +
           (!(task === conversationTask && hasVersionDemoHistory()) && example.files.length && index === (task === conversationTask ? allTurns.length - 2 : turns.length - 1) ? '<div class="conversation-artifacts" id="conversationArtifacts" aria-label="对话产物"></div>' : '') +
           (task === conversationTask && startedConversationDemos.has(task) && index === turns.length - 1 ? renderConversationStage() : '') +
-          (reply ? renderMessageMeta('assistant', sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45) * 60000)) : '') +
+          (reply ? renderMessageMeta('assistant', sentAt ? new Date(sentAt) : new Date(openedAt.getTime() - (allTurns[index].minutesAgo ?? (task === conversationTask ? (demoTurnMinutesAgo[index] ?? 4) : 45)) * 60000)) : '') +
           '</div></div>'
         ).join('');
       }
@@ -8016,6 +8117,7 @@ const mainView = document.querySelector('.main');
     syncBackgroundAgentDemo(open, task);
     window.CatPawWidgetCases?.syncControls();
     syncExpertForContext();
+    browserQueue.activate(open && task === browserControlTask);
     queueDemo.activate(open && task === interventionTask);
     if (open && task === interventionTask && !new URLSearchParams(location.search).has('strategyScene') && !task.dataset.queueSeeded) {
       task.dataset.queueSeeded = 'true';
@@ -8026,6 +8128,8 @@ const mainView = document.querySelector('.main');
       resizeConversationPrompt();
     }
     recoveryDemos.forEach((demo,key)=>demo.activate(open && task===key));
+    browserControlDemo.activate(open && task===browserControlTask);
+    if(open && task===browserControlTask && !summaryPopover.hidden)setSummaryOpen(false);
     if (!open || task !== conversationTask) clearTimeout(stageAutoTimer);
     syncStageDemoControls();
     if (!open && workbenchExpanded) setWorkbenchExpanded(false);
@@ -8067,7 +8171,7 @@ const mainView = document.querySelector('.main');
       resizeConversationPrompt();
       renderConversationTurnNav();
       requestAnimationFrame(() => {
-        conversationScroll.scrollTop = task === conversationTask || task === membershipResearchTask ? conversationScroll.scrollHeight : 0;
+        conversationScroll.scrollTop = task === conversationTask || task === browserControlTask || task === membershipResearchTask ? conversationScroll.scrollHeight : 0;
         updateConversationTurnNav();
       });
     }
@@ -8335,11 +8439,13 @@ function beginConversationTurn(message) {
     showConversationFeedback('已按补充要求继续');
   } else if (activeConversationTask === interventionTask && queueDemo.enqueue(message)) {
     showConversationFeedback('已加入待发送队列');
-  } else if (activeConversationTask === conversationTask && !startedConversationDemos.has(conversationTask)) {
-    startedConversationDemos.add(conversationTask);
+  } else if (activeConversationTask === browserControlTask && browserControlDemo.acceptsQueuedMessages && browserQueue.enqueue(message)) {
+    showConversationFeedback('已加入待发送队列');
+  } else if (awaitingDemoPrompt(activeConversationTask)) {
+    startedConversationDemos.add(activeConversationTask);
     conversationThread.insertAdjacentHTML('beforeend',
       renderConversationTurnTime(new Date()) + renderUserMessage(message.text, message.attachments, false, false, message.references) +
-      `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)}</div></div>`);
+      `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage(!reducedMotion.matches)}</div></div>`);
     renderConversationTurnNav();
     syncStageDemoControls();
     if (reducedMotion.matches) scheduleStageAutoAdvance(conversationThread.querySelector('.conversation-stage-demo'));
@@ -8660,7 +8766,7 @@ function beginConversationTurn(message) {
   }
 
   urlInput.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' || e.isComposing) return;
+    if (e.key !== 'Enter' || e.isComposing || urlInput.readOnly) return;
     navigate(urlInput.value);
   });
 
@@ -8729,6 +8835,9 @@ function beginConversationTurn(message) {
   const addLabels = { skill: '技能', expert: '专家', knowledge: '知识库', mcp: 'MCP' };
   // 原型没有实际广场接口：专家和 MCP 预置已添加示例，新增项保留在当前会话状态中。
   const installedAddItems = { knowledge: ['产品知识库', '项目知识库', '团队知识库'], skill: [], expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'], mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'] };
+  function availableKnowledgeBases(input) {
+    return input.knowledgeEnabled ? [...installedAddItems.knowledge] : [];
+  }
   const legacySkillNames = {
     '数据分析': 'data-analysis', '文档写作': 'docx', '文档总结': 'document-summary',
     '网页制作': 'website-development', 'PPT 制作': 'pptx', 'App 设计与开发': 'app-development',
@@ -8754,24 +8863,27 @@ function beginConversationTurn(message) {
     [prompt, document.getElementById('homeKnowledgeTags')],
     [conversationPrompt, document.getElementById('conversationKnowledgeTags')],
   ]);
-  knowledgeTagContainers.forEach((_, input) => { input.knowledgeBases = []; });
+  knowledgeTagContainers.forEach((_, input) => { input.knowledgeBases = []; input.knowledgeEnabled = false; });
+  function syncKnowledgeControl(input) {
+    const root = input === prompt ? document.querySelector('.hero .composer') : document.querySelector('.conversation-composer');
+    const control = root.querySelector('.composer-knowledge-control');
+    const enabled = Boolean(input.knowledgeEnabled) || input.knowledgeBases.length > 0;
+    control.dataset.enabled = String(enabled);
+    const count = control.querySelector('.knowledge-count');
+    count.hidden = !enabled;
+    count.textContent = input.knowledgeBases.length;
+    control.querySelector('[data-quick-add="knowledge"]').setAttribute('aria-label', enabled ? `知识库，已选择 ${input.knowledgeBases.length} 个` : '知识库，未选择');
+  }
   function renderKnowledgeTags(input) {
     const container = knowledgeTagContainers.get(input);
-    const names = input.knowledgeBases || [];
-    container.replaceChildren(...names.map((name, index) => {
-      const tag = document.createElement('span');
-      tag.className = 'composer-skill-tag composer-knowledge-tag';
-      tag.title = name;
-      tag.innerHTML = `<button class="composer-skill-tag-clear" type="button" data-knowledge-remove="${index}" title="移除知识库">${addIcon('knowledge', 'composer-skill-icon')}${skillTagClearIcon}</button><span></span>`;
-      tag.querySelector('button').setAttribute('aria-label', `移除知识库：${name}`);
-      tag.querySelector('span').textContent = name;
-      return tag;
-    }));
-    container.hidden = !names.length;
+    container.replaceChildren();
+    container.hidden = true;
+    syncKnowledgeControl(input);
     syncComposerTags(input);
   }
   function addKnowledgeTag(input, name) {
     if (!name || input.knowledgeBases.includes(name)) return;
+    input.knowledgeEnabled = true;
     input.knowledgeBases.push(name);
     renderKnowledgeTags(input);
   }
@@ -8819,6 +8931,7 @@ function beginConversationTurn(message) {
     selectedSkills.get(input).length = 0;
     // Sending or replacing a draft clears its selected knowledge references too.
     input.knowledgeBases = [];
+    input.knowledgeEnabled = false;
     renderKnowledgeTags(input);
     renderSkillTags(input);
   }
@@ -9135,6 +9248,15 @@ function beginConversationTurn(message) {
     const kind = addMenuPage;
     const list = addSubmenu.querySelector('.composer-add-list');
     if (!list || !addLabels[kind]) return;
+    if (kind === 'knowledge') {
+      const input = addTarget();
+      const matches = name => name.includes(query);
+      const rows = (names, disabled = false) => names.filter(matches).map(name => `<button class="composer-add-item knowledge-option" type="button" ${disabled ? 'disabled aria-disabled="true"' : ''} role="menuitemcheckbox" aria-checked="${input.knowledgeBases.includes(name)}" data-knowledge-name="${esc(name)}"><span class="knowledge-checkbox" aria-hidden="true">${input.knowledgeBases.includes(name) ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="m2 6 2.7 3 5.3-6.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span><span>${esc(name)}</span></button>`).join('');
+      const enterpriseRows = rows(installedAddItems.knowledge, !input.knowledgeEnabled);
+      list.innerHTML = `<div class="knowledge-enterprise-heading"><span>企业知识</span><button class="composer-knowledge-toggle" type="button" role="switch" aria-checked="${Boolean(input.knowledgeEnabled)}" aria-label="使用企业知识"><span></span></button></div>${enterpriseRows || '<p class="composer-add-empty">没有匹配的知识库</p>'}`;
+      placeAddSubmenu();
+      return;
+    }
     const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
     const choices = directAddTrigger
       ? [...new Set([...installedAddItems[kind], ...galleryExamples[kind]])]
@@ -9163,6 +9285,9 @@ function beginConversationTurn(message) {
       addSubmenu.innerHTML = back + '<div class="composer-add-section">最近打开</div>'
         + (entries.length ? entries.map((entry, index) => `<button class="composer-add-item composer-add-file" type="button" data-add-library="${index}">${addIcon('file')}<span title="${esc(entry.node.name)}">${esc(entry.node.name)}</span><small>${esc(entry.chain.slice(0, -1).map(node => node.name).join(' / '))}</small></button>`).join('') : '<p class="composer-add-empty">还没有最近打开的文件</p>')
         + `<div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="library">${addIcon('library')}<span>浏览全部资料库文件</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
+    } else if (addMenuPage === 'knowledge') {
+      addSubmenu.innerHTML = `<div class="composer-add-list" role="menu" aria-label="选择知识库"></div>`;
+      renderAddList();
     } else if (addLabels[addMenuPage]) {
       const kind = addMenuPage;
       const label = directAddTrigger && kind === 'mcp' ? '连接器' : addLabels[kind];
@@ -9285,13 +9410,14 @@ function beginConversationTurn(message) {
     const composer = activeAddTrigger.closest('.conversation-composer') || activeAddTrigger.closest('.composer-card');
     const anchor = (composer || activeAddTrigger).getBoundingClientRect();
     // Anchor to the input itself, allowing the menu to overlay queued messages.
-    const bottom = anchor.top - 8;
-    const availableHeight = wrap ? bottom - bounds.top - 8 : bounds.bottom - anchor.bottom - 16;
+    const panelGap = addMenuPage === 'knowledge' ? 4 : 8;
+    const bottom = anchor.top - panelGap;
+    const availableHeight = wrap ? bottom - bounds.top - 8 : bounds.bottom - anchor.bottom - panelGap - 8;
     panel.style.width = `${anchor.width}px`;
     panel.style.maxHeight = `${Math.max(40, Math.min(390, availableHeight))}px`;
     const height = panel.getBoundingClientRect().height;
     panel.style.left = `${anchor.left}px`;
-    panel.style.top = `${wrap ? Math.max(bounds.top + 8, bottom - height) : anchor.bottom + 8}px`;
+    panel.style.top = `${wrap ? Math.max(bounds.top + 8, bottom - height) : anchor.bottom + panelGap}px`;
     document.body.classList.toggle('composer-add-panel-open', Boolean(wrap));
   }
   function placeAddMenu() {
@@ -9376,7 +9502,7 @@ function beginConversationTurn(message) {
       closeAddMenu();
       activeQuickAddOverflowTrigger = trigger;
       quickAddOverflowMenu.innerHTML = Array.from(trigger.closest('.composer-quick-add').querySelectorAll('.composer-quick-add-trigger'))
-        .filter(button => !button.hidden)
+        .filter(button => !button.hidden && !button.getClientRects().length)
         .map(button => `<button class="composer-add-item" type="button" role="menuitem" data-overflow-quick-add="${button.dataset.quickAdd}">${button.innerHTML}</button>`)
         .join('');
       quickAddOverflowMenu.hidden = false;
@@ -9427,6 +9553,39 @@ function beginConversationTurn(message) {
   });
   addSubmenu.addEventListener('click', event => {
     event.stopPropagation();
+    const enterpriseToggle = event.target.closest('.composer-knowledge-toggle');
+    if (addMenuPage === 'knowledge' && enterpriseToggle) {
+      const input = addTarget();
+      input.knowledgeEnabled = !input.knowledgeEnabled;
+      input.knowledgeBases = input.knowledgeBases.filter(name => !installedAddItems.knowledge.includes(name));
+      if (input.knowledgeEnabled) input.knowledgeBases.push(...installedAddItems.knowledge);
+      renderKnowledgeTags(input);
+      renderAddList();
+      addSubmenu.querySelector('.composer-knowledge-toggle')?.focus({preventScroll:true});
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+      return;
+    }
+    const knowledgeOption = event.target.closest('[data-knowledge-name]');
+    const knowledgeAction = event.target.closest('[data-knowledge-action]');
+    if (knowledgeOption?.disabled) return;
+    if (addMenuPage === 'knowledge' && (knowledgeOption || knowledgeAction)) {
+      const input = addTarget();
+      const selected = new Set(input.knowledgeBases);
+      const action = knowledgeAction?.dataset.knowledgeAction;
+      if (action === 'all') availableKnowledgeBases(input).forEach(name => selected.add(name));
+      else if (action === 'clear') selected.clear();
+      else if (action === 'invert') availableKnowledgeBases(input).forEach(name => selected.has(name) ? selected.delete(name) : selected.add(name));
+      else {
+        const name = knowledgeOption.dataset.knowledgeName;
+        selected.has(name) ? selected.delete(name) : selected.add(name);
+      }
+      input.knowledgeBases = [...selected];
+      renderKnowledgeTags(input);
+      renderAddList();
+      if (knowledgeOption) [...addSubmenu.querySelectorAll('[data-knowledge-name]')].find(option => option.dataset.knowledgeName === knowledgeOption.dataset.knowledgeName)?.focus({preventScroll:true});
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
     const libraryButton = event.target.closest('[data-add-library]');
     if (libraryButton) {
       const entry = addSubmenu._libraryEntries[Number(libraryButton.dataset.addLibrary)];
@@ -10176,14 +10335,15 @@ function beginConversationTurn(message) {
     let processPlanningTimer = null;
     const usesSpotlight = ['2.1-2','2.1-3','2.1-4'].includes(strategyScene);
     if (usesSpotlight || strategyScene === '2.1-5') document.documentElement.classList.add('strategy-flat-composer');
+    if (strategyScene === '2.1-2') document.documentElement.classList.add('strategy-spotlight-before');
     let spotlightOverlay = null, spotlightSvg = null, spotlightMaskPath = null, spotlightFrame = null;
     function stopStrategySpotlight() {
       cancelAnimationFrame(spotlightFrame);
       spotlightFrame = null;
-      if (spotlightOverlay) spotlightOverlay.hidden = true;
+      if (spotlightOverlay) spotlightOverlay.hidden = !document.documentElement.classList.contains('slide-outer-backdrop');
     }
     function showStrategySpotlight(selector) {
-      stopStrategySpotlight();
+      cancelAnimationFrame(spotlightFrame);
       if (!spotlightOverlay) {
         spotlightOverlay=document.createElement('div');
         spotlightOverlay.className='strategy-spotlight';
@@ -10196,6 +10356,7 @@ function beginConversationTurn(message) {
         spotlightOverlay.append(spotlightSvg);
         document.body.append(spotlightOverlay);
       }
+      spotlightOverlay.setAttribute('data-focus-target',selector);
       spotlightOverlay.hidden=false;
       let lastBounds='';
       const update=()=>{
@@ -10644,6 +10805,24 @@ function beginConversationTurn(message) {
           selectStrategyCategory('create');
           secondaryPrompts.querySelector('[data-secondary-index="1"]').click();
           break;
+        case 'background-four-agents':
+          document.documentElement.classList.add('strategy-four-agents');
+          backgroundDemoCounts.set(backgroundAgentTask,4);
+          setConversationOpen(true,backgroundAgentTask);
+          break;
+        case 'process-compose':
+          setConversationOpen(true, conversationTask);
+          conversationThread.replaceChildren();
+          conversationPrompt.value = conversationExamples.get(conversationTask).turns.at(-1).prompt;
+          resizeConversationPrompt();
+          renderConversationTurnNav();
+          break;
+        case 'process-send':
+          conversationThread.innerHTML = renderUserMessage(conversationPrompt.value);
+          conversationPrompt.value = '';
+          resizeConversationPrompt();
+          renderConversationTurnNav();
+          break;
         case 'process':
           if (processPanelMode) showStrategyProcessSnapshot(step.frame, snapshotFrame === null);
           else processPanel = showStrategyProcess(step.frame, step.thinking);
@@ -10976,8 +11155,10 @@ function beginConversationTurn(message) {
     host:win,
     onOpen() { setScheduledPageMode(false); setConversationOpen(false); setRightPanel(null); },
   });
-  const linkedRecovery = extraRecoveryCases.find(item=>item.mode===new URLSearchParams(location.search).get('recoveryCase'));
-  if(linkedRecovery)setConversationOpen(true,linkedRecovery.task);
+  const recoveryCase = new URLSearchParams(location.search).get('recoveryCase');
+  const linkedRecoveryTask = recoveryCase === 'failure' ? failureRecoveryTask : extraRecoveryCases.find(item=>item.mode===recoveryCase)?.task;
+  if(linkedRecoveryTask)setConversationOpen(true,linkedRecoveryTask);
+  if(new URLSearchParams(location.search).has('browserControl'))setConversationOpen(true,browserControlTask);
   if (new URLSearchParams(location.search).has('backgroundProcess')) setConversationOpen(true, backgroundProcessTask);
   if (new URLSearchParams(location.search).has('backgroundAgent')) setConversationOpen(true, backgroundAgentTask);
   const linkedWidgetCase = document.getElementById('widgetCase-' + new URLSearchParams(location.search).get('widgetCase'));

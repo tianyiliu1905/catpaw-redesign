@@ -1,41 +1,143 @@
-/* Shared navigation for every Motion Lab experiment. */
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%;max-width:1440px;min-height:54px;margin:0 auto;padding:12px 32px;border-bottom:1px solid #e9e9e9;background:#f9f9f9;font:400 14px/22px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#2b2b2b}
-.topbar a{color:inherit;text-decoration:none;white-space:nowrap}
-.topbar .wordmark{flex:none;font-weight:600;letter-spacing:-.02em}
-.topbar .wordmark span{display:inline;margin-left:12px;font-weight:400;color:#737373}
-.topbar nav{display:flex;align-items:center;gap:24px;overflow-x:auto;color:#737373}
-.topbar nav a:hover{color:#2b2b2b}
-.topbar nav a[aria-current="page"]{color:#2b2b2b;font-weight:500}
-.topbar a:focus-visible{outline:2px solid #737373;outline-offset:3px}
-.task-sticky-controls{background:#f9f9f9}
-.task-sticky-controls .topbar{position:static}
-@media(max-width:850px){.topbar{padding-inline:16px;gap:20px}.topbar nav{gap:16px}}
-@media(max-width:600px){.topbar{flex-wrap:wrap;gap:8px;padding-block:12px}.topbar nav{width:100%;padding-bottom:2px}}
-
 /* Inset glass controls over the shared desktop wallpaper. */
 body{min-height:100vh;background:#c6dad4 url("../assets/desktop-tulips.png") center/cover fixed no-repeat;padding:24px}
 .lab-chrome{position:sticky;top:24px;z-index:20;max-width:1376px;margin:0 auto 32px;border:1px solid rgba(255,255,255,.5);border-radius:20px;background:rgba(255,255,255,.68);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 8px 32px rgba(25,45,40,.08)}
-.lab-chrome .topbar{position:static;max-width:none;min-height:56px;padding:16px 24px;background:transparent;border-bottom:1px solid rgba(70,85,80,.1)}
 .lab-chrome .lab-toolbar-wrap{max-width:none;margin:0;padding:12px 24px 16px}
 .lab-chrome .toolbar,.lab-chrome .controls{margin:0;padding:0;border:0;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.lab-chrome button,.lab-chrome select{background:rgba(255,255,255,.7);border-color:rgba(60,75,70,.12)}
+.lab-chrome button,.lab-chrome select{background:rgba(255,255,255,.7);border:0}
 .lab-chrome button:hover{background:rgba(255,255,255,.95)}
-.lab-chrome button.primary{background:#2b2b2b;color:white;border-color:#2b2b2b}
+.lab-chrome button.primary{background:#2b2b2b;color:white;border:0}
 .lab-chrome button.primary:hover{background:#454545}
 body>main{max-width:1376px;margin:0 auto;padding:0 0 24px}
 .case-caption,.task-case-heading p{color:#505e58}
-@media(max-width:850px){body{padding:16px}.lab-chrome{top:16px;margin-bottom:24px}.lab-chrome .topbar{padding:12px 16px}.lab-chrome .lab-toolbar-wrap{padding:12px 16px}.lab-chrome{border-radius:16px}}
+@media(max-width:850px){body{padding:16px}.lab-chrome{top:16px;margin-bottom:24px}.lab-chrome .lab-toolbar-wrap{padding:12px 16px}.lab-chrome{border-radius:16px}}
 @media(prefers-reduced-transparency:reduce){.lab-chrome{background:rgba(255,255,255,.94)}}
 
 /* Each case is a glass frame around an opaque white demonstration surface. */
-.task-case,.comparisons>.comparison,.stage>.panel{padding:24px;border:1px solid rgba(255,255,255,.55);border-radius:20px;background:rgba(255,255,255,.48);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 28px rgba(25,45,40,.05);min-width:0}
+.task-case,.comparisons>.comparison,.stage>.panel{padding:24px;border:1px solid rgba(255,255,255,.55);border-radius:28px;background:rgba(255,255,255,.48);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 28px rgba(25,45,40,.05);min-width:0}
 .task-case-heading{margin-bottom:20px}
 .task-case-heading h2,.stage>.panel h2{color:#2b2b2b}
 .task-case-heading p,.numbering-caption{color:#59665f}
-.task-case>.task-preview{background:#fff;border:0;border-radius:12px}
-.comparisons>.comparison>.conversation{background:#fff;border:0;border-radius:12px;box-shadow:none;padding:32px}
+.task-case>.task-preview{background:#fff;border:0;border-radius:20px}
+.comparisons>.comparison>.conversation{background:#fff;border:0;border-radius:20px;box-shadow:none;padding:32px}
 .comparisons>.comparison>.case-caption{margin:16px 0 0;color:#59665f}
 .stage>.panel .card,.stage>.panel .zoom{background:#fff}
-@media(max-width:850px){.task-case,.comparisons>.comparison,.stage>.panel{padding:20px;border-radius:16px}.comparisons>.comparison>.conversation{padding:24px}}
+@media(max-width:850px){.task-case,.comparisons>.comparison,.stage>.panel{padding:20px;border-radius:24px}.comparisons>.comparison>.conversation{padding:24px}}
 @media(max-width:600px){.task-case,.comparisons>.comparison,.stage>.panel{padding:16px}.task-case>.task-preview{padding:16px}.comparisons>.comparison>.conversation{padding:20px}}
 @media(prefers-reduced-transparency:reduce){.task-case,.comparisons>.comparison,.stage>.panel{background:rgba(255,255,255,.94)}}
+
+/* Shared select arrow with a reserved slot instead of browser-native edge placement. */
+.lab-chrome select{appearance:none;-webkit-appearance:none;min-width:72px;padding:0 48px 0 12px;background-image:url("../assets/chevron-down-figma.svg");background-repeat:no-repeat;background-size:16px 16px;background-position:right 16px center;line-height:normal}
+@media(forced-colors:active){.lab-chrome select{appearance:auto;background-image:none;padding-right:12px}}
+
+/* The same persistent left navigation and right workspace on every page. */
+body{--lab-sidebar-width:200px;--lab-workspace-offset:224px}
+.lab-sidebar{position:fixed;top:24px;bottom:24px;left:24px;z-index:30;width:var(--lab-sidebar-width);padding:24px 16px;border:1px solid rgba(255,255,255,.5);border-radius:24px;background:rgba(255,255,255,.68);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 8px 32px rgba(25,45,40,.08);display:flex;flex-direction:column;gap:32px;overflow:auto}
+.lab-sidebar a{text-decoration:none;color:inherit}
+.lab-sidebar .wordmark{display:flex;flex-direction:column;gap:4px;padding:0 12px;font-size:18px;line-height:26px;font-weight:600;letter-spacing:-.02em}
+.lab-sidebar .wordmark span{display:block;margin:0;font-size:13px;line-height:20px;font-weight:400;color:#737373;letter-spacing:0}
+.lab-sidebar nav{display:flex;flex-direction:column;gap:6px}
+.lab-sidebar nav a{display:flex;align-items:center;min-height:40px;padding:9px 12px;border-radius:12px;font-size:14px;line-height:22px;color:#737373;white-space:nowrap}
+.lab-sidebar nav a:hover{background:rgba(255,255,255,.45);color:#2b2b2b}
+.lab-sidebar nav a[aria-current="page"]{background:rgba(255,255,255,.8);color:#2b2b2b;font-weight:500}
+.lab-sidebar a:focus-visible{outline:2px solid #737373;outline-offset:3px}
+body>.lab-chrome,body>main{width:calc(100% - var(--lab-workspace-offset));max-width:none;margin-left:var(--lab-workspace-offset);margin-right:0;min-width:0}
+.lab-chrome .lab-toolbar-wrap{padding:16px 24px}
+body.agent-motion-page>main{min-height:calc(100dvh - 160px)}
+.task-experiments{margin-top:0}
+@media(max-width:1000px){body{--lab-sidebar-width:176px;--lab-workspace-offset:196px}.lab-sidebar{padding:24px 12px}.lab-sidebar nav a{padding-inline:10px}}
+@media(max-width:850px){.lab-sidebar{top:16px;bottom:16px;left:16px;border-radius:20px}.lab-chrome .lab-toolbar-wrap{padding:16px}}
+@media(max-width:600px){body>.lab-sidebar{position:relative;inset:auto;width:100%;padding:16px;margin:0 0 16px;gap:16px}.lab-sidebar .wordmark{flex-direction:row;align-items:center;gap:12px}.lab-sidebar nav{flex-direction:row;gap:4px;overflow:auto}.lab-sidebar nav a{font-size:12px;padding:8px;min-height:36px}.lab-sidebar .wordmark{padding:0}.lab-sidebar .wordmark span{font-size:13px}body>.lab-chrome,body>main{width:100%;margin-left:0}body.agent-motion-page>main{min-height:0}}
+@media(prefers-reduced-transparency:reduce){.lab-sidebar{background:rgba(255,255,255,.94)}}
+
+/* Keep wallpaper geometry identical when navigating between short and long pages. */
+html{overflow-y:scroll;scrollbar-gutter:stable;background:#c6dad4}
+body{background:transparent;isolation:isolate}
+body::before{content:"";position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;background:#c6dad4 url("../assets/desktop-tulips.png") center/cover no-repeat;pointer-events:none}
+
+/* Compact navigation with playback controls in a separate module beneath it. */
+body>.lab-sidebar{padding:0;border:0;border-radius:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;gap:16px;overflow:visible}
+.lab-navigation-panel{flex:none;padding:16px 12px;border:1px solid rgba(255,255,255,.5);border-radius:20px;background:rgba(255,255,255,.68);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 8px 32px rgba(25,45,40,.08)}
+.lab-sidebar .wordmark{font-size:16px;line-height:24px;margin-bottom:16px;padding-inline:10px}
+.lab-sidebar nav{gap:4px}
+.lab-sidebar nav a{min-height:36px;padding:7px 10px;font-size:13px;border-radius:10px}
+.lab-sidebar>.lab-chrome{position:static;flex:0 1 auto;min-height:0;width:100%;margin:0;border-radius:20px;overflow:auto}
+.lab-sidebar .lab-toolbar-wrap{padding:16px 12px}
+.lab-sidebar .toolbar,.lab-sidebar .control-group{display:flex;flex-direction:column;align-items:stretch;width:100%;gap:8px}
+.lab-sidebar .toolbar{gap:20px}
+.lab-sidebar .control-group>button{width:100%;font-size:13px}
+.lab-sidebar .control-group label{display:flex;flex-direction:column;align-items:stretch;gap:6px;margin:4px 0 0;font-size:12px}
+.lab-sidebar select{width:100%;min-width:0;max-width:100%;font-size:13px}
+.lab-sidebar .agent-case-navigation{justify-content:space-between}
+body.agent-motion-page>main{min-height:calc(100dvh - 48px)}
+@media(max-width:850px){body.agent-motion-page>main{min-height:calc(100dvh - 32px)}}
+@media(max-width:600px){body>.lab-sidebar{padding:0;margin-bottom:24px;gap:12px}.lab-navigation-panel{padding:16px}.lab-sidebar .wordmark{padding:0}.lab-sidebar>.lab-chrome{overflow:visible;flex:none}.lab-sidebar .toolbar{flex-direction:row;flex-wrap:wrap}.lab-sidebar .control-group{width:auto;flex:1;min-width:140px}body.agent-motion-page>main{min-height:0}}
+@media(prefers-reduced-transparency:reduce){.lab-navigation-panel{background:rgba(255,255,255,.94)}}
+
+/* Split the available sidebar height equally between its two modules. */
+@media(min-width:601px){
+ body>.lab-sidebar{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:16px}
+ .lab-sidebar>.lab-navigation-panel,.lab-sidebar>.lab-chrome{height:100%;min-height:0;box-sizing:border-box;overflow:auto}
+}
+
+/* Background controls sit beside the Motion Lab name. */
+:root{--lab-background:#c6dad4;--lab-wallpaper:url("../assets/desktop-tulips.png")}
+html{background:var(--lab-background)}
+body::before{background-color:var(--lab-background);background-image:var(--lab-wallpaper)}
+.lab-navigation-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px}
+.lab-navigation-heading .wordmark{margin:0;padding-right:0;white-space:nowrap}
+.lab-background-picker{position:relative;flex:none;color:#505050}
+.lab-background-picker>summary{display:grid;place-items:center;list-style:none;width:28px;height:28px;border-radius:8px;cursor:pointer}
+.lab-background-picker>summary::-webkit-details-marker{display:none}
+.lab-background-picker>summary:hover,.lab-background-picker[open]>summary{background:rgba(255,255,255,.5)}
+.lab-background-picker>summary:focus-visible{outline:2px solid #737373;outline-offset:2px}
+.lab-background-options{position:absolute;right:0;top:calc(100% + 8px);z-index:2;display:grid;grid-template-columns:repeat(3,32px);gap:10px;padding:12px;border:1px solid rgba(0,0,0,.06);border-radius:16px;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.1)}
+.lab-background-options button{width:32px;height:32px;padding:0;border:0;border-radius:50%;background:var(--swatch);cursor:pointer}
+.lab-background-options button[aria-pressed="true"]{outline:2px solid #505050;outline-offset:3px}
+.lab-background-options button:focus-visible{outline:2px solid #505050;outline-offset:3px}
+.lab-background-options [data-lab-background="tulips"]{background:url("../assets/desktop-tulips.png") center/cover}
+.lab-background-options [data-lab-background="neutral"]{--swatch:#e9e9e7}
+.lab-background-options [data-lab-background="blue"]{--swatch:#cddfee}
+.lab-background-options [data-lab-background="mint"]{--swatch:#d3e4da}
+.lab-background-options [data-lab-background="pink"]{--swatch:#eed7df}
+.lab-background-options [data-lab-background="slate"]{--swatch:#555e69}
+
+/* Use the same compact spacing between cases in both directions. */
+.comparisons,.task-experiments{row-gap:20px;column-gap:20px}
+
+/* Command-backslash toggles both sidebar modules without animation. */
+html.lab-sidebar-hidden body{--lab-workspace-offset:0px}
+html.lab-sidebar-hidden body>.lab-sidebar{display:none}
+
+/* Every experiment supports a single focused case or a four-case comparison. */
+.lab-case-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lab-case-navigation[hidden]{display:none}
+.lab-case-navigation button{display:grid;place-items:center;width:32px;height:32px;padding:0;font-size:18px}
+.lab-case-navigation #casePosition{min-width:46px;text-align:center;font-size:12px;color:#737373;font-variant-numeric:tabular-nums}
+html[data-case-view="all"] .agent-motion-page .comparisons{grid-template-columns:repeat(2,minmax(0,1fr));max-width:none}
+html[data-case-view="all"] body.agent-motion-page>main{align-items:flex-start;min-height:0}
+html[data-case-view="single"] .comparisons,html[data-case-view="single"] .task-experiments{grid-template-columns:minmax(0,1fr)}
+@media(max-width:850px){html[data-case-view="all"] .agent-motion-page .comparisons{grid-template-columns:minmax(0,1fr)}}
+
+/* Transparent scrollbar tracks preserve the sidebar's glass surface. */
+.lab-sidebar>.lab-chrome::-webkit-scrollbar,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar{width:6px;background:transparent}
+.lab-sidebar>.lab-chrome::-webkit-scrollbar-track,.lab-sidebar>.lab-chrome::-webkit-scrollbar-track-piece,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar-track,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar-track-piece{background:transparent;border:0;box-shadow:none;margin-block:16px}
+.lab-sidebar>.lab-chrome::-webkit-scrollbar-thumb,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border:0;border-radius:999px}
+.lab-sidebar>.lab-chrome::-webkit-scrollbar-button,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar-button{display:none;width:0;height:0}
+.lab-sidebar>.lab-chrome::-webkit-scrollbar-corner,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar-corner{background:transparent}
+@supports not selector(::-webkit-scrollbar){.lab-sidebar>.lab-chrome,.lab-sidebar>.lab-navigation-panel{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.2) transparent}}
+
+/* Softer outer corners on the translucent surfaces. */
+.lab-navigation-panel,.lab-sidebar>.lab-chrome{border-radius:28px}
+.task-case,.comparisons>.comparison{border-radius:36px}
+.agent-motion-page .comparisons>.comparison{border-radius:48px}
+@media(max-width:600px){.task-case,.comparisons>.comparison{border-radius:32px}.agent-motion-page .comparisons>.comparison{border-radius:40px}}
+
+/* Reveal sidebar scroll thumbs only while their panel is hovered. */
+@media(hover:hover) and (pointer:fine){
+ .lab-sidebar>.lab-chrome::-webkit-scrollbar-thumb,.lab-sidebar>.lab-navigation-panel::-webkit-scrollbar-thumb{background:transparent}
+ .lab-sidebar>.lab-chrome:hover::-webkit-scrollbar-thumb,.lab-sidebar>.lab-navigation-panel:hover::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2)}
+ @supports not selector(::-webkit-scrollbar){
+  .lab-sidebar>.lab-chrome,.lab-sidebar>.lab-navigation-panel{scrollbar-color:transparent transparent}
+  .lab-sidebar>.lab-chrome:hover,.lab-sidebar>.lab-navigation-panel:hover{scrollbar-color:rgba(0,0,0,.2) transparent}
+ }
+}

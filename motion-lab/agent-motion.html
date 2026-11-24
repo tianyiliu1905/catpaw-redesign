@@ -2,24 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CatPaw · Subagent Motion</title>
+<title>Motion Lab · Subagent motion</title>
+<link rel="stylesheet" href="assets/catpaw-tokens.css">
 <link rel="stylesheet" href="lab.css">
 <link rel="stylesheet" href="agent-motion.css">
-<link rel="stylesheet" href="header.css"></head>
-<body>
-<div class="lab-chrome"><header class="topbar"><a class="wordmark" href="index.html">CatPaw <span>Motion Lab</span></a><nav aria-label="Test pages"><a href="index.html">Text & tools</a><a href="agent-motion.html" aria-current="page">Subagent motion</a><a href="task-plan.html">Task list</a><a href="icon-pixel.html">Icon pixel</a></nav></header><div class="lab-toolbar-wrap"><section class="toolbar" aria-label="Playback controls">
+<link rel="stylesheet" href="header.css"><script src="header.js" defer></script></head>
+<body class="agent-motion-page"><aside class="lab-sidebar" aria-label="Motion Lab navigation"><div class="lab-navigation-panel"><div class="lab-navigation-heading"><a class="wordmark" href="index.html">Motion Lab</a><details class="lab-background-picker"><summary aria-label="Change background" title="Change background"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17Z" fill="currentColor" stroke="none"/></svg></summary><div class="lab-background-options" role="group" aria-label="Background"><button type="button" data-lab-background="tulips" aria-label="Tulip wallpaper" title="Tulip wallpaper"></button><button type="button" data-lab-background="neutral" aria-label="Light gray" title="Light gray"></button><button type="button" data-lab-background="blue" aria-label="Soft blue" title="Soft blue"></button><button type="button" data-lab-background="mint" aria-label="Soft green" title="Soft green"></button><button type="button" data-lab-background="pink" aria-label="Soft pink" title="Soft pink"></button><button type="button" data-lab-background="slate" aria-label="Slate" title="Slate"></button></div></details></div><nav aria-label="Test pages"><a href="index.html">Text & tools</a><a href="background-motion.html">背景动效</a><a href="task-plan.html">Task list</a><a href="agent-motion.html" aria-current="page">Subagent motion</a><a href="percentage.html">Percentage</a></nav></div>
+<div class="lab-chrome"><div class="lab-toolbar-wrap"><section class="toolbar" aria-label="Playback controls">
 <div class="control-group"><button id="play" class="primary">Pause</button><button id="advance">Advance progress</button><button id="complete">Complete first agent</button><button id="replay">Replay</button></div>
 <div class="control-group"><label>Speed <select id="speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select></label></div>
 </section></div></div>
+</aside>
 <main>
 
 <div class="comparisons">
 <section class="comparison panel" data-mode="current"><div class="conversation"><div class="demo"></div></div><h2 class="case-caption">A · Continuous dispatch</h2></section>
 <section class="comparison panel" data-mode="cards"><div class="conversation"><div class="demo agent-cards-demo"></div></div><h2 class="case-caption">B · Agent cards / Current action</h2></section>
 <section class="comparison panel" data-mode="capsules"><div class="conversation"><div class="demo agent-capsules-demo"></div></div><h2 class="case-caption">C · Agent capsules</h2></section>
-<section class="comparison panel gantt-panel" data-mode="gantt"><div class="conversation"><div class="demo agent-gantt-demo"></div></div><h2 class="case-caption">E · Agent progress</h2></section>
+<section class="comparison panel gantt-panel" data-mode="gantt"><div class="conversation"><div class="demo agent-gantt-demo"></div></div><h2 class="case-caption">D · Agent progress</h2></section>
 </div>
 </main>
+<script src="vendor/gsap.min.js"></script>
 <script src="agent-motion.js"></script>
 </body>
 </html>

@@ -31,7 +31,7 @@
   function createController({thread,onChange=()=>{},setTimer=setTimeout,clearTimer=clearTimeout,mode='supplement',stepMotion,actionHost,systemHost}){
     const model=createModel(mode);
     let active=false,timer=null,generation=0;
-    const status=()=>extraPaths[mode]?({reading:'处理中',blocked:mode==='auth'?'等待本人登录':mode==='system'?'等待网络恢复':'已暂停 · 保留进度',deferred:'已暂停 · 待授权',handoff:'等待本人操作',verifying:'正在继续',unknown:'提交结果待确认',checking:'正在查询回执',retrying:'服务暂时不可用 · 正在重试',paused:'已暂停',partial:'已保留部分结果',done:'已完成'})[model.stage]:mode==='retry'?({reading:'读取中',retrying:'正在重试',verifying:'连接已恢复 · 核对中',blocked:'等待重新尝试',done:'已完成'})[model.stage]:mode==='failure'?({reading:'检查能力',failed:'暂时无法完成',alternative:model.choice==='script'?'正在整理讲解稿':'正在整理分镜',paused:'已暂停',done:'替代内容已整理'})[model.stage]:({reading:'读取中',blocked:'等待补充',choosing:'等待补充',selected:'资料已补充',resuming:'核对中',done:'已完成'})[model.stage];
+    const status=()=>extraPaths[mode]?({reading:'处理中',blocked:mode==='auth'?'等待本人登录':mode==='system'?'等待网络恢复':'已暂停 · 保留进度',deferred:'已暂停 · 待授权',handoff:'等待本人操作',verifying:'正在继续',unknown:'提交结果待确认',checking:'正在查询回执',retrying:'服务暂时不可用 · 正在重试',paused:'已暂停',partial:'已保留部分结果',done:'已完成'})[model.stage]:mode==='retry'?({reading:'读取中',retrying:'正在重试',verifying:'连接已恢复 · 核对中',blocked:'等待重新尝试',done:'已完成'})[model.stage]:mode==='failure'?({reading:'检查能力',failed:'已完成',alternative:model.choice==='script'?'正在整理讲解稿':'正在整理分镜',paused:'已暂停',done:'替代内容已整理'})[model.stage]:({reading:'读取中',blocked:'等待补充',choosing:'等待补充',selected:'资料已补充',resuming:'核对中',done:'已完成'})[model.stage];
     function body(){
       if(mode==='system'){
         if(model.stage==='reading')return '<p>已整理门店清单，接着读取本周经营数据。</p><div class="recovery-tool is-running">读取门店经营数据</div>';
@@ -88,9 +88,9 @@
         return `${saved}<p>已完成风险预案整理。重点关注延期交付，提前确认备货与替代供应商。</p>${history}<div class="recovery-result"><span>风险预案 · 示例内容</span><p>交期延误：提前两天核对发货状态<br>供货不足：保留备用供应商与安全库存</p></div><button class="recovery-secondary" data-recovery-action="restart">重播恢复过程</button>`;
       }
       if(mode==='failure'){
-        const options=`<div class="recovery-actions">${button('fallback','整理分镜和解说稿')}${button('script','只写解说稿')}${stage==='paused'?'':button('pause','先暂停')}</div>`;
+        const options=`<div class="recovery-suggestions" role="group" aria-label="后续建议">${button('fallback','把复盘材料整理成分镜，给每个画面配上解说词。')}${button('script','只写一份可以直接录音的解说稿。')}${stage==='paused'?'':button('pause','先保留复盘材料，稍后再继续。')}</div>`;
         if(stage==='reading')return '<p>我先检查能否把复盘材料生成视频。</p><div class="recovery-tool is-running">检查工具　确认视频生成能力</div>';
-        if(stage==='failed')return '<p>复盘材料已经整理好了，不过我目前还不能直接生成视频。</p><p>我可以先准备分镜和解说词，方便你接着制作；也可以只写一份讲解稿。你想先做哪一种？</p>'+options;
+        if(stage==='failed')return '<p>复盘材料已经整理好了。当前环境还不能直接生成视频，我可以用这些材料准备分镜和解说词，方便你接着制作。</p>'+options;
         if(stage==='paused')return '<p>好的，先停在这里。整理好的复盘材料会保留，之后可以继续准备分镜或解说稿。</p>'+options;
         const script=model.choice==='script';
         if(stage==='alternative')return `<p>${script?'好，我先把复盘内容写成可以直接讲述的解说稿。':'好，我把复盘内容按画面和解说配成分镜，方便后续制作。'}</p><div class="recovery-tool is-running">${script?'整理经营复盘解说稿':'按画面与解说整理复盘材料'}</div>`;
@@ -146,7 +146,7 @@
       </section>`;
     }
     const recoveryIcons={
-      file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+      file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/><path class="tool-icon-read-line" d="M9 13h6"/><path class="tool-icon-read-line" d="M9 17h6"/>',
       list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m4 6 1 1 2-2m-3 7 1 1 2-2m-3 7 1 1 2-2"/>',
       chevron:'<path d="m6 9 6 6 6-6"/>'
     };
@@ -165,8 +165,9 @@
       const steps=scenario?scenario.steps:mode==='retry'?['读取供应商名单与风险分类','核对交付记录','整理风险预案']:['读取销售与客流数据','补齐营销明细','汇总核心指标归因'];
       const completed=done?steps.length:scenario?scenario.completed:mode==='retry'&&stage==='reading'?0:1;
       const plan=`<details class="stage-plan recovery-plan"><summary class="stage-plan-toggle">${recoveryIcon('list','stage-plan-icon')}<strong>待办任务</strong><span>已完成 ${completed}/${steps.length}</span>${recoveryIcon('chevron','stage-plan-chevron')}</summary><ol>${steps.map((title,i)=>`<li class="stage-plan-step" data-state="${i<completed?'done':running&&i===completed?'current':'pending'}"><span class="stage-plan-number">${running&&i===completed?'<span class="spinner" aria-hidden="true"></span>':`<span class="stage-plan-digit">${i+1}</span>`}</span><span class="stage-plan-title"><span class="stage-plan-title-text">${title}</span></span></li>`).join('')}</ol></details>`;
-      const content=body().replace(/<div class="recovery-tool is-running">([^<]+)<\/div>/g,(_,text)=>`<details class="stage-tool-call recovery-tool is-running" data-tool-state="running"><summary><span class="stage-tool-icon">${recoveryIcon('file')}${recoveryIcon('file','stage-tool-shine')}</span><span class="stage-tool-copy"><span class="stage-tool-description">${text}</span></span>${recoveryIcon('chevron','stage-call-chevron')}</summary><div class="stage-call-details">${scenario?scenario.detail:mode==='retry'?'只重试尚未读取的交付记录；供应商名单与风险分类保留。':'只处理营销明细；已读取的销售与客流数据保留。'}</div></details>`);
-      return statusMarkup+(done?'':plan)+content;
+      const content=body().replace(/<div class="recovery-tool is-running">([^<]+)<\/div>/g,(_,text)=>`<details class="stage-tool-call recovery-tool is-running" data-tool-state="running"><summary><span class="stage-tool-icon">${recoveryIcon('file')}</span><span class="stage-tool-copy"><span class="stage-tool-description">${text}</span></span>${recoveryIcon('chevron','stage-call-chevron')}</summary><div class="stage-call-details">${scenario?scenario.detail:mode==='retry'?'只重试尚未读取的交付记录；供应商名单与风险分类保留。':'只处理营销明细；已读取的销售与客流数据保留。'}</div></details>`);
+      const awaitingChoice=mode==='failure'&&['failed','paused'].includes(stage);
+      return statusMarkup+(done||awaitingChoice?'':plan)+content;
     }
     function initial(){return `<section class="recovery-demo" aria-label="任务受阻与恢复演示" data-recovery-mode="${mode}" data-recovery-stage="${model.stage}">${['retry','exhausted','auth','receipt','failure'].includes(mode)?processPresentation():`<div class="recovery-status" role="status">${status()}</div>${body()}`}</section>`;}
 

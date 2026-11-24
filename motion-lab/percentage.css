@@ -1,0 +1,36 @@
+/* Percentage animations share the lab's white demonstration surfaces. */
+.percentage-experiments .conversation{min-height:260px;justify-content:center}
+.percentage-demo{width:100%;max-width:280px;text-align:center}
+.percentage-value{font-size:56px;line-height:72px;font-weight:400;letter-spacing:-.04em;color:#000;font-variant-numeric:tabular-nums;white-space:nowrap}
+.percentage-sign{font-size:24px;margin-left:4px;color:#737373}
+.percentage-label{margin:8px 0 0;font-size:13px;color:#737373}
+.percentage-track{height:4px;margin-top:24px;border-radius:2px;overflow:hidden;background:#f2f2f2}
+.percentage-fill{height:100%;background:#505050;transform:scaleX(0);transform-origin:left}
+
+/* Continuous drums: units roll throughout; higher places move only on carry. */
+.percentage-odometer{display:inline-flex;vertical-align:middle;line-height:1;letter-spacing:0}
+.odometer-window{display:block;width:1ch;height:1em;overflow:hidden}
+.odometer-strip{display:block;line-height:1}
+.odometer-strip>span{display:block;height:1em;line-height:1;text-align:center}
+
+/* Three-column comparison; focused mode remains a single case. */
+.percentage-experiments.comparisons{grid-template-columns:repeat(3,minmax(0,1fr))}
+.percentage-experiments.comparisons.focused{grid-template-columns:minmax(0,1fr)}
+@media(max-width:1000px){.percentage-experiments.comparisons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.percentage-experiments.comparisons{grid-template-columns:minmax(0,1fr)}}
+
+/* NumberFlow-inspired digit windows: only changed places roll; the unit stays fixed. */
+.percentage-number-flow{display:inline-flex;vertical-align:middle;line-height:1;letter-spacing:0;mask-image:linear-gradient(to bottom,transparent 0%,#000 14%,#000 86%,transparent 100%)}
+.number-flow-digit{display:block;position:relative;width:1ch;height:1em;overflow:hidden}
+.number-flow-strip,.number-flow-strip>span{display:block;line-height:1}
+.number-flow-strip>span{height:1em;text-align:center}
+
+/* Step updates reveal the next complete value without counting through intermediate numbers. */
+.percentage-blur-value{display:inline-grid;vertical-align:bottom}
+.percentage-blur-value>span{display:block;grid-area:1/1;line-height:72px}
+.percentage-blur-value{width:3ch;text-align:right}
+
+/* F: each place owns its reveal; unchanged digits keep their current face. */
+.percentage-blur-value{display:inline-flex}
+.percentage-blur-value>.blur-digit{display:inline-grid;width:1ch;flex:none}
+.blur-digit>span{display:block;grid-area:1/1;line-height:72px;text-align:center}

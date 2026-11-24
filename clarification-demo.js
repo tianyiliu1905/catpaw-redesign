@@ -34,6 +34,7 @@
       },
     };
   }
+  const questionIcon='<span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic"><path d="M7.5 2h9A4.5 4.5 0 0 1 21 6.5V14a4.5 4.5 0 0 1-4.5 4.5h-5.2l-3.8 2.3v-2.3A4.5 4.5 0 0 1 3 14V6.5A4.5 4.5 0 0 1 7.5 2Z"/><g class="tool-icon-question"><path d="M9.5 8.5a2.5 2.5 0 0 1 5 .2c0 1.6-2.5 1.8-2.5 3.3"/><circle cx="12" cy="15" r=".9" fill="currentColor" stroke="none"/></g></svg></span>';
   function renderQuestionTool(model, expanded=false){
     if(model.phase!=='asking')return '';
     const q=questions[model.index];
@@ -45,7 +46,6 @@
     const title='请求补充信息：'+(q.label||'确认上线要求');
     return `<details class="stage-tool-call clarify-tool-call" data-tool-state="waiting"${expanded?' open':''}>
       <summary aria-label="${escape(title)}，等待用户回答，展开查看工具调用">
-        <span class="stage-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="ic"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6a4.5 4.5 0 0 1-4.5 4.5h-5.2l-3.8 2.3v-2.3A4.5 4.5 0 0 1 3 14V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 .2c0 1.6-2.5 1.8-2.5 3.3"/><circle cx="12" cy="15" r=".9" fill="currentColor" stroke="none"/></svg><svg viewBox="0 0 24 24" class="ic stage-tool-shine"><path d="M7.5 3.5h9A4.5 4.5 0 0 1 21 8v6a4.5 4.5 0 0 1-4.5 4.5h-5.2l-3.8 2.3v-2.3A4.5 4.5 0 0 1 3 14V8a4.5 4.5 0 0 1 4.5-4.5Z"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 .2c0 1.6-2.5 1.8-2.5 3.3"/><circle cx="12" cy="15" r=".9" fill="currentColor" stroke="none"/></svg></span>
         <span class="stage-tool-copy"><span class="stage-tool-description">${escape(title)}</span></span>
         <svg viewBox="0 0 24 24" class="ic stage-call-chevron" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
@@ -102,9 +102,9 @@
       if(q.kind==='text')body=`<div class="clarify-field"><textarea data-clarify-field="text" aria-label="菜品与限制" placeholder="例如：招牌烤鸡配小食和饮品，周末可用，暂不含海鲜" maxlength="200" rows="3">${escape(model.custom)}</textarea></div>`;
       if(q.kind==='range')body=`<div class="clarify-field"><div class="clarify-range">${['min','max'].map((field,i)=>`${i?'<span>至</span>':''}<label><span>${i?'最高售价':'最低售价'}</span><div><input type="number" data-clarify-field="${field}" aria-label="${i?'最高售价':'最低售价'}" min="0" max="10000" step="any" placeholder="${i?'168':'128'}" value="${escape(model.range[field])}"><span>元</span></div></label>`).join('')}</div><span class="clarify-hint" aria-live="polite" data-clarify-error ${rangeHint()?'':'hidden'}>${rangeHint()}</span></div>`;
       if(q.kind==='confirm')body=summary(true);
-      return `<section class="clarify-card" aria-label="补充套餐上线要求"><header><strong id="clarify-question">${q.title}</strong><nav aria-label="问题导航"><button data-recovery-action="previous" aria-label="上一题" ${model.index===0?'disabled':''}>${icon('previous')}</button><span aria-live="polite">${model.index+1} / 4</span>${model.index<3?`<button data-recovery-action="next" aria-label="下一题" ${model.canNext?'':'disabled'}>${icon('next')}</button>`:''}<button data-recovery-action="close" aria-label="收起问题">${icon('close')}</button></nav></header>${body}<footer><span class="clarify-hint"></span><div>${model.index>0&&model.index<3?'<button data-recovery-action="skip">跳过本题</button>':''}<button class="clarify-primary" data-recovery-action="${model.index===3?'confirm':'next'}" ${model.canNext?'':'disabled'}>${model.index===3?'确认并继续':'下一步'}</button></div></footer></section>`;
+      return `<section class="clarify-card" aria-label="补充套餐上线要求"${intro?' data-clarification-intro':''}><header><strong class="clarify-question-heading" id="clarify-question" data-tool-state="waiting">${questionIcon}<span>${q.title}</span></strong><nav aria-label="问题导航"><button data-recovery-action="previous" aria-label="上一题" ${model.index===0?'disabled':''}>${icon('previous')}</button><span aria-live="polite">${model.index+1} / 4</span>${model.index<3?`<button data-recovery-action="next" aria-label="下一题" ${model.canNext?'':'disabled'}>${icon('next')}</button>`:''}<button data-recovery-action="close" aria-label="收起问题">${icon('close')}</button></nav></header>${body}<footer><span class="clarify-hint"></span><div>${model.index>0&&model.index<3?'<button data-recovery-action="skip">跳过本题</button>':''}<button class="clarify-primary" data-recovery-action="${model.index===3?'confirm':'next'}" ${model.canNext?'':'disabled'}>${model.index===3?'确认并继续':'下一步'}</button></div></footer></section>`;
     }
-    function initial(toolExpanded=false,planOpen=true){
+    function initial(toolExpanded=false,planOpen=intro){
       if(introStep<2)return `<section class="recovery-demo clarify-reply" data-recovery-stage="reading"><div class="stage-thinking" data-global-state="reading"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong class="stage-global-label">${introStep===0?'正在理解需求':'正在确认任务要求'}</strong></div></div>${introStep===1?'<p>我会帮你准备双人套餐搭配和上架文案。为了让方案更贴合门店经营，我先和你确认几个要求。</p>':''}</section>`;
       let content='我会帮你准备双人套餐搭配和上架文案。先确认经营目标、可用菜品和售价范围，让方案更贴合门店经营。';
       let tail='';
@@ -112,11 +112,20 @@
       if(model.phase==='done'){content='已收到并保留你的套餐要求，接下来沿用这些条件准备方案。';tail=`<details class="stage-completed-call clarify-request-history"><summary>已确认套餐上线要求</summary><div class="stage-call-details">${summary(false)}<p>未补充的条件保留为待确认；本次确认不会直接发布套餐。</p></div></details>`;}
       const label=introStep<4?'正在安排任务':{asking:'等待补充',closed:'已暂停',done:'已补充'}[model.phase];
       const stateBar=`<div class="stage-thinking" data-global-state="done"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong class="stage-global-label" role="status" aria-live="polite">${label}</strong></div></div>`;
-      return `<section class="recovery-demo clarify-reply" data-recovery-stage="${model.phase}" data-intro-step="${introStep}">${stateBar}<p>${content}</p>${renderPlan({phase:model.phase,answers:model.answers,open:model.phase==='done'||introStep===3||introStep===4?false:planOpen})}${introStep<4?'':renderQuestionTool(model,toolExpanded)}${tail}</section>`;
+      const tool=introStep<4?'':renderQuestionTool(model,toolExpanded);
+      return `<section class="recovery-demo clarify-reply" data-recovery-stage="${model.phase}" data-intro-step="${introStep}">${stateBar}<div class="clarify-reply-body"><p>${content}</p>${tool}</div>${renderPlan({phase:model.phase,answers:model.answers,open:model.phase==='done'||introStep===3||introStep===4?false:planOpen})}${tail}</section>`;
     }
     function render(){
       host.hidden=!(active&&introStep===5&&model.phase==='asking');composer.closest('.conversation-composer-wrap').classList.toggle('has-clarification',!host.hidden);
-      if(!active)return;host.innerHTML=host.hidden?'':card();const panel=thread.querySelector('.clarify-reply');if(panel){const markup=initial(panel.querySelector?.('.clarify-tool-call')?.open||false,panel.querySelector?.('.stage-plan-toggle')?.getAttribute('aria-expanded')!=='false');if(replaceReply)replaceReply(panel,markup);else panel.outerHTML=markup;}notify();
+      if(!active)return;
+      host.innerHTML=host.hidden?'':card();
+      const panel=thread.querySelector('.clarify-reply');
+      if(panel){
+        const plan=panel.querySelector?.('.stage-plan-toggle');
+        const markup=initial(panel.querySelector?.('.clarify-tool-call')?.open||false,plan?plan.getAttribute('aria-expanded')==='true':intro);
+        if(replaceReply)replaceReply(panel,markup);else panel.outerHTML=markup;
+      }
+      notify();
     }
     function act(action){
       if(!active||introStep<5||!model.act(action))return false;

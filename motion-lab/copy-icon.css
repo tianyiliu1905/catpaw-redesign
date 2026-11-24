@@ -1,0 +1,190 @@
+.copy-lab {
+  background: #f9f9f9;
+  min-height: 100vh;
+}
+
+.copy-definitions {
+  position: absolute;
+  pointer-events: none;
+}
+
+.copy-lab .topbar,
+.copy-lab main {
+  max-width: 880px;
+  padding-inline: 24px;
+}
+
+.copy-lab .topbar {
+  align-items: center;
+  min-height: 56px;
+}
+
+.copy-lab .back-link,
+.copy-comparison figcaption span {
+  color: var(--muted);
+}
+
+.copy-lab main {
+  padding-block: 40px 48px;
+}
+
+.copy-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.replay-button {
+  height: 40px;
+  padding-inline: 16px;
+}
+
+.copy-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.copy-comparison figure {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+
+.copy-stage {
+  display: grid;
+  min-height: 178px;
+  place-items: center;
+  border-radius: 10px;
+  background: #f4f5f4;
+}
+
+.reference-stage > svg {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+
+.copy-comparison figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding: 10px 2px 0;
+}
+
+.copy-comparison figcaption :is(a, strong) {
+  font-weight: 600;
+}
+
+.copy-comparison figcaption span {
+  font-size: 12px;
+}
+
+.copy-context {
+  margin-top: 28px;
+}
+
+.copy-context h2 {
+  margin-bottom: 8px;
+}
+
+.sample-reply {
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.sample-reply p {
+  margin: 0;
+}
+
+.sample-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.copy-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  color: #555;
+}
+
+.copy-feedback {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.copy-glyph {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.copy-sheet {
+  transform-box: view-box;
+  transition: transform 160ms var(--ease);
+}
+
+.copy-confirm {
+  opacity: 0;
+  stroke-width: 1.8;
+  transition: opacity 120ms ease;
+}
+
+.copy-glyph[data-copied] .copy-sheet {
+  transform: translate(6%, 6%);
+}
+
+.copy-glyph[data-copied] .copy-confirm {
+  opacity: 1;
+  transition-delay: 60ms;
+}
+
+@media (max-width: 540px) {
+  .copy-lab .topbar,
+  .copy-lab main {
+    padding-inline: 16px;
+  }
+
+  .copy-lab main {
+    padding-top: 24px;
+  }
+
+  .copy-stage {
+    min-height: 124px;
+  }
+
+  .copy-stage > svg {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-glyph[data-copied] .copy-sheet {
+    transform: none;
+  }
+
+  .copy-sheet,
+  .copy-glyph .copy-confirm {
+    transition: none;
+  }
+}

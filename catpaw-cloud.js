@@ -24,6 +24,7 @@
     './strategy-scenes.js?v=20261113-slide-layout',
     './supplier-conversation-demo.js?v=ds003',
     './conversation-queue-demo.js',
+    './browser-control-demo.js',
     './recovery-conversation-demo.js?v=20261113-slide-layout',
     './clarification-demo.js?v=20261110-question-icon',
     './capability-market.js',

@@ -9,7 +9,7 @@
   },
   "leaves": {
     "--widget-surface-canvas": {
-      "light": "#F9F9F9",
+      "light": "#FFFFFF",
       "dark": "#070707"
     },
     "--widget-surface-card": {

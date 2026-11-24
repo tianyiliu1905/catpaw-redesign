@@ -1,25 +1,29 @@
 .demo{position:relative;min-width:0;width:100%}
 .heading{display:flex;align-items:flex-start;gap:8px;font-size:var(--type-lg);line-height:var(--line-lg);color:var(--muted)}
-.heading img{width:18px;height:18px;margin-top:4px;flex-shrink:0}
+.heading-icon{position:relative;width:18px;height:18px;margin-top:4px;flex:0 0 18px}
+.heading-icon img{position:absolute;left:0;top:0;display:block;transform:scale(.75);transform-origin:top left;opacity:.55}
 .heading-copy{background:linear-gradient(105deg,#737373 0%,#737373 38%,#2b2b2b 49%,#2b2b2b 51%,#737373 62%,#737373 100%);background-size:240% 100%;background-position:100% 0;background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .rows{margin:4px 0 0 27px}
 .row{height:38px;display:flex;align-items:center;gap:8px;font-size:var(--type-md);line-height:var(--line-md);color:#505050}
-.row:last-child{color:#a6a6a6}
 .agent-icon{display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;border-radius:6px;background:#ecf7ef;color:#4bcc7a}
 .agent-icon svg{display:block;width:18px;height:18px}
 .row:nth-child(2) .agent-icon{background:#edf4ff;color:#5b91df}
 .row:nth-child(3) .agent-icon{background:#f3effb;color:#9a78cf}
 .row:nth-child(4) .agent-icon{background:#f5f5f5;color:#bfbfbf}
 .demo>svg{position:absolute;left:0;top:25px;width:100%;height:170px;overflow:visible;pointer-events:none}
-.demo>svg path{fill:none;stroke-width:1.2;stroke-linecap:butt}
+.demo>svg path{fill:none;stroke-width:1;stroke-linecap:butt}
 .base{stroke:#f2f2f2}
 .base-queued{stroke-dasharray:3 3}
-.packet{stroke:#a6a6a6;opacity:0}
+.packet{stroke:rgba(0,0,0,.13);opacity:0}
+.demo>svg path.packet{stroke-linecap:round}
 .agent-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
-.agent-card{height:auto;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:16px;border:1px solid #ededed;border-radius:12px;background:#fff;text-align:left;transition:background-color .16s ease,border-color .16s ease}
+.agent-card{height:auto;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:16px;border:1px solid #ededed;border-radius:20px;background:#fff;text-align:left;transition:background-color .16s ease,border-color .16s ease}
 .agent-card:hover{background:#fafafa;border-color:#dedede}
 .agent-card[aria-expanded="true"]{background:#f7f7f7;border-color:#d5d5d5}
-.agent-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.agent-card-top{display:flex;align-items:center;gap:12px}
+.agent-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.agent-card-bottom .agent-card-action{min-width:0;flex:1}
+.agent-card-bottom .agent-card-state{flex:none}
 .agent-card-name{font-size:14px;line-height:22px;color:#505050}
 .agent-card-state{display:grid;place-items:center;font-size:12px;line-height:18px;color:var(--subtle)}
 .agent-card-state>*{grid-area:1/1}
@@ -44,8 +48,8 @@
 .base.is-complete{stroke:#737373}
 .agent-card-action{font-size:12px;line-height:18px;color:var(--subtle)}
 .agent-capsules{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.agent-chip{display:inline-flex;align-items:center;gap:8px;height:auto;min-height:36px;max-width:100%;padding:6px 10px 6px 6px;border:1px solid #ededed;border-radius:10px;font-size:13px;line-height:20px;text-align:left;background:white}
-.agent-chip[aria-pressed="true"]{border-color:#bcbcbc;background:#f8f8f8}
+.agent-chip{display:inline-flex;align-items:center;gap:8px;height:auto;min-height:36px;max-width:100%;padding:10px 16px;border:1px solid #ededed;border-radius:16px;font-size:13px;line-height:20px;text-align:left;background:white}
+.agent-chip[aria-pressed="true"]{border-color:#bcbcbc;background:white}
 .agent-chip[data-agent-index="1"] .agent-icon,.agent-activity-entry[data-agent-index="1"] .agent-icon{background:#edf4ff;color:#5b91df}
 .agent-chip[data-agent-index="2"] .agent-icon,.agent-activity-entry[data-agent-index="2"] .agent-icon{background:#f3effb;color:#9a78cf}
 .agent-chip[data-state="queued"] .agent-icon,.agent-activity-entry[data-state="queued"] .agent-icon{background:#f5f5f5;color:#bfbfbf}
@@ -76,17 +80,17 @@
 .agent-findings [data-state="current"]{color:#505050}
 /* E: simple, aligned per-agent progress. */
 .agent-gantt-demo{height:auto;min-height:0}
-.agent-progress-list{display:grid;gap:20px;margin-top:24px;max-width:760px}
-.agent-progress-row{display:grid;grid-template-columns:36px minmax(0,1fr) 56px;gap:8px 16px;align-items:center;--progress-color:#48bd70}
+.agent-progress-list{display:grid;gap:20px;margin-top:12px;max-width:760px}
+.agent-progress-row{display:grid;grid-template-columns:36px minmax(0,1fr) 56px;gap:8px 16px;align-items:center;--progress-color:#87e4a4}
 .agent-progress-row > .agent-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;flex-basis:36px;border-radius:8px}
 .agent-progress-row > .agent-icon svg{width:24px;height:24px}
 .agent-progress-name{grid-column:2;grid-row:1;min-width:0;color:#505050;font-size:13px;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .agent-progress-name>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .agent-progress-track{grid-column:2/4;grid-row:2;height:6px;border-radius:3px;background:#f2f2f2;overflow:hidden}
 .agent-progress-fill{display:block;width:100%;height:100%;background:var(--progress-color);border-radius:inherit;transform-origin:left;transition:transform .3s cubic-bezier(.22,.68,0,1)}
-.agent-progress-row[data-agent-index="1"]{--progress-color:#568fe6}
+.agent-progress-row[data-agent-index="1"]{--progress-color:#ffd2b2}
 .agent-progress-row[data-agent-index="1"] .agent-icon{background:#edf4ff;color:#5b91df}
-.agent-progress-row[data-agent-index="2"]{--progress-color:#a078dc}
+.agent-progress-row[data-agent-index="2"]{--progress-color:#bea6ff}
 .agent-progress-row[data-agent-index="2"] .agent-icon{background:#f3effb;color:#9a78cf}
 .agent-progress-row[data-state="queued"] .agent-icon{background:#f5f5f5;color:#bfbfbf}
 .agent-progress-row[data-state="queued"] .agent-progress-name{color:#a6a6a6}
@@ -95,6 +99,71 @@
 @media(prefers-reduced-motion:reduce){.agent-progress-fill{transition:none}}
 
 /* Generated avatars include their own coordinated pastel background. */
-.demo .agent-icon{background:transparent}
-.demo .agent-icon img{display:block;width:100%;height:100%;object-fit:contain}
-.row:last-child .agent-icon img,[data-state="queued"] .agent-icon img{filter:grayscale(1);opacity:.5}
+.demo .agent-icon{background:transparent;overflow:hidden}
+.demo .agent-icon img{display:block;width:100%;height:100%;object-fit:contain;border-radius:inherit}
+[data-state="queued"] .agent-icon img{filter:grayscale(1);opacity:.5}
+
+/* A single centered case, navigated from the header. */
+body.agent-motion-page>main{display:flex;align-items:center;justify-content:center;min-height:calc(100dvh - 220px)}
+.agent-motion-page .comparisons{display:grid;grid-template-columns:minmax(0,1fr);width:100%;max-width:960px;margin:0 auto}
+.agent-motion-page .comparisons>.comparison{border-radius:40px}
+.agent-motion-page .comparisons>.comparison>.conversation{width:100%;max-width:800px;min-height:300px;align-self:center;justify-content:center;border-radius:32px}
+.agent-motion-page .conversation>.demo{max-width:680px}
+.agent-case-navigation{display:flex;align-items:center;gap:8px}
+.agent-case-navigation button{display:grid;place-items:center;width:32px;padding:0;font-size:18px}
+#casePosition{min-width:46px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
+@media(max-width:600px){body.agent-motion-page>main{min-height:0}.agent-motion-page .comparisons>.comparison{border-radius:32px}.agent-motion-page .comparisons>.comparison>.conversation{min-height:280px;border-radius:24px}}
+
+/* All four cases share identical frames, independent of their content. */
+.agent-motion-page .comparisons>.comparison{box-sizing:border-box;width:100%;height:386px;padding:24px;gap:0}
+.agent-motion-page .comparisons>.comparison>.conversation{box-sizing:border-box;width:100%;max-width:800px;height:300px;min-height:300px;flex:0 0 300px;overflow:auto}
+.agent-motion-page .comparisons>.comparison>.case-caption{flex:none;height:20px;line-height:20px;margin:16px 0 0}
+@media(max-width:600px){.agent-motion-page .comparisons>.comparison{height:370px;padding:16px}.agent-motion-page .comparisons>.comparison>.conversation{height:300px;min-height:300px;flex-basis:300px}}
+
+/* Match the white panel's top and side insets. */
+.agent-motion-page .comparisons{max-width:850px}
+.agent-motion-page .comparisons>.comparison>.conversation{max-width:none}
+
+/* Anchor every case heading to the same white-panel inset. */
+.agent-motion-page .comparisons>.comparison>.conversation{align-items:flex-start;padding:32px}
+.agent-motion-page .conversation>.demo{margin:0}
+@media(max-width:600px){.agent-motion-page .comparisons>.comparison>.conversation{padding:24px}}
+
+/* B: rotate only the geometric subject, leaving the rounded avatar surface still. */
+.agent-card .agent-icon>svg{display:block;width:100%;height:100%;border-radius:inherit}
+.agent-card .agent-rolling-shape{transform-box:fill-box;transform-origin:center}
+
+/* The triangular three-circle motif rotates around its symmetry center (80,84),
+   rather than the midpoint of its asymmetrical bounds. */
+.agent-card[data-agent-index="2"] .agent-rolling-shape{transform-box:view-box;transform-origin:50% 52.5%}
+
+.agent-progress-row[data-agent-index="3"]{--progress-color:#a1caff}
+
+/* B: align the current-action copy with the task name, after the avatar slot. */
+.agent-card-bottom{padding-left:36px}
+
+.agent-card{gap:4px}
+
+/* C: the avatar-colored perimeter grows clockwise with completion. */
+.agent-chip{position:relative;--chip-progress-color:#87e4a4}
+.agent-chip[aria-pressed="true"]{border-color:#ededed}
+.agent-chip[data-agent-index="1"]{--chip-progress-color:#ffd2b2}
+.agent-chip[data-agent-index="2"]{--chip-progress-color:#bea6ff}
+.agent-chip[data-agent-index="3"]{--chip-progress-color:#a1caff}
+.chip-progress-border{position:absolute;inset:-1px;width:calc(100% + 2px);height:calc(100% + 2px);overflow:visible;pointer-events:none}
+.chip-progress-outline{fill:none;stroke:var(--chip-progress-color);stroke-width:2;stroke-dasharray:100;stroke-dashoffset:100;stroke-linecap:round}
+
+/* A: a quiet current-tool label follows each agent's name. */
+.agent-row-name{min-width:0;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-row-tool{display:inline-flex;align-items:center;gap:4px;min-width:0;margin-left:4px;color:var(--subtle);font-size:12px;line-height:20px}
+.agent-row-tool>svg{flex:none;display:block;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.agent-row-tool>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* C: match the neutral perimeter to the 2px progress stroke without shifting content. */
+.agent-chip,.agent-chip[aria-pressed="true"]{border-color:transparent;box-shadow:none}
+.agent-chip::before{content:none}
+.chip-progress-border{z-index:1}
+
+.chip-border-track{fill:none;stroke-width:2}
+
+.chip-border-track,.chip-progress-outline{stroke-linejoin:round}

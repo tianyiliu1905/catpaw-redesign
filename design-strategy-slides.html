@@ -94,7 +94,6 @@
 .process-research-slide .process-pair{top:96px;right:0px;bottom:84px;left:auto;width:var(--detail-demo-width);grid-template-columns:minmax(0,3fr) minmax(0,5fr);gap:20px}
 .process-research-slide .process-pair-panel figcaption{min-height:34px;flex-wrap:wrap;align-content:flex-start;align-items:baseline;justify-content:center;text-align:center;gap:8px}
 .process-research-slide .process-pair{grid-template-rows:auto minmax(0,1fr)}
-.process-research-slide .process-pair::after{content:"";grid-area:2 / 1 / 3 / -1;border:0.5px solid var(--line);pointer-events:none}
 .process-research-slide .process-pair-panel{grid-row:2;margin:12px}
 .process-research-slide .process-pair-panel:first-of-type{grid-column:1;margin-right:0}
 .process-research-slide .process-pair-panel:last-of-type{grid-column:2;margin-left:0}
@@ -536,18 +535,10 @@
       {
         no:'1.1', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'能力可感：用熟悉的任务与产物，让用户看懂 Agent 能做什么。',
         thesis:'先让用户认出可以委托的任务，以及可能得到的成果类型。',
-        question:'“我手头这些事，哪些能交给它做？”',
+        question:'“哪些事能交给它做，能做出什么样的成品？”',
         context:'初次使用者更容易理解熟悉的任务和产物类型；首屏堆叠太多文字与具体案例，反而会增加理解负担。四类入口依据 ToC 与 ToB 的真实任务类型归并，但不等同于统计分类。',
         actions:[
-          ['用四类任务入口说明能力与产物','将常见工作与成果并列呈现；短说明帮助用户选方向，具体成品留到案例区。']
-        ], check:'用户能说出至少一种可委托的任务，以及可能得到的产物类型。'
-      },
-      {
-        no:'1.2', strategy:'策略一 · 降低启动门槛，建立正确预期', title:'预期可管：从案例看清结果，建立产物预期。',
-        thesis:'通过相关案例和完整成品，帮助用户判断结果是否适合自己的任务。',
-        question:'“做出来的东西，够不够我实际用？”',
-        context:'认识能力后，用户仍需要看到具体结果，确认产物质量与自己的任务是否匹配。借用案例做法、改写并发起任务，从上手可启开始展开。',
-        actions:[
+          ['用四类任务入口说明能力与产物','首页用四张卡片列出常见任务方向，选中后即可查看对应的成品案例。'],
           ['按任务方向提供案例，直接查看成品','选择任务方向后展示相关案例，卡片预览产物样貌；点开即可查看完整成品，帮助用户判断质量与任务是否匹配，建立结果预期。']
         ], check:'用户能看清成品，判断质量与自己的任务是否匹配，形成结果预期。'
       },
@@ -557,26 +548,26 @@
         question:'“想试试，但第一句话该怎么说？”',
         context:'看过案例之后，用户需要可借用、可改写的起点；直接输入时，也需要轻量接话，逐步补充目标、材料和要求。',
         actions:[
-          ['交代做法，提供可改写的起点','鼠标依次指向案例中的 Skill 与原始 Prompt，再点击“做同款”。案例预览、Skill 与 Prompt 一起带回输入区，成为用户可继续改写的起点。'],
-          ['主动搭话，让用户轻松开口','用户聚焦输入框时，Agent 用一句亲切的问候主动破冰，邀请用户先聊一个想法。通过情感化设计营造“有人接话”的感受，缓解面对空白输入框的开场压力。'],
+          ['从成品案例开始自己的任务','看到想做的成品后，点击“做同款”，输入区就带入案例预览、所用技能和原始提示词。用户可以对照成品，把要求换成自己的。'],
+          ['主动搭话，让用户轻松开口','用户点击输入框，Agent主动问候破冰，邀请用户先聊一个想法'],
           ['顺着任务接话，让用户感到被回应','用户选择任务方向或具体标签后，Agent 顺势接一句与任务相关的话。让选择得到自然回应，以情感化的开场邀请用户继续聊，把大概想法逐步说成具体需求。']
         ], check:'用户不必先写出完整 Prompt，也能顺利发起第一轮任务。'
       },
       {
-        no:'2.1', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'过程可懂：按任务阶段与用户需要调整信息披露。',
+        no:'2.1', strategy:'策略二 · 看清任务进展，随时调整方向', title:'过程可懂：按任务阶段与用户需要调整信息披露。',
         thesis:'先讲清当前进展，再按需提供更深的执行细节。',
         question:'“它是不是按我的意思在做，做到哪儿了？”',
         context:'为降低办公用户的理解门槛，默认折叠技术细节与历史过程，按阶段突出重点；同时保留研发模式，回应仍然存在的研发与深度用户需求。',
-        research:{title:'按任务阶段切换信息重点',concern:'“它是不是按我的意思在做，做到哪儿了？”',body:'面向办公用户降低理解门槛，研究各阶段最需要的信息：工作前确认意图与安排，工作时突出当前执行，结束后呈现文字、产物与本轮变化，迭代修改可撤回。后续设计分别回应这三个阶段。'},
+        research:{title:'按任务阶段切换信息重点',concern:'“它是不是按我的意思在做，做到哪儿了？”',body:'面向办公用户降低理解门槛，研究各阶段最需要的信息：工作初始确认意图与安排，工作中突出当前执行，工作结束时呈现文字、产物与本轮变化，迭代修改可撤回。后续设计分别回应这三个阶段。'},
         actions:[
-          ['工作前：确认意图与任务规划','收到任务即显示全局响应与计时，先复述目标、产物与关键约束，再展开完整待办。让用户确认任务已被接住，并检查理解与推进安排。'],
-          ['工作时：语义化呈现工具执行过程','将工具执行转译为用户能理解的任务描述，说明正在处理什么、要解决什么问题，降低理解成本。持续展示全局状态，每组完成后留下阶段总结；技术细节与历史过程按需展开。'],
-          ['结束后：呈现文字、产物与变化','停止计时，呈现简短结论、可打开的产物与本轮变化。待办和执行过程收进全局状态，展开可回看；迭代后支持撤回本轮修改，恢复上一版本。'],
-          ['后台运行：持续呈现进程状态与结果入口','主回复结束后，仍显示后台进程的运行状态，支持查看与终止；完成后在原对话补充结果。通过悬浮提示呈现后台工作。']
+          ['工作初始：确认意图与任务规划','收到任务即显示全局响应与计时，先复述目标、产物与关键约束，再展开完整待办。让用户确认任务已被接住，并检查理解与推进安排。'],
+          ['工作中：语义化呈现工具执行过程','将工具执行转译为用户能理解的任务描述，说明正在处理什么、要解决什么问题，降低理解成本。持续展示全局状态，每组完成后留下阶段总结；技术细节与历史过程按需展开。'],
+          ['主回复结束后，仍能看见后台进程','主回复发出后，输入区上方仍显示四个子智能体。展开列表，可以逐项核对哪些检查已经结束、哪些还在进行。'],
+          ['工作结束：呈现文字、产物与变化','工作结束时停止计时，把结论和可打开的产物留在回复中。修改过文件时，产物下方列出本轮变化；需要核对执行经过时，再展开全局状态。']
         ], check:'不同用户都能快速判断任务是否按预期推进，并按需核对执行依据。'
       },
       {
-        no:'2.2', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'过程可控：随时暂停、补充与引导。',
+        no:'2.2', strategy:'策略二 · 看清任务进展，随时调整方向', title:'过程可控：随时暂停、补充与引导。',
         thesis:'让用户能按需要暂停、补充要求，并承接已有内容继续。',
         question:'“做着做着发现要求没说对，还来得及改吗？”',
         context:'执行中用户可能发现方向不对、想起遗漏条件，或需要先停下来判断；提供暂停、继续与队列引导，降低中途调整的成本。',
@@ -601,30 +592,30 @@
         ], check:'用户能随时暂停、补充和引导，并沿用已有上下文继续任务。'
       },
       {
-        no:'2.3', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'异常可恢复：说明受阻原因，保留成果并提供继续路径。',
+        no:'2.3', strategy:'策略二 · 看清任务进展，随时调整方向', title:'异常可恢复：说明受阻原因，保留成果并提供继续路径。',
         thesis:'保留已有成果，让用户知道是在等待、需要补充，还是要确认新的方案。',
-        question:'“怎么不往下做了，我还要等多久？”',
+        question:'“现在需要我做什么，才能接着往下走？”',
         context:'按受阻原因与交互位置分为四类：请求信息占用输入区；Agent 恢复在回复区提示并保留输入；系统限制在标题下方悬浮；能力不支持在正文提供替代方案。',
         recoveryResearch:true,
         actions:[
           ['请求信息：用补充卡片占用输入区','Agent 执行正常，但缺少用户信息或必要操作。用补充卡片占用普通输入区，支持填写、选择、上传或前往目标系统登录／授权；完成后继续原任务。'],
-          ['能力不支持：说明限制，由用户选择替代方案','在正文说明无法完成的部分和已保留的成果，提供具体替代方案。保留正常输入，用户确认后再改变交付目标。'],
+          ['能力不支持：说明限制，由用户选择替代方案','以季度复盘为例，本轮回复标为“已完成”。正文交代复盘材料已整理、当前无法生成视频，并给出可选方向：把材料整理成分镜，或先写解说稿。由用户决定是否改变交付目标。'],
           ['执行与系统异常：按影响范围呈现恢复状态','针对两种更系统性的异常区分提示位置：单个工具或步骤受阻，在回复区就近呈现重试；整体运行条件受限，在任务标题下方显示全局提示。两者都保留已有成果与草稿。']
         ], check:'用户能根据提示位置判断需要自己补充、等待恢复、处理系统限制，还是确认替代方案。以下为交互设计示意，不代表恢复能力已接通。'
       },
       {
-        no:'2.4', strategy:'策略二 · 构建对话闭环，保障透明可控', title:'结果可视：按用户下一步任务组织回复与交互。',
+        no:'2.4', strategy:'策略二 · 看清任务进展，随时调整方向', title:'结果可视：按用户下一步任务组织回复与交互。',
         thesis:'让用户先看懂答案，再决定是否深入；需要表达偏好时，可以直接选择、填写或勾选。',
         question:'“信息这么多，我该关注什么、怎么选？”',
         context:'回复形式取决于用户接下来要确认、理解、比较，还是补充信息。短回复减少阅读，可视化降低理解成本，交互组件降低表达成本。当前以供应商报价对比、套菜预算试算和履约异常定位三个案例，对照 Widget 与 Markdown 的呈现。',
-        analysis:{title:'按下一步任务判断回复形式',concern:'“回复看完了，可我还是不知道该怎么选、怎么做。”',premiseTitle:'回答正确，也不一定好用',premise:'简单确认写成长文，比较数据散在段落里，偏好只能靠文字描述，都会增加理解与表达成本。回复还需要适合用户接下来要做的事。',body:'因此，先区分确认答案、理解比较、补充信息三类场景，再选择短回复、可视化呈现或交互控件。'},
+        analysis:{title:'按下一步任务判断回复形式',concern:'“如果再多来几个人，这份菜单还在预算内吗？”',premiseTitle:'调整用餐人数后，直接看到预算变化',premise:'简单确认写成长文，比较数据散在段落里，偏好只能靠文字描述，都会增加理解与表达成本。回复还需要适合用户接下来要做的事。',body:'因此，先区分确认答案、理解比较、补充信息三类场景，再选择短回复、可视化呈现或交互控件。'},
         actions:[
           ['统一 Widget 的展示与交互规范','以共享设计规范约束文字、颜色、布局与控件状态，按任务组织结果摘要、比较选项、参数输入与确认操作。'],
-          ['用同题对照验证交互价值','以同一份数据展示 Widget 与 Markdown，分别展示按需查看详情、调整参数试算和定位异常环节。通过右侧全局控件切换呈现方式或重播回复过程；效果仍需真实用户验证。']
+          ['在回复里比较报价、试算预算和定位异常','用户可展开供应商报价、调整用餐人数，或从履约漏斗找到需要核查的环节。用相同数据制作文字版与交互版，供后续测试比较。']
         ], check:'验证用户能否更快完成选择、调整与定位；当前已提供同题对照原型，尚未形成任务完成率、耗时或追问次数的验证结论。'
       },
       {
-        no:'3.1', strategy:'策略三 · 优化产物体验，推动成果落地', status:'待深化', title:'布局可适：让窗口随人和 Agent 的参与状态切换。',
+        no:'3.1', strategy:'策略三 · 指得出要改哪里，也核对得了改动', status:'待深化', title:'布局可适：让窗口随人和 Agent 的参与状态切换。',
         thesis:'对话、并排、批注与桌宠触达，对应四种不同的人机参与关系。',
         question:'“我得仔细看看做出来的东西，有问题再接着聊。”',
         context:'讨论方向时看对话；核对内容时边看边聊；集中批注时让 Agent 暂退；人暂时离开时，桌宠传达 Agent 的工作状态。',
@@ -633,7 +624,7 @@
         ], check:'待验证：四种状态能自然切换，产物、任务进度与修改上下文始终连贯。'
       },
       {
-        no:'3.2', strategy:'策略三 · 优化产物体验，推动成果落地', title:'意见可达：选取产物内容，把修改上下文带进对话。',
+        no:'3.2', strategy:'策略三 · 指得出要改哪里，也核对得了改动', title:'意见可达：选取产物内容，把修改上下文带进对话。',
         thesis:'用户指出对象、说明意见，界面替他携带位置与内容。',
         question:'“能不能直接指着要改的地方说？”',
         context:'复杂产物里的某页、某段或某个区域难以用文字准确描述；反复交代位置与原文，会增加人机交互成本。',
@@ -644,7 +635,7 @@
         ], check:'用户能少打字、少往返，并确认每条意见指向正确内容。'
       },
       {
-        no:'3.3', strategy:'策略三 · 优化产物体验，推动成果落地', title:'版本可溯：每轮改动看得见，也回得去。',
+        no:'3.3', strategy:'策略三 · 指得出要改哪里，也核对得了改动', title:'版本可溯：每轮改动看得见，也回得去。',
         thesis:'把产物变化留成可以查看和恢复的历史。',
         question:'“改了这么多轮，别把之前满意的内容弄丢了。”',
         context:'复杂产物经过多轮修改后，只保留最新文件不足以让用户核对变化，也难以找回先前认可的内容。通过产物下方的修改总结查看变更并撤销本轮修改。',
@@ -656,12 +647,11 @@
     ];
 
     const catalogConcerns = {
-      '1.1':'手头哪些事能交给它做？',
-      '1.2':'做出来的东西够不够用？',
+      '1.1':'哪些事能交给它做，能做出什么样的成品？',
       '1.3':'第一句话该怎么说？',
       '2.1':'按我的意思在做吗，做到哪儿了？',
       '2.2':'要求没说对，还来得及改吗？',
-      '2.3':'怎么不往下做了，还要等多久？',
+      '2.3':'现在需要我做什么，才能接着往下走？',
       '2.4':'信息这么多，该关注什么、怎么选？',
       '3.1':'想仔细看成品，有问题再接着聊。',
       '3.2':'能直接指着要改的地方说吗？',
@@ -670,9 +660,7 @@
 
     const actionConcerns = {
       '1.1':[
-        '“我手头有不少事，它能替我做掉哪些？”'
-      ],
-      '1.2':[
+        '“我手头有不少事，它能替我做掉哪些？”',
         '“交给它做，能达到我想要的效果吗？”'
       ],
       '1.3':[
@@ -683,8 +671,8 @@
       '2.1':[
         '“发出去了，它明白我要的是什么了吗？”',
         '“等了一会儿了，事情有进展吗？”',
-        '“这就做好了吗？改了哪些，能退回上一版吗？”',
-        '“你已经回复完了，导出还在继续吗？我要去哪里看？”'
+        '“主回复已经出来了，那几项核查也都做完了吗？”',
+        '“这就做好了吗？改了哪些，能退回上一版吗？”'
       ],
       '2.2':[
         '“先停一下，我想看清楚再继续。”',
@@ -718,8 +706,8 @@
     }
 
     const evolution = {
-      no:'evolution', kind:'evolution', title:'从研发工作台，到个人 Agent。',
-      story:'Agent 的工作形态正在降低使用门槛。本项目聚焦中间的办公阶段：先让普通用户看懂、敢用、愿意继续交付任务。',
+      no:'evolution', kind:'evolution', title:'让办公用户也能把工作交给 Agent',
+      story:'想做一份经营报告的人，可能很清楚要交付什么，却不熟悉工具名称，也读不懂执行日志。CatPaw 从研发工作台走向办公场景时，首页要让人认得出自己的任务，对话要说清工作进展，需要核对时还要找得到执行依据。',
       phases:[
         ['研发型 Agent','IDE → Codex 形态','保留工作台和研发术语，适合专业开发者。虽已简化部分交互并加入 Office 基础能力，对普通办公用户仍有门槛。','已有基础'],
         ['办公型 Agent','本次设计聚焦','围绕办公任务组织能力与产物，把执行过程翻译成工作语言，收起大多数研发视角的信息，降低首次委托与修改门槛。','当前目标'],
@@ -734,8 +722,8 @@
           ['CatPaw ToC · 首轮 n=3,322','软件开发 50.4% · 内容创作 18.5%'],
           ['CatPaw ToB · 抽样 n=938','追问/指代 53.5%；经营分析/报告 7.9%，纯查数 2.8%']
         ]],
-        ['目标','降低用户使用门槛','无需先学专业工具，也能发起任务、看懂进展与结果，并愿意采用产物。','衡量：一轮对话完成率 · 成果采纳率'],
-        ['挑战','门槛贯穿整段协作','发起前不知道能做什么；执行中难判断是否做对；产物要改却说不准位置；结束后又得从头交代。','依次降低发起、判断、修改和再次委托的门槛；产品转型期还要取舍功能：办公默认只展示必要能力，研发深度按需打开。']
+        ['目标','降低用户使用门槛','无需先学专业工具，也能发起任务、看懂进展与结果，并愿意采用产物。','对条件齐备、可一次交付的任务，观察一轮对话完成率；对交付产物的任务，观察成果采纳率。'],
+        ['挑战','门槛贯穿整段协作','发起前不知道能做什么，执行中难判断是否做对，拿到产物后又说不清具体要改哪里。','默认展示用户此刻要判断的事。需要查工具调用或核对修改记录时，再展开细节。']
       ]
     };
     const overview = {
@@ -743,17 +731,17 @@
       story:'从发起任务到检查结果，用户的关注点会变化。先解决能否开始，再建立执行信任；出现完整产物后，进入查看与修改场景。',
       steps:[
         ['发起任务','它能做什么？','降低启动门槛，建立正确预期'],
-        ['推进任务','它懂我、做对了吗？','构建对话闭环，保障透明可控'],
-        ['协作迭代','怎样看清、改好并核对版本？','优化产物体验，推动成果落地']
+        ['推进任务','它懂我、做对了吗？','看清任务进展，随时调整方向'],
+        ['协作迭代','怎样看清、改好并核对版本？','指得出要改哪里，也核对得了改动']
       ]
     };
     const catalog = {no:'catalog',kind:'catalog',title:'三个场景的策略与设计动作'};
     const chapters = {
-      1:{no:'strategy-1',kind:'chapter',label:'策略一 / 发起任务前',title:'降低启动门槛，建立正确预期',story:'通过熟悉的任务入口、可查看的成品案例和主动接话的引导，让用户知道 Agent 能做什么、会交付什么，并轻松发起第一轮任务。',steps:['能力可感','预期可管','上手可启']},
-      2:{no:'strategy-2',kind:'chapter',label:'策略二 / 对话与执行中',title:'构建对话闭环，保障透明可控',story:'通过意图确认、过程可视、中途可干预、异常可恢复和结果可迭代的闭环设计，打造透明、可控、连贯的对话体验。',steps:['过程可懂','过程可控','异常可恢复','结果可视']},
-      3:{no:'strategy-3',kind:'chapter',label:'策略三 / 完整产物修改',title:'优化产物体验，推动成果落地',story:'针对 PPT、Word、设计稿等完整产物，提供适合查看与修改的布局，让用户通过批注和引用便捷表达意见，核对版本并回退，使产物友好呈现、顺畅修改，最终落地使用。',steps:['布局可适','意见可达','版本可溯']}
+      1:{no:'strategy-1',kind:'chapter',label:'策略一 / 发起任务前',title:'降低启动门槛，建立正确预期',story:'通过熟悉的任务入口、可查看的成品案例和主动接话的引导，让用户知道 Agent 能做什么、会交付什么，并轻松发起第一轮任务。',steps:['能力可感','上手可启']},
+      2:{no:'strategy-2',kind:'chapter',label:'策略二 / 对话与执行中',title:'看清任务进展，随时调整方向',story:'发出任务后，用户先要确认 Agent 理解得对不对。执行顺利时，看进展就够了；想起遗漏的要求，可以先记下，也可以立即改方向。任务受阻时，界面要说清该等系统重试、由本人接管，还是另选做法。拿到回复后，再按下一步要做的决定呈现结果。',steps:['过程可懂','过程可控','异常可恢复','结果可视']},
+      3:{no:'strategy-3',kind:'chapter',label:'策略三 / 完整产物修改',title:'指得出要改哪里，也核对得了改动',story:'当任务交付的是一份需要细看的文档、幻灯片或设计稿，用户可以边看边聊，也可以专心批注。要改哪里，就选中那一处，把位置和意见一起带进对话。改完对照本轮差异，再决定保留还是撤回。',steps:['布局可适','意见可达','版本可溯']}
     };
-    const slides=[evolution,contextSlide,overview,catalog];
+    const slides=[evolution,contextSlide,overview];
     for(const [index,point] of pointSlides.entries()){
       const chapter=Number(point.no.split('.')[0]);
       if(index===0||Number(pointSlides[index-1].no.split('.')[0])!==chapter){
@@ -763,7 +751,6 @@
       if(point.interruptionResearch)slides.push({...point,no:'2.2-analysis',kind:'interruption-research',pointNo:point.no});
       if(point.recoveryResearch)slides.push({no:'2.3-analysis',kind:'recovery-analysis',pointNo:point.no});
       if(point.analysis) slides.push({...point,kind:'reply-analysis',pointNo:point.no});
-      if(point.no==='2.4') slides.push({...point,no:'2.4-research',supplementary:true,kind:'genui-research',pointNo:point.no});
       if(point.no==='2.4') slides.push({...point,no:'2.4-flow',supplementary:true,kind:'reply-flow',pointNo:point.no});
       if(point.no==='2.4') slides.push({...point,no:'2.4-modules',supplementary:true,kind:'widget-modules',pointNo:point.no});
       if(point.no==='2.4') CatPawWidgetCases.cases.forEach((item, caseIndex) => {
@@ -778,15 +765,26 @@
         kind:'action',
         status:point.no==='2.3'&&actionIndex>0?'（设计中）':point.status,
         pointNo:point.no,
-        no:point.analysis||point.research?`${point.no}-${actionIndex+2}`:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
+        no:point.no==='2.1'?['2.1-2','2.1-3','2.1-5','2.1-4'][actionIndex]:point.analysis||point.research?`${point.no}-${actionIndex+2}`:actionIndex===0?point.no:`${point.no}-${actionIndex+1}`,
         action,
         actionIndex
       });});
     }
 
+    slides.push({
+      no:'validation', kind:'validation', title:'怎样判断这些设计帮上了忙？',
+      story:'下一轮可用性测试从三项任务开始，记录用户在哪一步需要提示，以及最后怎样作出决定。',
+      blocks:[
+        ['发起任务','能否从案例发出自己的要求？','给首次使用者一个办公任务，观察他能否找到相关成品，并把案例里的要求改成自己的。'],
+        ['推进任务','遇到阻碍，能否判断该谁接手？','分别演示工具重试和浏览器登录，观察用户能否判断何时可以等待、何时需要接管，以及登录后如何交还给 Agent。'],
+        ['协作迭代','能否核对改动，再决定去留？','请用户在产物中指出一处修改，收到新版后找到对应差异，决定保留改动或恢复上一版，并说明依据。']
+      ]
+    });
+    const reviewStart=slides.length;
+    slides.push(catalog,{no:'2.4-research',supplementary:true,kind:'genui-research',pointNo:'2.4',title:'对话内 UI 生成路径调研'});
+
     const pageView = {
       '1.1':['能力可感','首页：任务入口与产物类型'],
-      '1.2':['预期可管','案例列表、详情与做同款'],
       '1.3':['上手可启','小猫气泡与输入引导'],
       '2.1':['过程可懂','阶段与模式的信息披露'],
       '2.2':['过程可控','暂停、补充与队列引导'],
@@ -888,20 +886,46 @@
       {name:'请求信息',place:'输入区 · 占用普通对话框',input:'先完成补充，再继续任务',example:'缺少结算规则、附件或任务所需登录／授权',button:'提交补充信息',steps:['Agent 没有故障，只是在等用户补充。','填写、选择、上传或授权完成后，从原步骤继续。']},
       {name:'Agent 遇到问题',place:'回复区 · 状态与替代路径',input:'保留输入，允许补充与打断',example:'单个工具超时、读取失败或暂时繁忙',button:'换个来源继续',steps:['展示正在恢复的步骤、当前状态和已保留内容。','换路径时停止原恢复流程，沿用已有内容继续，避免重复执行。']},
       {name:'系统问题',place:'标题下方 · 悬浮状态条',input:'不占输入区，说明影响范围',example:'积分／配额用尽、全局断网、服务维护／停用、账号使用受限',button:'查看额度',steps:['提示持续存在，提供与原因匹配的恢复入口。','恢复后短暂提示已恢复，再收起；需要用户决策时在对话中给出选择。']},
-      {name:'能力不支持',place:'回复正文 · 建议方案按钮',input:'保留正常对话入口',example:'无法生成视频，但能交付分镜与解说稿',button:'改为生成分镜稿',steps:['说明不能完成的部分和可沿用的成果。','按钮写明建议的新交付，用户确认后再改变方案。']}
+      {name:'能力不支持',place:'回复正文 · 后续建议列表',input:'保留正常对话入口',example:'无法生成视频，但能交付分镜与解说稿',button:'改为生成分镜稿',steps:['说明不能完成的部分和可沿用的成果。','每条建议写明下一步操作，用户确认后再改变方案。']}
     ];
-    function recoveryWireframe(index){
-      const text=(x,y,value,size=10,color='#555')=>`<text x="${x}" y="${y}" fill="${color}" font-size="${size}" font-family="sans-serif">${value}</text>`;
-      const button=(x,y,w,label)=>`<rect x="${x}" y="${y}" width="${w}" height="21" rx="5" fill="#eee" stroke="#aaa"/>${text(x+8,y+14,label)}`;
-      const response=index===0?'':index===1?
-        `<rect x="66" y="67" width="208" height="22" rx="5" fill="#ddd"/>${text(74,82,'正在重新读取第 3 份资料…')}${button(66,98,105,'换个来源继续')}`:index===3?
-        `${text(66,78,'暂不支持直接生成视频')}${button(66,91,126,'改为生成分镜稿')}`:
-        `<rect x="66" y="69" width="150" height="7" rx="3" fill="#ddd"/>`;
-      const input=index===0?
-        `<defs><linearGradient id="request-wash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bcebd5" stop-opacity="0"/><stop offset="1" stop-color="#bcebd5" stop-opacity=".65"/></linearGradient></defs><rect class="request-wireframe-wash" x="46" y="100" width="254" height="104" fill="url(#request-wash)"/><rect x="66" y="141" width="210" height="47" rx="10" fill="#fff" stroke="#777"/>${text(76,158,'请补充结算规则')}${button(196,162,69,'确认补充')}`:
-        `<rect x="66" y="141" width="210" height="47" rx="10" fill="#fff" stroke="#777"/>${text(76,161,index===1?'补充要求／打断':index===2?'保留草稿':'继续对话',10,'#999')}`;
-      const banner=index===2?`<rect x="66" y="25" width="210" height="21" rx="5" fill="#ccc"/>${text(74,39,'服务暂不可用 · 正在恢复')}`:'';
-      return `<svg class="recovery-wireframe" viewBox="0 0 300 204" role="img" aria-label="${recoveryPatterns[index].place}，${recoveryPatterns[index].input}"><rect width="300" height="204" rx="8" fill="#fafafa"/><path d="M8 0H46V204H8Q0 204 0 196V8Q0 0 8 0" fill="#eee"/><path d="M66 12H145" stroke="#bbb"/>${index===2?'':'<rect x="146" y="24" width="130" height="25" rx="10" fill="#ddd"/>'}${response}${banner}${input}</svg>`;
+    function recoveryWireframe(index,{showLabels=true}={}){
+      const pattern=recoveryPatterns[index];
+      const accent='var(--ds-primary-3,#4bcc7a)';
+      const pale='var(--ds-primary-1,#ecf7ef)';
+      const box=(x,y,w,h,r,fill,stroke='none')=>
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${showLabels?stroke:'none'}"/>`;
+      const label=(x,y,words,size=11,color=accent)=>showLabels
+        ? `<text x="${x}" y="${y}" font-family="sans-serif" font-size="${size}" fill="${color}">${words}</text>`
+        : '';
+      const line=(x,y,w)=>showLabels ? box(x,y,w,4,2,'#d9dcda') : '';
+      const button=(x,y,w,words)=>box(x,y,w,18,5,accent)+label(x+8,y+13,words,10,'white');
+      const panel=(x,y,w,h)=>box(x,y,w,h,6,pale,accent);
+      const skeleton=`
+        ${box(1,1,358,238,10,'#fff','#e5e8e6')}
+        ${showLabels ? box(2,2,76,236,9,'#f2f3f2') : ''}
+        <path d="M78 1V239" fill="none" stroke="#edf0ee" vector-effect="non-scaling-stroke"/>
+        ${showLabels?'<path d="M78 29h280" fill="none" stroke="#edf0ee"/>':''}
+        <g fill="#bec4c0"><circle cx="14" cy="14" r="3"/><circle cx="24" cy="14" r="3"/><circle cx="34" cy="14" r="3"/></g>
+        ${label(12,44,'我的项目',10,'#737c76')}
+        ${box(8,54,62,17,4,'#e2e6e3')}${line(13,60,41)}
+        ${line(13,83,48)}${line(13,100,35)}${line(13,117,43)}
+        ${label(92,20,'任务对话',11,'#737c76')}
+        ${box(245,64,99,21,8,'#e9ecea')}${line(256,73,73)}
+        ${box(92,98,13,13,5,'#d8ded9')}${line(112,99,99)}${line(112,109,153)}
+        ${box(92,181,252,45,8,'#fafbfa','#d1d6d2')}
+        ${label(103,200,'继续对话',10,'#8a938d')}${box(322,207,13,12,4,'#d6dcd7')}`;
+      const gradientId=showLabels?'request-detail-gradient':'request-overview-gradient';
+      const inputGlow=`<defs><linearGradient id="${gradientId}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="${accent}" stop-opacity="0"/>
+        <stop offset="100%" stop-color="${accent}" stop-opacity=".58"/>
+      </linearGradient></defs><path d="M78 135H359V229A10 10 0 0 1 349 239H78Z" fill="url(#${gradientId})"/>`;
+      const prompts=[
+        inputGlow+box(92,181,252,45,8,'white',accent)+label(102,199,'请补充结算规则')+box(102,205,155,15,3,showLabels?'white':pale,'var(--ds-primary-2,#a8f1bb)')+button(271,203,64,'确认补充'),
+        panel(111,120,225,45)+label(120,136,'资料读取失败，正在重试…')+button(120,141,84,'换个来源继续'),
+        panel(92,34,252,22)+label(102,49,'服务暂不可用 · 正在恢复'),
+        label(112,122,'暂不支持直接生成视频')+[0,1,2].map((n)=>label(112,139+n*15,'↳',11,'#737c76')+(showLabels?label(127,139+n*15,['整理分镜和解说稿','只写解说稿','先保留材料'][n],10,'#626762'):box(112,132+n*15,[109,78,92][n],6,3,pale))).join('')
+      ];
+      return `<svg class="recovery-wireframe" viewBox="0 0 360 240" role="img" aria-label="${pattern.place}，${pattern.input}"><g>${skeleton}</g><g>${prompts[index]}</g>${showLabels?'':'<rect x="1" y="1" width="358" height="238" rx="10" fill="none" stroke="#e5e8e6" stroke-width="1" vector-effect="non-scaling-stroke"/>'}</svg>`;
     }
     const processDemo = `<div class="process-pair" aria-label="信息示意与实际对话同步演示"><div class="process-header"><div class="process-tabs" role="tablist" aria-label="任务展示状态" data-process-tabs><button type="button" id="process-tab-before" role="tab" aria-controls="process-map-before" aria-selected="true" tabindex="0" data-process-frame="0">初步生成</button><button type="button" id="process-tab-working" role="tab" aria-controls="process-map-working" aria-selected="false" tabindex="-1" data-process-frame="1">生成中</button><button type="button" id="process-tab-after" role="tab" aria-controls="process-map-after" aria-selected="false" tabindex="-1" data-process-frame="10">生成后</button></div><p class="process-map-caption" role="status" aria-live="polite">先确认理解与目标，展示任务规划。</p></div>
       <figure class="process-pair-panel"><figcaption>信息展示示意</figcaption>
@@ -914,7 +938,7 @@
           </div>
         </div>
       </figure>
-      <figure class="process-pair-panel"><figcaption>实际对话演示</figcaption><div class="demo-viewport" data-demo-width="660" data-demo-height="500"><iframe title="任务进程 Demo：与信息示意同步播放" data-scene="2.1" data-process-sync="true" src="./index.html?strategyScene=2.1&amp;strategyPanel=process" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></figure>
+      <figure class="process-pair-panel"><figcaption>实际对话演示</figcaption><div class="demo-viewport" data-demo-width="510" data-demo-height="570"><iframe title="任务进程 Demo：与信息示意同步播放" data-scene="2.1" data-process-sync="true" src="./index.html?strategyScene=2.1&amp;strategyPanel=process" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></figure>
     </div>`;
     const layoutComparisonsDemo = `<div class="phase-demo-grid" aria-label="四种人机参与场景的 2×2 设计 Demo">${[
       [0,'Face-to-face','对话为主 · 建立方向','先讨论修改目标与整体方向，产物保留可打开的预览。'],
@@ -986,7 +1010,7 @@
       </div>`;
     const escapeHtml = value => String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const canvas=document.getElementById('canvas');
-    const deckPhaseRanges=[1,2,3].map((chapter,index)=>({start:slides.findIndex(slide=>slide.no===`strategy-${chapter}`),end:index<2?slides.findIndex(slide=>slide.no===`strategy-${chapter+1}`):slides.length}));
+    const deckPhaseRanges=[1,2,3].map((chapter,index)=>({start:slides.findIndex(slide=>slide.no===`strategy-${chapter}`),end:index<2?slides.findIndex(slide=>slide.no===`strategy-${chapter+1}`):reviewStart}));
     const deckPointGroups=deckPhaseRanges.map((range,chapter)=>pointSlides
       .filter(point=>Number(point.no.split('.')[0])===chapter+1)
       .map(point=>({no:point.no,label:pageView[point.no][0],start:slides.findIndex(slide=>slide.pointNo===point.no||slide.no===`${point.no}-analysis`)}))
@@ -1002,7 +1026,7 @@
       const pointNav=progress.phase>=0?`<nav class="deck-points" aria-label="各策略要点">${deckPointGroups.map((points,chapter)=>`<div class="deck-point-group${chapter===progress.phase?' is-current':''}">${points.map(point=>`<a href="#${escapeHtml(slides[point.start].no)}"${index>=point.start&&index<point.end?' aria-current="step"':''}>${escapeHtml(point.label)}</a>`).join('')}</div>`).join('')}</nav>`:'';
       return `<div class="topline"><span>CATPAW / 设计策略</span><div class="deck-progress" role="progressbar" aria-label="设计策略场景进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.value}" aria-valuetext="${description}">${labels.map((label,i)=>`<span class="deck-progress-step ${progress.phase===i?'is-current':progress.fractions[i]===1?'is-complete':''}"${progress.phase===i?' aria-current="step"':''}><span>${label}</span><span class="deck-progress-track"><span class="deck-progress-fill" style="--phase-progress:${(progress.fractions[i]*100).toFixed(1)}%"></span></span></span>`).join('')}</div>${pointNav}<span class="right">${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</span></div>`;
     };
-    const demoJump = (scene,label='打开完整 Demo') => `<a class="slide-demo-jump" href="./index.html?strategyScene=${encodeURIComponent(scene)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)}（在新标签页打开）">${escapeHtml(label)} ↗</a>`;
+    const demoJump = (scene,label) => `<a class="slide-demo-jump" href="./index.html?strategyScene=${encodeURIComponent(scene)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)}（在新标签页打开）">${escapeHtml(label)} ↗</a>`;
     canvas.innerHTML=slides.map((slide,index)=>{
       if(slide.kind==='evolution')return `
         <section class="slide story-slide evolution-slide" id="slide-evolution" aria-label="Agent 工作形态演化：${escapeHtml(slide.title)}">
@@ -1029,10 +1053,16 @@
           <p class="story-copy">${escapeHtml(slide.story)}</p>
           <div class="scene-flow" aria-label="三个使用场景的推进流程">${slide.steps.map(([scene,question,purpose],i)=>`${i?`<div class="scene-flow-connector" aria-label="${i===1?'发出任务':'出现完整产物'}"><span class="arrow" aria-hidden="true"></span><span>${i===1?'发出任务':'形成完整产物'}</span></div>`:''}<div class="scene-flow-node"><span class="step-number">场景 0${i+1}</span><h2>${escapeHtml(scene)}</h2><p class="question">“${escapeHtml(question)}”</p><p class="purpose"><span>策略${['一','二','三'][i]}</span>${escapeHtml(purpose)}</p></div>`).join('')}</div>
         </section>`;
+      if(slide.kind==='validation')return `
+        <section class="slide story-slide context-slide" id="slide-validation" aria-label="待验证的问题">
+          ${topline(index)}
+          <div class="story-kicker">后续验证</div><h1>${slide.title}</h1><p class="story-copy">${slide.story}</p>
+          <div class="context-grid">${slide.blocks.map(([scene,question,task])=>`<div class="context-block"><span class="block-label">${scene}</span><h2>${question}</h2><p>${task}</p></div>`).join('')}</div>
+        </section>`;
       if(slide.kind==='catalog')return `
         <section class="slide story-slide catalog-slide" id="slide-catalog" aria-label="${escapeHtml(slide.title)}">
           ${topline(index)}
-          <div class="story-kicker">全局索引 / 3 个场景 · ${pointSlides.length} 个策略点 · ${pointSlides.reduce((total,point)=>total+point.actions.length,0)} 个设计动作</div>
+          <div class="story-kicker">待确认区 · 全局索引 / 3 个场景 · ${pointSlides.length} 个策略点 · ${pointSlides.reduce((total,point)=>total+point.actions.length,0)} 个设计动作</div>
           <h1>${escapeHtml(slide.title)}</h1>
           <div class="catalog-grid">${[1,2,3].map(chapter=>`<div class="catalog-column"><span class="scene">场景 0${chapter} / ${escapeHtml(chapters[chapter].label.split(' / ')[1])}</span><h2>${escapeHtml(pointSlides.find(point=>Number(point.no.split('.')[0])===chapter).strategy)}</h2>${pointSlides.filter(point=>Number(point.no.split('.')[0])===chapter).map(point=>`<div class="catalog-point"><div class="catalog-point-heading"><span>${escapeHtml(point.no)}</span><strong>${escapeHtml(pageView[point.no][0])}</strong><p class="catalog-point-concern">${escapeHtml(catalogConcerns[point.no])}</p></div><ol>${point.actions.map((action,actionIndex)=>`<li><span>${escapeHtml(`${point.no}.${actionIndex+1}`)}</span><span>${escapeHtml(action[0])}</span></li>`).join('')}</ol></div>`).join('')}</div>`).join('')}</div>
         </section>`;
@@ -1051,30 +1081,13 @@
           <h1>${escapeHtml(slide.title)}</h1>
           <div class="body"><div class="left-content"><div class="action-detail"><span class="label">场景分析</span><h3>谁在场，谁在持续工作？</h3><p>同一份完整产物，在讨论、边看边改、专心批注和人暂离时，需要不同的窗口关系。</p></div><p class="design-note">先看人和 Agent 的参与度，再分别设计四种状态；切换时仍沿用同一任务、产物和修改上下文。</p></div><figure class="design-slot" aria-label="人和 Agent 参与度的四状态分析图">${participationAnalysis}</figure></div>
         </section>`;
-      if(slide.pointNo==='2.1'&&slide.kind==='action'&&slide.actionIndex===3)return `
-        <section class="slide background-layout" id="slide-${slide.no}" aria-label="过程可懂：后台进程展示记录">
-          ${topline(index)}
-          <div class="mainline"><span class="number">2.1</span><span>策略二 · 过程可懂 / 设计动作 2.1.4</span></div>
-          <h1>过程可懂</h1>
-          <h2 class="layout-subtitle">主回复结束后，仍能看见后台进程</h2>
-          <p class="recovery-analysis-intro">用户关注：“你已经回复完了，导出还在继续吗？我要去哪里看？”<br>将本轮回复结束与后台工作完成区分开，保留查看进程和接收结果的入口。</p>
-          <div class="background-comparison" aria-label="后台进程的悬浮提示">
-            ${[
-              ['悬浮提示','在输入区上方持续显示运行状态；多个进程聚合为数量入口，展开后查看各项进度。','floating','查看悬浮提示 Demo ↗'],
-              // 已停用：['回复结尾提示','在本轮回复结尾附上进程入口，将仍在执行的工作与这次回复关联起来。','inline','查看回复结尾 Demo ↗'],
-              // 已停用：['正文链接','在回复中说明“导出仍在后台继续”，通过文字链接打开对应脚本预览。','text','查看正文链接 Demo ↗']
-            ].map(([title,description,kind,link],i)=>`<article class="background-option"><span class="label">已实现的展示方式 · 0${i+1}</span><h3>${title}</h3><div class="background-sample background-sample-${kind}" aria-hidden="true"><div class="background-sample-reply">本周履约概况已整理。</div>${kind==='text'?'<span class="background-sample-link">导出仍在后台继续，你可以查看：<u>导出明细.py ↗</u></span>':'<span class="background-sample-process"><span class="background-sample-dot"></span>导出门店履约明细 <small>后台运行中</small> ↗</span>'}<div class="background-sample-composer">继续对话</div></div><span class="label">呈现与交互</span><p>${description}</p><div class="background-option-link"><span class="label">原型入口</span><a href="./index.html?backgroundProcess=${kind}" target="_blank" rel="noopener">${link}</a></div></article>`).join('')}
-          </div>
-          <p class="recovery-analysis-intro">统一管理：摘要中汇总后台进程，支持查看与终止；进程完成后，在原对话补充结果文件。</p>
-          <p class="recovery-analysis-note">当前展示悬浮提示方案。运行状态、脚本与产出均为本地预设演示，不执行真实后台任务。</p>
-        </section>`;
       if(slide.kind==='recovery-analysis')return `
         <section class="slide recovery-analysis" id="slide-${slide.no}" aria-label="异常可恢复：异常类型与交互方式研究">
           ${topline(index)}
           <div class="mainline"><span class="number">2.3</span><span>策略二 · 四类受阻情景</span></div>
           <h1>异常可恢复</h1>
           <p class="recovery-analysis-intro"><strong>异常类型与交互方式研究</strong><br>共同保留已有成果；按当前是否需要用户补充、能否继续执行，决定输入框与提示的关系。</p>
-          <div class="recovery-pattern-grid">${recoveryPatterns.map((pattern,i)=>`<article class="recovery-pattern-card"><h2>${i+1}. ${pattern.name}</h2>${recoveryWireframe(i)}<h3>${pattern.place}</h3><p>${pattern.input}</p><p class="recovery-pattern-example">${pattern.example}</p>${demoJump(['2.3','2.3-2','2.3-3','2.3-6'][i],'打开'+pattern.name+' Demo')}</article>`).join('')}</div>
+          <div class="recovery-pattern-grid">${recoveryPatterns.map((pattern,i)=>`<article class="recovery-pattern-card"><h2>${i+1}. ${pattern.name}</h2>${recoveryWireframe(i,{showLabels:false})}<h3>${pattern.place}</h3><p>${pattern.input}</p><p class="recovery-pattern-example">${pattern.example}</p>${demoJump(['2.3','2.3-2','2.3-3','2.3-6'][i],'打开'+pattern.name+' Demo')}</article>`).join('')}</div>
           <p class="recovery-pattern-note">边界：工具问题在执行处留记录；系统状态在标题下提示并注明范围；授权与补充信息由输入区承接。恢复失败后的选择放在对话中。此框架可按新场景扩展，并非穷举。</p>
         </section>`;
       if(slide.pointNo==='2.3'&&slide.kind==='action'&&slide.actionIndex===2)return `
@@ -1100,7 +1113,6 @@
             <div class="user-concern"><span class="label">用户关注</span><p>${escapeHtml(actionConcerns['2.3'][slide.actionIndex])}</p></div>
             <div class="action-detail"><span class="label">设计动作 2.3.${slide.actionIndex+1}</span><h3>${escapeHtml(slide.action[0])}</h3><p>${escapeHtml(slide.action[1])}</p></div>
             <p class="design-note">${escapeHtml(recoveryPatterns[slide.actionIndex===1?3:0].example)}</p>
-            ${demoJump(slide.actionIndex===1?'2.3-6':'2.3')}
           </div><figure class="design-slot recovery-pattern-detail" aria-label="${recoveryPatterns[slide.actionIndex===1?3:0].place}">
             <div class="demo-viewport recovery-action-viewport" data-demo-width="800" data-demo-height="580"><iframe title="${slide.actionIndex===1?'能力不支持：用户选择替代方案':'请求信息：连续补充与确认'} Demo" data-scene="${slide.actionIndex===1?'2.3-6':'2.3'}" src="./index.html?strategyScene=${slide.actionIndex===1?'2.3-6':'2.3'}&amp;strategyPanel=recovery-detail" scrolling="no"></iframe></div>
             <figcaption class="recovery-action-caption">${slide.actionIndex===0?`<div class="recovery-caption-wireframe">${recoveryWireframe(0)}</div>`:''}<div><strong>${recoveryPatterns[slide.actionIndex===1?3:0].place}</strong><p>${recoveryPatterns[slide.actionIndex===1?3:0].input}</p><small>预设交互演示</small></div></figcaption>
@@ -1184,7 +1196,7 @@
               <iframe title="CatPaw Demo：${item.title}" data-widget-case="${item.id}" src="./index.html?widgetCase=${item.id}" loading="lazy"></iframe>
             </div>
           </div>
-          <p class="reply-analysis-sources">设计动作 2.4.2 · Widget 与 Markdown 同题对照 · 交互原型，用户效果待验证</p>
+          <p class="reply-analysis-sources">设计动作 2.4.2 · 在回复里比较报价、试算预算和定位异常。文字版与交互版采用同一组数据，用户效果待验证。</p>
         </section>`;
       }
       if(slide.kind==='reply-flow')return `
@@ -1244,10 +1256,10 @@
         <section class="slide reply-analysis-slide" id="slide-2.4" aria-label="2.4 结果可视：场景分析">
           ${topline(index)}
           <div class="mainline"><span class="number">2.4</span><span>策略二 · 场景分析</span></div>
-          <h1>结果可视</h1><a class="research-entry" href="#2.4-research">补充研究 · 实现路径、展示流程与模块规范 ↗</a>
+          <h1>结果可视</h1><a class="research-entry" href="#2.4-research">补充研究 · 生成路径调研 ↗</a>
           <div class="reply-analysis-top"><div><span class="label">问题洞察</span><h2>${escapeHtml(slide.analysis.premiseTitle)}</h2></div><div><span class="label">用户关注</span><p>${escapeHtml(slide.analysis.concern)}</p></div></div>
           <figure class="reply-analysis-map" aria-label="三类任务与回复形式的并排场景分析">${replyDecisionDemo}</figure>
-          <p class="reply-analysis-rule"><strong>${escapeHtml(slide.analysis.title)}</strong>，选择足够完成任务的呈现方式。三种形式可组合，自动选型与组装规则仍待验证。</p>
+          <p class="reply-analysis-rule"><strong>${escapeHtml(slide.analysis.title)}</strong>。只问是否超支，一句结论就够了；需要反复试算时，让用户调人数，直接看支出和结余的变化。自动选择和组合控件的规则仍待验证。</p>
           <p class="reply-analysis-sources">外部参考：<a href="https://research.google/blog/generative-ui-a-rich-custom-visual-interactive-user-experience-for-any-prompt/" target="_blank" rel="noopener noreferrer">Google Research</a> · <a href="https://a2ui.org/" target="_blank" rel="noopener noreferrer">A2UI</a> · <a href="https://cloud.tencent.com/document/product/1759/127035" target="_blank" rel="noopener noreferrer">腾讯云 Widget</a> · <a href="https://medium.com/@michaeloloughlin/how-design-systems-must-evolve-for-generative-ui-8a928a93b15c" target="_blank" rel="noopener noreferrer">Medium 设计讨论</a> · <a href="https://www.antgroup.com/technology/new-tech-Technology-Antfocuses-Tabcomnent-detail/20241028003" target="_blank" rel="noopener noreferrer">灵光官网</a>　/　本页为设计归纳，案例数据为示例</p>
         </section>`;
       if(slide.no==='3.1')return `
@@ -1272,6 +1284,7 @@
           </div>
           ${processDemo}
         </section>`;
+      const demoScene=slide.no==='1.1-2'?'1.2':slide.no;
       return `
         <section class="slide action-slide${interruptionRoutes[slide.no]?' interruption-action-slide':''}" id="slide-${escapeHtml(slide.no)}" aria-label="${escapeHtml(slide.pointNo+' '+pageView[slide.pointNo][0]+'：'+slide.action[0])}">
           ${topline(index)}
@@ -1285,7 +1298,7 @@
               ${slide.pointNo==='3.3'?demoJump(slide.no,slide.actionIndex===0?'打开版本修改摘要 Demo':'打开版本差异与撤销 Demo'):''}
               ${slide.pointNo==='1.1'&&slide.actionIndex===0?`<p class="capability-source">四类是任务归并，并非统计标签。ToC 首轮 n=3,322；ToB 抽样 n=938。来源：<a href="https://km.sankuai.com/collabpage/2789760458" target="_blank" rel="noopener noreferrer">ToC 报告</a> · <a href="https://km.sankuai.com/collabpage/2786789535" target="_blank" rel="noopener noreferrer">ToB 报告</a></p>`:''}
             </div>
-            <figure class="design-slot ${CatPawStrategyScenes.scenes[slide.no]?'has-demo':''}" data-design-slot="${escapeHtml(slide.no)}" aria-label="设计稿：${escapeHtml(pageView[slide.pointNo][1])}">${slide.no==='3.2'?toolbarComparison:''}${CatPawStrategyScenes.scenes[slide.no]?`<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="CatPaw Demo：${escapeHtml(slide.action[0])}" data-scene="${escapeHtml(slide.no)}" src="./index.html?strategyScene=${escapeHtml(slide.no)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`:slide.no==='2.1'?processDemo:slide.no==='2.1-5'?modeDemo:slide.pointNo==='2.2'?`<div class="design-slot-body">${slide.actionIndex===0?'中途干预':'异常恢复'}设计待定</div>`:slide.pointNo==='3.1'?workspaceDemo[0]:slide.pointNo==='3.3'?`<div class="design-slot-body">版本界面待设计</div>`:`<div class="design-slot-body">对应设计稿放在这里</div>`}</figure>
+            <figure class="design-slot ${CatPawStrategyScenes.scenes[demoScene]?'has-demo':''}" data-design-slot="${escapeHtml(slide.no)}" aria-label="设计稿：${escapeHtml(demoScene==='2.1-5'?'四个后台运行的子智能体':demoScene==='1.2'?'案例列表与完整成品':pageView[slide.pointNo][1])}">${slide.no==='3.2'?toolbarComparison:''}${CatPawStrategyScenes.scenes[demoScene]?`<div class="design-slot-body demo-slot-body"><div class="demo-viewport"><iframe title="CatPaw Demo：${escapeHtml(slide.action[0])}" data-scene="${escapeHtml(demoScene)}" src="./index.html?strategyScene=${escapeHtml(demoScene)}" tabindex="-1" aria-hidden="true" scrolling="no"></iframe></div></div>`:slide.no==='2.1'?processDemo:slide.no==='2.1-5'?modeDemo:slide.pointNo==='2.2'?`<div class="design-slot-body">${slide.actionIndex===0?'中途干预':'异常恢复'}设计待定</div>`:slide.pointNo==='3.1'?workspaceDemo[0]:slide.pointNo==='3.3'?`<div class="design-slot-body">版本界面待设计</div>`:`<div class="design-slot-body">对应设计稿放在这里</div>`}</figure>
           </div>
           ${interruptionRoutes[slide.no]?renderInterruptionRoute(slide.no):''}
         </section>`;
@@ -1296,7 +1309,7 @@
     let sharedGreetingText='';
     const fromHash=()=>{
       const hash=decodeURIComponent(location.hash);
-      const canonical=hash==='#2.1-background'?'#2.1-5':hash==='#3.4'?'#3.3':hash==='#2.2-recovery-analysis'?'#2.3-analysis':hash==='#2.3-6'?'#2.3-2':hash==='#2.3-4'?'#2.3-analysis':hash==='#2.3-5'?'#2.3':hash==='#2.2-4'?'#2.3':hash==='#2.2-5'?'#2.3-2':hash==='#2.2-6'?'#2.3-6':hash==='#1.2-2'?'#1.2':hash==='#1.2-3'?'#1.3':/^#1\.1-[23]$/.test(hash)?'#1.1':hash==='#2.4-2'?'#2.4-modules':/^#2\.4-[34]$/.test(hash)?'#2.4-cases':/^#3\.1-[234]$/.test(hash)?'#3.1':hash==='#3.2-4'?'#3.2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.3':hash;
+      const canonical=hash==='#2.1-background'?'#2.1-5':hash==='#3.4'?'#3.3':hash==='#2.2-recovery-analysis'?'#2.3-analysis':hash==='#2.3-6'?'#2.3-2':hash==='#2.3-4'?'#2.3-analysis':hash==='#2.3-5'?'#2.3':hash==='#2.2-4'?'#2.3':hash==='#2.2-5'?'#2.3-2':hash==='#2.2-6'?'#2.3-6':['#1.2','#1.2-2'].includes(hash)?'#1.1-2':hash==='#1.2-3'?'#1.3':hash==='#1.1-3'?'#1.1':hash==='#2.4-2'?'#2.4-modules':/^#2\.4-[34]$/.test(hash)?'#2.4-cases':/^#3\.1-[234]$/.test(hash)?'#3.1':hash==='#3.2-4'?'#3.2':hash==='#3.3-3'?'#3.3-2':hash==='#strategy-4'?'#strategy-3':/^#4(?:-\d+)?$/.test(hash)?'#3.3':hash;
       return slides.findIndex(slide=>'#'+slide.no===canonical);
     };
     let current=Math.max(0,fromHash());
@@ -1462,9 +1475,11 @@
       if(!tab)return;
       const tabs=[...tab.closest('[data-process-tabs]').querySelectorAll('[data-process-frame]')];
       let index=tabs.indexOf(tab);
-      if(['ArrowRight','ArrowLeft','Home','End'].includes(event.key)){
+      const vertical=tab.parentElement.getAttribute('aria-orientation')==='vertical';
+      const nextKey=vertical?'ArrowDown':'ArrowRight',previousKey=vertical?'ArrowUp':'ArrowLeft';
+      if([nextKey,previousKey,'Home','End'].includes(event.key)){
         event.preventDefault();event.stopPropagation();
-        index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length;
+        index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key===nextKey?1:tabs.length-1))%tabs.length;
         tabs[index].focus();tabs[index].click();
       }else if(['Enter',' '].includes(event.key))event.stopPropagation();
     });

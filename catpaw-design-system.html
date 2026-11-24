@@ -406,7 +406,8 @@ section#sources ul{padding-inline-start:20px}.source-link{display:inline-block;m
 .ds-button:not(.xs):not(.compact):not(.large):not(.icon-only):not(:has(> svg, > .button-spinner)){padding-inline:12px}
 .button-rule-list{padding-left:20px;margin:12px 0}.button-rule-list li{margin:6px 0}
 .button-table{overflow-x:auto}.button-table table{min-width:520px}
-</style></head>
+</style><link rel="stylesheet" href="./tooltip.css">
+</head>
 <body>
 <header><div class="bar"><div class="wordmark"><b>●</b> CatPaw Design System</div><nav aria-label="目录"><a href="#colors">色板</a><a href="#foundations">字体与尺寸</a><a href="#buttons">按钮规范</a><a href="#controls">控件</a><a href="#patterns">组合示例</a><a href="#sources">来源</a></nav><button type="button" class="theme" aria-pressed="false">切换深色</button></div></header>
 <main>
@@ -443,6 +444,7 @@ section#sources ul{padding-inline-start:20px}.source-link{display:inline-block;m
 <div class="grid">
 <article class="example"><h3>发送按钮</h3><div class="sample demo-shell"><button class="send-btn" aria-label="发送"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button><button class="send-btn" aria-label="不可发送" disabled><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div><small>任务对话的圆形主操作。空输入时禁用。</small></article>
 <article class="example"><h3>图标按钮</h3><div class="sample demo-shell"><button class="icon-btn" aria-label="搜索项目"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4 4"/></svg></button><button class="round-btn" aria-label="添加信息"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button></div><small>侧栏搜索、输入栏添加。紧凑操作使用图标和可访问名称。</small></article>
+<article class="example"><h3>工具提示</h3><div class="sample demo-shell"><button type="button" class="icon-btn" aria-label="侧边栏打开" data-tooltip="侧边栏打开"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M15 3v18"/></svg></button></div><small>悬停或使用 Tab 聚焦图标时，按钮下方显示操作名称。</small></article>
 <article class="example"><h3>能力入口</h3><div class="sample demo-shell"><button class="composer-quick-add-trigger">专家</button><button class="composer-quick-add-trigger">知识库</button><button class="composer-quick-add-trigger">技能</button></div><small>输入栏内的次级操作。示例展示入口外观。</small></article>
 <article class="example"><h3>任务列表项</h3><div class="demo-shell specimen-list" id="task-samples"><button class="task" aria-current="page"><span class="task-name">整理本周门店履约异常明细</span></button><button class="task"><span class="task-name">把季度复盘要点汇总成幻灯片</span></button></div><small>点击可切换当前项，查看侧栏选中底色。</small></article>
 </div></section>
