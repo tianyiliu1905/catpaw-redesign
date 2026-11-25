@@ -2512,7 +2512,7 @@ promptGuide = text;
         }, delay);
         const data = promptCategoryData()[category];
         const sourceButton = primaryPromptButtons.find((button) => button.dataset.promptCategory === category);
-        const sourceIcon = sourceButton?.querySelector('.ic')?.outerHTML || '';
+        const sourceIcon = sourceButton?.querySelector('.prompt-category-icon')?.innerHTML || '';
         setPromptGuide(data.guide, data.tag, sourceIcon);
         if (focusPrompt) prompt.focus();
       }
@@ -3299,7 +3299,7 @@ let openingFileWorkspace = false;
     content.classList.remove('wb-panel-switch');
   });
 
-  function setRightPanel(panel) {
+  function setRightPanel(panel, { animateOpen = false } = {}) {
     const next = panel || null;
     if (next !== 'tools') content.classList.remove('wb-scheduled-overlay');
     const opening = Boolean(next) && (!content.classList.contains('wb-open') || content.classList.contains('wb-auto-collapsed'));
@@ -3313,7 +3313,7 @@ let openingFileWorkspace = false;
     document.querySelectorAll('.artifact-version-tag').forEach(tag => tag.setAttribute('aria-expanded', String(next === 'tools' && currentFileWorkspace()?.previewMode === 'history')));
     syncScheduledPanelToggle();
     syncWorkbenchWidth();
-    const instantFileOpen = opening && content.classList.contains('wb-file-workspace');
+    const instantFileOpen = opening && !animateOpen && content.classList.contains('wb-file-workspace');
     if (instantFileOpen) content.classList.add('wb-opening');
     const open = Boolean(next);
     content.classList.toggle('wb-open', open);
@@ -3516,6 +3516,7 @@ let openingFileWorkspace = false;
     const index = openWorkspaces.findIndex((item) => item.id === id);
     if (index === -1) return;
     const item = openWorkspaces[index];
+    if (!confirmed && item.controlSession && browserControlDemo.confirmTabClose(() => closeWorkspace(id, true))) return;
     if (!confirmed && item.kind === 'file' && item.sourceDraft !== undefined) {
       pendingCloseWorkspaceId = id;
       closeDialogReturnFocus = document.activeElement;
@@ -3618,7 +3619,6 @@ summaryPopover.addEventListener('click', event => {
   list.hidden = !expanded;
 });
 function setSummaryOpen(open) {
-  if (open && document.getElementById('standardSummary').hidden) open = false;
   // 工具区已打开时先用当前左侧主区边界定位，再显示摘要浮窗，避免沿用旧的静态位置。
   syncSummaryTriggerPosition();
   summaryPopover.hidden = !open;
@@ -5020,22 +5020,54 @@ const mainView = document.querySelector('.main');
   // Observing geometry covers streaming, cards, files and expanded tool output alike.
   let conversationFollowLatest = true;
   let conversationFollowFrame = null;
-  let anchoredConversationPlan = null;
+  let anchoredConversationElement = null;
   const conversationPlanBottomGap = 32; // Plus the composer's 8px top padding.
-  function currentConversationPlan() {
-    return [...conversationThread.querySelectorAll('.conversation-stage-demo:not(.is-paused) > .stage-plan')].at(-1) || null;
+  function currentConversationAnchor() {
+    const waitingCard = conversationThread.lastElementChild?.querySelector('[data-browser-reply]:has(.stage-thinking[data-browser-stage="asking"]) .browser-takeover-card');
+    return waitingCard || [...conversationThread.querySelectorAll('.conversation-stage-demo:not(.is-paused) > .stage-plan')].at(-1) || null;
+  }
+  function conversationAnchorBoundary(anchor) {
+    const boundary = conversationScroll.getBoundingClientRect().bottom - conversationPlanBottomGap;
+    if (!anchor.matches('.browser-takeover-card')) return boundary;
+    const thumbnail = document.querySelector('#browserControlSummary:not([hidden]) .browser-preview-tip');
+    return thumbnail ? Math.min(boundary, thumbnail.getBoundingClientRect().top - 40) : boundary;
+  }
+  let revealingTakeoverCard = null;
+  function revealTakeoverCard(anchor) {
+    conversationFollowLatest = true;
+    if (reducedMotion.matches) {
+      followConversationContent();
+      return;
+    }
+    revealingTakeoverCard = anchor;
+    const start = performance.now();
+    const from = conversationScroll.scrollTop;
+    function tick(now) {
+      if (revealingTakeoverCard !== anchor) return;
+      if (currentConversationAnchor() !== anchor) {
+        revealingTakeoverCard = null;
+        return;
+      }
+      const progress = Math.min(1, Math.max(0, (now - start) / 420));
+      const target = conversationScroll.scrollTop + anchor.getBoundingClientRect().bottom - conversationAnchorBoundary(anchor);
+      conversationScroll.scrollTop = from + Math.max(0, target - from) * (1 - (1 - progress) ** 3);
+      if (progress < 1) requestAnimationFrame(tick);
+      else {
+        revealingTakeoverCard = null;
+        anchoredConversationElement = anchor;
+      }
+    }
+    requestAnimationFrame(tick);
   }
   function followConversationContent() {
-    const plan = currentConversationPlan();
-    if (anchoredConversationPlan !== plan) anchoredConversationPlan = null;
+    if (revealingTakeoverCard) return;
+    const anchor = currentConversationAnchor();
+    if (anchoredConversationElement !== anchor) anchoredConversationElement = null;
     if (!conversationFollowLatest) return;
-    if (plan) {
-      const boundary = conversationScroll.getBoundingClientRect().bottom - conversationPlanBottomGap;
-      const distance = plan.getBoundingClientRect().bottom - boundary;
-      // Short replies remain in normal flow. Once they reach the composer,
-      // follow the plan's bottom edge instead of the whole thread's bottom.
-      if (distance >= 0 || anchoredConversationPlan === plan) {
-        anchoredConversationPlan = plan;
+    if (anchor) {
+      const distance = anchor.getBoundingClientRect().bottom - conversationAnchorBoundary(anchor);
+      if (distance >= 0 || anchoredConversationElement === anchor) {
+        anchoredConversationElement = anchor;
         conversationScroll.scrollTop += distance;
       }
       return;
@@ -5051,21 +5083,24 @@ const mainView = document.querySelector('.main');
       const viewport = conversationScroll.clientHeight;
       const needsFollow = height > conversationFollowSize.height || viewport < conversationFollowSize.viewport;
       conversationFollowSize = {height, viewport};
-      if (!conversationFollowLatest || !viewport || (!needsFollow && !anchoredConversationPlan)) return;
+      if (!conversationFollowLatest || !viewport || (!needsFollow && !anchoredConversationElement)) return;
       followConversationContent();
     });
   }
   conversationScroll.addEventListener('scroll', () => {
-    const plan = currentConversationPlan();
-    const atPlan = plan && Math.abs(plan.getBoundingClientRect().bottom - conversationScroll.getBoundingClientRect().bottom + conversationPlanBottomGap) <= 4;
+    if (revealingTakeoverCard) return;
+    const plan = currentConversationAnchor();
+    const atPlan = plan && Math.abs(plan.getBoundingClientRect().bottom - conversationAnchorBoundary(plan)) <= 4;
     conversationFollowLatest = Boolean(atPlan) || conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight <= 4;
   }, { passive:true });
   // Cancel following before the next streaming frame when the reader scrolls back.
   conversationScroll.addEventListener('wheel', event => {
+    if (event.deltaY) revealingTakeoverCard = null;
     if (event.deltaY < 0) conversationFollowLatest = false;
   }, { passive:true });
   let conversationTouchY = null;
   conversationScroll.addEventListener('touchstart', event => {
+    revealingTakeoverCard = null;
     conversationTouchY = event.touches[0]?.clientY ?? null;
   }, { passive:true });
   conversationScroll.addEventListener('touchmove', event => {
@@ -5080,14 +5115,15 @@ const mainView = document.querySelector('.main');
   const conversationSend = document.getElementById('conversationSend');
   const conversationTask = document.getElementById('demoConversationTask');
   const retailConversationTask = document.getElementById('retailFirstConversationTask');
-  const membershipResearchTask = document.getElementById('membershipResearchTask');
   const scheduledReportTask = document.getElementById('scheduledReportTask');
   const conversationSubagents = [
     { work: '合并各门店履约明细', state: 'done', detail: '已按订单与门店归并明细，统一事件时间字段，供后续异常识别和核验使用。' },
     { work: '定位异常订单的集中时段', state: 'running', detail: '正在对照订单事件日志，定位超时与出餐延迟的集中时段；未核实的原因暂不写成结论。' },
     { work: '复核履约指标统计口径', state: 'running', detail: '正在核对订单去重、时间戳对齐及分时段阈值，确保看板与异常明细的统计口径一致。' },
   ];
-  const artifactEditingTask = document.getElementById('artifactEditingTask');
+  const artifactEditingTask = strategyScene
+    ? document.getElementById('strategyArtifactEditingTask').content.firstElementChild.cloneNode(true)
+    : null;
   const supplierComparisonTask = document.getElementById('supplierComparisonTask');
   // Shared by the standalone queue conversation and the slide intervention demo.
   const interventionTask = document.getElementById('interventionTask');
@@ -5095,6 +5131,7 @@ const mainView = document.querySelector('.main');
   const retryRecoveryTask=document.getElementById('retryRecoveryTask');
   const failureRecoveryTask=document.getElementById('failureRecoveryTask');
   const browserControlTask=document.getElementById('browserControlTask');
+  const browserTasks = new Set(document.querySelectorAll('[data-browser-presentation]'));
   const extraRecoveryCases = [
     {task:document.getElementById('systemRecoveryTask'), mode:'system', prompt:'整理本周门店经营数据，生成区域经营概况。'},
     {task:document.getElementById('authRecoveryTask'), mode:'auth', prompt:'读取门店巡检规范，结合本月问题更新标准作业流程。'},
@@ -5112,11 +5149,11 @@ const mainView = document.querySelector('.main');
     [backgroundMixedTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约概况，让一个子智能体交叉核查明细，同时在后台导出完整文件。',reply:''}]}],
     // 回复结尾提示已停用：[backgroundAgentInlineTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
     [backgroundAgentTask,{folderId:'default',files:[],turns:[{prompt:'先汇总本周门店履约情况，明细的交叉核查交给子智能体在后台继续。',reply:''}]}],
-    [browserControlTask,{folderId:'default',files:[],turns:[
+    ...[...browserTasks].map(task=>[task,{folderId:'default',files:[],turns:[
       {minutesAgo:38,prompt:'我在准备周末的到店提醒，需要跟门店确认哪些信息？',reply:'先确认门店名称和周六、周日各自的营业时间。如果有临时调整，再把调整日期写进提醒。'},
       {minutesAgo:24,prompt:'这次只看湖滨店，两天的时间分开核对。',reply:'好的，我会分别核对湖滨店周六和周日的记录。两天一致时，提醒里可以合并写成一句话。'},
       {minutesAgo:12,prompt:'营业时间以门店管理后台为准。',reply:'明白，以后台的门店详情为准；如果周末有单独排班，就采用当天的排班时间。'},
-      {prompt:'打开门店管理后台，帮我查一下湖滨店周末的营业时间。',reply:''}]}],
+      {prompt:'打开门店管理后台，帮我查一下湖滨店周末的营业时间。',reply:''}]}]),
     ...extraRecoveryCases.map(({task,prompt})=>[task,{folderId:task.closest('[data-folder]')?.dataset.folder || 'default',files:[],turns:[{prompt,reply:''}]}]),
     ...[...widgetCases].map(([task, item]) => [task, {folderId:'default', files:[], turns:[{prompt:item.prompt, reply:''}]}]),
     [retryRecoveryTask,{folderId:'default',files:[],turns:[{prompt:'对照供应商交付记录，帮我梳理供应链风险和应对预案。',reply:''}]}],
@@ -5129,12 +5166,12 @@ const mainView = document.querySelector('.main');
       folderId:'default',files:[],
       turns:[{prompt:'帮我整理本季度经营复盘，先分析各区域表现，再给出后续行动建议。',reply:''}],
     }],
-    [artifactEditingTask, {
+    ...(artifactEditingTask ? [[artifactEditingTask, {
       folderId:'default',
       turns:[{prompt:'把季度经营数据和复盘要点整理成汇报 PPT，附上复盘说明，方便我继续调整。',
         reply:'已整理好季度复盘初稿，按经营概况、区域表现和行动计划组织，共 5 页。华东区域履约率偏低，具体原因仍需核对。\n\n打开产物后，可以选择 PPT 页面或框选局部、划选文档文字，再点击「添加到对话」，围绕所选内容提出修改要求。'}],
       files:['季度经营复盘.pptx','季度经营复盘说明.docx'],
-    }],
+    }]] : []),
     [conversationTask, {
       folderId: 'default',
       goal: '基于订单履约事件日志建立可复算的异常识别流程：按订单 ID 去重，对齐接单、到店、出餐与交接时间戳；超时阈值按时段和门店配置，缺失时间戳单列待核验。输出异常明细时保留原始事件 ID、规则版本、优先级计算依据和责任方待确认标记，确保看板指标可追溯到明细。',
@@ -5204,20 +5241,6 @@ const mainView = document.querySelector('.main');
         },
       ],
       files: strategyScene ? ['门店履约异常看板.html', '门店履约异常明细.xlsx', '门店履约分析.docx'] : ['门店履约异常看板.html'],
-    }],
-    [membershipResearchTask, {
-      folderId: 'default',
-      turns: [
-        { prompt: '调研竞品在会员权益上的差异，看看我们还缺什么。',
-          reply: '我先按价格、折扣、积分和专属服务整理了竞品会员权益。初稿中有些权益属于限时活动，且各品牌会员等级不同，目前只能作为线索，不能直接判断谁更有优势。' },
-        { prompt: '别只列权益。把入会门槛、权益使用条件和限制也放到一起比；过期活动不要算常驻权益。',
-          reply: '已把一次性活动单列，并按会员等级、入会成本、使用门槛、有效期和适用渠道统一口径。原先“竞品折扣力度更大”的判断缺少同等级、同渠道证据，已改为待核实。' },
-        { prompt: '这样好一些。结论别笼统说我们落后，要指出哪个用户场景缺权益、依据是什么。',
-          reply: '已按新客入会、老客复购和高频用户三个场景重写差异：每条判断都附上对比口径和证据状态；缺少公开规则的权益保留“待核实”，不推断实际可用性。' },
-        { prompt: '这一版可以，口径和结论都比之前清楚多了。',
-          reply: '好的，这版会保留可比口径、用户场景和待核实项，方便后续查看。' },
-      ],
-      files: [],
     }],
     [retailConversationTask, {
       folderId: 'retail',
@@ -5915,8 +5938,9 @@ const mainView = document.querySelector('.main');
       });
     }
   };
-  const browserControlDemo=window.createBrowserControlDemo({thread:conversationThread,task:browserControlTask,openDock:(address)=>{
-    setRightPanel('tools');
+  const browserControlDemo=window.createBrowserControlDemo({thread:conversationThread,openDock:(address)=>{
+    if(!summaryPopover.hidden)setSummaryOpen(false);
+    setRightPanel('tools', {animateOpen:true});
     fileTreeVisible=false;
     let item=openWorkspaces.find(tab=>tab.controlSession);
     if(!item){
@@ -5930,7 +5954,7 @@ const mainView = document.querySelector('.main');
   },updateDockAddress:(address)=>{
     const item=openWorkspaces.find(tab=>tab.controlSession);
     if(item){item.url=address;if(item.id===activeWorkspace)urlInput.value=address;}
-  },onComplete:()=>browserQueue.dispatchPending(),syncProgress:syncStageDemoControls,preserveConversationScrollRange,renderStageAcknowledgement,replaceStageContent});
+  },onComplete:()=>browserQueues.get(activeConversationTask)?.dispatchPending(),syncProgress:syncStageDemoControls,preserveConversationScrollRange,renderStageAcknowledgement,replaceStageContent});
   const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure'],...extraRecoveryCases.map(({task,mode})=>[task,mode])].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
     intro: strategyScene==='2.3',
     renderPlan:state=>renderConversationPlan(clarificationPlan.map(title=>({title})),state.phase==='done'?1:0,state.open,false,state.phase!=='done','clarificationPlanBody'),
@@ -5987,7 +6011,7 @@ const mainView = document.querySelector('.main');
     },
   });
   function restoreQueuedMessage(message) {
-    if(conversationPage.hidden || (activeConversationTask!==interventionTask && !(activeConversationTask===browserControlTask && browserControlDemo.acceptsQueuedMessages)))return false;
+    if(conversationPage.hidden || (activeConversationTask!==interventionTask && !(browserTasks.has(activeConversationTask) && browserControlDemo.acceptsQueuedMessages)))return false;
     const text=message.rawText??message.text;
     const existing=conversationPrompt.value.trim();
     conversationPrompt.value=[text,existing].filter(Boolean).join('\n\n');
@@ -6003,16 +6027,17 @@ const mainView = document.querySelector('.main');
     conversationPrompt.setSelectionRange(0,text.length);
     return true;
   }
-  const browserQueue = window.CatPawQueueDemo.createController({
-    container:document.getElementById('browserMessageQueue'),thread:conversationThread,
+  const queueIds={composer:'browserMessageQueue',summary:'browserSummaryQueue',prompt:'browserPromptQueue'};
+  const browserQueues=new Map([...browserTasks].map(task=>[task,window.CatPawQueueDemo.createController({
+    container:document.getElementById(queueIds[task.dataset.browserPresentation]),thread:conversationThread,
     onEdit:restoreQueuedMessage,onDispatch:beginConversationTurn,
-  });
+  })]));
   const queueDemo = window.CatPawQueueDemo.createController({
     characterInterval:['2.2','2.2-2','2.2-3'].includes(strategyScene)?80:55,
     container:document.getElementById('conversationQueueGroup'),thread:conversationThread,
     onResume:message=>{
       conversationThread.insertAdjacentHTML('beforeend',
-        (message?renderConversationTurnTime(new Date())+renderUserMessage(message.text,message.attachments,false,false,message.references):'')+
+        (message?renderConversationTurnTime(new Date())+renderUserMessage(message.text,message.attachments,false,message.references):'')+
         `<div class="conversation-message assistant-message"><div class="assistant-content">${queueDemo.initial()}</div></div>`);
       moveConversationProgressToLatestTurn();
       renderConversationTurnNav();
@@ -6776,7 +6801,7 @@ const mainView = document.querySelector('.main');
     const result = panel.querySelector('.stage-result');
     if (result && !positions.has(stageContentKey(result))) stepMotion.enter(null, result);
     for (const {node,previous,delta} of movements) {
-      if (Math.abs(delta) > 1 && node !== anchoredConversationPlan) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
+      if (Math.abs(delta) > 1 && node !== anchoredConversationElement) node.animate([{transform:`translateY(${delta}px)`},{transform:'translateY(0)'}], {duration,easing});
       if (!((delegationEntering || sameTaskGroup || current?.dataset.taskGroup !== undefined) && node === current) && (!previous || previous.text !== node.textContent) && node.matches('.stage-checkpoint,.stage-current:not(:has(> .stage-tool-call))')) {
         node.animate([{opacity:0},{opacity:1}], {duration:320,easing});
       }
@@ -6924,7 +6949,7 @@ const mainView = document.querySelector('.main');
     syncAgentTransmissionPaths(panel);
     if(panel?.dataset.pausedAt)applyStagePausedView(panel,true);
     syncInterventionComposer();
-    if (!conversationPage.hidden && activeConversationTask===browserControlTask) {
+    if (!conversationPage.hidden && browserTasks.has(activeConversationTask)) {
       const progress=browserControlDemo.progress;
       stageDemoControls.hidden=!!conversationThread.querySelector('[data-browser-reply].is-entering');
       stageDemoPrevious.disabled=progress.first;
@@ -6983,7 +7008,7 @@ const mainView = document.querySelector('.main');
     panel.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
     panel.querySelectorAll('[aria-controls]').forEach(node=>node.removeAttribute('aria-controls'));
     const text=message?.rawText??message?.text;
-    conversationThread.insertAdjacentHTML('beforeend',(message?renderConversationTurnTime(new Date())+renderUserMessage(message.text,message.attachments,false,false,message.references):'')+
+    conversationThread.insertAdjacentHTML('beforeend',(message?renderConversationTurnTime(new Date())+renderUserMessage(message.text,message.attachments,false,message.references):'')+
       `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage()}</div></div>`);
     const nextPanel=conversationThread.querySelector('.conversation-stage-demo');
     nextPanel.dataset.newRoundThinking='true';
@@ -6997,12 +7022,17 @@ const mainView = document.querySelector('.main');
   }
 
   stageDemoPrevious.addEventListener('click', () => {
-    if(activeConversationTask===browserControlTask)return browserControlDemo.step(-1);
+    if(browserTasks.has(activeConversationTask))return browserControlDemo.step(-1);
     if (activeConversationTask !== conversationTask) return;
     previousConversationStage(conversationThread.querySelector('.conversation-stage-demo'));
   });
   stageDemoAdvance.addEventListener('click', () => {
-    if(activeConversationTask===browserControlTask)return browserControlDemo.step(1);
+    if(browserTasks.has(activeConversationTask)){
+      browserControlDemo.step(1);
+      const anchor=currentConversationAnchor();
+      if(anchor?.matches('.browser-takeover-card'))revealTakeoverCard(anchor);
+      return;
+    }
     const panel = conversationThread.querySelector('.conversation-stage-demo');
     if (!panel || activeConversationTask !== conversationTask) return;
     const next = (Number(panel.dataset.stageFrame) + 1) % conversationStageFrames.length;
@@ -7406,11 +7436,10 @@ const mainView = document.querySelector('.main');
     return `<button class="conversation-sent-file" type="button" data-message-attachment="${id}" aria-label="预览文件：${nameAttr}" title="预览文件：${nameAttr}"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"><span class="conversation-sent-file-copy"><strong>${name}</strong><small>${entry.localFile ? '本地文件' : '资料库文件'} · 点击预览</small></span><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`;
   }
 
-  function renderUserMessage(text, attachments = [], isGoal = false, suggestSop = false, references = []) {
+  function renderUserMessage(text, attachments = [], isGoal = false, references = []) {
     const bubble = text ? `<div class="message-bubble">${isGoal ? conversationGoalLabel : ''}${esc(text)}</div>` : '';
     const cards = attachments.length ? `<div class="conversation-sent-attachments">${attachments.map(renderSentAttachment).join('')}</div>` : '';
-    const suggestion = suggestSop ? '<div class="conversation-sop-suggestion"><span>是否沉淀 SOP？</span><button type="button" data-sop-accept aria-label="确认沉淀 SOP" title="确认沉淀 SOP"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="m5 12 4.5 4.5L19 7"/></svg></button></div>' : '';
-    return `<div class="conversation-message user-message"><div class="conversation-message-body">${artifactSelection?.renderSent(references) || ''}${bubble}${cards}${suggestion}${renderMessageMeta('user')}</div></div>`;
+    return `<div class="conversation-message user-message"><div class="conversation-message-body">${artifactSelection?.renderSent(references) || ''}${bubble}${cards}${renderMessageMeta('user')}</div></div>`;
   }
 
   function formatConversationTurnTime(date, now = new Date()) {
@@ -8050,7 +8079,7 @@ const mainView = document.querySelector('.main');
     return task === conversationTask && !startedConversationDemos.has(task);
   }
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
-    document.getElementById('standardSummary').hidden = open && task === browserControlTask;
+    const leavingBrowserTask=browserTasks.has(activeConversationTask) && (!open || task!==activeConversationTask);
     closeSubagentConversation();
     if (open && scheduledRunTasks.has(task)) showScheduledTaskDetails(task);
     closeAccessMenus();
@@ -8080,9 +8109,9 @@ const mainView = document.querySelector('.main');
             const folder = FOLDERS.find(entry => entry.id === example.folderId);
             const node = folder?.files.find(file => file.name === name);
             return node ? { node, chain: [folder, node] } : null;
-          }).filter(Boolean), isGoal, task === membershipResearchTask && index === turns.length - 1) +
+          }).filter(Boolean), isGoal) +
           `<div class="conversation-message assistant-message"><div class="assistant-content">${reply ? `<article class="md conversation-reply">${renderMarkdown(reply)}</article>` : ''}` +
-          (task === browserControlTask && index === turns.length - 1 ? browserControlDemo.initial(!reducedMotion.matches) : '') +
+          (browserTasks.has(task) && index === turns.length - 1 ? browserControlDemo.initial(!reducedMotion.matches) : '') +
           (task === supplierComparisonTask && index === 0 ? supplierDemo.initial() : '') +
           (widgetCases.has(task) && index === 0 ? window.CatPawWidgetCases.renderReply(widgetCases.get(task).id) : '') +
           (task === interventionTask && index === 0 ? queueDemo.initial() : '') +
@@ -8117,7 +8146,7 @@ const mainView = document.querySelector('.main');
     syncBackgroundAgentDemo(open, task);
     window.CatPawWidgetCases?.syncControls();
     syncExpertForContext();
-    browserQueue.activate(open && task === browserControlTask);
+    browserQueues.forEach((queue,key)=>queue.activate(open && key===task));
     queueDemo.activate(open && task === interventionTask);
     if (open && task === interventionTask && !new URLSearchParams(location.search).has('strategyScene') && !task.dataset.queueSeeded) {
       task.dataset.queueSeeded = 'true';
@@ -8128,8 +8157,12 @@ const mainView = document.querySelector('.main');
       resizeConversationPrompt();
     }
     recoveryDemos.forEach((demo,key)=>demo.activate(open && task===key));
-    browserControlDemo.activate(open && task===browserControlTask);
-    if(open && task===browserControlTask && !summaryPopover.hidden)setSummaryOpen(false);
+    if(leavingBrowserTask){
+      const tab=openWorkspaces.find(item=>item.controlSession);
+      if(tab)closeWorkspace(tab.id,true);
+    }
+    browserControlDemo.activate(open && browserTasks.has(task) ? task : null);
+    if(open && browserTasks.has(task) && !summaryPopover.hidden)setSummaryOpen(false);
     if (!open || task !== conversationTask) clearTimeout(stageAutoTimer);
     syncStageDemoControls();
     if (!open && workbenchExpanded) setWorkbenchExpanded(false);
@@ -8171,7 +8204,7 @@ const mainView = document.querySelector('.main');
       resizeConversationPrompt();
       renderConversationTurnNav();
       requestAnimationFrame(() => {
-        conversationScroll.scrollTop = task === conversationTask || task === browserControlTask || task === membershipResearchTask ? conversationScroll.scrollHeight : 0;
+        conversationScroll.scrollTop = task === conversationTask || browserTasks.has(task) ? conversationScroll.scrollHeight : 0;
         updateConversationTurnNav();
       });
     }
@@ -8351,7 +8384,7 @@ function beginConversationTurn(message) {
   const attachments = typeof message === 'string' ? [] : message.attachments || [];
   const references = typeof message === 'string' ? [] : message.references || [];
   if (activeConversationTask === supplierComparisonTask) {
-    conversationThread.insertAdjacentHTML('beforeend', renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments, false, false, references) +
+    conversationThread.insertAdjacentHTML('beforeend', renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments, false, references) +
       `<div class="conversation-message assistant-message"><div class="assistant-content">${supplierDemo.replyToText(text)}${renderMessageMeta('assistant')}</div></div>`);
     conversationThreads.set(supplierComparisonTask, conversationThread.innerHTML);
     moveConversationProgressToLatestTurn();
@@ -8363,7 +8396,7 @@ function beginConversationTurn(message) {
     ? `已收到针对「${references.map(ref => `${ref.fileName} · ${ref.label}`).join('」、「')}」的修改意见。当前为交互演示，尚未连接生成服务，产物内容没有改变。`
     : '已记录消息。当前原型未连接生成服务，文件内容没有更新；可继续查看原产物或补充要求。';
   conversationThread.insertAdjacentHTML('beforeend',
-    renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments, false, false, references) +
+    renderConversationTurnTime(new Date()) + renderUserMessage(text, attachments, false, references) +
     `<div class="conversation-message assistant-message"><div class="assistant-content"><p class="conversation-prototype-receipt">${esc(receipt)}</p>${renderMessageMeta('assistant')}</div></div>`);
   moveConversationProgressToLatestTurn();
   renderConversationTurnNav();
@@ -8439,12 +8472,12 @@ function beginConversationTurn(message) {
     showConversationFeedback('已按补充要求继续');
   } else if (activeConversationTask === interventionTask && queueDemo.enqueue(message)) {
     showConversationFeedback('已加入待发送队列');
-  } else if (activeConversationTask === browserControlTask && browserControlDemo.acceptsQueuedMessages && browserQueue.enqueue(message)) {
+  } else if (browserTasks.has(activeConversationTask) && browserControlDemo.acceptsQueuedMessages && browserQueues.get(activeConversationTask).enqueue(message)) {
     showConversationFeedback('已加入待发送队列');
   } else if (awaitingDemoPrompt(activeConversationTask)) {
     startedConversationDemos.add(activeConversationTask);
     conversationThread.insertAdjacentHTML('beforeend',
-      renderConversationTurnTime(new Date()) + renderUserMessage(message.text, message.attachments, false, false, message.references) +
+      renderConversationTurnTime(new Date()) + renderUserMessage(message.text, message.attachments, false, message.references) +
       `<div class="conversation-message assistant-message"><div class="assistant-content">${renderConversationStage(!reducedMotion.matches)}</div></div>`);
     renderConversationTurnNav();
     syncStageDemoControls();
@@ -10042,101 +10075,20 @@ function beginConversationTurn(message) {
   const sopForm = document.getElementById('sopForm');
   const sopEvidence = document.getElementById('sopEvidence');
   const sopFormStatus = document.getElementById('sopFormStatus');
-  let sopReturnFocus = null;
   let sopScope = 'whole';
-  let sopDrafts = {};
   let editingSopId = null;
-  // 演示数据：只针对会员权益调研这段已写明的示例对话，不推断任意真实任务。
-  const membershipSopDrafts = {
-    whole: {
-      title: '会员权益竞品调研',
-      when: '需要比较同类会员产品，找出具体用户场景中的权益差异时。',
-      inputs: '本方和竞品的会员等级、公开权益规则、使用条件及有效期；缺失项由用户补充或标为待核实。',
-      steps: '1. 按会员等级、入会成本、适用渠道、使用门槛和有效期统一口径。\n2. 区分常驻权益与限时活动，不把不可比项目直接排序。\n3. 按新客入会、老客复购和高频用户场景比较差异。\n4. 每条结论附上来源及证据状态，列出待核实项。',
-      checks: '对比条件一致；没有把过期活动当常驻权益；结论指向具体用户场景；不确定项明确标记。',
-      prompt: '请基于我提供的会员权益规则，比较本方与竞品在具体用户场景中的权益差异。先核对会员等级、入会成本、使用门槛、适用渠道和有效期；限时活动与常驻权益分开列出。结论逐条说明证据及待核实信息，不要在口径不同时直接判断谁更有优势。',
-      evidence: '参考了初稿中口径不齐的问题、后续对使用条件与活动有效期的修正，以及最终按用户场景表达差异的认可。',
-    },
-    revision: {
-      title: '修正会员权益对比的口径与结论',
-      when: '已有一份权益对比初稿，但结论过于笼统或把不同等级、限时活动混在一起比较时。',
-      inputs: '待修改的对比初稿及可核对的权益规则；没有目标初稿时不能直接套用。',
-      steps: '1. 找出初稿中混入的限时活动、等级不一致和缺少条件的判断。\n2. 补齐入会门槛、权益使用限制、渠道和有效期，无法核实的标为待核实。\n3. 保留有依据的内容，撤回无证据的强结论。\n4. 改写为“哪个用户场景缺什么权益、依据是什么”。',
-      checks: '未将过期活动作为常驻权益；修改前后判断可追溯；每条差异有适用场景、对比口径和证据状态。',
-      prompt: '请修改我提供的会员权益对比初稿，而不是重新从零生成。先核对各会员等级、使用门槛、适用渠道和有效期；将限时活动单列，撤回缺少同口径证据的结论。保留已有可靠内容，按用户场景说明权益差异及依据，并标出待核实项。',
-      evidence: '参考了“过期活动不要算常驻权益”和“指出哪个用户场景缺权益、依据是什么”两次修改及最后的认可；不是仅复制最后一句话。',
-    },
-  };
-  function captureSopDraft() {
-    const fields = sopForm.elements;
-    sopDrafts[sopScope] = Object.fromEntries(['title', 'when', 'inputs', 'steps', 'checks', 'prompt'].map(name => [name, fields[name].value]));
-  }
-  function showSopScope(scope) {
-    sopScope = scope;
-    const draft = sopDrafts[scope] || membershipSopDrafts[scope];
-    for (const name of ['title', 'when', 'inputs', 'steps', 'checks', 'prompt']) sopForm.elements[name].value = draft[name];
-    sopEvidence.innerHTML = `<strong>草稿依据 · 示例复盘</strong><p>${esc(membershipSopDrafts[scope].evidence)}</p>`;
-    sopFormStatus.hidden = true;
-  }
-  const sopRequest = '请回顾刚才这项任务的对话，把真正有效的做法沉淀成一份可复用的 SOP 草稿，先给我确认，不要直接保存。';
-  conversationThread.addEventListener('click', event => {
-    const button = event.target.closest('[data-sop-accept]');
-    if (!button || activeConversationTask !== membershipResearchTask) return;
-    button.closest('.conversation-sop-suggestion').remove();
-    const draft = membershipSopDrafts.revision;
-    const reply = [
-      '这是一份待你确认的 SOP 草稿。我回看了初稿、两次修改和最终认可，重点保留了对比口径与结论的修正方法。',
-      '',
-      `### ${draft.title}`,
-      '',
-      `**适用场景**：${draft.when}`,
-      '',
-      `**需要提供**：${draft.inputs}`,
-      '',
-      `**步骤**：\n${draft.steps}`,
-      '',
-      `**验收标准**：${draft.checks}`,
-      '',
-      '如果范围不对，可以继续告诉我希望保留哪种做法；确认前不会保存。',
-    ].join('\n');
-    conversationThread.insertAdjacentHTML('beforeend',
-      renderConversationTurnTime(new Date()) + renderUserMessage(sopRequest) +
-      `<div class="conversation-message assistant-message"><div class="assistant-content"><article class="md conversation-reply">${renderMarkdown(reply)}</article>` +
-      '<p class="conversation-sop-demo-note">原型示例回复：草稿预置，尚未连接模型，不代表已真实回溯对话。</p>' +
-      '<button class="conversation-sop-review" type="button" data-sop-review>审阅并保存草稿</button>' +
-      `${renderMessageMeta('assistant')}</div></div>`);
-    renderConversationTurnNav();
-    requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
-  });
-  conversationThread.addEventListener('click', event => {
-    const button = event.target.closest('[data-sop-review]');
-    if (!button || activeConversationTask !== membershipResearchTask) return;
-    sopReturnFocus = button;
-    editingSopId = null;
-    sopDialog.querySelector('#sopDialogTitle').textContent = '审阅 SOP 草稿';
-    sopDialog.querySelector('.sop-scope').hidden = false;
-    sopDrafts = {};
-    sopForm.reset();
-    showSopScope('revision');
-    sopDialog.showModal();
-  });
-  sopForm.addEventListener('change', event => {
-    if (event.target.name !== 'scope') return;
-    captureSopDraft();
-    showSopScope(event.target.value);
-  });
   function editSopTemplate(item) {
     templateReturnFocus = null;
     templateDialog.close();
-    sopReturnFocus = null;
     editingSopId = item.id;
     sopScope = item.sop.scope;
     sopForm.reset();
     sopDialog.querySelector('#sopDialogTitle').textContent = '编辑已保存的方法';
     sopDialog.querySelector('.sop-scope').hidden = true;
-    sopDrafts = { [sopScope]: { title: item.title, when: item.sop.when, inputs: item.sop.inputs,
-      steps: item.sop.steps, checks: item.sop.checks, prompt: item.prompt } };
-    showSopScope(sopScope);
+    const values = { title: item.title, when: item.sop.when, inputs: item.sop.inputs,
+      steps: item.sop.steps, checks: item.sop.checks, prompt: item.prompt };
+    for (const [name, value] of Object.entries(values)) sopForm.elements[name].value = value;
+    sopFormStatus.hidden = true;
     sopEvidence.innerHTML = '<strong>修改保存内容</strong><p>下次使用以这里确认后的版本为准；原对话和文件仍不会附带。</p>';
     sopDialog.showModal();
   }
@@ -10149,8 +10101,7 @@ function beginConversationTurn(message) {
       showTemplateList();
       templateDialog.showModal();
       templateDialog.querySelector('.template-close').focus();
-    } else if (sopReturnFocus?.isConnected) sopReturnFocus.focus();
-    sopReturnFocus = null;
+    }
   });
   sopForm.addEventListener('submit', event => {
     event.preventDefault();
@@ -10174,8 +10125,6 @@ function beginConversationTurn(message) {
     else templates.unshift(item);
     const persisted = saveTemplates();
     editingSopId = null;
-    templateReturnFocus = sopReturnFocus;
-    sopReturnFocus = null;
     sopDialog.close();
     showTemplateList();
     templateMessage(persisted ? '已保存任务方法；再次使用时会回填可编辑指令，文件与原对话不会附带。' : '仅在本次页面会话中可用；存储失败，请不要将其视为已持久保存。');
@@ -11155,10 +11104,16 @@ function beginConversationTurn(message) {
     host:win,
     onOpen() { setScheduledPageMode(false); setConversationOpen(false); setRightPanel(null); },
   });
-  const recoveryCase = new URLSearchParams(location.search).get('recoveryCase');
+  const startupParams = new URLSearchParams(location.search);
+  const recoveryCase = startupParams.get('recoveryCase');
+  const refreshingFailureDemo = recoveryCase === 'failure' && startupParams.size === 1 &&
+    performance.getEntriesByType('navigation')[0]?.type === 'reload';
   const linkedRecoveryTask = recoveryCase === 'failure' ? failureRecoveryTask : extraRecoveryCases.find(item=>item.mode===recoveryCase)?.task;
-  if(linkedRecoveryTask)setConversationOpen(true,linkedRecoveryTask);
-  if(new URLSearchParams(location.search).has('browserControl'))setConversationOpen(true,browserControlTask);
+  if (!startupParams.size || refreshingFailureDemo || startupParams.has('browserControl')) {
+    setConversationOpen(true, browserControlTask);
+  } else if (linkedRecoveryTask) {
+    setConversationOpen(true, linkedRecoveryTask);
+  }
   if (new URLSearchParams(location.search).has('backgroundProcess')) setConversationOpen(true, backgroundProcessTask);
   if (new URLSearchParams(location.search).has('backgroundAgent')) setConversationOpen(true, backgroundAgentTask);
   const linkedWidgetCase = document.getElementById('widgetCase-' + new URLSearchParams(location.search).get('widgetCase'));

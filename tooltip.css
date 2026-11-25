@@ -1,22 +1,10 @@
 [data-tooltip] { position:relative }
-[data-tooltip]::before,
 [data-tooltip]::after {
   position:absolute;
   left:50%;
   z-index:1;
   visibility:hidden;
   pointer-events:none;
-}
-[data-tooltip]::before {
-  content:"";
-  top:calc(100% + 5px);
-  width:8px;
-  height:8px;
-  background:white;
-  transform:translateX(-50%) rotate(45deg);
-  z-index:2;
-}
-[data-tooltip]::after {
   content:attr(data-tooltip);
   top:calc(100% + 8px);
   transform:translateX(-50%);
@@ -28,6 +16,6 @@
   font:400 12px/18px var(--font, sans-serif);
   white-space:nowrap;
 }
+[data-tooltip-placement="top"]::after { top:auto; bottom:calc(100% + 8px) }
 [data-tooltip-align="end"]::after { left:auto; right:0; transform:none }
-[data-tooltip]:is(:hover,:focus-visible)::before,
 [data-tooltip]:is(:hover,:focus-visible)::after { visibility:visible }

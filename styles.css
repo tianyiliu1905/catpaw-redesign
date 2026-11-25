@@ -260,12 +260,18 @@ body{
   overflow:hidden;
 }
 
+html:not(.strategy-embed) > body{
+  background-color:#6c9476;
+  background-image:url('./assets/demo-wallpaper-emerald-valley.jpg');
+}
+
 /* ---------- 页面右侧原型控制浮层，不占用产品窗口内容区 ---------- */
 .theme-panel,
 .stage-demo-controls{
+  --controls-anchor:38%;
   position:fixed;
   z-index:300;
-  top:50%;
+  top:var(--controls-anchor);
   right:max(8px, calc((100vw - 2600px) / 2 - 54px));
   display:flex;
   flex-direction:column;
@@ -299,7 +305,7 @@ body{
 .theme-panel .ic{ width:16px; height:16px; }
 .stage-demo-controls{
   border-radius:12px;
-  top:calc(50% + 52px);
+  top:calc(var(--controls-anchor) + 52px);
   transform:none;
   font-size:var(--type-sm);
   font-weight:var(--weight-body);
@@ -1687,7 +1693,7 @@ pointer-events:none;
 .message-bubble{
   max-width:min(520px,82%);
   padding:var(--space-3) var(--space-4);
-  border-radius:var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+  border-radius:var(--radius-md);
   background:var(--ds-primary-1);
   color:var(--ds-text-1);
   font-size:var(--type-md);
@@ -2003,7 +2009,7 @@ pointer-events:none;
   gap:var(--space-1);
   padding:var(--space-2);
   border:1px solid var(--gray-5);
-  border-radius:var(--radius-lg);
+  border-radius:var(--radius-md);
   background:var(--surface-bg);
   color:var(--text-1);
   transition:border-color .15s ease, box-shadow .15s ease;
@@ -2173,7 +2179,7 @@ display:flex;
 flex-direction:column;
 padding:12px 12px 10px;
 border:.5px solid var(--gray-5);
-border-radius:var(--radius-panel);
+border-radius:var(--radius-lg);
   background:var(--composer-input-bg);
   box-shadow:0 4px 16px rgba(0,0,0,.035);
 }
@@ -2207,10 +2213,10 @@ border-radius:var(--radius-panel);
   line-height:20px;
   animation:promptChipIn .24s cubic-bezier(.22,.68,0,1) both;
 }
-.composer-goal-tag{padding:0;border-radius:0;background:transparent;color:var(--skill-text);font-weight:var(--weight-emphasis);white-space:nowrap;}
+.composer-goal-tag{padding:0;border-radius:0;background:transparent;color:var(--accent-blue);font-weight:var(--weight-emphasis);white-space:nowrap;}
 .composer-goal-tag[hidden],.composer-skill-tags[hidden]{ display:none; }
 .composer-skill-tags{ display:inline-flex; gap:8px; flex:none; }
-.composer-skill-tag{ gap:2px; padding:0; border-radius:0; background:transparent; color:var(--skill-text); white-space:nowrap; }
+.composer-skill-tag{ gap:2px; padding:0; border-radius:0; background:transparent; color:var(--accent-blue); white-space:nowrap; }
 .composer-skill-tags .composer-skill-tag{ max-width:min(260px, 72vw); }
 .composer-skill-tag > span{ max-width:220px; overflow:hidden; text-overflow:ellipsis; font-weight:var(--weight-emphasis); }
 .composer-skill-tag-clear{ color:inherit; }
@@ -2898,7 +2904,7 @@ to  { clip-path: inset(0 -2% 0 0); }
   width:100%;
   max-width:var(--home-composer-width);
   position:relative;
-  --composer-corner-radius:var(--radius-panel);
+  --composer-corner-radius:var(--radius-lg);
   --composer-add-size:28px;
   --composer-tool-gap:12px;
 }
@@ -3930,18 +3936,19 @@ button.composer-dialog-row:hover,.composer-dialog-back:hover{ background:var(--h
 .quick .pill .pill-art{
   --pill-art-paper:var(--gray-2);
   position:absolute;
-  right:18px;
-  bottom:16px;
-  width:34px;
-  height:34px;
-  color:var(--text-3);
+  right:-5px;
+  bottom:-9px;
+  width:80px;
+  height:80px;
+  color:var(--ds-text-6);
   stroke:currentColor;
-  stroke-width:5;
+  stroke-width:3;
   stroke-linecap:round;
   stroke-linejoin:round;
   pointer-events:none;
 }
-:root[data-theme="dark"] .quick .pill .pill-art{--pill-art-paper:var(--gray-3);color:var(--text-2)}
+.quick .pill .analysis-table-art{right:-2px}
+:root[data-theme="dark"] .quick .pill .pill-art{--pill-art-paper:var(--gray-3)}
 
 @media (prefers-reduced-motion:no-preference){
   .web-desktop-hero{animation:webDesktopHero 4.8s ease-in-out -3.6s infinite paused}
@@ -4449,7 +4456,7 @@ transition:box-shadow .16s ease;
 .case-dialog::backdrop{
   background:transparent;
 }
-body:has(> :is(#caseDialog, #browserTakeover)[open]) .window::after{
+body:has(> :is(#caseDialog, #browserTakeover, #computerHandoff)[open]) .window::after{
   content:"";
   position:absolute;
   inset:0;
@@ -5625,6 +5632,7 @@ button.scheduled-prompt-chip{ cursor:pointer; }
   font-size:var(--type-md);
   font-weight:var(--weight-emphasis);
 }
+#summaryArtifactsTitle, #summaryBrowserSection .summary-section-head strong{ color:var(--text-1); }
 .summary-section-head small{
   color:var(--text-4);
   font-size:var(--type-sm);

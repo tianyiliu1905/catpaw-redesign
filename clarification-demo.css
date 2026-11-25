@@ -90,6 +90,10 @@
 @keyframes clarify-plan-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.clarify-reply[data-intro-step="2"] :is(.stage-plan,.stage-plan-step){animation:none}}
 
+#summaryBrowserSection .summary-agent-row {gap:12px}
+#summaryBrowserSection .browser-thumbnail {left:0; width:80px; height:56px}
+.browser-summary-copy {display:grid; min-width:0; gap:2px; justify-items:start}
+.browser-summary-copy small {color:var(--text-3); font-size:var(--type-sm); line-height:var(--line-sm)}
 #browserControlSummary { overflow:visible }
 #browserControlSummary:has(+ #browserMessageQueue:not([hidden])) { margin-bottom:0; padding-bottom:0 }
 #browserControlSummary:has(+ #browserMessageQueue:not([hidden]))::after {
@@ -110,8 +114,14 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 }
 @keyframes browserTypeStore {from{width:0}to{width:3em}}
 @keyframes browserReadDay {0%,100%{background:transparent}50%{background:var(--ds-primary-1)}}
-.browser-preview-row .browser-thumbnail { width:88px; flex:none; margin-top:-20px; margin-bottom:var(--space-2); align-self:flex-end }
-.browser-preview-row .conversation-queue-text { color:var(--text-3); text-align:right }
+.browser-preview-tip { width:80px; height:56px; flex:none; margin-top:-20px; margin-bottom:var(--space-2); align-self:flex-end }
+.browser-preview-tip .browser-thumbnail {width:100%; height:100%}
+@media (hover:hover) {
+  .browser-preview-tip:hover .browser-thumbnail {box-shadow:0 2px 6px rgb(0 0 0 / 9%)}
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  .browser-preview-tip .browser-thumbnail {transition:box-shadow 160ms ease-out}
+}
 .browser-control-status { flex:none; align-self:center; line-height:var(--line-md); font-weight:600 }
 @media (prefers-reduced-motion:no-preference) and (forced-colors:none) {
   #browserControlSummary:is([data-browser-stage="browsing"], [data-browser-stage="reading"]) .browser-control-status {
@@ -126,30 +136,25 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 }
 .browser-thumbnail { aspect-ratio:1.55; border:1px solid var(--gray-5); border-radius:6px; overflow:hidden; background:var(--main-bg); display:flex; flex-direction:column }
 .browser-login-form { width:46%; display:grid; gap:3px; padding:5px; background:var(--main-bg); border:1px solid var(--gray-5); border-radius:3px }
-.browser-control-reply > button { font:inherit; cursor:pointer; color:var(--text-2); background:transparent; border:0; padding:4px 0; text-decoration:underline; text-underline-offset:3px }
 .browser-control-reply p { margin:0 0 8px }
 :root[data-theme="dark"] .browser-control-reply .stage-thinking-status {--text-3:var(--ds-text-3)}
 :root[data-theme="dark"] .browser-control-reply .stage-thinking {border-color:var(--gray-5)}
-#browserControlSummary[data-browser-stage="asking"] .browser-control-status {color:var(--warning-text)}
+#browserControlSummary[data-browser-stage="asking"] .browser-control-status {color:var(--ds-warning-4)}
 .browser-control-reply .stage-thinking[data-browser-stage="asking"] .stage-global-label {
-  color:var(--warning-text); -webkit-text-fill-color:currentColor; background:none; animation:none;
+  color:var(--text-3); -webkit-text-fill-color:currentColor; background:none; animation:none;
 }
 .browser-takeover-card {
-  grid-template-columns:40px minmax(0,1fr) auto; gap:var(--space-2); margin-top:var(--space-3);
+  grid-template-columns:40px minmax(0,1fr) auto; gap:var(--space-2); margin-top:var(--space-5);
+  padding-inline:var(--space-3) var(--space-4);
 }
 :root[data-theme="dark"] .browser-takeover-card {background:var(--ds-background-3)}
 .browser-takeover-card .conversation-artifact-icon img {width:24px; height:24px}
 .browser-takeover-card strong {font-size:var(--type-md); font-weight:var(--weight-emphasis); line-height:var(--line-md)}
-.browser-takeover-card-action {
-  min-height:36px; padding:4px 16px; border:0; border-radius:var(--radius-sm);
-  background:var(--text-1); color:var(--main-bg); font:inherit; font-weight:var(--weight-emphasis);
-  white-space:nowrap; cursor:pointer;
-}
-.browser-takeover-card-action:hover {background:var(--text-2)}
-.browser-takeover-card-action:focus-visible {outline:2px solid var(--brand-green); outline-offset:2px}
+.browser-takeover-description {display:block; margin-top:2px; color:var(--text-3); font-size:var(--type-sm); line-height:var(--line-sm)}
+
 
 .browser-takeover {
-  width:min(82vw,1100px); height:min(78dvh,800px); padding:0;
+  width:min(77vw,1000px); height:min(78dvh,800px); padding:0;
   border:0; border-radius:var(--radius-panel);
   background:var(--main-bg); color:var(--text-1); box-shadow:var(--soft-shadow);
 }
@@ -158,12 +163,13 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 .browser-takeover header {display:flex; align-items:center; gap:16px; padding:12px 16px; border-bottom:1px solid var(--gray-5)}
 #browserTakeoverTitle {display:inline-flex;align-items:center;gap:6px}
 #browserTakeoverTitle .global-status-paw[hidden] {display:none}
-.browser-takeover header [data-browser-address] {flex:1; min-width:0; overflow-wrap:anywhere; font-size:var(--type-sm); color:var(--text-2)}
+.browser-window-info {flex:1; min-width:0; display:grid; gap:2px}
+.browser-window-info small {font-size:var(--type-sm); color:var(--text-3)}
 .browser-takeover-page button {font:inherit; cursor:pointer; border:0; border-radius:8px}
 .browser-takeover header .icon-btn {width:28px; height:28px; padding:0; color:var(--ds-fill-7)}
-.browser-takeover header [data-browser-step="close"] {position:relative}
-.browser-takeover header [data-browser-step="close"]::before {
-  content:""; position:absolute; top:50%; left:-8px; transform:translateY(-50%);
+.browser-takeover header .browser-take-control {position:relative}
+.browser-takeover header .browser-take-control::after {
+  content:""; position:absolute; top:50%; right:-8px; transform:translateY(-50%);
   width:1px; height:20px; border-radius:1px; background:var(--gray-4); pointer-events:none;
 }
 .browser-take-control {flex:none}
@@ -198,24 +204,7 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
   left:2px;
   background:var(--gray-3);
 }
-.browser-page-mini::after {
-  content:"查看";
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-  background:rgb(0 0 0 / 40%);
-  backdrop-filter:blur(2px);
-  color:white;
-  font-size:var(--type-sm);
-  font-weight:600;
-  opacity:0;
-  pointer-events:none;
-}
-@media (hover:hover) {
-  .browser-page-mini:hover::after {opacity:1}
-}
-.browser-preview-row:focus-visible .browser-page-mini::after {opacity:1}
+.browser-preview-row:focus-visible .browser-preview-tip::after {visibility:visible}
 .browser-mini-viewport {
   position:absolute; inset:0 auto auto 0; width:600px; height:374px;
   display:flex; flex-direction:column; transform:scale(.14333); transform-origin:top left;
@@ -225,7 +214,7 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 .browser-mini-viewport .browser-takeover-page {padding:16px; overflow:hidden}
 .browser-mini-viewport b {display:inline-block; padding:8px 18px; border-radius:8px; background:var(--text-1); color:var(--main-bg)}
 
-.browser-body:has(> #browserDockHost:not([hidden])) {display:flex;align-items:stretch}
+.browser-body:has(> #browserDockHost:not([hidden])) {display:flex;align-items:stretch;overflow-x:hidden}
 #browserDockHost:not([hidden]) {
   --browser-control-bottom:24px;
   --browser-control-clearance:calc(var(--browser-control-bottom) + 44px + var(--space-2));
@@ -266,3 +255,41 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
     .browser-takeover-viewport[data-agent-control]::before {opacity:0}
   }
 }
+
+.wb-pane:has(#browserDockHost:not([hidden])) > .wb-bar {display:none}
+.computer-address-row {display:flex; align-items:center; gap:12px; padding:10px 16px; min-height:48px; background:var(--main-bg); border-bottom:.5px solid var(--sidebar-border)}
+.computer-address-row [data-computer-status] {display:inline-flex; align-items:center; gap:12px; flex:none; color:var(--text-1); font-size:var(--type-md)}
+.computer-address-row [data-computer-status].is-using-browser {font-weight:450}
+.computer-address-row:has([data-browser-step="give-back"]) [data-computer-status] {font-weight:var(--weight-emphasis)}
+.computer-address-row [data-computer-status]::after {content:""; width:1px; height:16px; background:var(--sidebar-border)}
+.computer-address-row [data-tool-detail] {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-3); font-size:var(--type-md)}
+.computer-address-row .browser-take-control {margin-inline-start:auto; flex:none}
+.computer-address-row [data-browser-step="give-back"] .browser-control-button-icon {display:none}
+.browser-takeover-viewport > [hidden] {display:none}
+.computer-editor {flex:1; min-width:0; min-height:0; overflow-y:auto; overflow-x:hidden; background:var(--main-bg); color:var(--text-1); padding-bottom:var(--browser-control-clearance)}
+.computer-address-row .browser-take-control[data-browser-step="take-control"] {position:relative; margin-left:auto; display:grid; place-items:center; width:28px; height:28px; padding:0; border:0; border-radius:var(--radius-sm); background:transparent; cursor:pointer}
+.computer-address-row .browser-take-control[data-browser-step="take-control"]:is(:hover,:focus-visible) {background:var(--hover)}
+#browserDockHost [data-browser-step="take-control"] .browser-control-button-icon {width:18px; height:18px; padding:0; border:0; background:transparent}
+#browserDockHost [data-browser-step="take-control"] .browser-control-button-icon img {width:100%; height:100%}
+.computer-editor pre {margin:0; padding:20px 16px; white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.7 ui-monospace,monospace}
+.computer-editor b,.computer-editor em {color:var(--accent-blue); font-style:normal}
+.computer-editor p {margin:0 16px; color:var(--text-2); overflow-wrap:anywhere}
+.computer-handoff {width:min(480px,calc(100vw - 32px)); padding:0; border:0; border-radius:var(--radius-panel); color:var(--text-1); background:var(--main-bg); box-shadow:var(--menu-shadow)}
+.computer-handoff::backdrop {background:transparent}
+.computer-handoff form {padding:20px; display:grid; gap:16px}
+.computer-handoff header {display:flex; align-items:center; justify-content:space-between}
+.computer-handoff h2 {margin:0; font-size:18px}
+.computer-handoff button {cursor:pointer; border:0; border-radius:var(--radius-sm); font:inherit}
+.computer-handoff [data-dismiss] {background:transparent; color:var(--text-3); font-size:22px}
+.computer-handoff textarea {width:100%; min-height:76px; padding:10px; resize:vertical; border:1px solid var(--gray-6); border-radius:var(--radius-sm); background:var(--main-bg); color:inherit; font:inherit}
+.computer-handoff textarea:focus {outline:none; border-color:var(--text-3)}
+@media (forced-colors: active) {
+  .computer-handoff textarea:focus {outline:1px solid Highlight}
+}
+.computer-handoff [type=submit] {justify-self:end}
+.computer-handoff footer {display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px; margin:0 -20px -20px; background:var(--gray-2)}
+.computer-handoff footer > div {display:grid; gap:2px}
+.computer-handoff footer button {flex:none; box-sizing:border-box; height:24px; padding:0 6px; border-radius:6px; font-size:12px; line-height:16px; border:1px solid var(--gray-6); background:transparent; color:inherit}
+.computer-handoff footer button:hover {background:var(--hover)}
+.handoff-note-field {display:grid; gap:var(--space-3)}
+.computer-handoff small,.handoff-note-field label {color:var(--text-3)}

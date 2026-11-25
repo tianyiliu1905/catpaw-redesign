@@ -255,7 +255,7 @@ test('continuation renders fresh assistant state without inventing a user messag
   });
   onResume(null);assert.equal(messages.length,0);assert.doesNotMatch(rendered[0],/user-message|<time>/);assert.match(rendered[0],/assistant-message.*思考中 0秒/);
   const message={text:'只看华东',attachments:[{node:{name:'补充.xlsx'}}],references:[{id:'r1'}]};
-  onResume(message);assert.equal(messages.length,1);assert.equal(messages[0][0],message.text);assert.equal(messages[0][1],message.attachments);assert.equal(messages[0][4],message.references);
+  onResume(message);assert.equal(messages.length,1);assert.equal(messages[0][0],message.text);assert.equal(messages[0][1],message.attachments);assert.equal(messages[0][3],message.references);
   assert.match(rendered[1],/user-message/);assert.match(rendered[1],/<time>/);
 });
 
