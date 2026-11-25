@@ -54,17 +54,17 @@
       });
       copyBlocks.forEach(block=>alignDemos.observe(block));
     }
-    createTitledActionRow(pages.filter((_,i)=>slides[i].pointNo==='1.1'),'能力可感 · 左右滑动查看任务入口和案例成品');
+    createTitledActionRow(pages.filter((_,i)=>slides[i].pointNo==='1.1'),'直观了解功能 · 左右滑动查看任务入口和案例成品');
     const processActions=pages.filter((_,i)=>{
       const slide=slides[i];
       return slide.pointNo==='2.1'&&slide.kind==='action';
     });
-    createTitledActionRow(processActions,'过程可懂 · 左右滑动查看工作初始、工作中、后台运行和工作结束');
+    createTitledActionRow(processActions,'清晰掌握进展 · 左右滑动查看工作初始、工作中、后台运行和工作结束');
     const recoveryActions=pages.filter((_,i)=>slides[i].pointNo==='2.3'&&slides[i].kind==='action');
-    createActionRow(recoveryActions,'异常可恢复 · 左右滑动查看三个设计动作');
+    createActionRow(recoveryActions,'顺畅恢复任务 · 左右滑动查看三个设计动作');
 
     const interruptionPages=pages.filter(page=>page.classList.contains('interruption-action-slide'));
-    const interruptionRow=createActionRow(interruptionPages,'过程可控 · 左右滑动查看三个设计动作');
+    const interruptionRow=createActionRow(interruptionPages,'灵活调整方向 · 左右滑动查看三个设计动作');
     interruptionRow.classList.add('case-interruption-row');
     const sharedConcern=interruptionPages[0].querySelector('.user-concern');
     sharedConcern.classList.add('case-interruption-concern');
@@ -74,7 +74,7 @@
       page.querySelectorAll(':scope > .mainline, :scope > h1, .user-concern').forEach(node=>node.remove());
     });
     const greetingPages=pages.filter((_,i)=>slides[i].pointNo==='1.3'&&slides[i].kind==='action');
-    const greetingRow=createActionRow(greetingPages,'上手可启 · 左右滑动查看三个设计动作');
+    const greetingRow=createActionRow(greetingPages,'轻松表达需求 · 左右滑动查看三个设计动作');
     greetingRow.classList.add('case-greeting-row');
     const intro=document.createElement('header');
     intro.className='slide case-greeting-intro';

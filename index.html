@@ -11,6 +11,7 @@
   if (new URLSearchParams(location.search).get('strategyPanel') === 'recovery-detail') document.documentElement.classList.add('strategy-recovery-detail');
   if (new URLSearchParams(location.search).has('strategyScene')) document.documentElement.classList.add('strategy-embed');
   if (window.self !== window.top) {
+    if (['1.3-2','1.3-3'].includes(new URLSearchParams(location.search).get('strategyScene'))) document.documentElement.classList.add('strategy-greeting-frame');
     document.documentElement.classList.add('strategy-framed');
     if (new URLSearchParams(location.search).get('slideBackdrop') === 'outer') {
       document.documentElement.classList.add('slide-outer-backdrop');
@@ -161,12 +162,14 @@
           <a class="task flush" id="browserControlTask" data-browser-presentation="composer" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">浏览器控制 · 查询门店营业时间</span><span class="task-state"></span>
           </a>
+          <!-- 备选浏览器控制方案，取消注释即可恢复。
           <a class="task flush" id="browserControlSummaryTask" data-browser-presentation="summary" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">浏览器控制 · 摘要内查看</span><span class="task-state"></span>
           </a>
           <a class="task flush" id="browserControlPromptTask" data-browser-presentation="prompt" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">浏览器控制 · 仅需操作时提示</span><span class="task-state"></span>
           </a>
+          -->
           <a class="task flush" id="authRecoveryTask" href="#" data-scope="office" data-open-conversation>
               <span class="task-name">异常：更新门店巡检标准作业流程</span>
             <span class="task-state"><span class="task-time">6d</span></span>
@@ -700,19 +703,21 @@
               <template class="prompt-category-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="m9 9-3 3 3 3m6-6 3 3-3 3m-2-7-2 8"/></svg></template>
               <span class="pill-copy"><strong>网站和应用</strong></span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art web-devices-art" aria-hidden="true" fill="none">
-                <rect x="15" y="27" width="105" height="70" rx="10"/>
-                <path d="M17 84h101M63 97l-4 16m17-16 4 16m-33 0h45"/>
-                <g class="web-desktop-hero web-motion" stroke-width="2.25">
-                  <rect x="28" y="42" width="28" height="18" rx="3"/>
-                  <path d="M66 46h28m-28 10h18"/>
+                <g transform="translate(14 12) scale(.88)">
+                  <rect x="15" y="27" width="105" height="70" rx="14"/>
+                  <path d="M17 84h101M63 97l-4 16m17-16 4 16m-33 0h45"/>
+                  <g class="web-desktop-hero web-motion">
+                    <rect x="28" y="42" width="28" height="18" rx="5"/>
+                    <path d="M66 46h28m-28 10h18"/>
+                  </g>
+                  <path class="web-desktop-cards web-motion" d="M29 72h26"/>
                 </g>
-                <path class="web-desktop-cards web-motion" d="M29 72h15m10 0h14m10 0h14" stroke-width="2.25"/>
                 <g class="web-phone web-motion">
-                  <rect x="94" y="54" width="48" height="82" rx="9" fill="var(--pill-art-paper)"/>
-                  <path d="M111 64h14m-13 62h12" stroke-width="2.25"/>
-                  <g class="web-mobile-content web-motion" stroke-width="2.25">
-                    <rect x="104" y="76" width="28" height="18" rx="3"/>
-                    <path d="M105 105h26m-26 9h17"/>
+                  <rect x="94" y="54" width="48" height="82" rx="13" fill="var(--pill-art-paper)"/>
+                  <path d="M111 64h14m-13 62h12"/>
+                  <g class="web-mobile-content web-motion">
+                    <rect x="104" y="76" width="28" height="18" rx="5"/>
+                    <path d="M105 105h22"/>
                   </g>
                 </g>
               </svg>
@@ -720,14 +725,15 @@
             <button class="pill" type="button" data-prompt-category="analyze" aria-pressed="false">
               <template class="prompt-category-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7 16v-3m5 3V8m5 8v-5"/></svg></template>
               <span class="pill-copy"><strong>分析数据</strong></span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art analysis-table-art" aria-hidden="true" fill="none">
-                <rect x="18" y="27" width="100" height="101" rx="9"/>
-                <path d="M19 51h98M19 76h97M19 101h87M49 51v76M82 51v76" stroke-width="2.25"/>
-                <rect class="analysis-selection analysis-motion" x="18" y="51" width="64" height="49" rx="2" stroke-dasharray="7 5" stroke-width="2.25"/>
-                <path class="analysis-cursor analysis-motion" d="m40 61 18 10-8 2-3 8z" fill="var(--pill-art-paper)" stroke-width="2"/>
-                <g class="analysis-pie analysis-motion">
-                  <path d="M112 79a26 26 0 1 0 26 26h-26z" fill="var(--pill-art-paper)"/>
-                  <path d="M122 72a26 26 0 0 1 26 26h-26z" fill="var(--pill-art-paper)"/>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art analysis-bars-art" aria-hidden="true" fill="none">
+                <g transform="translate(0 128) scale(1 .84) translate(0 -128)">
+                  <rect x="18" y="27" width="100" height="101" rx="13"/>
+                  <path d="M18 51h100"/>
+                  <g class="analysis-bars">
+                    <rect x="31" y="83" width="15" height="34" rx="4"/>
+                    <rect x="60" y="61" width="15" height="56" rx="4"/>
+                    <rect x="89" y="94" width="15" height="23" rx="4"/>
+                  </g>
                 </g>
               </svg>
             </button>
@@ -735,13 +741,13 @@
               <template class="prompt-category-icon"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="9" cy="9" r="2"/><path d="m5 17 4-4 3 3 3-3 4 4"/></svg></template>
               <span class="pill-copy"><strong>设计与创作</strong></span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art design-pages-art" aria-hidden="true" fill="none">
-                <rect x="15" y="31" width="106" height="72" rx="8"/>
-                <path d="M24 111h56" stroke-width="2.25"/>
-                <path class="design-slide-title design-motion" d="M27 46h39m-39 10h24" stroke-width="2.25"/>
-                <path class="design-slide-chart design-motion" d="M30 88V76m15 12V69m15 19V62m-34 27h41" stroke-width="2.25"/>
-                <rect x="79" y="52" width="63" height="88" rx="7" fill="var(--pill-art-paper)"/>
-                <path class="design-poster-title design-motion" d="M91 67h38m-38 9h25" stroke-width="2.25"/>
-                <g class="design-flower design-motion" stroke-width="2.25">
+                <rect x="15" y="31" width="106" height="72" rx="12"/>
+                <path d="M24 111h56"/>
+                <path class="design-slide-title design-motion" d="M27 46h39m-39 10h24"/>
+                <path class="design-slide-chart design-motion" d="M30 88V76m15 12V69m15 19V62m-34 27h41"/>
+                <rect x="79" y="52" width="63" height="88" rx="10" fill="var(--pill-art-paper)"/>
+                <path class="design-poster-title design-motion" d="M91 67h38m-38 9h25"/>
+                <g class="design-flower design-motion">
                   <path d="M110 99c-11-12-4-19 2-17 5 1 7 7 6 14 13-5 19 2 15 8-3 5-10 5-16 4 5 11 0 17-6 16-6-1-7-7-5-16-12 5-18 0-16-6 2-6 10-7 20-3z"/>
                   <circle cx="112" cy="104" r="4"/>
                 </g>
@@ -753,7 +759,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" class="pill-art search-globe-art" aria-hidden="true" fill="none">
                 <defs>
                   <clipPath id="search-globe-clip"><circle cx="66" cy="66" r="43"/></clipPath>
-                  <g id="search-globe-continents" stroke-width="2.25">
+                  <g id="search-globe-continents">
                     <path d="m34 38 14-7 15 4 4 10-12 6-2 13-12-3-10-10zM54 68l14 4 8 12-9 9-5 13-7-8 2-12-7-8z"/>
                     <path d="m77 33 13-6 17 8 8 11-11 8-14-5-9 7-10-9z"/>
                   </g>
@@ -768,7 +774,6 @@
                 </g>
                 <circle cx="66" cy="66" r="43"/>
                 <g class="search-lens">
-                  <path d="m118 111 23 23" stroke="var(--pill-art-paper)" stroke-width="12"/>
                   <path d="m118 111 23 23"/>
                   <circle cx="100" cy="93" r="25" fill="var(--pill-art-paper)" fill-opacity=".78"/>
                 </g>
@@ -789,7 +794,7 @@
 <section class="summary-popover" id="summaryPopover" role="dialog" aria-label="摘要" hidden>
 <div class="standard-summary" id="standardSummary">
 <section class="summary-section" id="summaryBrowserSection" aria-label="云端浏览器" hidden>
-  <button type="button" class="summary-agent-row" data-browser-step="view" aria-controls="browserDockHost">
+  <button type="button" class="summary-agent-row" data-browser-step="view" aria-controls="browserTakeover" aria-haspopup="dialog">
     <span data-browser-summary-preview aria-hidden="true"></span>
     <span class="browser-summary-copy"><strong>妙手的电脑</strong><small data-browser-summary-status></small></span>
   </button>
@@ -914,7 +919,7 @@
           </div>
         </div>
 
-        <div class="wb-body browser-body" id="browserBody"><div id="browserDockHost" hidden></div>
+        <div class="wb-body browser-body" id="browserBody">
           <div class="wb-empty">
             <svg viewBox="0 0 24 24" class="wb-empty-ic"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9c2.5-2.5 3.8-5.5 3.8-9S14.5 5.5 12 3Z"/></svg>
             <p class="wb-empty-title">浏览器已就绪</p>
@@ -1197,26 +1202,11 @@
 </dialog>
 
 <dialog class="browser-takeover" id="browserTakeover" aria-labelledby="browserTakeoverTitle">
-  <header><div class="browser-window-info"><strong id="browserTakeoverTitle"><span class="global-status-paw" aria-hidden="true" hidden></span>妙手的电脑</strong><small data-control-subtitle></small></div>
-    <button type="button" class="browser-take-control" data-tooltip-align="end" data-browser-step="take-control" hidden>
-      <span class="browser-control-button-icon"><img class="browser-control-monitor" src="./assets/browser-control-monitor.svg" alt="" width="16" height="16"></span><span data-control-label>使用妙手的电脑</span>
-    </button>
-    <button type="button" class="icon-btn" data-browser-step="dock" data-tooltip="侧边栏打开" aria-label="侧边栏打开"><svg viewBox="0 0 18 18" width="18" height="18" fill="none" aria-hidden="true"><use href="#workbenchSidebarGlyph"/></svg></button><button type="button" class="icon-btn" data-browser-step="close" aria-label="关闭浏览器窗口"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></header>
+  <header class="computer-view-header">
+    <strong id="browserTakeoverTitle">妙手的浏览器</strong>
+    <button type="button" class="icon-btn" data-browser-step="close" aria-label="关闭全屏视图"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3m18 6h-6v6M9 9 3 3m12 12 6 6"/></svg></button>
+  </header>
   <section class="browser-takeover-viewport">
-    <div class="computer-address-row"><span data-computer-status></span><span data-tool-detail></span></div>
-    <section class="computer-editor" aria-label="代码预览" hidden>
-      <pre><code><b>// 查询门店营业时间</b>
-const store = await stores.find({
-  name: <em>"湖滨店"</em>
-});
-
-const hours = await store.openingHours({
-  days: [<em>"周六"</em>, <em>"周日"</em>]
-});
-
-return hours;</code></pre>
-      <p data-handoff-note hidden></p>
-    </section>
     <div class="browser-takeover-page">
       <div data-browser-monitor hidden>
         <h2>门店管理后台</h2>
@@ -1240,22 +1230,14 @@ return hours;</code></pre>
       </div>
     </div>
   </section>
+  <footer class="computer-view-controls">
+    <svg class="computer-control-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 20H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3M10 11h11l-5 3-1 6z"/></svg>
+    <span data-view-mode>仅观看</span>
+    <button type="button" class="browser-take-control" data-browser-step="take-control" hidden><span data-control-label>取得控制权</span></button>
+  </footer>
 </dialog>
 
-<dialog class="computer-handoff" id="computerHandoff" aria-labelledby="computerHandoffTitle">
-  <form>
-    <header><h2 id="computerHandoffTitle">告诉妙手你做了什么</h2><button type="button" data-dismiss aria-label="关闭">×</button></header>
-    <div class="handoff-note-field">
-      <label for="computerHandoffNote">简要描述你完成的操作，妙手会从这里继续。</label>
-      <textarea id="computerHandoffNote" placeholder="例如：我已登录……"></textarea>
-    </div>
-    <button class="catpaw-primary-regular" type="submit">发送并继续</button>
-    <footer>
-      <div><strong>保存登录cookie</strong><small>下次保持登录状态，以便更轻松地访问</small></div>
-      <button type="button" name="remember" aria-label="保存登录cookie" aria-pressed="false">启用</button>
-    </footer>
-  </form>
-</dialog>
+
 <dialog class="file-details-dialog" id="fileDetailsDialog" aria-labelledby="fileDetailsTitle">
 <h2 id="fileDetailsTitle"></h2>
 <div id="fileDetailsContent"></div>
@@ -1302,6 +1284,6 @@ return hours;</code></pre>
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
 <script src="./assets/case-covers/posters.js"></script>
 <script src="./catpaw-cloud-config.js"></script>
-<script src="./catpaw-cloud.js?v=20261118-single-process"></script>
+<script src="./catpaw-cloud.js?v=20261125-browser-only"></script>
 </body>
 </html>

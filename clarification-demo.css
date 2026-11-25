@@ -153,37 +153,36 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 .browser-takeover-description {display:block; margin-top:2px; color:var(--text-3); font-size:var(--type-sm); line-height:var(--line-sm)}
 
 
+#window {anchor-name:--product-window}
+#toggleFileTree {anchor-name:--file-tree-button}
 .browser-takeover {
-  width:min(77vw,1000px); height:min(78dvh,800px); padding:0;
-  border:0; border-radius:var(--radius-panel);
-  background:var(--main-bg); color:var(--text-1); box-shadow:var(--soft-shadow);
+  position:fixed; position-anchor:--product-window;
+  inset:anchor(top) auto auto anchor(left); box-sizing:border-box; margin:0;
+  width:anchor-size(width); height:anchor-size(height); max-width:none; max-height:none;
+  border-radius:var(--radius-window); overflow:hidden;
+  padding:0 clamp(12px,8vw,160px) 16px; border:0;
+  background:#141414; color:var(--text-1);
 }
-.browser-takeover[open] {display:flex; flex-direction:column}
+.browser-takeover[open] {display:flex; flex-direction:column; gap:10px}
 .browser-takeover::backdrop {background:transparent}
-.browser-takeover header {display:flex; align-items:center; gap:16px; padding:12px 16px; border-bottom:1px solid var(--gray-5)}
-#browserTakeoverTitle {display:inline-flex;align-items:center;gap:6px}
-#browserTakeoverTitle .global-status-paw[hidden] {display:none}
-.browser-window-info {flex:1; min-width:0; display:grid; gap:2px}
-.browser-window-info small {font-size:var(--type-sm); color:var(--text-3)}
+.computer-view-header {display:flex; align-items:center; justify-content:flex-start; color:#eee; min-height:44px; margin-inline:calc(12px - clamp(12px,8vw,160px)); padding-inline-start:8px}
+.computer-view-header strong {position:fixed; position-anchor:--file-tree-button; top:anchor(center); translate:0 -50%}
+.computer-view-header .icon-btn {
+  position:fixed; position-anchor:--file-tree-button;
+  left:anchor(center); top:anchor(center); translate:-50% -50%;
+  width:anchor-size(width); height:anchor-size(height); color:inherit;
+}
+.computer-view-header .icon-btn:hover {background:#333}
+.browser-takeover > .browser-takeover-viewport {overflow:hidden; border-radius:8px}
+.computer-view-controls {align-self:center; display:flex; align-items:center; gap:10px; padding:4px 5px 4px 14px; min-height:36px; border-radius:999px; background:white; color:#535353; font-size:14px; font-weight:500}
+.computer-view-controls .browser-take-control {border:0; border-radius:999px; padding:4px 12px; background:#191919; color:white; font:inherit; line-height:20px; cursor:pointer}
+.computer-control-icon {display:none}
+.computer-view-controls.is-controlling {gap:8px; color:#191919}
+.computer-view-controls.is-controlling .computer-control-icon {display:block}
+.computer-view-controls.is-controlling .browser-take-control {padding-inline:10px; background:#ededed; color:inherit}
+.computer-view-controls.is-controlling .browser-take-control:hover {background:#e0e0e0}
+.computer-view-controls:has(button[hidden]) {padding-inline:14px}
 .browser-takeover-page button {font:inherit; cursor:pointer; border:0; border-radius:8px}
-.browser-takeover header .icon-btn {width:28px; height:28px; padding:0; color:var(--ds-fill-7)}
-.browser-takeover header .browser-take-control {position:relative}
-.browser-takeover header .browser-take-control::after {
-  content:""; position:absolute; top:50%; right:-8px; transform:translateY(-50%);
-  width:1px; height:20px; border-radius:1px; background:var(--gray-4); pointer-events:none;
-}
-.browser-take-control {flex:none}
-.browser-takeover header .browser-take-control:not([hidden]) {
-  display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 8px;
-  border:0; border-radius:var(--radius-sm); background:transparent; color:var(--ds-fill-7);
-  font:inherit; white-space:nowrap; cursor:pointer;
-}
-.browser-takeover header .browser-take-control:hover {background:var(--hover)}
-.browser-takeover header .browser-take-control:active {background:var(--active)}
-.browser-takeover header .browser-take-control:focus-visible {outline:2px solid var(--brand-green); outline-offset:2px}
-.browser-control-button-icon img {display:block}
-.browser-takeover header .browser-control-button-icon img {width:18px; height:18px}
-#browserDockHost .browser-control-button-icon img {opacity:.58}
 :root[data-theme="dark"] .browser-control-monitor {filter:invert(1)}
 .browser-take-control[hidden] {display:none}
 .browser-takeover header .icon-btn > .ic {width:18px; height:18px}
@@ -196,7 +195,7 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 .browser-takeover-page h2 {font-size:22px; margin:0}
 .browser-takeover-page p {margin:12px 0 24px; color:var(--text-2)}
 .browser-takeover-primary {padding:10px 20px; color:var(--main-bg); background:var(--text-1)}
-@media(max-width:640px){.browser-takeover{width:calc(100vw - 24px);height:min(80dvh,800px)}}
+@media(max-width:640px){.browser-takeover{padding-inline:8px}.computer-view-header{margin-inline:0}}
 
 
 .browser-page-mini {
@@ -213,25 +212,6 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
 .browser-mini-address {padding:6px 14px; font-size:13px; color:var(--text-2); background:var(--main-bg)}
 .browser-mini-viewport .browser-takeover-page {padding:16px; overflow:hidden}
 .browser-mini-viewport b {display:inline-block; padding:8px 18px; border-radius:8px; background:var(--text-1); color:var(--main-bg)}
-
-.browser-body:has(> #browserDockHost:not([hidden])) {display:flex;align-items:stretch;overflow-x:hidden}
-#browserDockHost:not([hidden]) {
-  --browser-control-bottom:24px;
-  --browser-control-clearance:calc(var(--browser-control-bottom) + 44px + var(--space-2));
-  position:relative; flex:1; min-width:0; display:flex; flex-direction:column; background:var(--gray-3);
-}
-#browserDockHost > .browser-take-control {
-  position:absolute; inset-inline:0; inset-block-end:var(--browser-control-bottom); z-index:1;
-  width:max-content; margin-inline:auto;
-}
-#browserDockHost:has(> .browser-take-control:not([hidden])) .browser-takeover-page {
-  padding-block-end:var(--browser-control-clearance);
-  scroll-padding-block-end:var(--browser-control-clearance);
-}
-@media(max-width:600px) {
-  body:has(.stage-demo-controls:not([hidden])) #browserDockHost:not([hidden]) {--browser-control-bottom:92px}
-}
-#browserDockHost:not([hidden]) + .wb-empty {display:none}
 
 [data-store-search] > .browser-takeover-primary, .browser-mini-viewport .browser-search-field + b {margin-top:16px}
 
@@ -256,40 +236,4 @@ button.browser-preview-row {width:100%; column-gap:16px; align-items:center; pad
   }
 }
 
-.wb-pane:has(#browserDockHost:not([hidden])) > .wb-bar {display:none}
-.computer-address-row {display:flex; align-items:center; gap:12px; padding:10px 16px; min-height:48px; background:var(--main-bg); border-bottom:.5px solid var(--sidebar-border)}
-.computer-address-row [data-computer-status] {display:inline-flex; align-items:center; gap:12px; flex:none; color:var(--text-1); font-size:var(--type-md)}
-.computer-address-row [data-computer-status].is-using-browser {font-weight:450}
-.computer-address-row:has([data-browser-step="give-back"]) [data-computer-status] {font-weight:var(--weight-emphasis)}
-.computer-address-row [data-computer-status]::after {content:""; width:1px; height:16px; background:var(--sidebar-border)}
-.computer-address-row [data-tool-detail] {overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-3); font-size:var(--type-md)}
-.computer-address-row .browser-take-control {margin-inline-start:auto; flex:none}
-.computer-address-row [data-browser-step="give-back"] .browser-control-button-icon {display:none}
 .browser-takeover-viewport > [hidden] {display:none}
-.computer-editor {flex:1; min-width:0; min-height:0; overflow-y:auto; overflow-x:hidden; background:var(--main-bg); color:var(--text-1); padding-bottom:var(--browser-control-clearance)}
-.computer-address-row .browser-take-control[data-browser-step="take-control"] {position:relative; margin-left:auto; display:grid; place-items:center; width:28px; height:28px; padding:0; border:0; border-radius:var(--radius-sm); background:transparent; cursor:pointer}
-.computer-address-row .browser-take-control[data-browser-step="take-control"]:is(:hover,:focus-visible) {background:var(--hover)}
-#browserDockHost [data-browser-step="take-control"] .browser-control-button-icon {width:18px; height:18px; padding:0; border:0; background:transparent}
-#browserDockHost [data-browser-step="take-control"] .browser-control-button-icon img {width:100%; height:100%}
-.computer-editor pre {margin:0; padding:20px 16px; white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.7 ui-monospace,monospace}
-.computer-editor b,.computer-editor em {color:var(--accent-blue); font-style:normal}
-.computer-editor p {margin:0 16px; color:var(--text-2); overflow-wrap:anywhere}
-.computer-handoff {width:min(480px,calc(100vw - 32px)); padding:0; border:0; border-radius:var(--radius-panel); color:var(--text-1); background:var(--main-bg); box-shadow:var(--menu-shadow)}
-.computer-handoff::backdrop {background:transparent}
-.computer-handoff form {padding:20px; display:grid; gap:16px}
-.computer-handoff header {display:flex; align-items:center; justify-content:space-between}
-.computer-handoff h2 {margin:0; font-size:18px}
-.computer-handoff button {cursor:pointer; border:0; border-radius:var(--radius-sm); font:inherit}
-.computer-handoff [data-dismiss] {background:transparent; color:var(--text-3); font-size:22px}
-.computer-handoff textarea {width:100%; min-height:76px; padding:10px; resize:vertical; border:1px solid var(--gray-6); border-radius:var(--radius-sm); background:var(--main-bg); color:inherit; font:inherit}
-.computer-handoff textarea:focus {outline:none; border-color:var(--text-3)}
-@media (forced-colors: active) {
-  .computer-handoff textarea:focus {outline:1px solid Highlight}
-}
-.computer-handoff [type=submit] {justify-self:end}
-.computer-handoff footer {display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px; margin:0 -20px -20px; background:var(--gray-2)}
-.computer-handoff footer > div {display:grid; gap:2px}
-.computer-handoff footer button {flex:none; box-sizing:border-box; height:24px; padding:0 6px; border-radius:6px; font-size:12px; line-height:16px; border:1px solid var(--gray-6); background:transparent; color:inherit}
-.computer-handoff footer button:hover {background:var(--hover)}
-.handoff-note-field {display:grid; gap:var(--space-3)}
-.computer-handoff small,.handoff-note-field label {color:var(--text-3)}

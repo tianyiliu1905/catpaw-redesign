@@ -3434,9 +3434,6 @@ let openingFileWorkspace = false;
     wbPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === item.kind));
     workbench.querySelectorAll('.subagent-workspace-pane').forEach(pane => pane.classList.toggle('active', pane.dataset.workspaceId === id));
     if (item.kind === 'browser') {
-      const dock=document.getElementById('browserDockHost');
-      dock.hidden=!(item.controlSession && dock.childElementCount);
-      urlInput.readOnly=!dock.hidden;
       urlInput.value = item.url || '';
       if (!saveCurrent || document.activeElement === workspaceAdd || document.activeElement?.closest('.workspace-create-menu')) {
         requestAnimationFrame(() => urlInput.focus());
@@ -3516,7 +3513,6 @@ let openingFileWorkspace = false;
     const index = openWorkspaces.findIndex((item) => item.id === id);
     if (index === -1) return;
     const item = openWorkspaces[index];
-    if (!confirmed && item.controlSession && browserControlDemo.confirmTabClose(() => closeWorkspace(id, true))) return;
     if (!confirmed && item.kind === 'file' && item.sourceDraft !== undefined) {
       pendingCloseWorkspaceId = id;
       closeDialogReturnFocus = document.activeElement;
@@ -5938,23 +5934,7 @@ const mainView = document.querySelector('.main');
       });
     }
   };
-  const browserControlDemo=window.createBrowserControlDemo({thread:conversationThread,openDock:(address)=>{
-    if(!summaryPopover.hidden)setSummaryOpen(false);
-    setRightPanel('tools', {animateOpen:true});
-    fileTreeVisible=false;
-    let item=openWorkspaces.find(tab=>tab.controlSession);
-    if(!item){
-      createWorkspace('browser',{replaceImplicitFile:true});
-      item=openWorkspaces.find(tab=>tab.id===activeWorkspace);
-      item.controlSession=true;
-      item.title='妙手的电脑';
-    }
-    item.url=address;
-    activateWorkspace(item.id,false);
-  },updateDockAddress:(address)=>{
-    const item=openWorkspaces.find(tab=>tab.controlSession);
-    if(item){item.url=address;if(item.id===activeWorkspace)urlInput.value=address;}
-  },onComplete:()=>browserQueues.get(activeConversationTask)?.dispatchPending(),syncProgress:syncStageDemoControls,preserveConversationScrollRange,renderStageAcknowledgement,replaceStageContent});
+  const browserControlDemo=window.createBrowserControlDemo({thread:conversationThread,onComplete:()=>browserQueues.get(activeConversationTask)?.dispatchPending(),syncProgress:syncStageDemoControls,preserveConversationScrollRange,renderStageAcknowledgement,replaceStageContent});
   const recoveryDemos=new Map([[recoveryTask,'supplement'],[retryRecoveryTask,'retry'],[failureRecoveryTask,'failure'],...extraRecoveryCases.map(({task,mode})=>[task,mode])].map(([task,mode])=>[task,(task===recoveryTask?window.CatPawClarificationDemo:window.CatPawRecoveryDemo).createController({
     intro: strategyScene==='2.3',
     renderPlan:state=>renderConversationPlan(clarificationPlan.map(title=>({title})),state.phase==='done'?1:0,state.open,false,state.phase!=='done','clarificationPlanBody'),
@@ -8079,7 +8059,6 @@ const mainView = document.querySelector('.main');
     return task === conversationTask && !startedConversationDemos.has(task);
   }
   function setConversationOpen(open, task = activeConversationTask || conversationTask) {
-    const leavingBrowserTask=browserTasks.has(activeConversationTask) && (!open || task!==activeConversationTask);
     closeSubagentConversation();
     if (open && scheduledRunTasks.has(task)) showScheduledTaskDetails(task);
     closeAccessMenus();
@@ -8158,10 +8137,6 @@ const mainView = document.querySelector('.main');
       resizeConversationPrompt();
     }
     recoveryDemos.forEach((demo,key)=>demo.activate(open && task===key));
-    if(leavingBrowserTask){
-      const tab=openWorkspaces.find(item=>item.controlSession);
-      if(tab)closeWorkspace(tab.id,true);
-    }
     browserControlDemo.activate(open && browserTasks.has(task) ? task : null);
     if(open && browserTasks.has(task) && !summaryPopover.hidden)setSummaryOpen(false);
     if (!open || task !== conversationTask) clearTimeout(stageAutoTimer);

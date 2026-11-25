@@ -24,14 +24,14 @@
     './strategy-scenes.js?v=20261113-slide-layout',
     './supplier-conversation-demo.js?v=ds003',
     './conversation-queue-demo.js',
-    './browser-control-demo.js',
+    './browser-control-demo.js?v=20261125-browser-only',
     './recovery-conversation-demo.js?v=20261113-slide-layout',
     './clarification-demo.js?v=20261110-question-icon',
     './capability-market.js',
     './nocode-page.js',
     './library-page.js',
     './widget-value-cases.js?v=20261110-current',
-    './app.js?v=20261118-single-process',
+    './app.js?v=20261125-browser-only',
     './credits-demo.js',
   ];
 
