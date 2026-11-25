@@ -5022,11 +5022,8 @@ const mainView = document.querySelector('.main');
     const waitingCard = conversationThread.lastElementChild?.querySelector('[data-browser-reply]:has(.stage-thinking[data-browser-stage="asking"]) .browser-takeover-card');
     return waitingCard || [...conversationThread.querySelectorAll('.conversation-stage-demo:not(.is-paused) > .stage-plan')].at(-1) || null;
   }
-  function conversationAnchorBoundary(anchor) {
-    const boundary = conversationScroll.getBoundingClientRect().bottom - conversationPlanBottomGap;
-    if (!anchor.matches('.browser-takeover-card')) return boundary;
-    const thumbnail = document.querySelector('#browserControlSummary:not([hidden]) .browser-preview-tip');
-    return thumbnail ? Math.min(boundary, thumbnail.getBoundingClientRect().top - 40) : boundary;
+  function conversationAnchorBoundary() {
+    return conversationScroll.getBoundingClientRect().bottom - conversationPlanBottomGap;
   }
   let revealingTakeoverCard = null;
   function revealTakeoverCard(anchor) {
@@ -5045,7 +5042,7 @@ const mainView = document.querySelector('.main');
         return;
       }
       const progress = Math.min(1, Math.max(0, (now - start) / 420));
-      const target = conversationScroll.scrollTop + anchor.getBoundingClientRect().bottom - conversationAnchorBoundary(anchor);
+      const target = conversationScroll.scrollTop + anchor.getBoundingClientRect().bottom - conversationAnchorBoundary();
       conversationScroll.scrollTop = from + Math.max(0, target - from) * (1 - (1 - progress) ** 3);
       if (progress < 1) requestAnimationFrame(tick);
       else {
@@ -5061,7 +5058,7 @@ const mainView = document.querySelector('.main');
     if (anchoredConversationElement !== anchor) anchoredConversationElement = null;
     if (!conversationFollowLatest) return;
     if (anchor) {
-      const distance = anchor.getBoundingClientRect().bottom - conversationAnchorBoundary(anchor);
+      const distance = anchor.getBoundingClientRect().bottom - conversationAnchorBoundary();
       if (distance >= 0 || anchoredConversationElement === anchor) {
         anchoredConversationElement = anchor;
         conversationScroll.scrollTop += distance;
@@ -5086,7 +5083,7 @@ const mainView = document.querySelector('.main');
   conversationScroll.addEventListener('scroll', () => {
     if (revealingTakeoverCard) return;
     const plan = currentConversationAnchor();
-    const atPlan = plan && Math.abs(plan.getBoundingClientRect().bottom - conversationAnchorBoundary(plan)) <= 4;
+    const atPlan = plan && Math.abs(plan.getBoundingClientRect().bottom - conversationAnchorBoundary()) <= 4;
     conversationFollowLatest = Boolean(atPlan) || conversationScroll.scrollHeight - conversationScroll.scrollTop - conversationScroll.clientHeight <= 4;
   }, { passive:true });
   // Cancel following before the next streaming frame when the reader scrolls back.
@@ -6007,7 +6004,7 @@ const mainView = document.querySelector('.main');
     conversationPrompt.setSelectionRange(0,text.length);
     return true;
   }
-  const queueIds={composer:'browserMessageQueue',summary:'browserSummaryQueue',prompt:'browserPromptQueue'};
+  const queueIds={pip:'browserMessageQueue',summary:'browserSummaryQueue',prompt:'browserPromptQueue'};
   const browserQueues=new Map([...browserTasks].map(task=>[task,window.CatPawQueueDemo.createController({
     container:document.getElementById(queueIds[task.dataset.browserPresentation]),thread:conversationThread,
     onEdit:restoreQueuedMessage,onDispatch:beginConversationTurn,

@@ -1,5 +1,5 @@
 window.createBrowserControlDemo = function ({thread, onComplete, syncProgress, preserveConversationScrollRange, renderStageAcknowledgement, replaceStageContent}) {
-  const summary = document.getElementById('browserControlSummary');
+  const pip = document.getElementById('browserPip');
   const summaryEntry=document.getElementById('summaryBrowserSection');
   const sessions=new Map();
   let task=null;
@@ -41,10 +41,9 @@ window.createBrowserControlDemo = function ({thread, onComplete, syncProgress, p
     </div></div>`;
   }
   function render(startBrowsing=false) {
-    summary.dataset.browserStage=stage;
     const presentation=task?.dataset.browserPresentation;
     summaryEntry.hidden=!active || presentation!=='summary';
-    summary.hidden = !active || presentation!=='composer' || !['browsing','asking','reading'].includes(stage);
+    pip.hidden = !active || presentation!=='pip' || stage==='understanding' || stage==='done';
     const card = stage==='asking' ? takeoverCard('take-control') : stage==='login' ? takeoverCard('view') : '';
     const needsUser = Boolean(card) || stage==='signed';
     if (!active) return;
@@ -78,10 +77,10 @@ window.createBrowserControlDemo = function ({thread, onComplete, syncProgress, p
       summaryEntry.querySelector('[data-browser-summary-preview]').innerHTML=preview;
       summaryEntry.querySelector('[data-browser-summary-status]').textContent=stage==='understanding'?'理解任务':controlLabel;
     }
-    summary.innerHTML = `<button type="button" class="conversation-queue-item browser-preview-row" data-browser-step="view" aria-label="查看妙手电脑，${controlLabel}" aria-controls="browserTakeover" aria-haspopup="dialog">
-        <div class="browser-preview-tip" data-tooltip="查看妙手电脑" data-tooltip-placement="top" aria-hidden="true">${preview}</div>
-        <strong class="browser-control-status">${controlLabel}</strong>
-      </button>`;
+    if(!pip.hidden){
+      pip.innerHTML=preview;
+      pip.setAttribute('aria-label',`查看妙手的浏览器，${controlLabel}`);
+    }
     task.querySelector('.task-state').innerHTML=needsUser?'<em class="tag-await">待接管</em>':'';
   }
   function userHasControl() {
@@ -165,7 +164,7 @@ window.createBrowserControlDemo = function ({thread, onComplete, syncProgress, p
     event.preventDefault();
     if (active && stage === 'login') go('signed');
   });
-  for(const host of [summary,summaryEntry,thread,dialog])host.addEventListener('click',click);
+  for(const host of [pip,summaryEntry,thread,dialog])host.addEventListener('click',click);
   return {
     get acceptsQueuedMessages(){return active && stage!=='understanding' && stage!=='done';},
     get progress(){

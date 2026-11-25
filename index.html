@@ -159,7 +159,7 @@
             <span class="task-name">异常：准备下周上线的双人套餐</span>
             <span class="task-state"><em class="tag-await">待确认</em></span>
           </a>
-          <a class="task flush" id="browserControlTask" data-browser-presentation="composer" href="#" data-scope="office" data-open-conversation>
+          <a class="task flush" id="browserControlTask" data-browser-presentation="pip" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">浏览器控制 · 查询门店营业时间</span><span class="task-state"></span>
           </a>
           <!-- 备选浏览器控制方案，取消注释即可恢复。
@@ -482,9 +482,9 @@
             </div>
           </div>
         </div>
+        <button type="button" id="browserPip" class="browser-pip" data-browser-step="view" aria-controls="browserTakeover" aria-haspopup="dialog" aria-label="查看妙手的浏览器" hidden></button>
         <div class="conversation-composer-wrap">
           <section class="conversation-queue-group" id="conversationQueueGroup" aria-label="待发送队列" hidden></section>
-          <section class="conversation-queue-group" id="browserControlSummary" aria-label="浏览器控制" hidden></section>
           <section class="conversation-queue-group" id="browserMessageQueue" aria-label="待发送队列" hidden></section>
           <section class="conversation-queue-group" id="browserSummaryQueue" aria-label="待发送队列" hidden></section>
           <section class="conversation-queue-group" id="browserPromptQueue" aria-label="待发送队列" hidden></section>
