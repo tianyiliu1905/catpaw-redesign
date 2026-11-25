@@ -8086,6 +8086,7 @@ const mainView = document.querySelector('.main');
     closeConversationArtifactMenu();
     if (!open) closeConversationTaskMenu();
     if (open && activeConversationTask !== task) {
+      conversationThread.classList.toggle('fulfillment-thread', task === conversationTask);
       conversationThread.style.minHeight = '';
       if (activeConversationTask) setGoalMode(conversationPrompt, false);
       if (activeConversationTask) {

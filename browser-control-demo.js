@@ -43,7 +43,7 @@ window.createBrowserControlDemo = function ({thread, openDock, updateDockAddress
     <button type="button" class="browser-takeover-card-action catpaw-primary-regular" data-browser-step="${step}" aria-controls="browserDockHost">接管</button>
   </div>`;
   function browserCardPreview(address) {
-    const reading=stage==='reading'||stage==='signed';
+    const reading=['reading','signed','done'].includes(stage);
     const monitor=page.querySelector('[data-browser-monitor]');
     const content=['asking','login'].includes(stage)
       ? '<h2>门店管理后台</h2><p>登录门店管理后台</p><div class="browser-login-form"><i></i><i></i><b>登录</b></div>'
@@ -56,7 +56,7 @@ window.createBrowserControlDemo = function ({thread, openDock, updateDockAddress
   function render(startBrowsing=false) {
     summary.dataset.browserStage=stage;
     const presentation=task?.dataset.browserPresentation;
-    summaryEntry.hidden=!active || presentation!=='summary' || ['understanding','done'].includes(stage);
+    summaryEntry.hidden=!active || presentation!=='summary';
     summary.hidden = !active || presentation!=='composer' || !['browsing','asking','reading'].includes(stage);
     const card = stage==='asking' ? takeoverCard('take-control') : stage==='login' ? takeoverCard('view') : '';
     const needsUser = Boolean(card) || stage==='signed';
@@ -90,7 +90,7 @@ window.createBrowserControlDemo = function ({thread, openDock, updateDockAddress
     const preview=browserCardPreview(address);
     if(!summaryEntry.hidden){
       summaryEntry.querySelector('[data-browser-summary-preview]').innerHTML=preview;
-      summaryEntry.querySelector('[data-browser-summary-status]').textContent=controlLabel;
+      summaryEntry.querySelector('[data-browser-summary-status]').textContent=stage==='understanding'?'理解任务':controlLabel;
     }
     summary.innerHTML = `<button type="button" class="conversation-queue-item browser-preview-row" data-browser-step="view" aria-label="查看妙手电脑，${controlLabel}" aria-controls="browserDockHost">
         <div class="browser-preview-tip" data-tooltip="查看妙手电脑" data-tooltip-placement="top" aria-hidden="true">${preview}</div>

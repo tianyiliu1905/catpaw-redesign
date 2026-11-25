@@ -59,7 +59,6 @@
   --soft-shadow: 0 12px 36px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.06);
 
   --sidebar-bg:      var(--gray-0);
-  --rail-bg:         linear-gradient(180deg, #ebf2f3 0%, #eff4f4 40%, #edf3f3 50%, #d9ece9 55.5%, #cde3d9 61%, #cdddd1 67%, #cddbd1 78%, #ccd1cf 100%);
   --sidebar-border:  var(--ds-border-3);
   --main-bg:         var(--gray-0);
 
@@ -224,7 +223,6 @@
   --warning-bg: #433421;
   --warning-text: #f6cd86;
   --floating-bg:var(--ds-background-2);
-  --rail-bg:var(--ds-background-3);
   --soft-shadow: 0 12px 36px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.2);
   color-scheme: dark;
 }
@@ -340,7 +338,6 @@ html:not(.strategy-embed) > body{
   display: grid;
   grid-template-columns: var(--user-sidebar-w, var(--sidebar-w)) minmax(0,1fr);
   grid-template-rows:minmax(0,1fr);
-  background: var(--rail-bg);
   isolation:isolate;
   border-radius: var(--radius-window);
   overflow: hidden;
@@ -421,7 +418,6 @@ html:not(.strategy-embed) > body{
 
 .window.collapsed{
   grid-template-columns:var(--sidebar-rail-w) minmax(0,1fr);
-  background:var(--rail-bg);
 }
 .window.sidebar-auto-collapsed{ grid-template-columns:0px minmax(0,1fr); }
 .window.sidebar-auto-collapsed .sidebar{ opacity:0; visibility:hidden; pointer-events:none; transition:none; }
@@ -493,6 +489,17 @@ stroke-width:1.8;
   min-height:0;
   transition:opacity .18s ease;
 }
+.sidebar-glass{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:calc(var(--sidebar-rail-w) + var(--radius-lg));
+  z-index:-2;
+  pointer-events:none;
+  background:rgba(255,255,255,.6);
+  -webkit-backdrop-filter:blur(24px);
+  backdrop-filter:blur(24px);
+}
+.window.sidebar-auto-collapsed .sidebar-glass{ display:none; }
 .sidebar-rail{
   position:absolute;
   top:52px; bottom:0; left:0; width:var(--sidebar-rail-w);
@@ -1530,7 +1537,7 @@ pointer-events:none;
   position:absolute;
   z-index:2;
   top:50%;
-  left:8px;
+  left:14px;
   width:22px;
   max-height:calc(100% - 32px);
   display:flex;
@@ -1543,7 +1550,7 @@ pointer-events:none;
 .conversation-turn{
   position:relative;
   width:22px;
-  height:13px;
+  height:10px;
   flex:none;
   display:flex;
   align-items:center;
@@ -1554,7 +1561,7 @@ pointer-events:none;
 }
 .conversation-turn::before{
   content:"";
-  width:8px;
+  width:6px;
   height:2px;
   border-radius:var(--radius-pill);
   background:var(--text-4);
@@ -1564,8 +1571,8 @@ pointer-events:none;
 /* 常态所有轮次等长且为灰色；滚动位置只用于定位，不改变刻度颜色。 */
 /* 只有悬停或键盘聚焦某一轮时，才围绕预览轮次展开长短层级。 */
 .conversation-turn-nav:has(.is-previewed) .conversation-turn::before{ background:var(--text-4); opacity:.55; }
-.conversation-turn-nav:has(.is-previewed) .conversation-turn.is-preview-neighbor::before{ width:14px; opacity:.8; }
-.conversation-turn-nav:has(.is-previewed) .conversation-turn.is-previewed::before{ width:22px; background:var(--brand-green); opacity:1; }
+.conversation-turn-nav:has(.is-previewed) .conversation-turn.is-preview-neighbor::before{ width:12px; opacity:.8; }
+.conversation-turn-nav:has(.is-previewed) .conversation-turn.is-previewed::before{ width:18px; background:var(--brand-green); opacity:1; }
 .conversation-turn:focus-visible{ outline:2px solid var(--brand-green-strong); outline-offset:1px; border-radius:var(--radius-sm); }
 .conversation-turn-preview{
   position:absolute;
@@ -1626,6 +1633,7 @@ pointer-events:none;
   flex-direction:column;
   gap:var(--space-4);
 }
+.conversation-thread.fulfillment-thread{ padding-bottom:56px; }
 .conversation-thread[hidden]{ display:none; }
 /* 每轮问答共用一个居中的时间锚点，避免在两侧消息操作栏重复显示。 */
 .conversation-turn-time{ display:block; align-self:stretch; margin-top:var(--space-2); color:var(--text-4); font-size:var(--type-sm); line-height:var(--line-sm); text-align:center; font-variant-numeric:tabular-nums; }
@@ -1692,7 +1700,7 @@ pointer-events:none;
 .user-message{ justify-content:flex-end; }
 .message-bubble{
   max-width:min(520px,82%);
-  padding:var(--space-3) var(--space-4);
+  padding:10px var(--space-3);
   border-radius:var(--radius-md);
   background:var(--ds-primary-1);
   color:var(--ds-text-1);
@@ -2387,9 +2395,10 @@ width:100%;
   content:"";
   position:absolute;
   left:-1px;
-  top:18px;
-  width:1px;
-  height:20px;
+  top:50%;
+  transform:translateY(-50%);
+  width:2px;
+  height:16px;
   border-radius:1px;
   background:var(--gray-4);
   pointer-events:none;
@@ -2427,7 +2436,8 @@ background:rgba(0,0,0,.065);
 }
 .summary-toggle-slot .icon-btn{ position:relative; width:28px; height:28px; }
 .summary-toggle-slot img{ display:block; width:18px; height:18px; }
-.content:has(.main.conversation-open):not(.wb-open):not(.scheduled-conversation) .summary-toggle-slot{ right:98px; }
+.content:has(.main.conversation-open):not(.wb-open):not(.scheduled-conversation) .wb-toggle-slot{ right:8px; }
+.content:has(.main.conversation-open):not(.wb-open):not(.scheduled-conversation) .summary-toggle-slot{ right:106px; }
 /* 常规状态下摘要与定时任务并排，中间保留一条分割线。 */
 .scheduled-toggle-slot{
   position:absolute;
@@ -5632,7 +5642,7 @@ button.scheduled-prompt-chip{ cursor:pointer; }
   font-size:var(--type-md);
   font-weight:var(--weight-emphasis);
 }
-#summaryArtifactsTitle, #summaryBrowserSection .summary-section-head strong{ color:var(--text-1); }
+#summaryArtifactsTitle{ color:var(--text-1); }
 .summary-section-head small{
   color:var(--text-4);
   font-size:var(--type-sm);
