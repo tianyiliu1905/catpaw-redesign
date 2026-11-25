@@ -6951,7 +6951,7 @@ const mainView = document.querySelector('.main');
     syncInterventionComposer();
     if (!conversationPage.hidden && browserTasks.has(activeConversationTask)) {
       const progress=browserControlDemo.progress;
-      stageDemoControls.hidden=!!conversationThread.querySelector('[data-browser-reply].is-entering');
+      stageDemoControls.hidden=false;
       stageDemoPrevious.disabled=progress.first;
       stageDemoAdvance.disabled=false;
       stageDemoAdvance.textContent=progress.label;
