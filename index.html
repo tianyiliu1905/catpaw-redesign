@@ -19,7 +19,7 @@
   }
 </script>
 <title>CatPaw</title>
-<link rel="stylesheet" href="./styles.css?v=20261125-emerald-valley" />
+<link rel="stylesheet" href="./styles.css?v=20261126-artifact-list-padding" />
 <link rel="stylesheet" href="./credits-demo.css?v=20261111-ds-audit">
 <link rel="stylesheet" href="./capability-market.css?v=20261110-palette-sync">
 <link rel="stylesheet" href="./nocode-page.css">
@@ -119,6 +119,12 @@
           <a class="task flush" id="demoConversationTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">整理本周门店履约异常明细</span>
             <span class="task-state"></span>
+          </a>
+          <a class="task flush" id="storeChecklistsTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">生成 20 份门店巡检便签</span><span class="task-state"></span>
+          </a>
+          <a class="task flush" id="batchArtifactsTask" href="#" data-scope="office" data-open-conversation>
+            <span class="task-name">整理季度经营复盘材料</span><span class="task-state"></span>
           </a>
           <a class="task flush" id="backgroundAgentTask" href="#" data-scope="office" data-open-conversation>
             <span class="task-name">主对话完成，子智能体 后台核查</span><span class="task-state"></span>
@@ -499,6 +505,7 @@
             <span class="composer-skill-tags" id="conversationSkillTags" aria-label="已选择的 Skill" hidden></span>
                 <span class="connector-tray" id="conversationConnectorTray" aria-label="已选择的连接器" hidden></span>
               </div>
+              <div class="conversation-prompt-preview" id="conversationPromptPreview" aria-hidden="true" hidden></div>
               <textarea id="conversationPrompt" rows="1" placeholder="继续对话"></textarea>
             </div>
             <div class="composer-file-cards" id="conversationFileCards" aria-label="已添加的资料库文件" hidden></div>
@@ -1284,6 +1291,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
 <script src="./assets/case-covers/posters.js"></script>
 <script src="./catpaw-cloud-config.js"></script>
-<script src="./catpaw-cloud.js?v=20261125-browser-only"></script>
+<script src="./catpaw-cloud.js?v=20261126-artifact-list-footer"></script>
 </body>
 </html>

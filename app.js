@@ -527,14 +527,14 @@ function renderGroups() {
       path: '~/CatPaw/默认文件夹',
       files: [
         ...window.ArtifactEditingDemo.files(),
-        { name: '门店履约分析.docx', type: 'word', artifact: true, preview: {
+        { name: '门店履约分析.docx', type: 'word', artifact: true, sizeBytes: 23900, preview: {
           kind: 'word', title: '门店履约分析', sections: [
             { heading: '一、分析概览', paragraphs: ['本报告汇总门店履约异常情况，聚焦晚高峰时段的超时订单与运力匹配问题。以下为可编辑的演示数据。', '观察周期：2026 年 9 月 21 日；分析范围：上海虹桥店及周边商圈。'] },
             { heading: '二、核心发现', paragraphs: ['当日超时订单 128 单，占订单总量的 6.2%。其中 83% 集中于 17:00–19:00，峰值时段骑手供给不足。', '同商圈另外两家门店没有出现相同幅度波动，初步排除平台级派单异常。'] },
             { heading: '三、行动建议', paragraphs: ['晚高峰前置增配 2 名骑手，连续观察 7 天的超时率与单均配送时长。', '逐单核对异常订单，并与渠道方确认 13:45 后的数据延迟原因。'] },
           ],
         } },
-        { name: '门店履约异常明细.xlsx', type: 'excel', artifact: true, preview: {
+        { name: '门店履约异常明细.xlsx', type: 'excel', artifact: true, sizeBytes: 18600, preview: {
           kind: 'excel', sheets: [
             { name: '异常明细', columns: ['日期', '门店', '时段', '订单量', '超时单', '超时率', '主要原因'], rows: [
               ['09-21', '上海虹桥店', '11:00–13:00', '318', '11', '', '午间集中下单'],
@@ -555,7 +555,7 @@ function renderGroups() {
           preview: { kind: 'html', html: DEMO_HTML },
         },
         {
-          name: '履约异常趋势.png', type: 'png', artifact: true,
+          name: '履约异常趋势.png', type: 'png', artifact: true, sizeBytes: 184000,
           preview: { kind: 'image', art: DEMO_PNG },
         },
         {
@@ -611,7 +611,7 @@ function renderGroups() {
       id: 'retail', name: '服务零售', scope: 'office',
       path: '~/CatPaw/服务零售',
       files: [
-        { name: 'AI 工具约束配置报告.docx', type: 'word', artifact: true, preview: {
+        { name: 'AI 工具约束配置报告.docx', type: 'word', artifact: true, sizeBytes: 21500, preview: {
           kind: 'word', title: 'AI 工具约束配置报告', sections: [
             { heading: '配置概览', paragraphs: ['已梳理 AI 工具的权限边界、文件访问范围与执行约束。'] },
             { heading: '校验结果', paragraphs: ['配置项检查完成，关键约束均已生效。'] },
@@ -1809,6 +1809,14 @@ document.getElementById('summaryArtifactsTitle').textContent += ` (${fileGrid.qu
   let nextTaskId = 1;
   document.querySelectorAll('.task').forEach((task) => {
     if (!taskHomes.has(task)) taskHomes.set(task, { parent: task.parentElement, next: task.nextSibling });
+    if (task.id === 'storeChecklistsTask') {
+      taskIds.set(task, 'demo-conversation-store-checklists');
+      return;
+    }
+    if (task.id === 'batchArtifactsTask') {
+      taskIds.set(task, 'demo-conversation-quarterly-materials');
+      return;
+    }
     taskIds.set(task, task.id === 'demoConversationTask' ? 'demo-conversation-store-fulfillment' : `demo-conversation-${nextTaskId++}`);
   });
 
@@ -3947,6 +3955,7 @@ const value = `@${node.name} `;
 let input = prompt;
 if (!fullscreenChat.hidden) input = fullscreenChatInput;
 else if (!conversationPage.hidden) input = conversationPrompt;
+if (input === conversationPrompt) conversationFileMentions.add(value.trimEnd());
 input.value = `${input.value}${input.value && !/\s$/.test(input.value) ? ' ' : ''}${value}`;
 input.dispatchEvent(new Event('input', { bubbles: true }));
 input.focus();
@@ -5254,7 +5263,7 @@ const mainView = document.querySelector('.main');
     const day = run.date.slice(8, 10);
     const artifactName = `${run.date.slice(0, 4)}年${run.date.slice(5, 7)}月Week${Math.ceil(Number(day) / 7)}数据-${run.date.slice(5, 7)}${day}.xlsx`;
     const artifactNode = {
-      name: artifactName, type: 'excel', artifact: true,
+      name: artifactName, type: 'excel', artifact: true, sizeBytes: 12400,
       preview: { kind: 'excel', sheets: [
         { name: '工作概览', columns: ['统计周期', '主要成果', '完成事项', '待跟进事项'], rows: [[run.period, run.result, String(run.completed), String(run.pending)]] },
         { name: '风险与计划', columns: ['问题风险', '下周计划'], rows: [[run.risk, run.next]] },
@@ -5280,6 +5289,52 @@ const mainView = document.querySelector('.main');
       fileNodes: [artifactNode],
     });
     return { ...run, task, artifactNode };
+  });
+  conversationExamples.set(document.getElementById('batchArtifactsTask'), {
+    folderId: 'default',
+    prompt: '帮我整理季度经营复盘会的材料。会上用演示稿，门店履约分析和 9 月的周报也一起交付，方便会后查数。',
+    reply: '会上先看《季度经营复盘》。需要解释门店履约波动时，可以打开异常看板，再用明细表和周报核对。',
+    files: [
+      '季度经营复盘.pptx', '季度经营复盘说明.docx', '季度经营数据.xlsx', '门店履约异常看板.html',
+      '门店履约分析.docx', '履约异常趋势.png', '门店履约异常明细.xlsx',
+      ...scheduledRuns.map(run => run.artifactNode.name),
+    ],
+    artifactListStyle: 'compact',
+  });
+  const checklistFiles = [
+    ["开店交接", "接过钥匙后核对交接本，把昨晚未处理的事项圈出来。"],
+    ["营业时间", "核对今天的营业时间，并同步到店门口和线上门店。"],
+    ["门头照明", "站到街对面看一次招牌，记录不亮的灯位。"],
+    ["入口通道", "走一遍顾客进店路线，把挡路的周转箱移回库房。"],
+    ["排班到岗", "按班表点名，给空缺岗位安排临时接替人。"],
+    ["收银签到", "用当班账号登录，确认小票上的门店名称正确。"],
+    ["备用零钱", "两人清点钱箱，按面额记录开班余额。"],
+    ["价签核对", "抽查三件促销商品，对比货架价和收银价。"],
+    ["货架补位", "先补齐入口陈列缺口，再把后排商品向前整理。"],
+    ["临期检查", "查看首排商品日期，将临期品移到指定位置。"],
+    ["库存盘点", "选一个高周转货位实点数量，记下账实差异。"],
+    ["到货验收", "对照送货单逐箱核对，破损货品拍照留存。"],
+    ["冷柜记录", "读取冷柜温度并记入巡检表，异常时通知值班经理。"],
+    ["试单打印", "打印一张测试单，检查字迹和切纸是否完整。"],
+    ["外卖接单", "确认接单设备在线，核对预计备餐时长。"],
+    ["打包备料", "按午高峰用量补齐纸袋、封签和餐具。"],
+    ["取货分区", "检查自提和配送两个取货区的标识是否清楚。"],
+    ["客诉交接", "逐条核对待回复事项，给每条记录指定跟进人。"],
+    ["闭店清点", "核对当日收款汇总，把差额和复核人写入交班本。"],
+    ["离店锁门", "沿离店路线核对门窗，将最后离店时间记入日志。"],
+  ].map(([title, instruction], index) => ({
+    name: `${String(index + 1).padStart(2, '0')}-${title}.md`,
+    type: 'code',
+    artifact: true,
+    preview: { kind: 'markdown', text: `# ${title}\n\n${instruction}\n` },
+  }));
+  const storeChecklistsTask = document.getElementById('storeChecklistsTask');
+  conversationExamples.set(storeChecklistsTask, {
+    folderId: 'default',
+    prompt: '从开店到闭店，帮我写 20 张巡检便签。每张只写一件事，单独存成一个小文件。',
+    reply: '20 张便签已按巡检顺序编号，从开店交接到离店锁门。点文件名就能查看对应的操作。',
+    files: checklistFiles.map(file => file.name),
+    fileNodes: checklistFiles,
   });
   const scheduledRunTasks = new Set(scheduledRuns.map(run => run.task));
   const createdScheduledTasks = new Map();
@@ -6482,9 +6537,9 @@ const mainView = document.querySelector('.main');
     if (!version) return '';
     const files = conversationExamples.get(conversationTask).files;
     const name = '门店履约异常明细.xlsx';
-    const card = renderConversationArtifact(name,files.indexOf(name),artifactVersionCopy(version));
-    const otherFiles = index === 8 ? files.filter(file => file !== name).map(file => renderConversationArtifact(file,files.indexOf(file))).join('') : '';
-    return `<div class="conversation-artifacts${otherFiles ? '' : ' is-single'}" aria-label="第 ${version} 版产物">${card}${otherFiles}</div>`;
+    const cards = [renderConversationArtifact(name,files.indexOf(name),artifactVersionCopy(version))];
+    if (index === 8) cards.push(...files.filter(file => file !== name).map(file => renderConversationArtifact(file,files.indexOf(file))));
+    return `<div class="conversation-artifacts${cards.length === 1 ? ' is-single' : ''}" aria-label="第 ${version} 版产物">${renderArtifactCardList(cards)}</div>`;
   }
   function renderStageRevision(resultName, version) {
     const before=stageResultHistory[stageResultHistory.length-1][0].rows;
@@ -7298,21 +7353,46 @@ const mainView = document.querySelector('.main');
       }).join('') + `</div></div></div>`;
   }
 
+  function conversationArtifactBlob(node) {
+    const preview = node?.preview;
+    if (preview?.kind === 'html' && typeof preview.html === 'string') {
+      return new Blob([preview.html], { type: 'text/html;charset=utf-8' });
+    }
+    if (preview?.kind === 'markdown' && typeof preview.text === 'string') {
+      return new Blob([preview.text], { type: 'text/markdown;charset=utf-8' });
+    }
+    return null;
+  }
+
+  function formatArtifactSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return '';
+    if (bytes < 1000) return `${bytes} B`;
+    const units = ['K', 'M', 'G', 'T'];
+    const unit = Math.min(Math.floor(Math.log10(bytes) / 3), units.length);
+    const value = Number((bytes / 1000 ** unit).toFixed(1));
+    return `${value} ${units[unit - 1]}`;
+  }
+
   function renderConversationArtifact(name, index, revision = null) {
       const extension = name.split('.').pop().toLowerCase();
       const icon = artifactIconByExtension[extension] || 'doc';
+      const example = conversationExamples.get(activeConversationTask);
+      const folder = FOLDERS.find(entry => entry.id === (example?.folderId || 'default'));
+      const node = example?.fileNodes?.find(file => file.name === name) || folder?.files.find(file => file.name === name);
+      const size = formatArtifactSize(node?.sizeBytes ?? conversationArtifactBlob(node)?.size);
+      const metadata = size ? `<small class="conversation-artifact-meta"><span>${size}</span><span aria-hidden="true">打开</span></small>` : '';
       if (revision && Number.isInteger(revision.version)) {
         renderConversationArtifact.versionSequence = (renderConversationArtifact.versionSequence || 0) + 1;
         const tipId = `artifact-version-summary-${renderConversationArtifact.versionSequence}`;
         return `<div class="conversation-artifact conversation-artifact-versioned" data-artifact-index="${index}">
           <button class="conversation-artifact-open conversation-artifact-icon-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}"><span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span></button>
-          <div class="conversation-artifact-info"><div class="conversation-artifact-title-row"><button class="conversation-artifact-title-open" type="button" data-artifact-open><strong>${esc(name)}</strong></button><span class="artifact-version-wrap"><button class="artifact-version-tag" type="button" data-artifact-version="${revision.version}" aria-controls="artifactHistoryPanel" aria-expanded="${isArtifactHistoryOpen()}" aria-label="第 ${revision.version} 版，打开版本记录" aria-describedby="${tipId}">第 ${revision.version} 版</button><span class="artifact-version-tooltip" id="${tipId}" role="tooltip"><span class="artifact-version-tooltip-label">第 ${revision.version} 版 · 修改摘要</span><strong>${esc(revision.title)}</strong><span>${esc(revision.summary)}</span></span></span></div><button class="conversation-artifact-subtitle-open" type="button" data-artifact-open><small>查看产物</small></button></div>
+          <div class="conversation-artifact-info"><div class="conversation-artifact-title-row"><button class="conversation-artifact-title-open" type="button" data-artifact-open><strong>${esc(name)}</strong></button><span class="artifact-version-wrap"><button class="artifact-version-tag" type="button" data-artifact-version="${revision.version}" aria-controls="artifactHistoryPanel" aria-expanded="${isArtifactHistoryOpen()}" aria-label="第 ${revision.version} 版，打开版本记录" aria-describedby="${tipId}">第 ${revision.version} 版</button><span class="artifact-version-tooltip" id="${tipId}" role="tooltip"><span class="artifact-version-tooltip-label">第 ${revision.version} 版 · 修改摘要</span><strong>${esc(revision.title)}</strong><span>${esc(revision.summary)}</span></span></span></div>${size ? `<button class="conversation-artifact-subtitle-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}，${size}">${metadata}</button>` : ''}</div>
           <button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
       }
       return `<div class="conversation-artifact" data-artifact-index="${index}">` +
         `<button class="conversation-artifact-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}">` +
         `<span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span>` +
-        `<span class="conversation-artifact-info"><strong>${esc(name)}</strong><small>查看产物</small></span></button>` +
+        `<span class="conversation-artifact-info"><strong>${esc(name)}</strong>${metadata}</span></button>` +
         `<button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu">` +
         `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
   }
@@ -7378,12 +7458,39 @@ const mainView = document.querySelector('.main');
     event.target.closest('.artifact-version-wrap')?.classList.remove('is-dismissed');
   });
 
+  function renderArtifactCardList(cards, { compact = false, expanded = false } = {}) {
+    if (cards.length < 2) return cards.join('');
+    const limit = 3;
+    const hasOverflow = cards.length > limit;
+    return `<section class="artifact-card-list" aria-label="交付文件">
+      <div class="artifact-card-group${compact ? ' artifact-bundle' : ''}">
+        ${compact ? `<h3>交付文件 <span>${cards.length}</span></h3>` : ''}
+        ${cards.slice(0, limit).join('')}
+        ${hasOverflow ? `<div class="artifact-list-overflow"${expanded ? '' : ' hidden'}>${cards.slice(limit).join('')}</div>` : ''}
+        ${hasOverflow ? `<button class="artifact-list-expand" type="button" data-artifact-expand${expanded ? ' hidden' : ''}>展开所有产物(${cards.length})</button>` : ''}
+      </div>
+    </section>`;
+  }
+
+  conversationThread.addEventListener('click', event => {
+    const button = event.target.closest('[data-artifact-expand]');
+    if (!button) return;
+    const overflow = button.closest('.artifact-card-group').querySelector('.artifact-list-overflow');
+    overflow.hidden = false;
+    button.hidden = true;
+    if (event.detail === 0) overflow.querySelector('[data-artifact-open]').focus();
+  });
+
   function renderConversationArtifacts(task) {
     const example = conversationExamples.get(task);
     const conversationArtifacts = conversationThread.querySelector('#conversationArtifacts');
     if (!conversationArtifacts) return;
     conversationArtifacts.classList.toggle('is-single', example.files.length === 1);
-    conversationArtifacts.innerHTML = example.files.map(renderConversationArtifact).join('');
+    const cards = example.files.map((name, index) => renderConversationArtifact(name, index));
+    conversationArtifacts.innerHTML = renderArtifactCardList(cards, {
+      compact: example.artifactListStyle === 'compact',
+      expanded: conversationArtifacts.querySelector('[data-artifact-expand]')?.hidden,
+    });
   }
 
   const messageAttachments = new Map();
@@ -8042,7 +8149,7 @@ const mainView = document.querySelector('.main');
           `<div class="conversation-message assistant-message"><div class="assistant-content">
             <div class="stage-thinking" data-global-state="done"><div class="stage-thinking-status"><span class="global-status-paw" aria-hidden="true"></span><strong>已完成</strong></div></div>
             <article class="md conversation-reply"><p>${summary}</p><p>${process ? '文件包含各门店、时段的订单量、超时情况与行动跟踪，方便继续查看和跟进。' : '重点关注晚高峰的超时订单与运力匹配；需要人工确认的记录与后续行动已保留在明细中。'}</p></article>
-            <div class="conversation-artifacts${names.length === 1 ? ' is-single' : ''}">${names.map((name, index) => renderConversationArtifact(name, index).replace('data-artifact-index=', 'data-background-artifact-name="' + esc(name) + '" data-artifact-index=')).join('')}</div>
+            <div class="conversation-artifacts${names.length === 1 ? ' is-single' : ''}">${renderArtifactCardList(names.map((name, index) => renderConversationArtifact(name, index).replace('data-artifact-index=', `data-background-artifact-name="${esc(name)}" data-artifact-index=`)))}</div>
           </div></div>`;
         conversationThread.append(turn);
       }
@@ -8346,9 +8453,34 @@ const mainView = document.querySelector('.main');
   });
   new MutationObserver(() => { if (scheduledPageMode) renderScheduledOverview(); }).observe(looseTasksInner, { childList:true, subtree:true, characterData:true });
 
+const conversationFileMentions = new Set();
+const conversationPromptPreview = document.getElementById('conversationPromptPreview');
+
+function syncConversationPromptPreview() {
+  if (!conversationFileMentions.size || !conversationPrompt.value.includes('@')) {
+    conversationPromptPreview.hidden = true;
+    return;
+  }
+  const mentions = [...conversationFileMentions].sort((a, b) => b.length - a.length);
+  const escaped = mentions.map(mention => mention.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const parts = conversationPrompt.value.split(new RegExp(`(?<!\\S)(${escaped.join('|')})(?=\\s|$)`, 'g'));
+  conversationPromptPreview.hidden = parts.length === 1;
+  if (conversationPromptPreview.hidden) return;
+  conversationPromptPreview.replaceChildren(...parts.map((part, index) => {
+    if (index % 2 === 0) return document.createTextNode(part);
+    const mention = document.createElement('span');
+    mention.textContent = part;
+    return mention;
+  }), document.createTextNode('\u200b'));
+  conversationPromptPreview.style.width = `${conversationPrompt.clientWidth}px`;
+  conversationPromptPreview.style.height = `${conversationPrompt.clientHeight}px`;
+  conversationPromptPreview.scrollTop = conversationPrompt.scrollTop;
+}
+
 function resizeConversationPrompt() {
 conversationPrompt.style.height = 'auto';
 conversationPrompt.style.height = `${Math.min(conversationPrompt.scrollHeight, 130)}px`;
+    syncConversationPromptPreview();
     syncInterventionComposer();
 }
 
@@ -8513,6 +8645,12 @@ function beginConversationTurn(message) {
     requestAnimationFrame(() => prompt.focus());
   });
   conversationPrompt.addEventListener('input', resizeConversationPrompt);
+  conversationPrompt.addEventListener('compositionstart', () => conversationPrompt.classList.add('is-composing'));
+  conversationPrompt.addEventListener('compositionend', () => conversationPrompt.classList.remove('is-composing'));
+  new ResizeObserver(syncConversationPromptPreview).observe(conversationPrompt);
+  conversationPrompt.addEventListener('scroll', () => {
+    conversationPromptPreview.scrollTop = conversationPrompt.scrollTop;
+  });
   conversationPrompt.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
     e.preventDefault();
@@ -8640,8 +8778,13 @@ function beginConversationTurn(message) {
       ['apps', '打开方式', FILE_ACTION_ICONS.default],
       ['chat', '添加到对话', FILE_ACTION_ICONS.chat],
       ['share', '分享', '<path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/>'],
-      ['download', '下载', '<path d="M12 3.5v10.8m-4.5-3.3 3.8 3.8a1 1 0 0 0 1.4 0l3.8-3.8"/><path d="M3 15.5v2.2a2.8 2.8 0 0 0 2.8 2.8h12.4a2.8 2.8 0 0 0 2.8-2.8v-2.2"/>'],
-    ].map(([action, label, icon]) => `<button class="row-menu-item" type="button" role="menuitem" data-artifact-action="${action}"${action === 'chat' ? ' data-divider' : ''}><svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${icon}</svg><span>${label}</span>${action === 'apps' ? '<span class="conversation-artifact-menu-chevron" aria-hidden="true">›</span>' : ''}</button>`).join('');
+      ['download', '下载'],
+    ].map(([action, label, icon]) => {
+      const iconMarkup = action === 'download'
+        ? '<span class="ic conversation-artifact-download-icon" aria-hidden="true"></span>'
+        : `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${icon}</svg>`;
+      return `<button class="row-menu-item" type="button" role="menuitem" data-artifact-action="${action}"${action === 'chat' ? ' data-divider' : ''}>${iconMarkup}<span>${label}</span>${action === 'apps' ? '<span class="conversation-artifact-menu-chevron" aria-hidden="true">›</span>' : ''}</button>`;
+    }).join('');
   }
 
   function positionConversationArtifactMenu() {
@@ -8656,14 +8799,12 @@ function beginConversationTurn(message) {
   }
 
   function downloadConversationArtifact(node) {
-    const preview = node.preview;
-    const text = preview?.kind === 'html' ? preview.html : preview?.kind === 'markdown' ? preview.text : null;
-    if (typeof text !== 'string') {
+    const blob = conversationArtifactBlob(node);
+    if (!blob) {
       showFileDetails('下载文件', `<p>「${esc(node.name)}」目前只有演示预览，没有可下载的原始文件，未开始下载。</p>`);
       return;
     }
-    const type = preview.kind === 'html' ? 'text/html;charset=utf-8' : 'text/markdown;charset=utf-8';
-    const url = URL.createObjectURL(new Blob([text], { type }));
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = node.name;
@@ -11084,6 +11225,8 @@ function beginConversationTurn(message) {
   const linkedRecoveryTask = recoveryCase === 'failure' ? failureRecoveryTask : extraRecoveryCases.find(item=>item.mode===recoveryCase)?.task;
   if (!startupParams.size || refreshingFailureDemo || startupParams.has('browserControl')) {
     setConversationOpen(true, browserControlTask);
+  } else if (startupParams.has('storeChecklists')) {
+    setConversationOpen(true, storeChecklistsTask);
   } else if (linkedRecoveryTask) {
     setConversationOpen(true, linkedRecoveryTask);
   }

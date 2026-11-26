@@ -20,7 +20,7 @@
   /* 应用脚本清单：与原 index.html 静态脚本完全一致（顺序敏感）。 */
   var APP_SCRIPTS = [
     './ppt-workbar.js',
-    './artifact-editing-demo.js',
+    './artifact-editing-demo.js?v=20261126-artifact-file-size',
     './strategy-scenes.js?v=20261113-slide-layout',
     './supplier-conversation-demo.js?v=ds003',
     './conversation-queue-demo.js',
@@ -31,7 +31,7 @@
     './nocode-page.js',
     './library-page.js',
     './widget-value-cases.js?v=20261110-current',
-    './app.js?v=20261125-browser-only',
+    './app.js?v=20261126-artifact-list-footer',
     './credits-demo.js',
   ];
 

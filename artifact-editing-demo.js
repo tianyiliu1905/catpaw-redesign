@@ -13,12 +13,12 @@
   const slideText = (index,item) => {deck(item);return window.PptWorkbench.text(item,index);};
   function files() {
     return [
-      {name:'季度经营复盘.pptx',type:'ppt',artifact:true,preview:{kind:'ppt',referenceDemo:true}},
-      {name:'季度经营数据.xlsx',type:'excel',artifact:true,preview:{kind:'excel',referenceDemo:true,sheets:[
+      {name:'季度经营复盘.pptx',type:'ppt',artifact:true,sizeBytes:1100000,preview:{kind:'ppt',referenceDemo:true}},
+      {name:'季度经营数据.xlsx',type:'excel',artifact:true,sizeBytes:42600,preview:{kind:'excel',referenceDemo:true,sheets:[
         {name:'区域经营',columns:['区域','上季度营收（万元）','本季度营收（万元）','履约率'],rows:[['华东','410','480','89.2%'],['华南','350','420','94.1%'],['华北','287','340','94.2%']]},
         {name:'跟进计划',columns:['对象','行动','负责人','截止时间'],rows:[['华东区域','核对晚高峰履约明细','区域运营','10月30日'],['试点门店','试行交接检查表','门店经理','11月2日'],['项目组','复核履约率与异常原因','数据分析','每周一']]},
       ]}},
-      {name:'季度经营复盘说明.docx',type:'word',artifact:true,preview:{kind:'word',referenceDemo:true,title:'季度经营复盘说明',subtitle:'2026 Q3 · 服务零售事业部 · 示例数据',sections:[
+      {name:'季度经营复盘说明.docx',type:'word',artifact:true,sizeBytes:28400,preview:{kind:'word',referenceDemo:true,title:'季度经营复盘说明',subtitle:'2026 Q3 · 服务零售事业部 · 示例数据',sections:[
         {heading:'一、季度经营概况',paragraphs:['本季度营收 1,240 万元，较上季度增长约 18.4%，平均履约率为 92.6%。营收增长与履约改善需要分别评价，避免只根据整体增长判断各区域经营质量。']},
         {heading:'二、区域表现与原因分析',paragraphs:['华东区域本季度营收 480 万元，履约率为 89.2%，低于整体水平。当前材料尚不足以确认具体原因，建议结合晚高峰订单明细，核对出餐、到店与交接时间。','华南与华北区域履约率分别为 94.1% 和 94.2%。后续可以对比不同区域的高峰排班与交接流程，验证哪些措施适合推广。']},
         {heading:'三、下一步行动',paragraphs:['区域运营先核对华东晚高峰异常明细；试点门店使用交接检查表；项目组每周复核履约率变化。责任归属与改善目标应在明细核验后确认。']},
