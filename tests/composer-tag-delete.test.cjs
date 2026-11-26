@@ -8,7 +8,7 @@ function setup() {
   const end = source.indexOf('  [prompt, conversationPrompt].forEach(input => input.addEventListener', start);
   const context = {}; vm.createContext(context); vm.runInContext(source.slice(start, end), context);
   const removed = [], buttons = [];
-  for (const name of ['prompt', 'knowledge', 'skill', 'connector']) {
+  for (const name of ['prompt', 'goal', 'knowledge', 'skill']) {
     buttons.push({getClientRects:() => [1], click() { removed.push(name); buttons.splice(buttons.indexOf(this), 1); }});
   }
   const input = { value:'', selectionStart:0, selectionEnd:0, focus(){}, parentElement:{querySelector:() => ({querySelectorAll:() => buttons})} };
@@ -19,7 +19,7 @@ test('backspace removes visible tags from the right and delete works in an empty
   const h = setup();
   for (let i=0;i<3;i++) assert.equal(h.key('Backspace').prevented,true);
   assert.equal(h.key('Delete').prevented,true);
-  assert.deepEqual(h.removed,['connector','skill','knowledge','prompt']);
+  assert.deepEqual(h.removed,['skill','knowledge','goal','prompt']);
   assert.equal(h.key('Backspace').prevented,undefined);
 });
 test('text, selections, composition and word deletion keep native editing behavior', () => {
@@ -35,5 +35,5 @@ test('text, selections, composition and word deletion keep native editing behavi
 test('hidden and disabled tag controls are skipped', () => {
   const h = setup();
   h.buttons.at(-1).getClientRects=()=>[];h.buttons.at(-2).disabled=true;
-  h.key('Backspace');assert.deepEqual(h.removed,['knowledge']);
+  h.key('Backspace');assert.deepEqual(h.removed,['goal']);
 });

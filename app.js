@@ -5299,7 +5299,7 @@ const mainView = document.querySelector('.main');
       '门店履约分析.docx', '履约异常趋势.png', '门店履约异常明细.xlsx',
       ...scheduledRuns.map(run => run.artifactNode.name),
     ],
-    artifactListStyle: 'compact',
+    showArtifactActions: true,
   });
   const checklistFiles = [
     ["开店交接", "接过钥匙后核对交接本，把昨晚未处理的事项圈出来。"],
@@ -6051,7 +6051,7 @@ const mainView = document.querySelector('.main');
     for(const entry of message.attachments||[])if(!files.some(file=>file.node===entry.node))files.push(entry);
     renderLibraryFileCards(conversationPrompt);
     for(const skill of message.skills||[])addSkillTag(conversationPrompt,skill);
-    for(const name of message.knowledge||[])addKnowledgeTag(conversationPrompt,name);
+    if (message.knowledge?.length) restoreKnowledgeSelection(conversationPrompt, message);
     artifactSelection?.restoreDraft(message.references||[]);
     resizeConversationPrompt();
     conversationComposerDrafts.set(activeConversationTask,conversationPrompt.value);
@@ -7373,6 +7373,19 @@ const mainView = document.querySelector('.main');
     return `${value} ${units[unit - 1]}`;
   }
 
+  const artifactQuickActions = {
+    download: {
+      label: '下载',
+      icon: '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3v13m-4-4 4 4 4-4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/></svg>',
+      run: downloadConversationArtifact,
+    },
+    share: {
+      label: '分享',
+      icon: '<img class="ic conversation-artifact-share-icon" src="assets/artifact-share-figma.svg" alt="">',
+      run: shareArtifact,
+    },
+  };
+
   function renderConversationArtifact(name, index, revision = null) {
       const extension = name.split('.').pop().toLowerCase();
       const icon = artifactIconByExtension[extension] || 'doc';
@@ -7389,12 +7402,17 @@ const mainView = document.querySelector('.main');
           <div class="conversation-artifact-info"><div class="conversation-artifact-title-row"><button class="conversation-artifact-title-open" type="button" data-artifact-open><strong>${esc(name)}</strong></button><span class="artifact-version-wrap"><button class="artifact-version-tag" type="button" data-artifact-version="${revision.version}" aria-controls="artifactHistoryPanel" aria-expanded="${isArtifactHistoryOpen()}" aria-label="第 ${revision.version} 版，打开版本记录" aria-describedby="${tipId}">第 ${revision.version} 版</button><span class="artifact-version-tooltip" id="${tipId}" role="tooltip"><span class="artifact-version-tooltip-label">第 ${revision.version} 版 · 修改摘要</span><strong>${esc(revision.title)}</strong><span>${esc(revision.summary)}</span></span></span></div>${size ? `<button class="conversation-artifact-subtitle-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}，${size}">${metadata}</button>` : ''}</div>
           <button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
       }
+      const more = `<button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu">` +
+        `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button>`;
+      const actions = example?.showArtifactActions
+        ? `<div class="conversation-artifact-actions">${Object.entries(artifactQuickActions).map(([action, { label, icon }]) =>
+          `<button class="conversation-artifact-quick-action" type="button" data-artifact-quick-action="${action}" title="${label}" aria-label="${label}：${esc(name)}">${icon}</button>`).join('')}</div>`
+        : more;
       return `<div class="conversation-artifact" data-artifact-index="${index}">` +
         `<button class="conversation-artifact-open" type="button" data-artifact-open aria-label="打开产物：${esc(name)}">` +
         `<span class="conversation-artifact-icon"><img src="assets/artifact-${icon}.svg" alt="" aria-hidden="true"></span>` +
         `<span class="conversation-artifact-info"><strong>${esc(name)}</strong>${metadata}</span></button>` +
-        `<button class="conversation-artifact-more" type="button" aria-label="${esc(name)}的更多操作" aria-haspopup="menu" aria-expanded="false" aria-controls="conversationArtifactMenu">` +
-        `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></g></svg></button></div>`;
+        `${actions}</div>`;
   }
 
   function renderArtifactHistory(selectedVersion = stageArtifactVersion()) {
@@ -7458,13 +7476,12 @@ const mainView = document.querySelector('.main');
     event.target.closest('.artifact-version-wrap')?.classList.remove('is-dismissed');
   });
 
-  function renderArtifactCardList(cards, { compact = false, expanded = false } = {}) {
+  function renderArtifactCardList(cards, { expanded = false } = {}) {
     if (cards.length < 2) return cards.join('');
     const limit = 3;
     const hasOverflow = cards.length > limit;
     return `<section class="artifact-card-list" aria-label="交付文件">
-      <div class="artifact-card-group${compact ? ' artifact-bundle' : ''}">
-        ${compact ? `<h3>交付文件 <span>${cards.length}</span></h3>` : ''}
+      <div class="artifact-card-group">
         ${cards.slice(0, limit).join('')}
         ${hasOverflow ? `<div class="artifact-list-overflow"${expanded ? '' : ' hidden'}>${cards.slice(limit).join('')}</div>` : ''}
         ${hasOverflow ? `<button class="artifact-list-expand" type="button" data-artifact-expand${expanded ? ' hidden' : ''}>展开所有产物(${cards.length})</button>` : ''}
@@ -7488,7 +7505,6 @@ const mainView = document.querySelector('.main');
     conversationArtifacts.classList.toggle('is-single', example.files.length === 1);
     const cards = example.files.map((name, index) => renderConversationArtifact(name, index));
     conversationArtifacts.innerHTML = renderArtifactCardList(cards, {
-      compact: example.artifactListStyle === 'compact',
       expanded: conversationArtifacts.querySelector('[data-artifact-expand]')?.hidden,
     });
   }
@@ -8169,6 +8185,8 @@ const mainView = document.querySelector('.main');
     closeConversationArtifactMenu();
     if (!open) closeConversationTaskMenu();
     if (open && activeConversationTask !== task) {
+      if (addMenuPage === 'knowledge') closeAddMenu();
+      clearKnowledgeSelection(conversationPrompt);
       conversationThread.classList.toggle('fulfillment-thread', task === conversationTask);
       conversationThread.style.minHeight = '';
       if (activeConversationTask) setGoalMode(conversationPrompt, false);
@@ -8562,12 +8580,13 @@ function beginConversationTurn(message) {
     renderConversationTurnNav();
     requestAnimationFrame(() => { conversationScroll.scrollTop = conversationScroll.scrollHeight; });
     conversationPrompt.value = '';
+    clearKnowledgeSelection(conversationPrompt);
     resizeConversationPrompt();
     return;
   }
     const message = {
       text: [text, ...(conversationPrompt.knowledgeBases || []).map(name => `知识库:${name}`), ...selectedSkills.get(conversationPrompt).map(name => `skill:${name}`), ...[...selectedConnectors.get(conversationPrompt)].map(name => `MCP:${name}`)].filter(Boolean).join(' '),
-      rawText:text,knowledge:[...(conversationPrompt.knowledgeBases || [])],skills:[...selectedSkills.get(conversationPrompt)],connectors:[...selectedConnectors.get(conversationPrompt)],
+      rawText:text,knowledge:[...(conversationPrompt.knowledgeBases || [])],knowledgeMode:conversationPrompt.knowledgeMode,skills:[...selectedSkills.get(conversationPrompt)],connectors:[...selectedConnectors.get(conversationPrompt)],
       attachments: [...files],
       references: artifactSelection?.entries().slice() || [],
     };
@@ -8640,6 +8659,10 @@ function beginConversationTurn(message) {
   });
   newTaskNav.addEventListener('click', (e) => {
     e.preventDefault();
+    if (addMenuPage === 'knowledge') closeAddMenu();
+    clearKnowledgeSelection(prompt);
+    clearKnowledgeSelection(conversationPrompt);
+    refreshSendState();
     setScheduledPageMode(false);
     setConversationOpen(false);
     requestAnimationFrame(() => prompt.focus());
@@ -8777,12 +8800,9 @@ function beginConversationTurn(message) {
       ['open', '打开', FILE_ACTION_ICONS.open],
       ['apps', '打开方式', FILE_ACTION_ICONS.default],
       ['chat', '添加到对话', FILE_ACTION_ICONS.chat],
-      ['share', '分享', '<path d="M12 16V3m-4 4 4-4 4 4"/><path d="M4 13v5a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-5"/>'],
-      ['download', '下载'],
+      ...Object.entries(artifactQuickActions).map(([action, { label }]) => [action, label]),
     ].map(([action, label, icon]) => {
-      const iconMarkup = action === 'download'
-        ? '<span class="ic conversation-artifact-download-icon" aria-hidden="true"></span>'
-        : `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${icon}</svg>`;
+      const iconMarkup = artifactQuickActions[action]?.icon ?? `<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${icon}</svg>`;
       return `<button class="row-menu-item" type="button" role="menuitem" data-artifact-action="${action}"${action === 'chat' ? ' data-divider' : ''}>${iconMarkup}<span>${label}</span>${action === 'apps' ? '<span class="conversation-artifact-menu-chevron" aria-hidden="true">›</span>' : ''}</button>`;
     }).join('');
   }
@@ -8813,6 +8833,19 @@ function beginConversationTurn(message) {
   }
 
   conversationThread.addEventListener('click', (event) => {
+    const quickAction = event.target.closest('[data-artifact-quick-action]');
+    if (quickAction) {
+      const card = quickAction.closest('.conversation-artifact');
+      const target = conversationArtifactTarget(card);
+      const name = conversationExamples.get(activeConversationTask)?.files[Number(card.dataset.artifactIndex)];
+      // Some cards list an output name without a source file in the demo.
+      const node = target?.node || (name && { name, type: name.split('.').at(-1) });
+      if (node) {
+        closeConversationArtifactMenu();
+        artifactQuickActions[quickAction.dataset.artifactQuickAction].run(node);
+      }
+      return;
+    }
     const more = event.target.closest('.conversation-artifact-more');
     if (more && conversationThread.contains(more)) {
       event.stopPropagation();
@@ -8867,8 +8900,7 @@ function beginConversationTurn(message) {
     if (item.dataset.artifactApp) showFileDetails('打开文件', `<p>将使用 ${esc(item.dataset.artifactApp)} 打开「${esc(node.name)}」。</p><p>当前是交互原型，尚未连接本地应用，未实际打开文件。</p>`);
     else if (action === 'open') { anchorConversationToArtifact(card); openArtifactPreview(node, chain, { fromConversation: true }); }
     else if (action === 'chat') appendFileToConversation(node);
-    else if (action === 'share') shareArtifact(node);
-    else if (action === 'download') downloadConversationArtifact(node);
+    else artifactQuickActions[action]?.run(node);
   });
   conversationArtifactMenu.addEventListener('keydown', (event) => {
     const items = Array.from(conversationArtifactMenu.querySelectorAll('[role="menuitem"]'));
@@ -8953,6 +8985,14 @@ function beginConversationTurn(message) {
   addSubmenu.setAttribute('aria-label', '添加信息子菜单');
   addSubmenu.hidden = true;
   document.body.appendChild(addSubmenu);
+  let knowledgeScrollTimer;
+  addSubmenu.addEventListener('scroll', event => {
+    const list = event.target;
+    if (!list.matches('.composer-knowledge-options')) return;
+    list.classList.add('is-scrolling');
+    clearTimeout(knowledgeScrollTimer);
+    knowledgeScrollTimer = setTimeout(() => list.classList.remove('is-scrolling'), 650);
+  }, { capture:true, passive:true });
   const addFileInput = document.createElement('input');
   addFileInput.type = 'file';
   addFileInput.multiple = true;
@@ -8981,10 +9021,12 @@ function beginConversationTurn(message) {
   let addSubmenuTimer;
   const addLabels = { skill: '技能', expert: '专家', knowledge: '知识库', mcp: 'MCP' };
   // 原型没有实际广场接口：专家和 MCP 预置已添加示例，新增项保留在当前会话状态中。
-  const installedAddItems = { knowledge: ['产品知识库', '项目知识库', '团队知识库'], skill: [], expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'], mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'] };
-  function availableKnowledgeBases(input) {
-    return input.knowledgeEnabled ? [...installedAddItems.knowledge] : [];
-  }
+  const installedAddItems = {
+    knowledge: ['产品知识库', '项目知识库', '团队知识库', '门店运营知识库', '客户服务知识库', '数据分析知识库', '技术研发知识库', '培训与入职知识库'],
+    skill: [],
+    expert: ['数据开发', '产品顾问', '数据分析师', '前端工程师'],
+    mcp: ['日历连接器', '文件系统连接器', '浏览器连接器'],
+  };
   const legacySkillNames = {
     '数据分析': 'data-analysis', '文档写作': 'docx', '文档总结': 'document-summary',
     '网页制作': 'website-development', 'PPT 制作': 'pptx', 'App 设计与开发': 'app-development',
@@ -9010,35 +9052,68 @@ function beginConversationTurn(message) {
     [prompt, document.getElementById('homeKnowledgeTags')],
     [conversationPrompt, document.getElementById('conversationKnowledgeTags')],
   ]);
-  knowledgeTagContainers.forEach((_, input) => { input.knowledgeBases = []; input.knowledgeEnabled = false; });
-  function syncKnowledgeControl(input) {
-    const root = input === prompt ? document.querySelector('.hero .composer') : document.querySelector('.conversation-composer');
-    const control = root.querySelector('.composer-knowledge-control');
-    const enabled = Boolean(input.knowledgeEnabled) || input.knowledgeBases.length > 0;
-    control.dataset.enabled = String(enabled);
-    const count = control.querySelector('.knowledge-count');
-    count.hidden = !enabled;
-    count.textContent = input.knowledgeBases.length;
-    control.querySelector('[data-quick-add="knowledge"]').setAttribute('aria-label', enabled ? `知识库，已选择 ${input.knowledgeBases.length} 个` : '知识库，未选择');
+  const knowledgeTagIcon = prompt.closest('.composer').querySelector('[data-quick-add="knowledge"] svg').outerHTML;
+  knowledgeTagContainers.forEach((_, input) => { input.knowledgeBases = []; input.knowledgeMode = 'off'; });
+  function setKnowledgeSelection(input, mode, names = []) {
+    input.knowledgeMode = mode;
+    input.knowledgeBases = mode === 'all' ? [...installedAddItems.knowledge] : mode === 'specified' ? [...new Set(names)] : [];
+    renderKnowledgeTags(input);
+  }
+  function clearKnowledgeSelection(input) {
+    setKnowledgeSelection(input, 'off');
+  }
+  function toggleEnterpriseKnowledge(input) {
+    setKnowledgeSelection(input, input.knowledgeMode === 'off' ? 'all' : 'off');
+  }
+  function specifyKnowledge(input, name) {
+    const names = input.knowledgeMode === 'specified' ? input.knowledgeBases : [];
+    const selected = new Set([...names, name]);
+    setKnowledgeSelection(input, 'specified', installedAddItems.knowledge.filter(item => selected.has(item)));
+  }
+  function removeSpecifiedKnowledge(input, index) {
+    if (input.knowledgeMode !== 'specified') return;
+    const names = input.knowledgeBases.filter((_, position) => position !== index);
+    setKnowledgeSelection(input, names.length ? 'specified' : 'all', names);
+  }
+  function restoreKnowledgeSelection(input, message) {
+    if (!message.knowledge?.length) return;
+    if (message.knowledgeMode === 'all' || input.knowledgeMode === 'all') setKnowledgeSelection(input, 'all');
+    else setKnowledgeSelection(input, 'specified', [...input.knowledgeBases, ...message.knowledge]);
   }
   function renderKnowledgeTags(input) {
     const container = knowledgeTagContainers.get(input);
-    container.replaceChildren();
-    container.hidden = true;
-    syncKnowledgeControl(input);
+    const mode = input.knowledgeMode;
+    const trigger = input.closest('.conversation-composer, .composer').querySelector('.composer-quick-add-trigger[data-quick-add="knowledge"]');
+    const labels = mode === 'specified' ? input.knowledgeBases : [];
+    trigger.dataset.enabled = String(mode !== 'off');
+    trigger.setAttribute('aria-label', mode === 'all' ? '知识库，使用全部企业知识' : mode === 'specified' ? `知识库，已指定 ${labels.length} 个` : '知识库');
+    container.replaceChildren(...labels.map((name, index) => {
+      const tag = document.createElement('span');
+      tag.className = 'composer-skill-tag composer-knowledge-tag';
+      tag.innerHTML = `<button class="composer-skill-tag-clear" type="button" data-knowledge-remove="${index}" title="移除知识库">${knowledgeTagIcon.replace('class="ic"', 'class="ic composer-skill-icon"')}${skillTagClearIcon}</button>
+        <button class="composer-knowledge-tag-open" type="button" data-quick-add="knowledge" aria-haspopup="dialog" aria-controls="${addSubmenu.id}" aria-expanded="false"><span class="composer-knowledge-tag-label"></span></button>`;
+      const open = tag.querySelector('.composer-knowledge-tag-open');
+      open.setAttribute('aria-label', `继续选择知识库，已指定：${name}`);
+      open.querySelector('.composer-knowledge-tag-label').textContent = name;
+      tag.querySelector('[data-knowledge-remove]').setAttribute('aria-label', `移除知识库：${name}`);
+      tag.title = name;
+      return tag;
+    }));
+    container.hidden = !labels.length;
     syncComposerTags(input);
   }
-  function addKnowledgeTag(input, name) {
-    if (!name || input.knowledgeBases.includes(name)) return;
-    input.knowledgeEnabled = true;
-    input.knowledgeBases.push(name);
-    renderKnowledgeTags(input);
-  }
   knowledgeTagContainers.forEach((container, input) => container.addEventListener('click', event => {
+    const opener = event.target.closest('.composer-knowledge-tag-open');
+    if (opener) {
+      event.stopPropagation();
+      closeQuickAddOverflowMenu();
+      openDirectQuickAdd(opener);
+      return;
+    }
     const button = event.target.closest('[data-knowledge-remove]');
     if (!button) return;
-    input.knowledgeBases.splice(Number(button.dataset.knowledgeRemove), 1);
-    renderKnowledgeTags(input);
+    if (addMenuPage === 'knowledge') closeAddMenu();
+    removeSpecifiedKnowledge(input, Number(button.dataset.knowledgeRemove));
     input.dispatchEvent(new Event('input', { bubbles:true }));
     input.focus();
   }));
@@ -9077,9 +9152,7 @@ function beginConversationTurn(message) {
   function clearSkillTags(input) {
     selectedSkills.get(input).length = 0;
     // Sending or replacing a draft clears its selected knowledge references too.
-    input.knowledgeBases = [];
-    input.knowledgeEnabled = false;
-    renderKnowledgeTags(input);
+    clearKnowledgeSelection(input);
     renderSkillTags(input);
   }
   window.addEventListener('resize', () => skillTagContainers.forEach((_, input) => syncComposerTags(input)));
@@ -9161,7 +9234,7 @@ function beginConversationTurn(message) {
       if (kind === 'mcp') {
         const count = selectedConnectors.get(input).size;
         button.dataset.enabled = String(count > 0);
-        button.querySelector('span').textContent = '连接器';
+        button.title = '选择连接器';
         button.setAttribute('aria-label', count ? `连接器，已启用 ${count} 个` : '连接器，未启用');
       }
     });
@@ -9294,20 +9367,58 @@ function beginConversationTurn(message) {
   function addIcon(kind, extraClass = '') {
     return `<svg viewBox="0 0 24 24" class="ic ${extraClass}" aria-hidden="true">${addIcons[kind]}</svg>`;
   }
+  // Keep the tooltip outside the horizontally scrolling connector tray.
+  const connectorTooltip = document.createElement('span');
+  connectorTooltip.className = 'connector-name-tooltip';
+  connectorTooltip.hidden = true;
+  connectorTooltip.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(connectorTooltip);
+  let connectorTooltipAnchor = null;
+  function hideConnectorTooltip() {
+    connectorTooltip.hidden = true;
+    connectorTooltipAnchor = null;
+  }
+  function showConnectorTooltip(button) {
+    connectorTooltipAnchor = button;
+    connectorTooltip.textContent = button.dataset.connectorName;
+    connectorTooltip.hidden = false;
+    const anchor = button.getBoundingClientRect();
+    const { width, height } = connectorTooltip.getBoundingClientRect();
+    const left = anchor.left + (anchor.width - width) / 2;
+    connectorTooltip.style.left = `${Math.max(8, Math.min(left, document.documentElement.clientWidth - width - 8))}px`;
+    connectorTooltip.style.top = `${anchor.top >= height + 16 ? anchor.top - height - 8 : anchor.bottom + 8}px`;
+  }
+  window.addEventListener('scroll', hideConnectorTooltip, true);
+  window.addEventListener('resize', hideConnectorTooltip);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') hideConnectorTooltip();
+  });
   function renderConnectorTray(input) {
     const tray = connectorTrays.get(input);
     const names = [...selectedConnectors.get(input)];
+    if (tray.contains(connectorTooltipAnchor)) hideConnectorTooltip();
     tray.hidden = names.length === 0;
     tray.replaceChildren(...names.map(name => {
-      const tag = document.createElement('span');
-      tag.className = 'connector-token';
-      tag.innerHTML = `<button class="connector-token-clear" type="button" title="关闭连接器">${connectorAvatar(name)}<svg viewBox="0 0 24 24" class="ic connector-clear-icon" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5m0-11-11 11"/></svg></button><span></span>`;
-      tag.querySelector('button').setAttribute('aria-label', `关闭连接器：${name}`);
-      tag.querySelector('button').dataset.connectorName = name;
-      tag.querySelector('span:last-child').textContent = name;
-      return tag;
+      const button = document.createElement('button');
+      button.className = 'connector-token-clear';
+      button.type = 'button';
+      button.setAttribute('aria-label', `关闭连接器：${name}`);
+      button.dataset.connectorName = name;
+      button.innerHTML = connectorAvatar(name) + skillTagClearIcon.replace('composer-skill-clear-icon', 'connector-clear-icon');
+      button.addEventListener('pointerenter', event => {
+        if (event.pointerType !== 'touch') showConnectorTooltip(button);
+      });
+      button.addEventListener('pointerleave', () => {
+        if (connectorTooltipAnchor === button && !button.matches(':focus-visible')) hideConnectorTooltip();
+      });
+      button.addEventListener('focus', () => {
+        if (button.matches(':focus-visible')) showConnectorTooltip(button);
+      });
+      button.addEventListener('blur', () => {
+        if (connectorTooltipAnchor === button && !button.matches(':hover')) hideConnectorTooltip();
+      });
+      return button;
     }));
-    syncComposerTags(input);
     syncQuickAddButtons();
   }
   function clearConnectorTags(input) {
@@ -9336,7 +9447,6 @@ function beginConversationTurn(message) {
     const input = addTarget();
     if (!input) return;
     if (label.startsWith('skill:')) addSkillTag(input, label.slice(6));
-    else if (label.startsWith('知识库:')) addKnowledgeTag(input, label.slice(4));
     else input.value += `${input.value && !/\s$/.test(input.value) ? ' ' : ''}@${label} `;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     closeAddMenu();
@@ -9397,10 +9507,11 @@ function beginConversationTurn(message) {
     if (!list || !addLabels[kind]) return;
     if (kind === 'knowledge') {
       const input = addTarget();
-      const matches = name => name.includes(query);
-      const rows = (names, disabled = false) => names.filter(matches).map(name => `<button class="composer-add-item knowledge-option" type="button" ${disabled ? 'disabled aria-disabled="true"' : ''} role="menuitemcheckbox" aria-checked="${input.knowledgeBases.includes(name)}" data-knowledge-name="${esc(name)}"><span class="knowledge-checkbox" aria-hidden="true">${input.knowledgeBases.includes(name) ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="m2 6 2.7 3 5.3-6.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span><span>${esc(name)}</span></button>`).join('');
-      const enterpriseRows = rows(installedAddItems.knowledge, !input.knowledgeEnabled);
-      list.innerHTML = `<div class="knowledge-enterprise-heading"><span>企业知识</span><button class="composer-knowledge-toggle" type="button" role="switch" aria-checked="${Boolean(input.knowledgeEnabled)}" aria-label="使用企业知识"><span></span></button></div>${enterpriseRows || '<p class="composer-add-empty">没有匹配的知识库</p>'}`;
+      const enabled = input.knowledgeMode !== 'off';
+      list.hidden = !enabled;
+      addSubmenu.querySelector('.composer-add-divider').hidden = !enabled;
+      list.innerHTML = enabled ? installedAddItems.knowledge.map(name => `<button class="composer-add-item knowledge-option" type="button" data-knowledge-name="${esc(name)}" aria-label="指定：${esc(name)}">${knowledgeTagIcon}<span>${esc(name)}</span></button>`).join('') : '';
+      addSubmenu.querySelector('.composer-knowledge-toggle').setAttribute('aria-checked', String(enabled));
       placeAddSubmenu();
       return;
     }
@@ -9423,6 +9534,8 @@ function beginConversationTurn(message) {
   }
   function renderAddSubmenu() {
     if (addMenuPage === 'root') { addSubmenu.hidden = true; return; }
+    addSubmenu.setAttribute('role', addMenuPage === 'knowledge' ? 'dialog' : 'menu');
+    addSubmenu.setAttribute('aria-label', addMenuPage === 'knowledge' ? '选择知识库' : '添加信息子菜单');
     const back = addItem('back', '返回');
     if (addMenuPage === 'file') {
       addSubmenu.innerHTML = (directAddTrigger ? '' : back) + addItem('local', '上传本地文件') + addItem('library', '从资料库添加', true);
@@ -9433,7 +9546,9 @@ function beginConversationTurn(message) {
         + (entries.length ? entries.map((entry, index) => `<button class="composer-add-item composer-add-file" type="button" data-add-library="${index}">${addIcon('file')}<span title="${esc(entry.node.name)}">${esc(entry.node.name)}</span><small>${esc(entry.chain.slice(0, -1).map(node => node.name).join(' / '))}</small></button>`).join('') : '<p class="composer-add-empty">还没有最近打开的文件</p>')
         + `<div class="composer-add-divider" aria-hidden="true"></div><button class="composer-add-item composer-add-more" type="button" data-add-open-dialog="library">${addIcon('library')}<span>浏览全部资料库文件</span>${addIcon('chevron', 'composer-add-chevron')}</button>`;
     } else if (addMenuPage === 'knowledge') {
-      addSubmenu.innerHTML = `<div class="composer-add-list" role="menu" aria-label="选择知识库"></div>`;
+      addSubmenu.innerHTML = `<div class="composer-add-item composer-add-more knowledge-enterprise-heading">${knowledgeTagIcon}<span>企业知识</span><button class="composer-knowledge-toggle" type="button" role="switch" aria-checked="false" aria-label="使用企业知识"><span></span></button></div>
+        <div class="composer-add-divider" aria-hidden="true" hidden></div>
+        <div class="composer-add-list composer-knowledge-options" role="group" aria-label="可指定的知识库"></div>`;
       renderAddList();
     } else if (addLabels[addMenuPage]) {
       const kind = addMenuPage;
@@ -9572,13 +9687,28 @@ function beginConversationTurn(message) {
     if (directAddTrigger || !addSubmenu.hidden) { placeAddSubmenu(); return; }
     if (!addMenu.hidden) placeComposerAddPanel(addMenu);
   }
+  function knowledgeToolbarAnchor(tagTrigger) {
+    const composer = tagTrigger.closest('.conversation-composer, .composer');
+    const buttons = composer.querySelectorAll('.composer-quick-add-trigger[data-quick-add="knowledge"], .composer-quick-add-overflow-trigger');
+    return [...buttons].find(button => button.getClientRects().length) || activeAddTrigger;
+  }
   function placeAddSubmenu() {
     if (!activeAddTrigger || addSubmenu.hidden) return;
     if (!directAddTrigger) { placeComposerAddPanel(addSubmenu); return; }
     addSubmenu.style.width = '';
     addSubmenu.style.maxHeight = '';
     const bounds = win.getBoundingClientRect();
-    const parent = (directAddTrigger || addMenu).getBoundingClientRect();
+    const anchor = directAddTrigger.matches('.composer-knowledge-tag-open') ? knowledgeToolbarAnchor(directAddTrigger) : directAddTrigger;
+    const parent = anchor.getBoundingClientRect();
+    if (addMenuPage === 'knowledge') {
+      // Anchor the panel above the toolbar and let the list scroll within the available space.
+      const bottom = parent.top - 6;
+      addSubmenu.style.maxHeight = `${Math.max(0, bottom - bounds.top - 8)}px`;
+      const width = addSubmenu.getBoundingClientRect().width;
+      addSubmenu.style.left = `${Math.max(bounds.left + 8, Math.min(parent.left, bounds.right - width - 8))}px`;
+      addSubmenu.style.top = `${bottom - addSubmenu.getBoundingClientRect().height}px`;
+      return;
+    }
     const width = addSubmenu.getBoundingClientRect().width;
     const height = addSubmenu.getBoundingClientRect().height;
     if (directAddTrigger) {
@@ -9625,13 +9755,13 @@ function beginConversationTurn(message) {
   function openDirectQuickAdd(button, anchor = button) {
     if (directAddTrigger === anchor && addMenuPage === button.dataset.quickAdd && !addSubmenu.hidden) { closeAddMenu(); return; }
     closeAddMenu();
-    activeAddTrigger = anchor.closest('.conversation-composer-actions, .composer-row')?.querySelector('.composer-add-trigger');
+    activeAddTrigger = anchor.closest('.conversation-composer, .composer')?.querySelector('.composer-add-trigger');
     directAddTrigger = anchor;
     anchor.setAttribute('aria-expanded', 'true');
     addMenuPage = button.dataset.quickAdd;
     renderAddSubmenu();
     placeAddSubmenu();
-    addSubmenu.querySelector('button')?.focus({preventScroll:true});
+    addSubmenu.querySelector(addMenuPage === 'knowledge' ? '.composer-knowledge-toggle' : 'button')?.focus({preventScroll:true});
   }
   quickAddButtons.forEach(button => {
     button.setAttribute('aria-controls', addSubmenu.id);
@@ -9650,7 +9780,12 @@ function beginConversationTurn(message) {
       activeQuickAddOverflowTrigger = trigger;
       quickAddOverflowMenu.innerHTML = Array.from(trigger.closest('.composer-quick-add').querySelectorAll('.composer-quick-add-trigger'))
         .filter(button => !button.hidden && !button.getClientRects().length)
-        .map(button => `<button class="composer-add-item" type="button" role="menuitem" data-overflow-quick-add="${button.dataset.quickAdd}">${button.innerHTML}</button>`)
+        .map((button, index, buttons) => {
+          const kind = button.dataset.quickAdd;
+          const divider = kind === 'skill' && index < buttons.length - 1 ? '<div class="composer-add-divider" role="separator"></div>' : '';
+          const activeKnowledge = kind === 'knowledge' && button.dataset.enabled === 'true' ? ` data-enabled="true" aria-label="${esc(button.getAttribute('aria-label'))}"` : '';
+          return `<button class="composer-add-item" type="button" role="menuitem" data-overflow-quick-add="${kind}"${activeKnowledge}>${button.innerHTML}</button>${divider}`;
+        })
         .join('');
       quickAddOverflowMenu.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
@@ -9685,7 +9820,7 @@ function beginConversationTurn(message) {
       if (!compact) {
         if (activeQuickAddOverflowTrigger === trigger) closeQuickAddOverflowMenu();
         if (directAddTrigger === trigger) closeAddMenu();
-      } else if (target.contains(directAddTrigger) && directAddTrigger !== trigger) closeAddMenu();
+      } else if (target.contains(directAddTrigger) && !directAddTrigger.getClientRects().length) closeAddMenu();
     });
   });
   quickAddOverflowObserver.observe(document.querySelector('.conversation-composer-wrap'));
@@ -9703,34 +9838,24 @@ function beginConversationTurn(message) {
     const enterpriseToggle = event.target.closest('.composer-knowledge-toggle');
     if (addMenuPage === 'knowledge' && enterpriseToggle) {
       const input = addTarget();
-      input.knowledgeEnabled = !input.knowledgeEnabled;
-      input.knowledgeBases = input.knowledgeBases.filter(name => !installedAddItems.knowledge.includes(name));
-      if (input.knowledgeEnabled) input.knowledgeBases.push(...installedAddItems.knowledge);
-      renderKnowledgeTags(input);
+      // Use a stable anchor if toggling off removes the tag that opened the picker.
+      if (directAddTrigger?.matches('.composer-knowledge-tag-open')) {
+        directAddTrigger = knowledgeToolbarAnchor(directAddTrigger);
+        directAddTrigger.setAttribute('aria-expanded', 'true');
+      }
+      toggleEnterpriseKnowledge(input);
       renderAddList();
       addSubmenu.querySelector('.composer-knowledge-toggle')?.focus({preventScroll:true});
       input.dispatchEvent(new Event('input', { bubbles:true }));
       return;
     }
     const knowledgeOption = event.target.closest('[data-knowledge-name]');
-    const knowledgeAction = event.target.closest('[data-knowledge-action]');
-    if (knowledgeOption?.disabled) return;
-    if (addMenuPage === 'knowledge' && (knowledgeOption || knowledgeAction)) {
+    if (addMenuPage === 'knowledge' && knowledgeOption) {
       const input = addTarget();
-      const selected = new Set(input.knowledgeBases);
-      const action = knowledgeAction?.dataset.knowledgeAction;
-      if (action === 'all') availableKnowledgeBases(input).forEach(name => selected.add(name));
-      else if (action === 'clear') selected.clear();
-      else if (action === 'invert') availableKnowledgeBases(input).forEach(name => selected.has(name) ? selected.delete(name) : selected.add(name));
-      else {
-        const name = knowledgeOption.dataset.knowledgeName;
-        selected.has(name) ? selected.delete(name) : selected.add(name);
-      }
-      input.knowledgeBases = [...selected];
-      renderKnowledgeTags(input);
-      renderAddList();
-      if (knowledgeOption) [...addSubmenu.querySelectorAll('[data-knowledge-name]')].find(option => option.dataset.knowledgeName === knowledgeOption.dataset.knowledgeName)?.focus({preventScroll:true});
+      specifyKnowledge(input, knowledgeOption.dataset.knowledgeName);
+      closeAddMenu();
       input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.focus({preventScroll:true});
       return;
     }
     const libraryButton = event.target.closest('[data-add-library]');
@@ -9744,7 +9869,6 @@ function beginConversationTurn(message) {
       const name = addSubmenu._visibleInstalled[Number(installedButton.dataset.addInstalled)];
       if (name && !installedAddItems[addMenuPage].includes(name)) installedAddItems[addMenuPage].push(name);
       if (name && addMenuPage === 'mcp') toggleConnector(installedButton, addSubmenu);
-      else if (name && addMenuPage === 'knowledge') appendAddReference(`知识库:${name}`);
       else if (name && addMenuPage === 'expert') {
         selectExpert(name);
         closeAddMenu();
@@ -9814,7 +9938,7 @@ function beginConversationTurn(message) {
     } else if (menu === addMenu && event.key === 'ArrowRight') {
       const kind = event.target.closest('[data-add-kind]')?.dataset.addKind;
       if (['file', 'skill', 'expert', 'mcp'].includes(kind)) { event.preventDefault(); showAddSubmenu(kind, true); }
-    } else if (menu === addSubmenu && event.key === 'ArrowLeft') {
+    } else if (menu === addSubmenu && addMenuPage !== 'knowledge' && event.key === 'ArrowLeft') {
       event.preventDefault();
       if (directAddTrigger) { closeAddMenu(true); return; }
       const kind = addMenuPage === 'library' ? 'file' : addMenuPage;
@@ -10054,7 +10178,7 @@ function beginConversationTurn(message) {
     if (input.selectionStart !== 0 || input.selectionEnd !== 0) return;
     if (event.key !== 'Backspace' && !(event.key === 'Delete' && input.value.length === 0)) return;
     const tags = input.parentElement.querySelector('.composer-inline-tags');
-    const remove = Array.from(tags.querySelectorAll('.prompt-chip-clear, .composer-goal-tag-clear, [data-knowledge-remove], [data-skill-remove], [data-connector-name]'))
+    const remove = Array.from(tags.querySelectorAll('.prompt-chip-clear, .composer-goal-tag-clear, [data-knowledge-remove], [data-skill-remove]'))
       .filter(button => !button.disabled && button.getClientRects().length > 0).at(-1);
     if (!remove) return;
     event.preventDefault();

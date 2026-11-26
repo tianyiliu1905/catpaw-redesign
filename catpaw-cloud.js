@@ -31,7 +31,7 @@
     './nocode-page.js',
     './library-page.js',
     './widget-value-cases.js?v=20261110-current',
-    './app.js?v=20261126-artifact-list-footer',
+    './app.js?v=20261126-knowledge-scroll-thumb',
     './credits-demo.js',
   ];
 
